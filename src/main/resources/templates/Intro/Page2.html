@@ -1,0 +1,32 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="content">
+    <div class="space-y-6">
+        <h2 class="text-2xl font-semibold text-center text-gray-800">이용 약관 동의</h2>
+        <div class="bg-gray-50 border rounded p-4 text-sm text-gray-700 h-48 overflow-y-auto">
+            이건 무료야 ~ 유료로 변경해서 막 사용하는건 안됨.<br>
+            소스 공개하니까 수정하고 버그 있거나 개선 사항 있으면 알려줘.<br>
+            그럼 이만.
+        </div>
+        <div class="flex items-center space-x-2" onchange="checkChange()" >
+            <input type="checkbox" id="agreeCheck" class="form-checkbox">
+            <label for="agreeCheck" class="text-sm text-gray-700">이용 약관에 동의합니다.</label>
+        </div>
+        <div class="flex justify-end space-x-2">
+            <button type="button" id="agreeCheckBtn" disabled class="bg-gray-500 text-black px-6 py-2 rounded-lg hover:bg-gray-600 transition" onclick="nextPage('page2', 'page3')">다음</button>
+        </div>
+    </div>
+    
+    <script>
+    	function checkChange(){
+    		const agreeCheckBtn = document.getElementById("agreeCheckBtn")
+    		if( document.getElementById("agreeCheck").checked ){
+    			agreeCheckBtn.disabled = false;
+    			agreeCheckBtn.classList.remove("bg-gray-500", "text-black", "hover:bg-gray-600");
+    			agreeCheckBtn.classList.add("bg-blue-500", "text-white", "hover:bg-blue-600");
+    		}else{
+    			agreeCheckBtn.disabled = true;
+    			agreeCheckBtn.classList.remove("bg-blue-500", "text-white", "hover:bg-blue-600");
+    			agreeCheckBtn.classList.add("bg-gray-500", "text-black", "hover:bg-gray-600");
+    		}
+    	}
+    </script>
+</div>

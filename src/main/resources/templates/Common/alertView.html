@@ -1,0 +1,66 @@
+<div xmlns:th="http://www.thymeleaf.org"
+	th:fragment="alertView"
+	id="customModal" 
+	class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+
+	<!-- 공통 모달 -->
+	<div class="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
+	    <p id="modalMessage" class="mb-4"></p>
+	    <input type="text" id="modalInput" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 mb-4 hidden">
+	    <div id="modalButtons" class="flex justify-center space-x-2">
+	        <button id="modalConfirmButton" class="w-1/2 bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">확인</button>
+	        <button id="modalCancelButton" class="w-1/2 bg-gray-500 text-white py-2 rounded-md hover:bg-gray-600 hidden">취소</button>
+	    </div>
+	</div>
+	
+	<script>
+	let modalCallback = null;
+	
+	function showCustomAlert(message, callback) {
+	    document.getElementById("modalMessage").innerText = message;
+	    document.getElementById("modalInput").classList.add("hidden"); // 입력 필드 숨김
+	    document.getElementById("modalCancelButton").classList.add("hidden"); // 취소 버튼 숨김
+	    document.getElementById("modalConfirmButton").innerText = "확인"; // 버튼 텍스트 설정
+	    modalCallback = callback;
+	    document.getElementById("customModal").classList.remove("hidden");
+	}
+	
+	function showCustomConfirm(message, callback) {
+	    document.getElementById("modalMessage").innerText = message;
+	    document.getElementById("modalInput").classList.add("hidden");
+	    document.getElementById("modalCancelButton").classList.remove("hidden");
+	    document.getElementById("modalConfirmButton").innerText = "확인";
+	    modalCallback = callback;
+	    document.getElementById("customModal").classList.remove("hidden");
+	}
+	
+	function showCustomPrompt(message, callback) {
+	    document.getElementById("modalMessage").innerText = message;
+	    document.getElementById("modalInput").classList.remove("hidden");
+	    document.getElementById("modalCancelButton").classList.remove("hidden");
+	    document.getElementById("modalConfirmButton").innerText = "입력";
+	    modalCallback = callback;
+	    document.getElementById("customModal").classList.remove("hidden");
+	}
+	
+	document.getElementById("modalConfirmButton").addEventListener("click", function () {
+	    document.getElementById("customModal").classList.add("hidden");
+	    if (modalCallback) {
+	        if (!document.getElementById("modalInput").classList.contains("hidden")) {
+	            modalCallback(document.getElementById("modalInput").value);
+	        } else {
+	            modalCallback(true);
+	        }
+	        modalCallback = null;
+	    }
+	});
+	
+	document.getElementById("modalCancelButton").addEventListener("click", function () {
+	    document.getElementById("customModal").classList.add("hidden");
+	    if (modalCallback) {
+	    	modalCallback(false);
+	        modalCallback = null;
+	    }
+	});
+	</script>
+</div>

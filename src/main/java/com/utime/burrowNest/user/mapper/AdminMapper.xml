@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<!--//네임스페이스에는 mapper 가 있는 풀 패키지명과 매퍼명을 등록 한다. -->
+<mapper namespace="com.utime.burrowNest.user.mapper.AdminMapper">
+
+	<!-- 어드민 테이블 생성 -->
+	<insert id="createAdmin">
+		CREATE TABLE BN_ADMIN (
+			AUTH_DATA VARCHAR(255), <!-- 암호값 -->
+			REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP, <!-- 생성일 -->
+			UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
+		)
+	</insert>
+
+	<!-- 어드민 계정 추가 -->
+	<insert id="insertAdmin">
+		INSERT INTO BN_ADMIN (
+			AUTH_DATA
+			, UPDATE_DATE
+		) VALUES (
+			#{pw, typeHandler=com.utime.burrowNest.user.typeHandler.PasswordEncoderTypeHandler}
+			, CURRENT_TIMESTAMP
+		)  
+	</insert>
+
+
+	<!-- 어드민 pw 조회 -->
+	<select id="getAdminPw" resultType="String">
+		SELECT AUTH_DATA FROM BN_ADMIN
+	</select>
+
+
+	<!-- 사용자 추가 -->
+	<insert id="insertUser" parameterType="com.utime.burrowNest.user.vo.UserVo">
+		INSERT INTO BN_USER (
+			, UPDATE_DATE 
+			, ID 
+			, STORAGES 
+		) VALUES (
+			CURRENT_TIMESTAMP
+			, #{id}
+			, #{rootPath, typeHandler=com.utime.burrowNest.user.typeHandler.LongListTypeHandler}
+		)
+	</insert>
+
+
+	<!-- 사용자 목록 조회 -->
+	<select id="getUserList" resultMap="com.utime.burrowNest.user.mapper.UserMapper.UserVoMap">
+		SELECT
+			NO
+			, REG_DATE 
+			, UPDATE_DATE
+			, ENABLED
+			, ID 
+			, NICK_NAME 
+			, ICON 
+			, STORAGES 
+			, NOTE 
+			, DAILY_UPLOAD_LIMIT 
+			, DAILY_DOWNLOAD_LIMIT 
+			, MAX_STORAGE_USAGE
+		FROM BN_USER
+		ORDER BY NO
+	</select>
+	
+</mapper>

@@ -1,0 +1,8 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="content">
+    <div class="text-center space-y-6">
+        <h1 class="text-4xl font-bold text-blue-600">🐇 BurrowNest</h1>
+        <p class="text-lg text-gray-700">감사합니다!</p>
+        <p class="text-sm text-gray-500">설정을 완료 했습니다.</p>
+        <button type="button" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" th:onclick="'location.href=\'' + @{/} + '\''">로그인</button>
+    </div>
+</div>

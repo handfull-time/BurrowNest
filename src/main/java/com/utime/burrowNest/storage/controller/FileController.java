@@ -1,0 +1,350 @@
+package com.utime.burrowNest.storage.controller;
+
+import java.io.BufferedInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.utime.burrowNest.common.util.FileUtils;
+import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.storage.vo.FileDto;
+import com.utime.burrowNest.storage.vo.PasteItem;
+import com.utime.burrowNest.storage.vo.PasteRequest;
+import com.utime.burrowNest.user.vo.UserVo;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+@Controller
+@RequestMapping("File")
+public class FileController {
+	
+	@GetMapping("Open")
+	public ResponseEntity<Resource> openFile(UserVo user, HttpServletRequest request, @RequestParam String path) {
+	    Path file = Paths.get("F:\\WorkData\\Burrow", path);
+	    if (!Files.exists(file)) {
+	        return ResponseEntity.notFound().build();
+	    }
+
+	    try {
+	        String mimeType = Files.probeContentType(file);
+	        
+	        if (mimeType != null && (mimeType.startsWith("video/") || mimeType.startsWith("audio/"))) {
+	            // redirect to streaming page
+	            String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
+	            final URI uri = URI.create(request.getContextPath() + "/File/Streaming.html?path=" + encodedPath);
+	            return ResponseEntity.status(HttpStatus.FOUND).location(uri).build();
+	        }
+	        
+	        // 텍스트 파일이라면 charset=utf-8 명시
+	        if (mimeType != null && mimeType.startsWith("text/")) {
+	        	mimeType += "; charset=UTF-8";
+	        }
+	        
+	        Resource resource = new InputStreamResource(Files.newInputStream(file));
+	        
+	        final String transName = URLEncoder.encode(file.getFileName().toString(), "utf-8").replaceAll("\\+","%20");
+
+	        return ResponseEntity.ok()
+	                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + transName + "\"")
+	                .contentType(MediaType.parseMediaType(mimeType != null ? mimeType : "application/octet-stream"))
+	                .body(resource);
+
+	    } catch (IOException e) {
+	        return ResponseEntity.internalServerError().build();
+	    }
+	}
+	
+	@GetMapping("Streaming.html")
+	public String streamPage(Model model, UserVo user, @RequestParam String path) throws IOException {
+	    Path filePath = Paths.get("F:\\WorkData\\Burrow", path).normalize();
+	    
+	    if (!Files.exists(filePath)) {
+	        throw new FileNotFoundException("File not found: " + path);
+	    }
+
+	    String mimeType = Files.probeContentType(filePath);
+	    if (mimeType == null) {
+	        mimeType = "application/octet-stream";
+	    }
+
+	    model.addAttribute("path", path);
+	    model.addAttribute("fileName", filePath.getFileName().toString());
+	    model.addAttribute("mimeType", mimeType);
+
+	    return "Common/Streaming";
+	}
+	
+	@GetMapping("Stream")
+	public ResponseEntity<StreamingResponseBody> openStreamingFile(UserVo user, @RequestParam String path,
+	                                                       HttpServletRequest request) throws IOException {
+		System.out.println("Stream User : " + user);
+		
+	    Path filePath = Paths.get("F:/WorkData/Burrow", path).normalize();
+
+	    if (!Files.exists(filePath) || Files.isDirectory(filePath)) {
+	        return ResponseEntity.notFound().build();
+	    }
+
+	    long fileLength = Files.size(filePath);
+	    String mimeType = Files.probeContentType(filePath);
+	    if (mimeType == null) mimeType = "application/octet-stream";
+
+	    // 텍스트 파일이라면 charset=UTF-8 명시
+	    if (mimeType.startsWith("text/")) {
+	        mimeType += "; charset=UTF-8";
+	    }
+
+	    HttpHeaders headers = new HttpHeaders();
+
+	    // 파일 이름 한글 인코딩
+	    String fileName = filePath.getFileName().toString();
+	    String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+
+	    headers.add(HttpHeaders.CONTENT_DISPOSITION, 
+	        "inline; filename=\"" + encodedFileName + "\"; filename*=UTF-8''" + encodedFileName);
+	    headers.add(HttpHeaders.CONTENT_TYPE, mimeType);
+
+	    // Range 지원
+	    String range = request.getHeader("Range");
+	    long start = 0;
+	    long end = fileLength - 1;
+
+	    if (range != null && range.startsWith("bytes=")) {
+	        String[] parts = range.replace("bytes=", "").split("-");
+	        try {
+	            start = Long.parseLong(parts[0]);
+	            if (parts.length > 1 && !parts[1].isEmpty()) {
+	                end = Long.parseLong(parts[1]);
+	            }
+	        } catch (NumberFormatException ignored) {}
+	    }
+
+	    long finalStart = start;
+	    long finalEnd = end;
+	    long contentLength = finalEnd - finalStart + 1;
+
+	    headers.set(HttpHeaders.ACCEPT_RANGES, "bytes");
+	    headers.set(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength));
+	    headers.set(HttpHeaders.CONTENT_RANGE, String.format("bytes %d-%d/%d", finalStart, finalEnd, fileLength));
+
+	    InputStream inputStream = Files.newInputStream(filePath);
+	    inputStream.skip(finalStart); // 시작 지점으로 이동
+
+	    StreamingResponseBody responseBody = outputStream -> {
+	        try (BufferedInputStream in = new BufferedInputStream(inputStream)) {
+	            byte[] buffer = new byte[8192];
+	            long bytesToRead = contentLength;
+	            int bytesRead;
+	            while ((bytesRead = in.read(buffer, 0, (int) Math.min(buffer.length, bytesToRead))) != -1) {
+	                outputStream.write(buffer, 0, bytesRead);
+	                bytesToRead -= bytesRead;
+	                if (bytesToRead <= 0) break;
+	            }
+	        }
+	    };
+
+	    // 206 Partial Content if ranged, 200 OK otherwise
+	    return new ResponseEntity<>(responseBody, headers, (range != null ? HttpStatus.PARTIAL_CONTENT : HttpStatus.OK));
+	}
+
+//	
+//	@GetMapping("Open")
+//	public ResponseEntity<StreamingResponseBody> openFile(
+//			UserVo user,
+//	        @RequestParam String path,
+//	        @RequestHeader(value = "Range", required = false) String rangeHeader
+//	) throws IOException {
+//
+//		final Path filePath = Paths.get("F:/WorkData/Burrow", path);
+//	    if (!Files.exists(filePath) || Files.isDirectory(filePath)) {
+//	        return ResponseEntity.notFound().build();
+//	    }
+//
+//	    final long fileSize = Files.size(filePath);
+//	    String mimeType = Files.probeContentType(filePath);
+//	    // 텍스트 파일이라면 charset=utf-8 명시
+//        if (mimeType != null && mimeType.startsWith("text/")) {
+//        	mimeType += "; charset=UTF-8";
+//        } else if (mimeType == null) {
+//        	mimeType = "application/octet-stream";
+//        }
+//
+//	    long start = 0;
+//	    long end = fileSize - 1;
+//
+//	    if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
+//	        String[] ranges = rangeHeader.replace("bytes=", "").split("-");
+//	        try {
+//	            start = Long.parseLong(ranges[0]);
+//	            if (ranges.length > 1 && !ranges[1].isBlank()) {
+//	                end = Long.parseLong(ranges[1]);
+//	            }
+//	        } catch (NumberFormatException ignored) {}
+//	    }
+//
+//	    final long contentLength = end - start + 1;
+//	    final InputStream inputStream = Files.newInputStream(filePath);
+//	    inputStream.skip(start);
+//
+//	    final StreamingResponseBody responseBody = outputStream -> {
+//	        final byte[] buffer = new byte[8192];
+//	        long bytesToRead = contentLength;
+//	        int bytesRead;
+//
+//	        while (bytesToRead > 0 && (bytesRead = inputStream.read(buffer, 0, (int) Math.min(buffer.length, bytesToRead))) != -1) {
+//	            outputStream.write(buffer, 0, bytesRead);
+//	            bytesToRead -= bytesRead;
+//	        }
+//
+//	        inputStream.close();
+//	    };
+//
+//	    final HttpHeaders headers = new HttpHeaders();
+//	    headers.set(HttpHeaders.ACCEPT_RANGES, "bytes");
+//	    headers.setContentLength(contentLength);
+//	    headers.setContentType(MediaType.parseMediaType(mimeType));
+//	    
+//	    if (rangeHeader != null) {
+//	        headers.set(HttpHeaders.CONTENT_RANGE, "bytes " + start + "-" + end + "/" + fileSize);
+//	        return new ResponseEntity<>(responseBody, headers, HttpStatus.PARTIAL_CONTENT);
+//	    } else {
+//		    final String transName = URLEncoder.encode(filePath.getFileName().toString(), "utf-8").replaceAll("\\+","%20");
+//		    headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + transName + "\"");
+//	        return new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
+//	    }
+//	}
+
+	
+	
+	@GetMapping("Download")
+	public ResponseEntity<Resource> download(@RequestParam String path) throws IOException {
+	    Path file = Paths.get("F:\\WorkData\\Burrow", path);
+	    if (!Files.exists(file)) {
+	        return ResponseEntity.notFound().build();
+	    }
+
+	    Resource resource = new UrlResource(file.toUri());
+	    String contentType = Files.probeContentType(file);
+	    String fileName = file.getFileName().toString();
+
+	    return ResponseEntity.ok()
+	        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + URLEncoder.encode(fileName, "UTF-8") + "\"")
+	        .contentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"))
+	        .body(resource);
+	}
+	
+	@GetMapping("ZipDownload")
+	public void zipDownload(HttpServletResponse response, @RequestParam String paths) throws IOException {
+		
+	    final List<String> filePaths = new ObjectMapper().readValue(paths, new TypeReference<List<String>>() {});
+	    
+	    response.setContentType("application/zip");
+	    response.setHeader("Content-Disposition", "attachment; filename=\"download.zip\"");
+
+	    try (ZipOutputStream zos = new ZipOutputStream(response.getOutputStream())) {
+	        for (String relPath : filePaths) {
+	            final Path fullPath = Paths.get("F:\\WorkData\\Burrow", relPath).normalize();
+
+	            if (Files.isDirectory(fullPath)) {
+	                Files.walk(fullPath).filter(p -> !Files.isDirectory(p)).forEach(p -> {
+	                    try {
+	                        String entryName = fullPath.relativize(p).toString().replace("\\", "/");
+	                        zos.putNextEntry(new ZipEntry(entryName));
+	                        Files.copy(p, zos);
+	                        zos.closeEntry();
+	                    } catch (IOException ignored) {}
+	                });
+	            } else {
+	                zos.putNextEntry(new ZipEntry(fullPath.getFileName().toString()));
+	                Files.copy(fullPath, zos);
+	                zos.closeEntry();
+	            }
+	        }
+	    }
+	}
+
+	@ResponseBody
+	@PostMapping("Paste.json")
+	public ReturnBasic paste(@RequestBody PasteRequest req) {
+		
+		final Path sourceBase = Paths.get("F:\\WorkData\\Burrow", req.getFromPath());
+		final Path targetBase = Paths.get("F:\\WorkData\\Burrow", req.getToPath());
+
+	    try {
+	        for (PasteItem item : req.getItems()) {
+	            Path source = sourceBase.resolve(item.getName()).normalize();
+	            Path target = targetBase.resolve(item.getName()).normalize();
+
+	            if ("copy".equals(req.getType())) {
+	                if (Files.isDirectory(source)) {
+	                    FileUtils.copyDirectory(source, target);
+	                } else {
+	                    Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+	                }
+	            } else {
+	                Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+	            }
+	        }
+	        return new ReturnBasic();
+	    } catch (Exception e) {
+	    	return new ReturnBasic("500", e.getMessage());
+	    }
+	}
+
+	@ResponseBody
+	@PostMapping("Delete.json")
+	public ReturnBasic deleteFiles(@RequestBody List<FileDto> files, @RequestParam String path) {
+		ReturnBasic result = new ReturnBasic();
+	    final Path base = Paths.get("F:/WorkData/Burrow", path);
+
+	    try {
+	        for (FileDto file : files) {
+	            Path target = base.resolve(file.getName());
+
+	            if (Files.exists(target)) {
+	                if (file.isDirectory()) {
+	                	FileUtils.deleteDirectory(target);
+	                } else {
+	                    Files.delete(target);
+	                }
+	            }
+	        }
+	    } catch (Exception e) {
+	    	result.setCodeMessage("500", e.getMessage());
+	    }
+
+	    return result;
+	}
+
+}
+

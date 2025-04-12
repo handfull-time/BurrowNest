@@ -1,0 +1,49 @@
+package com.utime.burrowNest.user.mapper;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import com.utime.burrowNest.user.vo.UserVo;
+
+/**
+ * 관리자 처리
+ */
+@Mapper
+public interface AdminMapper {
+	
+	/**
+	 * 회원 테이블 생성
+	 * @return
+	 */
+	int createAdmin();
+	
+	/**
+	 * 어드민 계정 추가
+	 * @param pw
+	 * @return
+	 */
+	int insertAdmin( @Param("pw") String pw );
+	
+	/**
+	 * 어드민 pw 조회
+	 * @return
+	 */
+	String getAdminPw();
+	
+	/**
+	 * 사용자 추가
+	 * @param user
+	 * @return
+	 */
+	int insertUser(UserVo user);
+
+	/**
+	 * 사용자 목록 조회
+	 * @return
+	 */
+	List<UserVo> getUserList();
+
+
+}

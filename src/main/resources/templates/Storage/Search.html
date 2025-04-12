@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+     layout:decorate="~{Common/LayoutMain}">
+    
+    <th:block layout:fragment="title">포인트파크 API 검색</th:block>
+    
+    <th:block layout:fragment="css">
+    </th:block>
+    
+    <th:block layout:fragment="script">
+        </th:block>
+
+    <div layout:fragment="content" class="p-6 shadow-lg rounded-none overflow-auto">
+
+	    <h2 class="text-xl font-semibold text-gray-800 mb-4">[[${keyword}]] 검색 결과. [[${searchSec}]]ms</h2>
+	
+	    <div th:if="${searchResults.empty}" class="text-gray-500">
+	        검색 결과가 없습니다.
+	    </div>
+	
+	    <div th:each="item : ${searchResults}" class="mb-6">
+	        <!-- 파일 경로 -->
+	        <h3>
+	            <a th:href="@{${item.pathName}}" 
+	               class="text-lg font-bold text-gray-900 hover:underline flex items-center">
+	                <span class="mr-2">📁 [[${item.pathName}]]</span>
+	            </a>
+	        </h3>
+	
+	        <!-- 검색된 라인 -->
+	        <div class="mt-2 border-l-4 border-gray-700 pl-4 ml-2">
+			    <p th:each="line, iterStat : ${item.lines}" 
+			       th:utext="${line}" 
+			       class="text-gray-700 leading-relaxed py-2 border-b border-gray-300"
+			       th:classappend="${iterStat.last} ? 'border-none' : ''">
+			    </p>
+			</div>
+			<hr class="border-gray-700 border-2 ml-2">
+	    </div>
+	</div>
+    
+</html>

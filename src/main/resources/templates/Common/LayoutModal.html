@@ -1,0 +1,33 @@
+<div xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+    <th:block layout:fragment="modalCss"/>
+
+    <!-- 팝업 레이어 -->
+    <div class="modal-container bg-white rounded-lg shadow-lg relative" style="width: auto;">
+        <!-- 제목 영역 (드래그 가능) -->
+        <div class="modal-header bg-gray-700 text-white text-center p-3 cursor-move"
+             onmousedown="startDrag(event, this)">
+            <span class="font-bold"><th:block layout:fragment="modalTitle"/></span>
+            <button onclick="closePopup(this)" class="absolute top-2 right-2 text-white hover:text-gray-300 text-xl">×</button>
+        </div>
+
+        <!-- 내용 영역 -->
+        <div class="modal-content p-4">
+            <th:block layout:fragment="modalContent"/>
+        </div> 
+
+        <!-- 하단 버튼 -->
+        <div class="modal-footer p-4 flex justify-end space-x-2">
+            <button id="saveButton" onclick="saveData(this)" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition">
+                저장
+            </button>
+            <button onclick="closePopup(this)" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition">
+                취소
+            </button>
+        </div>
+    </div>
+
+    <th:block layout:fragment="modalScript"/>
+
+</div>

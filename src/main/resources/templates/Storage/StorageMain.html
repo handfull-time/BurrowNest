@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>🐇 BurrowNest</title>
+    <meta charset="UTF-8">
+
+   	<th:block th:replace="~{Common/Favicon :: Favicon}"></th:block>
+
+    <script type="text/javascript" th:src="@{/js/tailwind/tailwind.min.js}"></script>
+    
+    <style>
+	</style>
+		
+</head>
+<body class="h-screen flex flex-col">
+    <!-- Header -->
+    <div th:replace="~{Storage/Header :: header}" class="flex-none"></div>
+
+    <!-- Path Bar -->
+    <div th:replace="~{Storage/Path :: path}" class="flex-none border-t border-b border-gray-300"></div>
+
+    <!-- Main Content: Directory Tree + File List -->
+    <div class="flex-1 flex overflow-hidden">
+        <!-- Directories Tree (Resizable) -->
+		<div id="resizable-left"
+		     class="w-1/4 min-w-[150px] max-w-[500px] resize-x overflow-auto border-r border-gray-300">
+		  <div th:insert="~{Storage/Directories :: directories}"></div>
+		  <script th:replace="~{Storage/Directories :: script}"></script>
+		</div>
+
+        <!-- Files List -->
+        <div class="flex-1 overflow-auto" th:replace="~{Storage/Files :: files}"></div>
+    </div>
+
+    <!-- Footer -->
+    <div th:replace="~{Storage/Footer :: footer}" class="flex-none border-t border-gray-300 text-sm px-2 py-1"></div>
+
+    <!-- Optional: Add a simple resizable script -->
+    <script>
+        const resizable = document.getElementById('resizable-left');
+        
+        let isResizing = false;
+
+        resizable.addEventListener('mousedown', function(e) {
+            if (e.offsetX > resizable.offsetWidth - 10) {
+                isResizing = true;
+                document.body.style.cursor = 'col-resize';
+            }
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isResizing) return;
+            const newWidth = e.clientX;
+            resizable.style.width = newWidth + 'px';
+        });
+
+        document.addEventListener('mouseup', function() {
+            isResizing = false;
+            document.body.style.cursor = 'default';
+        });
+    </script>
+</body>
+</html>

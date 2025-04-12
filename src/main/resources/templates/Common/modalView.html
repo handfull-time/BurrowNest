@@ -1,0 +1,151 @@
+
+<div xmlns:th="http://www.thymeleaf.org"
+	th:fragment="modalView" >
+
+<!-- 팝업을 위한 컨테이너 -->
+<div id="popupContainer">
+    <div id="popupOverlay" class="fixed inset-0 z-45 bg-black bg-opacity-50 hidden flex justify-center items-center">
+        <div id="popupWindow" class="modalTop bg-white rounded-lg shadow-lg relative">
+            <div id="popupContentContainer">
+                <!-- 서버에서 로드된 내용이 여기에 삽입됨 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let popupIndex = 0; // 중첩 모달을 위한 고유 ID
+
+	// Method 종류
+	const MethodType = Object.freeze({
+		Get: "GET",
+		Post: "POST"
+	});
+
+	// ContentsType 종류
+	const ContentsType = Object.freeze({
+		Form: "x-www-form-urlencoded",
+		Json: "application/json",
+		Multipart:"multipart/form-data"
+	});
+
+    async function openPopup(sendObj) {
+    	
+    	if( ! sendObj.url ){
+    		console.warn("❌ [openPopup Error] 'url' 값이 필수입니다.");
+			throw new Error("❌ [openPopup Error] 'url' 값이 필수입니다.");
+		}
+    	
+    	if( ! sendObj.NotCheck ){
+        	const refresh = await checkAndRefreshToken();
+        	if( ! refresh ){
+        		console.warn('❌ [authCheck Error] 인증 필요.');
+        		//throw new Error("❌ [authCheck Error] 인증 필요.");
+        		return;
+        	}
+    	}
+		
+		const defaults = {
+		        method: MethodType.Post, // 기본값: POST
+		        contentType: ContentsType.Json, // 기본값: JSON
+		        data:null,
+		        width: '800px'
+		    };
+		
+		const finalValue = { ...defaults, ...sendObj };
+		const width = finalValue.width;
+		
+        // 데이터 로드
+        apiRequest(finalValue.url, {
+	            method: finalValue.method,
+	            headers: { "Content-Type": finalValue.contentType },
+	            body: finalValue.data
+	    	})
+        	.then(response => {
+        		if (!response.ok) {
+        			// HTTP 상태 코드가 200이 아니면 예외 발생
+        			throw new Error(`HTTP 오류 발생: ${response.status} ${response.statusText}`);
+        		}
+        		return response.text(); // 정상적인 경우 HTML 반환
+        	})
+        	.then(html => {
+        		
+        		popupIndex++; // 새로운 팝업 ID 증가
+
+                // 기존 팝업 컨테이너 복제
+                const originalPopup = document.getElementById("popupOverlay");
+                const newPopup = originalPopup.cloneNode(true);
+
+                // 새로운 팝업 ID 변경
+                const newPopupId = `popupOverlay_${popupIndex}`;
+                const newWindowId = `popupWindow_${popupIndex}`;
+                const newContentId = `popupContentContainer_${popupIndex}`;
+
+                newPopup.id = newPopupId;
+                const popupWindow = newPopup.querySelector("#popupWindow");
+                popupWindow.id = newWindowId;
+                // width 적용
+                popupWindow.style.width = width;
+                newPopup.querySelector("#popupContentContainer").id = newContentId;
+
+                // 모달 개별 드래그 객체 추가
+                popupWindow.dragObj = { isDragging: false, offsetX: 0, offsetY: 0 };
+
+                // 새 팝업 숨김 해제
+                newPopup.classList.remove("hidden");
+
+                // 새로운 팝업 추가
+                document.getElementById("popupContainer").appendChild(newPopup);
+                
+        		const container = document.getElementById(newContentId);
+        		container.innerHTML = html;
+        		
+        		// 새로 추가된 script 태그 실행 (Thymeleaf script 실행)
+        		container.querySelectorAll("script").forEach(oldScript => {
+        			const newScript = document.createElement("script");
+        			newScript.textContent = oldScript.textContent;
+        			document.body.appendChild(newScript);
+        			oldScript.remove();
+        		});
+        	})
+        	.catch(error => console.error("에러 발생:", error) );
+    }
+
+    // 팝업 닫기 함수 (해당 모달만 닫기)
+    function closePopup(buttonElement) {
+        const modal = buttonElement.closest(".fixed");
+        if (modal) {
+            modal.remove();
+        }
+    }
+    
+	// 드래그 시작 함수 (각 모달별 dragObj 사용)
+    function startDrag(event, headerElement) {
+        const popup = headerElement.closest(".modalTop"); // 현재 모달 찾기
+        if (!popup) return;
+
+        popup.dragObj.isDragging = true;
+        popup.dragObj.offsetX = event.clientX - popup.offsetLeft;
+        popup.dragObj.offsetY = event.clientY - popup.offsetTop;
+
+        // 개별 모달에 이벤트 등록
+        document.addEventListener("mousemove", (e) => doDrag(e, popup));
+        document.addEventListener("mouseup", (e) => stopDrag(e, popup));
+    }
+
+    // 드래그 중 (각 모달별 dragObj 참조)
+    function doDrag(event, popup) {
+        if (!popup.dragObj.isDragging) return;
+        popup.style.position = "absolute";
+        popup.style.left = event.clientX - popup.dragObj.offsetX + "px";
+        popup.style.top = event.clientY - popup.dragObj.offsetY + "px";
+    }
+
+    // 드래그 종료 (각 모달별 이벤트 제거)
+    function stopDrag(event, popup) {
+        popup.dragObj.isDragging = false;
+        document.removeEventListener("mousemove", (e) => doDrag(e, popup));
+        document.removeEventListener("mouseup", (e) => stopDrag(e, popup));
+    }
+</script>
+</div>

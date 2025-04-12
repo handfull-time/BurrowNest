@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>BurrowNest 설치 마법사</title>
+    
+    <th:block th:replace="~{Common/Favicon :: Favicon}"></th:block>
+
+    <script type="text/javascript" th:src="@{/js/tailwind/tailwind.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/jsencrypt/jsencrypt.min.js}"></script>
+    
+    <script type="text/javascript" th:src="@{/js/websocket/sockjs.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/websocket/stomp.min.js}"></script>
+    
+    <script>
+        function showPage(id) {
+            const pages = document.querySelectorAll('.intro-page');
+            pages.forEach(page => page.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function nextPage(current, next) {
+            document.getElementById(current).classList.add('hidden');
+            document.getElementById(next).classList.remove('hidden');
+        }
+
+        function prevPage(current, prev) {
+            document.getElementById(current).classList.add('hidden');
+            document.getElementById(prev).classList.remove('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            showPage('page1');
+        });
+    </script>
+    
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="w-full max-w-2xl p-6 bg-white rounded-2xl shadow-xl max-h-[600px] overflow-auto">
+        	<form name="initForm">
+	            <div id="page1" class="intro-page hidden" th:insert="~{Intro/Page1 :: content}"></div>
+	            <div id="page2" class="intro-page hidden" th:insert="~{Intro/Page2 :: content}"></div>
+ 	            <div id="page3" class="intro-page hidden" th:insert="~{Intro/Page3 :: content}"></div>
+	            <div id="page4" class="intro-page hidden" th:insert="~{Intro/Page4 :: content}"></div>
+	            <div id="page5" class="intro-page hidden" th:insert="~{Intro/Page5 :: content}"></div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- alert confirm prompt -->
+	<div th:replace="~{Common/alertView :: alertView}"></div>
+    <!-- 모달창 -->
+    <div th:replace="~{Common/modalView :: modalView}"></div>
+    
+    <th:script th:replace="~{Common/Script :: CommonScript}"/>
+</body>
+</html>

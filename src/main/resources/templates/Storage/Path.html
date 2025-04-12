@@ -1,0 +1,25 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="path" class="flex items-center justify-between bg-gray-50 px-4 py-2 text-sm">
+    <!-- 현재 경로 -->
+    <div class="pl-2 truncate text-gray-700">
+    	<!-- 현재 경로 출력 -->
+    	<div class="pl-2 truncate text-gray-700">
+    		<th:block th:with="segments=${path.split('/')}">
+    			<a th:href="@{/Dir/Path.html(path='/')}">/</a>
+    			<th:block th:with="accumPath=''" th:each="segment, stat : ${segments}">
+    				<th:block th:if="${segment != ''}">
+    					<th:block th:with="accumPath=${accumPath + '/' + segment}">
+    						<a th:href="@{/Dir/Path.html(path=${accumPath})}"
+    							th:text="${'/' + segment}">/segment</a>
+    					</th:block>
+    				</th:block>
+    			</th:block>
+    		</th:block>
+    	</div>
+    </div>
+
+    <!-- 검색 입력창 -->
+    <div>
+        <input type="text" placeholder="검색" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400" />
+        <button class="ml-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">검색</button>
+    </div>
+</div>

@@ -1,0 +1,95 @@
+<div xmlns:th="http://www.thymeleaf.org" 
+	th:fragment="header" 
+	class="bg-gray-100 border-b border-gray-300 p-2 flex flex-wrap items-center justify-between gap-2 text-sm select-none">
+  <!-- 기능 메뉴들 -->
+  <div class="flex flex-wrap items-center gap-2">
+  	<a th:href="@{/Dir/Index.html}">
+      <img th:src="@{/images/favicon/favicon-96x96.png}" alt="Burrow Nest" class="w-8 h-8">
+    </a>
+  	
+    <!-- 구분선 -->
+    <div class="w-px h-6 bg-gray-400 mx-2"></div>
+
+    <!-- 편집 기능 -->
+    <button id="copyBtn" class="px-2 py-1 bg-white border rounded hover:bg-gray-100">📄 복사</button>
+    <button id="cutBtn" class="px-2 py-1 bg-white border rounded hover:bg-gray-100">✂️ 자르기</button>
+    <button id="pasteBtn" class="px-2 py-1 bg-white border rounded hover:bg-gray-100" disabled>📋 붙여넣기</button>
+
+    <!-- 구분선 -->
+    <div class="w-px h-6 bg-gray-400 mx-2"></div>
+
+    <!-- 파일 기능 -->
+    <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100">⬆️ 업로드</button>
+    <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100" id="downloadBtn">⬇️ 다운로드</button>
+    <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100" id="deleteBtn" >🗑️ 삭제</button>
+    <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100">✏️ 이름 변경</button>
+    <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100">📁➕ 새 폴더</button>
+
+  </div>
+
+  <!-- 사용자 아이콘 및 메뉴 -->
+  <div class="relative" id="userMenuWrapper">
+    <button id="userMenuButton" class="flex items-center space-x-2">
+      <img th:src="@{/images/profile/profile1.svg}" th:alt="${user.id}" class="w-10 h-10 rounded-full">
+    </button>
+    <div id="userMenuDropdown" class="absolute right-0 mt-2 z-50 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-44">
+      <ul class="py-2 text-sm text-gray-700" aria-labelledby="userMenuButton">
+        <li>
+          <button id="profileBtn" class="block px-4 py-2 hover:bg-gray-100 w-full text-left">Profile</button>
+        </li>
+        <li>
+          <button id="logoutBtn" class="block px-4 py-2 hover:bg-gray-100 w-full text-left">Logout</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+	//메뉴 내 버튼 클릭 이벤트 등록
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+     console.log("Logout Clicked");
+     if( ! confirm('로그아웃하시겠습니까?') ){
+     	return;
+     }
+     	
+    	const response = await fetch( /*[[@{/Auth/Logout.json}]]*/ null, {
+	        method: "GET",
+	        credentials: "include",
+	        headers: {
+	            "Content-Type": "application/json"
+	        }
+	    } );
+    	
+    	if (response.ok) {
+         const data = await response.json();
+         if( data.code === '0' ){
+        		window.location.href = /*[[@{/Auth/Login.html}]]*/ null;
+         }else{
+         	alert(data.code + " - " + data.message);
+         }
+     } else {
+     	console.error("로그아웃 실패:");
+     }
+     
+ });
+	
+  document.getElementById('profileBtn').addEventListener('click', async () => {
+	     console.log("profileBtn Clicked");
+  });
+  
+    const userDropdown = document.getElementById('userMenuDropdown');
+
+    document.getElementById('userMenuButton').addEventListener('click', () => {
+      userDropdown.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+      const wrapper = document.getElementById('userMenuWrapper');
+      if (!wrapper.contains(e.target)) {
+        userDropdown.classList.add('hidden');
+      }
+    });
+  </script>
+  
+  
+</div>

@@ -1,0 +1,134 @@
+<div xmlns:th="http://www.thymeleaf.org" 
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{Common/LayoutModal}">
+    
+    <th:block layout:fragment="modalTitle">루트 목록</th:block>
+
+	<th:block layout:fragment="modalContent">
+		<ul id="directoryTree" class="space-y-1 max-h-[600px] overflow-auto border rounded p-2 bg-white"></ul>
+
+		<template id="dirItemTemplate">
+		  <li>
+		    <div class="flex items-center gap-1">
+		      <button class="toggle-btn text-blue-600" data-path="" data-loaded="false">[+]</button>
+		      <div class="flex items-center space-x-2">
+		        <input type="checkbox" class="form-checkbox dir-checkbox" data-path="" data-name="">
+		        <span class="text-sm text-gray-700 cursor-pointer dir-label" data-path="">폴더명</span>
+		      </div>
+		    </div>
+		    <ul class="pl-4 hidden" data-children-for=""></ul>
+		  </li>
+		</template>
+
+
+    </th:block>
+    
+	<th:block layout:fragment="modalScript">
+		<script th:inline="javascript" defer>
+		const treeRoot = document.getElementById("directoryTree");
+		const template = document.getElementById("dirItemTemplate");
+
+		// 초기 로딩
+		loadDirectory("root", treeRoot);
+
+		// 트리 클릭 이벤트
+		treeRoot.addEventListener("click", async (e) => {
+		  const toggleBtn = e.target.closest(".toggle-btn");
+		  if (toggleBtn) {
+		    const path = toggleBtn.dataset.path;
+		    const li = toggleBtn.closest("li");
+		    const container = li.querySelector('ul');
+		    
+		    if (toggleBtn.textContent === "[+]") {
+		      toggleBtn.textContent = "[-]";
+		
+		      if (toggleBtn.dataset.loaded !== "true") {
+		        await loadDirectory(path, container);
+		        toggleBtn.dataset.loaded = "true";
+		      }
+		
+		      container.classList.remove("hidden");
+		    } else {
+		      toggleBtn.textContent = "[+]";
+		      container.classList.add("hidden");
+		    }
+		
+		    return;
+		  }
+		
+		  const label = e.target.closest(".dir-label");
+		  if (label) {
+		    const checkbox = label.closest("div").querySelector(".dir-checkbox");
+		    if (checkbox) {
+		      checkbox.checked = !checkbox.checked;
+		    }
+		  }
+		});
+
+
+		// 디렉토리 로딩
+		async function loadDirectory(path, container) {
+		  try {
+		    const baseUrl = /*[[@{/Intro/PathList.json}]]*/ null;
+		    const url = `${baseUrl}?path=${encodeURIComponent(path)}`;
+		    const response = await fetch(url);
+		    const list = await response.json();
+
+		    list.forEach(item => {
+		      const clone = template.content.cloneNode(true);
+		      const toggleBtn = clone.querySelector(".toggle-btn");
+		      const label = clone.querySelector(".dir-label");
+		      const checkbox = clone.querySelector(".dir-checkbox");
+		      const ul = clone.querySelector("ul");
+
+		      const fullPath = (path === 'root') ? item.name : path.replace(/\/$/, "") + "/" + item.name;
+
+		      label.textContent = item.name;
+		      label.dataset.path = fullPath;
+		      checkbox.dataset.path = fullPath;
+		      checkbox.dataset.name = item.name;
+
+		      if (item.hasChildren) {
+		        toggleBtn.dataset.path = fullPath;
+		        toggleBtn.dataset.loaded = "false";
+		        toggleBtn.textContent = "[+]";
+		      } else {
+		        toggleBtn.remove();
+		      }
+
+		      ul.dataset.childrenFor = fullPath;
+		      ul.classList.add("hidden");
+
+		      container.appendChild(clone);
+		    });
+
+		  } catch (err) {
+		    console.error("디렉토리 로딩 오류:", err);
+		  }
+		}
+
+		// ✅ 선택된 경로 리스트 반환 함수
+		function getCheckedNames() {
+		  const checked = document.querySelectorAll('.dir-checkbox:checked');
+		  return Array.from(checked).map(cb => cb.dataset.path + '/' + cb.dataset.name);
+		}
+
+		// ✅ 저장 후 목록에 추가
+		function saveData(element) {
+		  const names = getCheckedNames();
+
+		  for (let name of names) {
+		    const list = document.getElementById('storageList');
+		    const li = document.createElement('li');
+		    li.className = 'flex justify-between items-center bg-gray-100 p-2 rounded';
+		    li.innerHTML = `<span>${name}</span><button class="text-red-500 hover:text-red-700" onclick="this.closest('li').remove()">삭제</button>`;
+		    list.appendChild(li);
+		  }
+
+		  closePopup(element);
+		}
+
+		</script>
+    </th:block>
+</div>
+	   

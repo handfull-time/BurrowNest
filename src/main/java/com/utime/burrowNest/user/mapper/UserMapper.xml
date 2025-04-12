@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<!--//네임스페이스에는 mapper 가 있는 풀 패키지명과 매퍼명을 등록 한다. -->
+<mapper namespace="com.utime.burrowNest.user.mapper.UserMapper">
+
+	<insert id="createUser">
+		CREATE TABLE BN_USER (
+			NO INT PRIMARY KEY AUTO_INCREMENT
+			, REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP <!-- 생성일 -->
+			, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
+			, ENABLED CHAR(1) DEFAULT 'N' <!-- 사용 여부 -->
+			, ID VARCHAR(32) NOT NULL <!-- ID -->
+			, NICK_NAME VARCHAR(128) NOT NULL <!-- 별명 -->
+			, ICON VARCHAR(32) NOT NULL <!-- 아이콘 이미지 이름 -->
+			, STORAGES CLOB NOT NULL <!-- 루트 저장소 (JSON 문자열 등) -->
+			, NOTE VARCHAR(255) DEFAULT NULL <!-- 비고 -->
+			, DAILY_UPLOAD_LIMIT BIGINT DEFAULT 0 <!-- 하루 업로드 제한 (byte) -->
+			, DAILY_DOWNLOAD_LIMIT BIGINT DEFAULT 0  <!-- 일일 최대 다운로드 용량 -->
+			, MAX_STORAGE_USAGE BIGINT DEFAULT 0 <!-- 저장공간 최대 사용 용량 -->
+		)
+	</insert>
+	
+	<!-- 로그인 기록 -->
+	<insert id="createLoginRecord">
+		CREATE TABLE BN_USER_LOGIN_RECORD (
+			NO INT PRIMARY KEY AUTO_INCREMENT
+			, REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP <!-- 생성일 -->
+			, IP VARCHAR(32) NOT NULL
+			, USER_AGENT VARCHAR(256) NOT NULL
+			, STATUS VARCHAR(32) NOT NULL
+			, REQ_ID VARCHAR(32) NOT NULL <!-- 요청 ID -->
+			, USER_NO INT DEFAULT -1
+			, FOREIGN KEY(USER_NO) REFERENCES BN_USER(NO)
+		)
+	</insert>
+	
+	<!-- 로그인 기록 추가 -->
+	<insert id="insertLoginRecord" parameterType="map">
+		INSERT INTO BN_USER_LOGIN_RECORD (
+			IP
+			,USER_AGENT
+			,STATUS
+			,REQ_ID
+			<if test="user != null ">
+				,USER_NO
+			</if>
+		) VALUES (
+			#{req.ip}
+			,#{req.userAgent}
+			,#{status}
+			,#{req.id}
+			<if test="user != null ">
+				,#{user.userNo}
+			</if>
+		)
+	</insert>
+	
+	<resultMap id="UserVoMap" type="com.utime.burrowNest.user.vo.UserVo"> 
+		<id column="NO" 				property="userNo" />
+		<result column="REG_DATE" 		property="regDate" />
+		<result column="UPDATE_DATE" 	property="updateDate" />
+		<result column="ENABLED" 		property="enabled" typeHandler="com.utime.burrowNest.common.typeHandler.BooleanTypeHandler" />
+		<result column="ID" 			property="id" />
+		<result column="NICK_NAME" 		property="nickname" />
+		<result column="ICON" 			property="profileImg" />
+		<result column="STORAGES" 		property="rootPath" typeHandler="com.utime.burrowNest.user.typeHandler.LongListTypeHandler" />
+		<result column="NOTE" 			property="note" />
+		<result column="ROLE" 			property="role" />
+		<result column="DAILY_UPLOAD_LIMIT" 	property="dailyUploadLimit" />
+		<result column="DAILY_DOWNLOAD_LIMIT" 	property="dailyDownloadLimit" />
+		<result column="MAX_STORAGE_USAGE" 		property="maxStorageUsage" />
+	</resultMap>
+	
+	<sql id="UserColumn">
+		NO
+		, REG_DATE
+		, UPDATE_DATE
+		, ENABLED
+		, ID
+		, NICK_NAME
+		, ICON
+		, STORAGES
+		, NOTE
+		, ROLE
+		, DAILY_UPLOAD_LIMIT
+		, DAILY_DOWNLOAD_LIMIT
+		, MAX_STORAGE_USAGE
+	</sql>
+	
+</mapper>
