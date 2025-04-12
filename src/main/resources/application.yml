@@ -1,0 +1,29 @@
+server:
+  port: 9709
+  servlet:
+    context-path: /Burrow
+
+spring:
+  application:
+    name: BurrowNest
+  datasource:
+    url: jdbc:h2:file:./data/burrownest.h2;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /Burrow-h2
+  mvc:
+    pathmatch:
+      matching-strategy: ant-path-matcher
+  security:
+    user:
+      name: admin
+      password: my#9709
+jwt:
+  secret: f4e42d85-73b0-4884-913f-f88ad661a1cc
+
+security:
+  pwSaltKey: Pa57242N708B7WO5U
