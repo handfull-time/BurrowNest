@@ -29,9 +29,25 @@
 		, FILE_TYPE ENUM('Basic', 'Document', 'Image', 'Video', 'Audio', 'Archive' ) NOT NULL <!-- 파일 종류 -->
 		, CREATION TIMESTAMP NOT NULL <!-- 폴더 생성일 -->
 		, LAST_MODIFIED TIMESTAMP NOT NULL <!-- 폴더 수정일 -->
-		, EXTENSION CHARACTER VARYING(16) <!-- 파일 확장자 -->
+		, EXTENSION CHARACTER VARYING(16) DEFAULT NULL <!-- 파일 확장자 -->
 		, NAME CHARACTER VARYING(255) NOT NULL <!-- 순수 이름 확장자 미포함 -->
 		, FOREIGN KEY(PARENT_NO) REFERENCES BN_DIRECTORY(NO) ON DELETE CASCADE
+	)
+</insert>
+
+<insert id="CreateFileExtension">
+	CREATE TABLE BN_FILE_EXTENSION (
+		EXTENSION CHARACTER VARYING(16) PRIMARY KEY <!-- 파일 확장자 -->
+		, FILE_TYPE ENUM('Basic', 'Document', 'Image', 'Video', 'Audio', 'Archive' ) NOT NULL <!-- 파일 종류 -->
+	)
+</insert>
+
+<insert id="CreateFileThumbnail">
+	CREATE TABLE BN_FILE_THUMBNAIL (
+		FILE_NO BIGINT PRIMARY KEY
+		, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
+		, THUMBNAIL BINARY VARYING(307200) DEFAULT NULL <!-- 섬네일 320PX -->
+		, FOREIGN KEY(FILE_NO) REFERENCES BN_FILE(NO) ON DELETE CASCADE
 	)
 </insert>
 
@@ -71,7 +87,6 @@
 		, WHITE_BALANCE CHARACTER VARYING(32) DEFAULT NULL    <!-- 화이트 밸런스 설정 -->
 		, SCENE_MODE CHARACTER VARYING(32) DEFAULT NULL       <!-- 촬영 장면 모드 -->
 		, SOFTWARE_VERSION CHARACTER VARYING(32) DEFAULT NULL <!-- 사용된 소프트웨어 버전 -->
-	    , THUMBNAIL BINARY VARYING(307200) DEFAULT NULL <!-- 섬네일 320PX -->
 		, FOREIGN KEY(FILE_NO) REFERENCES BN_FILE(NO) ON DELETE CASCADE
 	)
 </insert>
@@ -87,7 +102,6 @@
 		, AUDIO_CODEC CHARACTER VARYING(32)<!-- - 오디오 코덱(): 오디오 파일에서 사용된 코덱(예: AAC, MP3). -->
 		, BITRATE INT DEFAULT 0 <!-- - 비트레이트(): 비디오 및 오디오의 비트레이트. -->
 		, TAGS CHARACTER VARYING(255) DEFAULT NULL <!-- - 태그(): 비디오 파일과 관련된 메타데이터 태그. -->
-	    , THUMBNAIL BINARY VARYING(307200) DEFAULT NULL <!-- 섬네일 320PX -->
 		, FOREIGN KEY(FILE_NO) REFERENCES BN_FILE(NO) ON DELETE CASCADE
 	)
 </insert>
@@ -112,7 +126,6 @@
 		, ARTIST_NAME CHARACTER VARYING(128) <!-- 아티스트: 오디오 트랙을 만든 아티스트 -->
 		, RELEASE_YEAR INT DEFAULT 0 <!-- 연도: 발매된 연도 -->
 	    , EMBEDDED_LYRICS CHARACTER VARYING(102400) DEFAULT 0 <!-- 내장된 가사 -->
-	    , THUMBNAIL BINARY VARYING(307200) DEFAULT NULL <!-- 섬네일 320PX -->
 		, FOREIGN KEY(FILE_NO) REFERENCES BN_FILE(NO) ON DELETE CASCADE
 	)
 </insert>
@@ -124,5 +137,297 @@
 		, FOREIGN KEY(FILE_NO) REFERENCES BN_FILE(NO) ON DELETE CASCADE
 	)
 </insert>
+
+
+ <!-- Insert: 새 디렉토리 생성 -->
+<insert id="insertBnDirectory" parameterType="com.utime.burrowNest.storage.vo.BnDirectory" useGeneratedKeys="true" keyProperty="no">
+    INSERT INTO BN_DIRECTORY (NO, NAME, PARENT_NO, CREATION, LAST_MODIFIED)
+    VALUES (#{no}, #{name}, #{parentNo}, #{creation}, #{lastModified});
+</insert>
+
+<!-- Update: 디렉토리 정보 수정 -->
+<update id="updateBnDirectory" parameterType="com.utime.burrowNest.storage.vo.BnDirectory">
+    UPDATE BN_DIRECTORY
+    SET 
+        NAME = #{name},
+        PARENT_NO = #{parentNo},
+        LAST_MODIFIED = #{lastModified}
+    WHERE NO = #{no};
+</update>
+
+<!-- Select: 특정 디렉토리 검색 -->
+<select id="selectBnDirectory" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnDirectory">
+    SELECT NO, NAME, PARENT_NO, CREATION, LAST_MODIFIED
+    FROM BN_DIRECTORY
+    WHERE NO = #{no};
+</select>
+
+<!-- Delete: 특정 디렉토리 삭제 -->
+<delete id="deleteBnDirectory" parameterType="long">
+    DELETE FROM BN_DIRECTORY
+    WHERE NO = #{no};
+</delete>
+
+<!-- INSERT -->
+<insert id="insertBnFile" parameterType="com.utime.burrowNest.storage.vo.BnFile" useGeneratedKeys="true" keyProperty="no" >
+    INSERT INTO BN_FILE (
+    	REG_DATE
+    	, UPDATE_DATE
+    	, ENABLED
+    	, PARENT_NO
+    	, FILE_LENGTH
+    	, FILE_TYPE
+    	, CREATION
+    	, LAST_MODIFIED
+    	, EXTENSION
+    	, NAME
+    ) VALUES (
+    	CURRENT_TIMESTAMP
+    	, CURRENT_TIMESTAMP
+    	, #{enabled}
+    	, #{parentNo}
+    	, #{fileLength}
+    	, #{fileType}
+    	, #{creation}
+    	, #{lastModified}
+    	, #{extension}
+    	, #{name}
+    )
+</insert>
+
+<!-- SELECT -->
+<select id="selectBnFileById" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFile">
+    SELECT 
+    	NO
+    	, REG_DATE
+    	, UPDATE_DATE
+    	, ENABLED
+    	, PARENT_NO
+    	, FILE_LENGTH
+    	, FILE_TYPE
+    	, CREATION
+    	, LAST_MODIFIED
+    	, EXTENSION
+    	, NAME
+    FROM BN_FILE
+    WHERE NO = #{no};
+</select>
+
+
+<!-- UPDATE -->
+<update id="updateBnFile" parameterType="com.utime.burrowNest.storage.vo.BnFile">
+    UPDATE BN_FILE
+    SET UPDATE_DATE = CURRENT_TIMESTAMP
+        , ENABLED = #{enabled}
+        , FILE_LENGTH = #{fileLength}
+        , FILE_TYPE = #{fileType}
+        , CREATION = #{creation}
+        , LAST_MODIFIED = #{lastModified}
+        , EXTENSION = #{extension}
+        , NAME = #{name}
+    WHERE NO = #{no};
+</update>
+
+<!-- DELETE -->
+<delete id="deleteBnFileById" parameterType="long">
+    DELETE FROM BN_FILE
+    WHERE NO = #{no};
+</delete>
+
+<!-- INSERT -->
+<insert id="insertBnFileDocument" parameterType="com.utime.burrowNest.storage.vo.BnFileDocument">
+    INSERT INTO BN_FILE_DOCUMENT (
+    	FILE_NO
+    	, UPDATE_DATE
+    	, TITLE
+    	, SUBJECT
+    	, AUTHOR
+    	, MANAGER
+    	, COMPANY
+    	, CATEGORY
+    	, KEYWORDS
+    	, NOTES
+    ) VALUES (
+    	#{fileNo}
+    	, CURRENT_TIMESTAMP
+    	, #{title}
+    	, #{subject}
+    	, #{author}
+    	, #{manager}
+    	, #{company}
+    	, #{category}
+    	, #{keywords}
+    	, #{notes}
+    )
+</insert>
+
+<!-- SELECT -->
+<select id="selectBnFileDocumentByFileNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFileDocument">
+    SELECT 
+    	FILE_NO
+    	, UPDATE_DATE
+    	, TITLE
+    	, SUBJECT
+    	, AUTHOR
+    	, MANAGER
+    	, COMPANY
+    	, CATEGORY
+    	, KEYWORDS
+    	, NOTES
+    FROM BN_FILE_DOCUMENT
+    WHERE FILE_NO = #{fileNo};
+</select>
+
+<!-- UPDATE -->
+<update id="updateBnFileDocument" parameterType="com.utime.burrowNest.storage.vo.BnFileDocument">
+    UPDATE BN_FILE_DOCUMENT
+    SET UPDATE_DATE = CURRENT_TIMESTAMP
+        , TITLE = #{title}
+        , SUBJECT = #{subject}
+        , AUTHOR = #{author}
+        , MANAGER = #{manager}
+        , COMPANY = #{company}
+        , CATEGORY = #{category}
+        , KEYWORDS = #{keywords}
+        , NOTES = #{notes}
+    WHERE FILE_NO = #{fileNo}
+</update>
+
+<insert id="insertBnFileImage" parameterType="com.utime.burrowNest.storage.vo.BnFileImage">
+    INSERT INTO BN_FILE_IMAGE (
+        FILE_NO
+        , UPDATE_DATE
+        <if test="cameraModel != null and cameraModel != '' ">, CAMERA_MODEL</if>
+        <if test="cameraManufacturer != null and cameraManufacturer != '' ">, CAMERA_MANUFACTURER</if>
+        , APERTURE_VALUE
+        , SHUTTER_SPEED
+        , ISO_VALUE
+        , FOCAL_LENGTH
+        , CAPTURE_DATE
+        , CAPTURE_TIME
+        , IMAGE_WIDTH
+        , IMAGE_HEIGHT
+        , GPS_LATITUDE
+        , GPS_LONGITUDE
+        , FLASH_USED
+        <if test="whiteBalance != null and whiteBalance != '' ">, WHITE_BALANCE</if>
+        <if test="sceneMode != null and sceneMode != '' ">, SCENE_MODE</if>
+        <if test="softwareVersion != null and softwareVersion != '' ">, SOFTWARE_VERSION</if>
+    ) VALUES (
+        #{fileNo}
+        , CURRENT_TIMESTAMP
+        <if test="cameraModel != null and cameraModel != '' ">,#{cameraModel}</if>
+        <if test="cameraManufacturer != null and cameraManufacturer != '' ">,#{cameraManufacturer}</if> 
+        , #{apertureValue}
+        , #{shutterSpeed}
+        , #{isoValue}
+        , #{focalLength} 
+        , #{captureDate}
+        , #{captureTime}
+        , #{imageWidth}
+        , #{imageHeight} 
+        , #{gpsLatitude}
+        , #{gpsLongitude}
+        , #{flashUsed}, 
+        <if test="whiteBalance != null and whiteBalance != '' ">,#{whiteBalance}</if>
+        <if test="sceneMode != null and sceneMode != '' ">,#{sceneMode}</if>
+        <if test="softwareVersion != null and softwareVersion != '' ">,#{softwareVersion}</if>
+    )
+</insert>
+
+<update id="updateBnFileImage" parameterType="com.utime.burrowNest.storage.vo.BnFileImage">
+    UPDATE BN_FILE_IMAGE
+    SET 
+        UPDATE_DATE = CURRENT_TIMESTAMP
+        , CAMERA_MODEL = <choose> <when test="cameraModel != null and cameraModel != '' ">#{cameraModel}</when> <otherwise>NULL</otherwise> </choose> 
+        , CAMERA_MANUFACTURER = <choose> <when test="cameraManufacturer != null and cameraManufacturer != '' ">#{cameraManufacturer}</when> <otherwise>NULL</otherwise> </choose>
+        , APERTURE_VALUE = #{apertureValue}
+        , SHUTTER_SPEED = #{shutterSpeed}
+        , ISO_VALUE = #{isoValue}
+        , FOCAL_LENGTH = #{focalLength}
+        , CAPTURE_DATE = #{captureDate}
+        , CAPTURE_TIME = #{captureTime}
+        , IMAGE_WIDTH = #{imageWidth}
+        , IMAGE_HEIGHT = #{imageHeight}
+        , GPS_LATITUDE = #{gpsLatitude}
+        , GPS_LONGITUDE = #{gpsLongitude}
+        , FLASH_USED = #{flashUsed}
+        , WHITE_BALANCE = <choose> <when test="whiteBalance != null and whiteBalance != '' ">#{whiteBalance}</when> <otherwise>NULL</otherwise> </choose>
+        , SCENE_MODE = <choose> <when test="sceneMode != null and sceneMode != '' ">#{sceneMode}</when> <otherwise>NULL</otherwise> </choose>
+        , SOFTWARE_VERSION = <choose> <when test="softwareVersion != null and softwareVersion != '' ">#{softwareVersion}</when> <otherwise>NULL</otherwise> </choose>
+    WHERE FILE_NO = #{fileNo}
+</update>
+
+<select id="selectBnFileImageByFileNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFileImage">
+    SELECT 
+    	FILE_NO
+    	, UPDATE_DATE
+        , CAMERA_MODEL
+        , CAMERA_MANUFACTURER
+        , APERTURE_VALUE
+        , SHUTTER_SPEED
+        , ISO_VALUE
+        , FOCAL_LENGTH
+        , CAPTURE_DATE
+        , CAPTURE_TIME
+        , IMAGE_WIDTH
+        , IMAGE_HEIGHT
+        , GPS_LATITUDE
+        , GPS_LONGITUDE
+        , FLASH_USED
+        , WHITE_BALANCE
+        , SCENE_MODE
+        , SOFTWARE_VERSION
+    FROM BN_FILE_DOCUMENT
+    WHERE FILE_NO = #{fileNo}
+</select>
+
+<insert id="insertBnFileVideo" parameterType="com.utime.burrowNest.storage.vo.BnFileVideo">
+    INSERT INTO BN_FILE_VIDEO (
+        FILE_NO
+        , UPDATE_DATE
+        , DURATION
+        , RESOLUTION
+        , FRAME_RATE
+        , VIDEO_CODEC
+        , AUDIO_CODEC
+        , BITRATE
+        , TAGS
+    ) VALUES (
+        #{fileNo}
+        , CURRENT_TIMESTAMP
+        , #{duration}
+        , #{resolution}
+        , #{frameRate}
+        , #{videoCodec}
+        , #{audioCodec}
+        , #{bitrate}
+        , #{tags}
+    )
+</insert>
+
+<select id="selectBnFileVideoByFileNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFileVideo">
+    SELECT 
+        FILE_NO, UPDATE_DATE, DURATION, RESOLUTION, FRAME_RATE, VIDEO_CODEC, AUDIO_CODEC, BITRATE, TAGS
+    FROM 
+        BN_FILE_VIDEO
+    WHERE 
+        FILE_NO = #{fileNo}
+</select>
+
+<update id="updateBnFileVideo" parameterType="com.utime.burrowNest.storage.vo.BnFileVideo">
+    UPDATE BN_FILE_VIDEO
+    SET UPDATE_DATE = CURRENT_TIMESTAMP
+        , DURATION = #{duration}
+        , RESOLUTION = #{resolution}
+        , FRAME_RATE = #{frameRate}
+        , VIDEO_CODEC = #{videoCodec}
+        , AUDIO_CODEC = #{audioCodec}
+        , BITRATE = #{bitrate}
+        , TAGS = #{tags}
+    WHERE 
+        FILE_NO = #{fileNo}
+</update>
+
 
 </mapper>

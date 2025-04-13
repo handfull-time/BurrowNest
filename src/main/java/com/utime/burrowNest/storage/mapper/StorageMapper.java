@@ -15,6 +15,16 @@ public interface StorageMapper {
 	 */
 	int CreateFile();
 	/**
+	 * 파일 확장자 종류
+	 * @return
+	 */
+	int CreateFileExtension();
+	/**
+	 * 섬네일 테이블 생성
+	 * @return
+	 */
+	int CreateFileThumbnail();
+	/**
 	 * 문서 파일 테이블 생성 
 	 * @return
 	 */
