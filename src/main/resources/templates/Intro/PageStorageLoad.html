@@ -5,18 +5,19 @@
         <p class="text-sm text-gray-500">진행을 클릭하면 설정이 저장되고 저장소 검색을 진행 합니다.</p>
         <p class="text-sm text-gray-500">검색할 양이 많을 경우 오래 걸릴 수 있으니 기다려 주세요.</p>
         <div class="bg-gray-50 p-6 font-sans">
-		  <div class="max-w-xl mx-auto bg-white shadow-lg rounded-xl p-6 space-y-4">
+        	<div class="max-w-xl mx-auto bg-white shadow-lg rounded-xl p-6 space-y-4">
+        	
 		    <div id="status" class="text-lg font-semibold text-green-600 text-center"></div>
 		
 		    <div id="message" class="text-gray-700 text-center text-base font-medium">메시지</div>
 		
 		    <div class="relative w-full h-6 bg-gray-200 rounded-full overflow-hidden">
-		      <div id="progressBar" class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-300 ease-in-out" style="width: 0%;"></div>
+		    	<div id="progressBar" class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-300 ease-in-out" style="width: 0%;"></div>
 		    </div>
 		
 		    <div class="flex justify-between text-sm text-gray-600">
-		      <span id="progressText">0 / 0</span>
-		      <span id="progressPercent">0%</span>
+		      	<span id="progressText">0 / 0</span>
+		      	<span id="progressPercent">0%</span>
 		    </div>
 		  </div>
 		</div>
@@ -27,29 +28,36 @@
 	    let stompClient = null;
 	
 	    function connectWebSocket() {
-	      const socket = new SockJS("/ws-stomp");
-	      stompClient = Stomp.over(socket);
-	      stompClient.connect({}, () => {
-	        stompClient.subscribe("/topic/search-status", (msg) => {
-	          const data = JSON.parse(msg.body);
-	          updateProgress(data);
-	        });
-	      });
+	    	const socket = new SockJS("/ws-stomp");
+	    	stompClient = Stomp.over(socket);
+	    	stompClient.connect({}, () => {
+	    		stompClient.subscribe("/topic/search-status", (msg) => {
+	    			const data = JSON.parse(msg.body);
+	    			updateProgress(data);
+	    		});
+	    	});
 	    }
+	    
+	    const eleMessage = document.getElementById("message");
+	    const eleProgressText = document.getElementById("progressText");
+	    const eleProgressBar = document.getElementById("progressBar");
+	    const eleProgressPercent = document.getElementById("progressPercent");
+	    const eleStatus = document.getElementById("status");
 	
 	    function updateProgress({ total, progress, message, done }) {
-	      const percent = total > 0 ? Math.floor((progress / total) * 100) : 0;
-	
-	      document.getElementById("message").textContent = message || "";
-	      document.getElementById("progressText").textContent = `${progress} / ${total}`;
-	      document.getElementById("progressBar").style.width = `${percent}%`;
-	      document.getElementById("progressPercent").textContent = `${percent}%`;
-	
-	      if (done) {
-	        document.getElementById("status").textContent = "✅ 완료";
-	      } else {
-	        document.getElementById("status").textContent = "";
-	      }
+	    	
+	    	const percent = total > 0 ? Math.floor((progress / total) * 100) : 0;
+	    	
+	    	eleMessage.textContent = message || "";
+	    	eleProgressText.textContent = `${progress} / ${total}`;
+	    	eleProgressBar.style.width = `${percent}%`;
+	    	eleProgressPercent.textContent = `${percent}%`;
+	    	
+	    	if (done) {
+	    		eleStatus.textContent = "✅ 완료";
+	    	} else {
+	    		eleStatus.textContent = "";
+	    	}
 	    }
 	    
     	async function apply(){
@@ -59,8 +67,7 @@
 
             const encPw = encrypt.encrypt( document.getElementById("pwd1").value );	
     	
-            const storageListEle = document.getElementById("storageList");
-            const storageList = [];
+            const storageList = getStorageListValues();
             
     		const requestData = {
     		        token: /*[[${unique.token}]]*/ null,

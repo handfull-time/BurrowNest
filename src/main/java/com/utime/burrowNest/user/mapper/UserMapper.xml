@@ -38,7 +38,9 @@
 	<insert id="insertLoginRecord" parameterType="map">
 		INSERT INTO BN_USER_LOGIN_RECORD (
 			IP
-			,USER_AGENT
+			<if test="req.userAgent != null and req.userAgent != '' ">
+				,USER_AGENT
+			</if>
 			,STATUS
 			,REQ_ID
 			<if test="user != null ">
@@ -46,7 +48,9 @@
 			</if>
 		) VALUES (
 			#{req.ip}
-			,#{req.userAgent}
+			<if test="req.userAgent != null and req.userAgent != '' ">
+				,#{req.userAgent}
+			</if>
 			,#{status}
 			,#{req.id}
 			<if test="user != null ">

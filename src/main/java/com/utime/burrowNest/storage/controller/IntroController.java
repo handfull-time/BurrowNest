@@ -43,6 +43,13 @@ public class IntroController {
 	@Autowired
 	private AuthService authService;
 	
+	/**
+	 * 인트로 페이지
+	 * @param request
+	 * @param model
+	 * @param user
+	 * @return
+	 */
 	@GetMapping(path = { "Intro.html" })
     public String BeginIntro(HttpServletRequest request, ModelMap model, UserVo user) {
 		
@@ -58,6 +65,11 @@ public class IntroController {
 		}		
     }
 	
+	/**
+	 * 저장소 목록을 보여질 팝업창
+	 * @param model
+	 * @return
+	 */
 	@GetMapping(path = { "Dir.layer" })
     public String BeginIntroDirListLayer(ModelMap model) {
 		final File [] roots = File.listRoots();
@@ -73,6 +85,12 @@ public class IntroController {
 		return "Intro/DirLayer";
     }
 	
+	/**
+	 * 초기 정보를 저장한다.
+	 * @param request
+	 * @param req
+	 * @return
+	 */
 	@ResponseBody
 	@PostMapping(path = { "SaveInit.json" })
     public ReturnBasic SaveInitinfor(HttpServletRequest request, @RequestBody InitInforReqVo req) {
@@ -82,11 +100,17 @@ public class IntroController {
 		return authService.saveInitInfor(req);
     }
 	
+	/**
+	 * 패스 정보를 얻어온다.
+	 * @param path
+	 * @return
+	 */
 	@ResponseBody
 	@GetMapping("PathList.json")
     public List<DirectoryDto> list(@RequestParam String path) {
         
 		if( userService.IsInit() ) {
+			// 이미 초기화 했다면 무효
 			return null;
 		}
 		

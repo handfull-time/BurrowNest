@@ -24,7 +24,7 @@ public class WhiteAddressList {
 			, "/Error/"
 			, "/error/"
 			, "/Intro/"
-			, "/Burrow-h2"
+			, "/DbConsoleH2/"
 		};
 	
 	public static final Set<String> whiteListPaths = Arrays.stream(AddressList)

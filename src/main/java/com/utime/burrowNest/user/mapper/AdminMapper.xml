@@ -13,7 +13,7 @@
 	</insert>
 
 	<!-- 어드민 계정 추가 -->
-	<insert id="insertAdmin">
+	<insert id="insertAdmin" parameterType="map">
 		INSERT INTO BN_ADMIN (
 			AUTH_DATA
 			, UPDATE_DATE
@@ -34,11 +34,17 @@
 	<insert id="insertUser" parameterType="com.utime.burrowNest.user.vo.UserVo">
 		INSERT INTO BN_USER (
 			, UPDATE_DATE 
+			, ENABLED
 			, ID 
+			, NICK_NAME 
+			, ICON 
 			, STORAGES 
 		) VALUES (
 			CURRENT_TIMESTAMP
+			, 'N'
 			, #{id}
+			, #{nickname}
+			, #{profileImg}
 			, #{rootPath, typeHandler=com.utime.burrowNest.user.typeHandler.LongListTypeHandler}
 		)
 	</insert>

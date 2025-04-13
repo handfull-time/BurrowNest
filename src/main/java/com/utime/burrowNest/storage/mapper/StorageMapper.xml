@@ -2,5 +2,127 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.utime.burrowNest.storage.mapper.StorageMapper">
 
+<insert id="CreateDirectory">
+	CREATE TABLE BN_DIRECTORY (
+		NO BIGINT PRIMARY KEY AUTO_INCREMENT
+		, REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP <!-- 생성일 -->
+		, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
+		, ENABLED BOOLEAN DEFAULT FALSE <!-- 사용 여부. T:사용, F:미사용 -->
+		, PARENT_NO	BIGINT NOT NULL	<!-- 부모 번호 -->
+		, HAS_CHILD	BOOLEAN DEFAULT FALSE NOT NULL <!-- 자식 여부. T:있다, F:없다 -->
+		, CREATION TIMESTAMP NOT NULL <!-- 폴더 생성일 -->
+		, LAST_MODIFIED TIMESTAMP NOT NULL <!-- 폴더 수정일 -->
+		, NAME CHARACTER VARYING(255) NOT NULL <!-- 순수  이름 -->
+		, ABSOLUTE_PATH	CHARACTER VARYING(2048) <!-- 풀 경로 -->
+		, FOREIGN KEY(PARENT_NO) REFERENCES BN_DIRECTORY(NO) ON DELETE CASCADE
+	)
+</insert>
+
+<insert id="CreateFile">
+	CREATE TABLE BN_FILE (
+		NO BIGINT PRIMARY KEY AUTO_INCREMENT
+		, REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP <!-- 생성일 -->
+		, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
+		, ENABLED BOOLEAN DEFAULT FALSE <!-- 사용 여부 -->
+		, PARENT_NO	BIGINT NOT NULL	<!-- 부모 번호 -->
+		, FILE_LENGTH BIGINT NOT NULL <!-- 파일 크기 -->
+		, FILE_TYPE ENUM('Basic', 'Document', 'Image', 'Video', 'Audio', 'Archive' ) NOT NULL <!-- 파일 종류 -->
+		, CREATION TIMESTAMP NOT NULL <!-- 폴더 생성일 -->
+		, LAST_MODIFIED TIMESTAMP NOT NULL <!-- 폴더 수정일 -->
+		, EXTENSION CHARACTER VARYING(16) <!-- 파일 확장자 -->
+		, NAME CHARACTER VARYING(255) NOT NULL <!-- 순수 이름 확장자 미포함 -->
+		, FOREIGN KEY(PARENT_NO) REFERENCES BN_DIRECTORY(NO) ON DELETE CASCADE
+	)
+</insert>
+
+<insert id="CreateFileDocument">
+	CREATE TABLE BN_FILE_DOCUMENT (
+		FILE_NO BIGINT PRIMARY KEY
+		, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
+		, TITLE CHARACTER VARYING(128) DEFAULT NULL <!-- 제목 -->
+		, SUBJECT CHARACTER VARYING(128) DEFAULT NULL <!-- 주제 -->
+		, AUTHOR CHARACTER VARYING(128) DEFAULT NULL <!-- 만든이 -->
+		, MANAGER CHARACTER VARYING(128) DEFAULT NULL <!-- 관리자 -->
+		, COMPANY CHARACTER VARYING(128) DEFAULT NULL  <!-- 회사 -->
+		, CATEGORY CHARACTER VARYING(128) DEFAULT NULL  <!-- 범주 -->
+		, KEYWORDS CHARACTER VARYING(128) DEFAULT NULL  <!-- 키워드 -->
+		, NOTES CHARACTER VARYING(128) DEFAULT NULL <!-- 메모 --> 
+		, FOREIGN KEY(FILE_NO) REFERENCES BN_FILE(NO) ON DELETE CASCADE
+	)
+</insert>
+
+<insert id="CreateFileImage">
+	CREATE TABLE BN_FILE_IMAGE (
+		FILE_NO BIGINT PRIMARY KEY
+		, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
+		, CAMERA_MODEL CHARACTER VARYING(64) DEFAULT NULL  <!-- 카메라 모델명 -->
+		, CAMERA_MANUFACTURER CHARACTER VARYING(64) DEFAULT NULL <!-- 카메라 제조사 -->
+		, APERTURE_VALUE REAL DEFAULT 0   <!-- 조리개 값 -->
+		, SHUTTER_SPEED REAL DEFAULT 0    <!-- 셔터 속도 -->
+		, ISO_VALUE INT  DEFAULT 0       <!-- ISO 감도 -->
+		, FOCAL_LENGTH REAL DEFAULT 0    <!-- 초점 거리 -->
+		, CAPTURE_DATE DATE DEFAULT NULL  <!-- 촬영 날짜 -->
+		, CAPTURE_TIME TIME DEFAULT NULL  <!-- 촬영 시간 -->
+		, IMAGE_WIDTH INT  DEFAULT 0      <!-- 이미지 너비 -->
+		, IMAGE_HEIGHT INT  DEFAULT 0     <!-- 이미지 높이 -->
+		, GPS_LATITUDE NUMERIC(10, 7)  DEFAULT NULL     <!-- GPS 위도 -->
+		, GPS_LONGITUDE NUMERIC(10, 7)  DEFAULT NULL    <!-- GPS 경도 -->
+		, FLASH_USED BOOLEAN DEFAULT FALSE           <!-- 플래시 사용 여부 -->
+		, WHITE_BALANCE CHARACTER VARYING(32) DEFAULT NULL    <!-- 화이트 밸런스 설정 -->
+		, SCENE_MODE CHARACTER VARYING(32) DEFAULT NULL       <!-- 촬영 장면 모드 -->
+		, SOFTWARE_VERSION CHARACTER VARYING(32) DEFAULT NULL <!-- 사용된 소프트웨어 버전 -->
+	    , THUMBNAIL BINARY VARYING(307200) DEFAULT NULL <!-- 섬네일 320PX -->
+		, FOREIGN KEY(FILE_NO) REFERENCES BN_FILE(NO) ON DELETE CASCADE
+	)
+</insert>
+
+<insert id="CreateFileVideo">
+	CREATE TABLE BN_FILE_VIDEO (
+		FILE_NO BIGINT PRIMARY KEY
+		, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
+		, DURATION INT DEFAULT 0 <!-- 비디오 길이(): 비디오 파일의 총 재생 시간. -->
+		, RESOLUTION CHARACTER VARYING(32) DEFAULT NULL<!-- 해상도(): 비디오 화면의 픽셀 크기(예: 1920x1080). -->
+		, FRAME_RATE REAL DEFAULT 0 <!-- 프레임 속도(): 초당 프레임 수(FPS). -->
+		, VIDEO_CODEC CHARACTER VARYING(32)<!-- 비디오 코덱(): 비디오 파일에서 사용된 코덱(예: H.264, H.265). -->
+		, AUDIO_CODEC CHARACTER VARYING(32)<!-- - 오디오 코덱(): 오디오 파일에서 사용된 코덱(예: AAC, MP3). -->
+		, BITRATE INT DEFAULT 0 <!-- - 비트레이트(): 비디오 및 오디오의 비트레이트. -->
+		, TAGS CHARACTER VARYING(255) DEFAULT NULL <!-- - 태그(): 비디오 파일과 관련된 메타데이터 태그. -->
+	    , THUMBNAIL BINARY VARYING(307200) DEFAULT NULL <!-- 섬네일 320PX -->
+		, FOREIGN KEY(FILE_NO) REFERENCES BN_FILE(NO) ON DELETE CASCADE
+	)
+</insert>
+
+<insert id="CreateFileAudio">
+	CREATE TABLE BN_FILE_AUDIO (
+		FILE_NO BIGINT PRIMARY KEY
+		, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
+	    , DURATION INT DEFAULT 0   <!-- 총 재생 시간: 초 또는 분 단위 -->
+	    , AUDIO_FORMAT CHARACTER VARYING(16)    <!-- 오디오 형식: 파일 형식 (예: MP3, WAV, FLAC) -->
+	    , SAMPLE_RATE INT  DEFAULT 0   <!-- 샘플 속도: Hz 단위 (예: 44100) -->
+	    , CHANNELS CHARACTER VARYING(16)    <!-- 채널: 모노, 스테레오 또는 서라운드 -->
+	    , BIT_DEPTH INT  DEFAULT 0   <!-- 비트 깊이: 음질을 결정하는 비트 깊이 (예: 16-bit, 24-bit) -->
+	    , AUDIO_CODEC CHARACTER VARYING(16)    <!-- 오디오 코덱: 압축 방식 및 코덱 (예: AAC, MP3) -->
+	    , BITRATE INT  DEFAULT 0   <!-- 비트레이트: 데이터 속도 (kbps, 예: 320kbps) -->
+	    , VOLUME_LEVEL_MIN REAL  DEFAULT 0   <!-- 최소 볼륨 -->
+	    , VOLUME_LEVEL_MAX FLOAT  DEFAULT 0   <!-- 최대 볼륨 -->
+	    , VOLUME_LEVEL_AVG FLOAT   DEFAULT 0  <!-- 평균 볼륨 -->
+	    , FREQUENCY_SPECTRUM TEXT   DEFAULT 0  <!-- 주파수 대역: 저음, 중음, 고음 분석 -->
+		, SONG_TITLE CHARACTER VARYING(128) <!-- 곡명: 오디오 트랙의 제목  -->
+		, ALBUM_TITLE CHARACTER VARYING(128) <!-- 앨범명: 관련 앨범의 제목 -->
+		, ARTIST_NAME CHARACTER VARYING(128) <!-- 아티스트: 오디오 트랙을 만든 아티스트 -->
+		, RELEASE_YEAR INT DEFAULT 0 <!-- 연도: 발매된 연도 -->
+	    , EMBEDDED_LYRICS CHARACTER VARYING(102400) DEFAULT 0 <!-- 내장된 가사 -->
+	    , THUMBNAIL BINARY VARYING(307200) DEFAULT NULL <!-- 섬네일 320PX -->
+		, FOREIGN KEY(FILE_NO) REFERENCES BN_FILE(NO) ON DELETE CASCADE
+	)
+</insert>
+
+<insert id="CreateFileArchive">
+	CREATE TABLE BN_FILE_ARCHIVE (
+		FILE_NO BIGINT PRIMARY KEY
+		, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
+		, FOREIGN KEY(FILE_NO) REFERENCES BN_FILE(NO) ON DELETE CASCADE
+	)
+</insert>
 
 </mapper>

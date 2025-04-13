@@ -107,6 +107,7 @@ public class AuthenticationController {
     public ResponseEntity<?> login( HttpServletRequest request, HttpServletResponse response, @RequestBody LoginReqVo reqVo) throws Exception {
     	
 		reqVo.setIp( BurrowUtils.getRemoteAddress( request ) );
+		reqVo.setUserAgent( request.getHeader("User-Agent") );
 		
     	final ResUserVo result = authService.procLogin(request, response, reqVo);
     	

@@ -9,12 +9,12 @@ spring:
   datasource:
     url: jdbc:h2:file:./data/burrownest.h2;AUTO_SERVER=TRUE
     driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    username: BurrowDbAgent
+    password: 91-3f48#84
   h2:
     console:
       enabled: true
-      path: /Burrow-h2
+      path: /DbConsoleH2
   mvc:
     pathmatch:
       matching-strategy: ant-path-matcher

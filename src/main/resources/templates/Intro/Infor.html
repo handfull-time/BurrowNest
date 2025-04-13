@@ -39,11 +39,12 @@
     <div class="min-h-screen flex items-center justify-center">
         <div class="w-full max-w-2xl p-6 bg-white rounded-2xl shadow-xl max-h-[600px] overflow-auto">
         	<form name="initForm">
-	            <div id="page1" class="intro-page hidden" th:insert="~{Intro/Page1 :: content}"></div>
-	            <div id="page2" class="intro-page hidden" th:insert="~{Intro/Page2 :: content}"></div>
- 	            <div id="page3" class="intro-page hidden" th:insert="~{Intro/Page3 :: content}"></div>
-	            <div id="page4" class="intro-page hidden" th:insert="~{Intro/Page4 :: content}"></div>
-	            <div id="page5" class="intro-page hidden" th:insert="~{Intro/Page5 :: content}"></div>
+	            <div id="PageIntroduce" class="intro-page hidden" th:insert="~{Intro/PageIntroduce :: content}"></div>
+	            <div id="PageAgree" class="intro-page hidden" th:insert="~{Intro/PageAgree :: content}"></div>
+ 	            <div id="PagePasswd" class="intro-page hidden" th:insert="~{Intro/PagePasswd :: content}"></div>
+	            <div id="PageStorageSelect" class="intro-page hidden" th:insert="~{Intro/PageStorageSelect :: content}"></div>
+	            <div id="PageStorageLoad" class="intro-page hidden" th:insert="~{Intro/PageStorageLoad :: content}"></div>
+	            <div id="PageComplete" class="intro-page hidden" th:insert="~{Intro/PageComplete :: content}"></div>
             </form>
         </div>
     </div>
