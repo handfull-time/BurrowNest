@@ -3,7 +3,7 @@
 	th:fragment="modalView" >
 
 <!-- 팝업을 위한 컨테이너 -->
-<div id="popupContainer">
+<div id="popupContainer" >
     <div id="popupOverlay" class="fixed inset-0 z-45 bg-black bg-opacity-50 hidden flex justify-center items-center">
         <div id="popupWindow" class="modalTop bg-white rounded-lg shadow-lg relative">
             <div id="popupContentContainer">
@@ -101,12 +101,16 @@
         		container.innerHTML = html;
         		
         		// 새로 추가된 script 태그 실행 (Thymeleaf script 실행)
-        		container.querySelectorAll("script").forEach(oldScript => {
-        			const newScript = document.createElement("script");
-        			newScript.textContent = oldScript.textContent;
-        			document.body.appendChild(newScript);
-        			oldScript.remove();
-        		});
+        		console.info('popupIndex', popupIndex);
+        		
+        		if( popupIndex === 1 ){
+            		container.querySelectorAll("script").forEach(oldScript => {
+            			const newScript = document.createElement("script");
+            			newScript.textContent = oldScript.textContent;
+            			document.body.appendChild(newScript);
+            			oldScript.remove();
+            		});
+        		}
         	})
         	.catch(error => console.error("에러 발생:", error) );
     }
@@ -114,6 +118,7 @@
     // 팝업 닫기 함수 (해당 모달만 닫기)
     function closePopup(buttonElement) {
         const modal = buttonElement.closest(".fixed");
+        
         if (modal) {
             modal.remove();
         }

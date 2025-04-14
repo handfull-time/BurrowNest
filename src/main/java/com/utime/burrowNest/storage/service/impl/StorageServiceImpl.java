@@ -10,7 +10,9 @@ import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.user.vo.InitInforReqVo;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StorageServiceImpl implements StorageService {
@@ -43,7 +45,26 @@ public class StorageServiceImpl implements StorageService {
 
 	@Override
 	public ReturnBasic saveInitStorage(InitInforReqVo req) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		new Thread( new Runnable(){
+			public void run() {
+				
+				log.info("thread call");
+//				
+//				final MessageDataVo message = new MessageDataVo();
+//				message.setMessage("aaaaaaaaaaaaaaaa");
+//				message.setProgress(10);
+//				message.setTotal(1000);
+//
+//	            messagingTemplate.convertAndSend("/topic/search-status", message);
+//
+//	            try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
+//	            
+//	            message.setTotal(300);
+
+			};
+		}).start();
+		
+		return new ReturnBasic();
 	}
 }

@@ -19,12 +19,10 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class RsaEncDec {
-	
-	private static final Logger log = LoggerFactory.getLogger(RsaEncDec.class);
 	
 	private static final String KeyEncAlgorithm = "RSA";
 

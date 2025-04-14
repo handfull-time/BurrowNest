@@ -27,8 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 class AuthServiceImpl implements AuthService {
 	
-//	private final Logger log = LoggerFactory.getLogger(this.getClass());
-	
 	final CacheIntervalMap<String, String> intervalMap = new CacheIntervalMap<>(10L, TimeUnit.MINUTES);
 	
 	@Autowired

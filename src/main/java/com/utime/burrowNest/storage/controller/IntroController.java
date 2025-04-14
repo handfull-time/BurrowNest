@@ -101,10 +101,10 @@ public class IntroController {
 		
 		req.setIp( BurrowUtils.getRemoteAddress(request) );
 		
-		final ReturnBasic userRes = authService.saveInitInfor(req);
-		if( userRes.isError() ) {
-			return userRes;
-		}
+//		final ReturnBasic userRes = authService.saveInitInfor(req);
+//		if( userRes.isError() ) {
+//			return userRes;
+//		}
 		
 		return storageService.saveInitStorage(req);
     }

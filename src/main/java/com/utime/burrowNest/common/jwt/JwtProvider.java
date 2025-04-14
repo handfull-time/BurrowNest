@@ -8,14 +8,12 @@ import java.util.Optional;
 
 import javax.crypto.SecretKey;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
-import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.common.vo.BurrowDefine;
+import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.user.vo.ResUserVo;
 import com.utime.burrowNest.user.vo.UserVo;
@@ -29,12 +27,12 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class JwtProvider {
 
-	private final Logger log = LoggerFactory.getLogger(this.getClass());
-	
 	private static final long ONE_SECOND = 1000L;
     private static final long ACCESS_EXPIRATION_TIME = 15L * 60L * ONE_SECOND; // 15분
     private static final long PAGING_EXPIRATION_TIME = 1L * 24L * 60L * 60L * ONE_SECOND; // 1일

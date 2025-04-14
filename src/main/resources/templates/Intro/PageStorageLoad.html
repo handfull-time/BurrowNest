@@ -25,7 +25,7 @@
     </div>
     
     <script th:inline="javascript">
-	    /* 
+	    
 	    let stompClient = null;
 	
 	    function connectWebSocket() {
@@ -38,7 +38,7 @@
 	    		});
 	    	});
 	    } 
-	    */
+	    
 	    
 	    const eleMessage = document.getElementById("message");
 	    const eleProgressText = document.getElementById("progressText");
@@ -49,7 +49,34 @@
 	    // 4. 저장 상태가 전달됨.
 	    function updateProgress(receiveData) {
 	    	
-	    	console.log("소켓 데이터 수신 " + receiveData.body);
+	    	console.log("User 소켓 데이터 수신 " + receiveData.body);
+	    	const json = JSON.parse(receiveData.body);
+	    	
+	    	if( Boolean(json.done) ){
+	    		// 작업 완료.
+	    		eleStatus.textContent = "✅ 완료";
+	    		
+	    		socketScript.disconnect();
+	    		// 5. 다음 페이지로 이동
+	    		nextPage('PageStorageSelect', 'PageComplete');
+	    		return;
+	    	}
+
+	    	const total = Number(json.total);
+	    	const progress = Number(json.progress);
+	    	const message  = json.message;
+	    	
+	    	const percent = total > 0 ? Math.floor((progress / total) * 100) : 0;
+	    	
+	    	eleMessage.textContent = message || "";
+	    	eleProgressText.textContent = `${progress} / ${total}`;
+	    	eleProgressBar.style.width = `${percent}%`;
+	    	eleProgressPercent.textContent = `${percent}%`;
+	    }
+	    
+		function publicCallBackStatus(receiveData) {
+	    	
+	    	console.log("public 소켓 데이터 수신 " + receiveData.body);
 	    	const json = JSON.parse(receiveData.body);
 	    	
 	    	if( Boolean(json.done) ){
@@ -79,6 +106,7 @@
 	    function apply(){
 	    	
 	    	// 1. 웹 소켓 접속.
+	    	connectWebSocket();
 	    	
 	    	const wsUrl = /*[[@{/BackEvent}]]*/ null;
 	    	const connectionInfo = new ConnectionInfo(wsUrl, { service: 'Burrow' });
@@ -99,9 +127,9 @@
 	    	socketScript = new SocketScript(connectionInfo);
 	    	
 	    	socketScript.addReceiveInfo(new ReceiveInfo('/user/toFront/RecieveStatus', updateProgress));
-	    	//socketScript.addReceiveInfo(new ReceiveInfo('/toFront/RecieveStatus', publicCallBackStatus));
+	    	socketScript.addReceiveInfo(new ReceiveInfo('/toFront/RecieveStatus', publicCallBackStatus));
 	    	
-	    	socketScript.connect();
+	    	// socketScript.connect();
 	    }
 	    
 	    

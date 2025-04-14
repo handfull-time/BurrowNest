@@ -11,11 +11,11 @@ import org.springframework.stereotype.Component;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component("JwtAccessDenied")
 public class JwtAccessDeniedHandler implements AccessDeniedHandler {
-	
-	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
