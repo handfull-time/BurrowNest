@@ -74,8 +74,6 @@
 	    	eleProgressPercent.textContent = `${percent}%`;
 	    }
 	    
-	    let currentUserKey = null;
-	    
 	    let socketScript = null;
 	    
 	    function apply(){
@@ -88,27 +86,27 @@
 	    	connectionInfo.setOpenHandler((frame) => {
 	    		
 	    		// 2. 접속 성공 하면 user-name 획득
-	    		currentUserKey = frame.headers['user-name'];
+	    		const currentUserKey = frame.headers['user-name'];
 	    		console.log("연결됨", currentUserKey );
 	    		
-	    		
-	    		SaveInit();
+	    		SaveInit( currentUserKey );
 	    	});
 	    	
 	    	connectionInfo.setCloseHandler(() => {
-	    		currentUserKey = null;
 	    		console.log("연결 해제");
 	    	});
 
 	    	socketScript = new SocketScript(connectionInfo);
+	    	
 	    	socketScript.addReceiveInfo(new ReceiveInfo('/user/toFront/RecieveStatus', updateProgress));
 	    	//socketScript.addReceiveInfo(new ReceiveInfo('/toFront/RecieveStatus', publicCallBackStatus));
+	    	
 	    	socketScript.connect();
 	    }
 	    
 	    
 	    // 3. saveInit 호출
-    	async function SaveInit(){
+    	async function SaveInit(wsUser){
     		
     		const encrypt = new JSEncrypt();
             encrypt.setPublicKey(/*[[${unique.publicKey}]]*/ null);
@@ -121,7 +119,7 @@
     		        token: /*[[${unique.token}]]*/ null,
     		        rsaId: /*[[${unique.rsaId}]]*/ null,
     		        pw: encPw,
-    		        wsUserName: currentUserKey,
+    		        wsUserName: wsUser,
     		        roots: storageList
     		    };
     		
