@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.user.service.AuthService;
 import com.utime.burrowNest.user.service.UserService;
@@ -42,6 +43,9 @@ public class IntroController {
 	
 	@Autowired
 	private AuthService authService;
+	
+	@Autowired
+	private StorageService storageService;
 	
 	/**
 	 * 인트로 페이지
@@ -80,7 +84,7 @@ public class IntroController {
 			list.add( f.getPath().toString() );
 		}
 		
-		model.addAttribute("list", list);		
+		model.addAttribute("list", list);
 		
 		return "Intro/DirLayer";
     }
@@ -97,7 +101,12 @@ public class IntroController {
 		
 		req.setIp( BurrowUtils.getRemoteAddress(request) );
 		
-		return authService.saveInitInfor(req);
+		final ReturnBasic userRes = authService.saveInitInfor(req);
+		if( userRes.isError() ) {
+			return userRes;
+		}
+		
+		return storageService.saveInitStorage(req);
     }
 	
 	/**

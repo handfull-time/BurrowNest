@@ -6,7 +6,9 @@ public class InitInforReqVo extends ReqUniqueVo{
 	
 	private String pw;
 	
-	List<String> roots;
+	private List<String> roots;
+	
+	private String wsUserName;
 
 	public String getPw() {
 		return pw;
@@ -24,39 +26,32 @@ public class InitInforReqVo extends ReqUniqueVo{
 		this.roots = roots;
 	}
 
+	public String getWsUserName() {
+		return wsUserName;
+	}
+
+	public void setWsUserName(String wsUserName) {
+		this.wsUserName = wsUserName;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("InitInforReq [");
-		if (pw != null) {
-			builder.append("pw=");
-			builder.append(pw);
-			builder.append(", ");
-		}
-		if (roots != null) {
-			builder.append("roots=");
-			builder.append(roots);
-			builder.append(", ");
-		}
-		if (token != null) {
-			builder.append("token=");
-			builder.append(token);
-			builder.append(", ");
-		}
-		if (ip != null) {
-			builder.append("ip=");
-			builder.append(ip);
-			builder.append(", ");
-		}
-		if (rsaId != null) {
-			builder.append("rsaId=");
-			builder.append(rsaId);
-			builder.append(", ");
-		}
-		if (publicKey != null) {
-			builder.append("publicKey=");
-			builder.append(publicKey);
-		}
+		builder.append("InitInforReqVo [");
+		if (pw != null)
+			builder.append("pw=").append(pw).append(", ");
+		if (roots != null)
+			builder.append("roots=").append(roots).append(", ");
+		if (wsUserName != null)
+			builder.append("wsUserName=").append(wsUserName).append(", ");
+		if (token != null)
+			builder.append("token=").append(token).append(", ");
+		if (ip != null)
+			builder.append("ip=").append(ip).append(", ");
+		if (rsaId != null)
+			builder.append("rsaId=").append(rsaId).append(", ");
+		if (publicKey != null)
+			builder.append("publicKey=").append(publicKey);
 		builder.append("]");
 		return builder.toString();
 	}

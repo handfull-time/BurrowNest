@@ -3,7 +3,11 @@ package com.utime.burrowNest.storage.service.impl;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.storage.service.StorageService;
+import com.utime.burrowNest.user.vo.InitInforReqVo;
 
 import lombok.RequiredArgsConstructor;
 
@@ -12,6 +16,9 @@ import lombok.RequiredArgsConstructor;
 public class StorageServiceImpl implements StorageService {
 	
 	private final SimpMessagingTemplate messagingTemplate;
+	
+	final static ObjectWriter objMapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
+	
 	
 	// socket 예.
     public void searchFiles(String keyword) {
@@ -33,4 +40,10 @@ public class StorageServiceImpl implements StorageService {
             messagingTemplate.convertAndSend("/topic/search-status", "❌ 검색 중 오류 발생");
         }
     }
+
+	@Override
+	public ReturnBasic saveInitStorage(InitInforReqVo req) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

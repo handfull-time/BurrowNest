@@ -6,10 +6,14 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.type.JdbcType;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
+import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.mybatis.spring.boot.autoconfigure.SpringBootVFS;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+
+import com.utime.burrowNest.storage.typeHandler.EArchiveTypeTypeHandler;
+import com.utime.burrowNest.storage.vo.EArchiveType;
 
 /**
  * DB 환경 정보
@@ -33,5 +37,11 @@ public class DbConfig {
 	public SqlSessionTemplate sqlSession(SqlSessionFactory sqlSessionFactory) {
 		return new SqlSessionTemplate(sqlSessionFactory);
 	}
+	
+	@Bean
+    public ConfigurationCustomizer configurationCustomizer() {
+        return configuration -> configuration.getTypeHandlerRegistry()
+            .register(EArchiveType.class, EArchiveTypeTypeHandler.class);
+    }
 
 }

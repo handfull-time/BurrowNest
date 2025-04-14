@@ -13,7 +13,7 @@ public class BnDirectory {
     /**
      * The primary key of the directory entity.
      */
-    private Long no;
+    private long no;
 
     /**
      * The registration date of the directory.
@@ -29,18 +29,19 @@ public class BnDirectory {
      * Indicates whether the directory is enabled or not. 
      * True for enabled, false for disabled.
      */
-    private Boolean enabled;
+    private boolean enabled;
 
     /**
      * The parent directory's primary key. Represents the parent-child relationship.
+     * root is -1;
      */
-    private Long parentNo;
+    private long parentNo;
 
     /**
      * Indicates whether the directory has child directories.
      * True for having children, false otherwise.
      */
-    private Boolean hasChild;
+    private boolean hasChild;
 
     /**
      * The creation timestamp of the folder.

@@ -1,52 +1,194 @@
 package com.utime.burrowNest.storage.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import com.utime.burrowNest.storage.vo.BnDirectory;
+import com.utime.burrowNest.storage.vo.BnFile;
+import com.utime.burrowNest.storage.vo.BnFileArchive;
+import com.utime.burrowNest.storage.vo.BnFileAudio;
+import com.utime.burrowNest.storage.vo.BnFileDocument;
+import com.utime.burrowNest.storage.vo.BnFileImage;
+import com.utime.burrowNest.storage.vo.BnFileVideo;
 
 @Mapper
 public interface StorageMapper {
 	/**
-	 * 디렉터리 테이블 생성 
+	 * Dir 권한 추가하기
+	 * @param dirNo
+	 * @param userNo
+	 * @param accType
 	 * @return
 	 */
-	int CreateDirectory();
+	int InsertDirectoryAccess(@Param("dirNo") long dirNo, @Param("userNo") int userNo, @Param("accType") int accType);
+
 	/**
-	 * 파일 테이블 생성 
+	 * 파일 권한 추가하기
+	 * @param dirNo
+	 * @param userNo
+	 * @param accType
 	 * @return
 	 */
-	int CreateFile();
+	int InsertFileAccess(@Param("fileNo") long fileNo, @Param("userNo") int userNo, @Param("accType") int accType);
+
 	/**
-	 * 파일 확장자 종류
+	 * dir 추가
+	 * @param dir
 	 * @return
 	 */
-	int CreateFileExtension();
+	int insertBnDirectory( BnDirectory dir );
+	
 	/**
-	 * 섬네일 테이블 생성
+	 * dir 수정
+	 * @param dir
 	 * @return
 	 */
-	int CreateFileThumbnail();
+	int updateBnDirectory( BnDirectory dir );
+	
 	/**
-	 * 문서 파일 테이블 생성 
+	 * dir 조회
+	 * @param dirNo
 	 * @return
 	 */
-	int CreateFileDocument();
+	BnDirectory selectBnDirectoryByNo( long dirNo );
+	
 	/**
-	 * 이미지 파일 테이블 생성 
+	 * 삭제
+	 * @param dirNo
 	 * @return
 	 */
-	int CreateFileImage();
+	int deleteBnDirectoryByNo( long dirNo );
+	
 	/**
-	 * 비디오 파일 테이블 생성 
+	 * 파일 추가.
+	 * @param file
 	 * @return
 	 */
-	int CreateFileVideo();
+	int insertBnFile( BnFile file );
+	
 	/**
-	 * 오디오 파일 테이블 생성 
+	 * 파일 조회
+	 * @param fileNo
 	 * @return
 	 */
-	int CreateFileAudio();
+	BnFile selectBnFileByNo( long fileNo );
+	
 	/**
-	 * 압축 파일 테이블 생성 
+	 * 파일 수정
+	 * @param file
 	 * @return
 	 */
-	int CreateFileArchive();
+	int updateBnFile( BnFile file );
+	
+	/**
+	 * 파일 삭제
+	 * @param fileNo
+	 * @return
+	 */
+	int deleteBnFileById( long fileNo );
+	
+	/**
+	 * file doc 추가.
+	 * @param document
+	 * @return
+	 */
+	int insertBnFileDocument( BnFileDocument document );
+	
+	/**
+	 * file doc 조회
+	 * @param fileNo
+	 * @return
+	 */
+	BnFileDocument selectBnFileDocumentByFileNo( long fileNo );
+	
+	/**
+	 * 파일 doc 수정
+	 * @param document
+	 * @return
+	 */
+	int updateBnFileDocument( BnFileDocument document );
+	
+	/**
+	 * 파일 이미지 추가
+	 * @param image
+	 * @return
+	 */
+	int insertBnFileImage( BnFileImage image );
+	
+	/**
+	 * 파일 이미지 조회
+	 * @param fileNo
+	 * @return
+	 */
+	BnFileImage selectBnFileImageByFileNo( long fileNo );
+	
+	/**
+	 * 파일 이미지 수정
+	 * @param image
+	 * @return
+	 */
+	int updateBnFileImage( BnFileImage image );
+	
+	/**
+	 * 파일 비디오 추가
+	 * @param video
+	 * @return
+	 */
+	int insertBnFileVideo( BnFileVideo video );
+	
+	/**
+	 * 파일 비디오 조회
+	 * @param fileNo
+	 * @return
+	 */
+	BnFileVideo selectBnFileVideoByFileNo( long fileNo );
+	
+	/**
+	 * 파일 비디오 수정
+	 * @param video
+	 * @return
+	 */
+	int updateBnFileVideo( BnFileVideo video );
+	
+	/**
+	 * 오디오 파일 추가
+	 * @param audio
+	 * @return
+	 */
+	int insertBnFileAudio( BnFileAudio audio );
+	
+	/**
+	 * 오디오 파일 조회
+	 * @param fileNo
+	 * @return
+	 */
+	BnFileAudio selectBnFileAudioByFileNo( long fileNo );
+	/**
+	 * 오디오 파일 수정
+	 * @param audio
+	 * @return
+	 */
+	int updateBnFileAudio( BnFileAudio audio );
+	
+	/**
+	 * 압축 파일 추가
+	 * @param archive
+	 * @return
+	 */
+	int insertBnFileArchive( BnFileArchive archive );
+	
+	/**
+	 * 압축 파일 조회
+	 * @param fileNo
+	 * @return
+	 */
+	BnFileArchive selectBnFileArchiveByFileNo( long fileNo );
+	
+	/**
+	 * 압축 파일 수정
+	 * @param archive
+	 * @return
+	 */
+	int updateBnFileArchive( BnFileArchive archive );
+	
 }
