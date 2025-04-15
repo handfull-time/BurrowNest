@@ -4,14 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import com.utime.burrowNest.user.service.UserService;
+import com.utime.burrowNest.user.service.AuthService;
 import com.utime.burrowNest.user.vo.UserVo;
 
 @Controller
 public class RootController {
 	
 	@Autowired
-	private UserService userService;
+	private AuthService authService;
 	
 	/**
 	 * Root 
@@ -21,7 +21,7 @@ public class RootController {
 	@GetMapping(path = { "/", "Index.html" })
     public String root(UserVo user) {
 		
-		if( ! userService.IsInit() ) {
+		if( ! authService.IsInit() ) {
 			return "redirect:/Intro/Intro.html";
 		}
 		

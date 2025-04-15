@@ -1,7 +1,6 @@
 package com.utime.burrowNest.user.vo;
 
 import java.util.Date;
-import java.util.List;
 
 import com.utime.burrowNest.common.vo.EJwtRole;
 
@@ -15,16 +14,14 @@ public class UserVo {
 	Date regDate;
 	/** 수정일 */
 	Date updateDate;
-	/** id */
-	String id;
 	/** 사용 여부 */
 	boolean enabled;
+	/** id */
+	String id;
 	/** 닉네임 */
 	String nickname;
 	/** 내 이미지 */
 	String profileImg;
-	/** 관리 패스 */
-	List<Long> rootPath;
 	/** 권한 */
 	EJwtRole role;
 	/** 비고 */

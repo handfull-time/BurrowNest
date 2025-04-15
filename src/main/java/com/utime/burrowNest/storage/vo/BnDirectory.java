@@ -30,6 +30,11 @@ public class BnDirectory {
      * True for enabled, false for disabled.
      */
     private boolean enabled;
+    
+    /**
+     * Indicates whether this directory is publicly accessible by all users.
+     */
+    private boolean publicAccessible;
 
     /**
      * The parent directory's primary key. Represents the parent-child relationship.

@@ -10,10 +10,5 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 class UserServiceImpl implements UserService {
 	
-	@Override
-	public boolean IsInit() {
-		return false;
-	}
-	
 	
 }

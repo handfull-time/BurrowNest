@@ -35,6 +35,12 @@ class AuthServiceImpl implements AuthService {
 	@Autowired
 	private UserDao userDao;
 	
+	@Override
+	public boolean IsInit() {
+		
+		return userDao.IsInit();
+	}
+	
 	/**
 	 * Interval 에 추가.
 	 * @param value

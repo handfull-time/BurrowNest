@@ -39,9 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 public class IntroController {
 	
 	@Autowired
-	private UserService userService;
-	
-	@Autowired
 	private AuthService authService;
 	
 	@Autowired
@@ -57,7 +54,7 @@ public class IntroController {
 	@GetMapping(path = { "Intro.html" })
     public String BeginIntro(HttpServletRequest request, ModelMap model, UserVo user) {
 
-		if( ! userService.IsInit() ) {
+		if( ! authService.IsInit() ) {
 			model.addAttribute("unique", authService.getNewGenUnique(request) );
 			return "Intro/Infor";
 		}
@@ -101,10 +98,10 @@ public class IntroController {
 		
 		req.setIp( BurrowUtils.getRemoteAddress(request) );
 		
-//		final ReturnBasic userRes = authService.saveInitInfor(req);
-//		if( userRes.isError() ) {
-//			return userRes;
-//		}
+		final ReturnBasic userRes = authService.saveInitInfor(req);
+		if( userRes.isError() ) {
+			return userRes;
+		}
 		
 		return storageService.saveInitStorage(req);
     }
@@ -118,7 +115,7 @@ public class IntroController {
 	@GetMapping("PathList.json")
     public List<DirectoryDto> list(@RequestParam String path) {
         
-		if( userService.IsInit() ) {
+		if( authService.IsInit() ) {
 			// 이미 초기화 했다면 무효
 			return null;
 		}

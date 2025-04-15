@@ -65,5 +65,10 @@ public class BnFile {
      * The name of the file excluding its extension.
      */
     private String name;
+    
+    /**
+     * extends file information
+     */
+    private AbsBnFileInfor infor;
 
 }

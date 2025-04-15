@@ -11,12 +11,9 @@ import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
 import com.utime.burrowNest.common.vo.StompPrincipal;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * 웹 소켓 통신시 고유값 생성 서비스
  */
-@Slf4j
 @Component("StompHandshakeHandler")
 class HandshakeHandlerImpl extends DefaultHandshakeHandler {
 	

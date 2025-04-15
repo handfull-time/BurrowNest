@@ -12,11 +12,20 @@
 			, ID VARCHAR(32) NOT NULL <!-- ID -->
 			, NICK_NAME VARCHAR(128) NOT NULL <!-- 별명 -->
 			, ICON VARCHAR(32) NOT NULL <!-- 아이콘 이미지 이름 -->
-			, STORAGES CLOB NOT NULL <!-- 루트 저장소 (JSON 문자열 등) -->
+			, ROLE VARCHAR(16) NOT NULL <!-- 권한 -->
 			, NOTE VARCHAR(255) DEFAULT NULL <!-- 비고 -->
 			, DAILY_UPLOAD_LIMIT BIGINT DEFAULT 0 <!-- 하루 업로드 제한 (byte) -->
 			, DAILY_DOWNLOAD_LIMIT BIGINT DEFAULT 0  <!-- 일일 최대 다운로드 용량 -->
 			, MAX_STORAGE_USAGE BIGINT DEFAULT 0 <!-- 저장공간 최대 사용 용량 -->
+		)
+	</insert>
+	
+	<insert id="createUserPw">
+		CREATE TABLE BN_USER_PW (
+			USER_NO INT PRIMARY KEY 
+			, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
+			, AUTH_VALUE VARCHAR(128) NOT NULL <!-- 비번 -->
+			, FOREIGN KEY(USER_NO) REFERENCES BN_USER(NO) ON DELETE CASCADE
 		)
 	</insert>
 	
@@ -67,7 +76,6 @@
 		<result column="ID" 			property="id" />
 		<result column="NICK_NAME" 		property="nickname" />
 		<result column="ICON" 			property="profileImg" />
-		<result column="STORAGES" 		property="rootPath" typeHandler="com.utime.burrowNest.user.typeHandler.LongListTypeHandler" />
 		<result column="NOTE" 			property="note" />
 		<result column="ROLE" 			property="role" />
 		<result column="DAILY_UPLOAD_LIMIT" 	property="dailyUploadLimit" />
@@ -76,19 +84,35 @@
 	</resultMap>
 	
 	<sql id="UserColumn">
-		NO
-		, REG_DATE
+		NO AS "userNo"
+		, REG_DATE 
 		, UPDATE_DATE
 		, ENABLED
-		, ID
-		, NICK_NAME
-		, ICON
-		, STORAGES
-		, NOTE
+		, ID 
+		, NICK_NAME 
+		, ICON AS "profileImg"
+		, NOTE 
 		, ROLE
-		, DAILY_UPLOAD_LIMIT
-		, DAILY_DOWNLOAD_LIMIT
+		, DAILY_UPLOAD_LIMIT 
+		, DAILY_DOWNLOAD_LIMIT 
 		, MAX_STORAGE_USAGE
 	</sql>
+
+	<!-- id 조회 -->	
+	<select id="getId" parameterType="map" resultType="com.utime.burrowNest.user.vo.UserVo">
+		SELECT 
+			<include refid="com.utime.burrowNest.user.mapper.UserMapper.UserColumn" /> 
+		FROM BN_USER
+		WHERE ID = #{id}
+	</select>
+
+	<!-- pw 조회 -->	
+	<select id="getPw" parameterType="map" resultType="String">
+	</select>
+	
+	<!--  -->	
+	<select id="" parameterType="map">
+	</select>
+	
 	
 </mapper>

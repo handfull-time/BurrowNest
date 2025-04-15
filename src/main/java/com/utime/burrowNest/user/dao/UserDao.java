@@ -22,7 +22,7 @@ public interface UserDao {
 	 * @param reqVo
 	 * @return
 	 */
-	ResUserVo procLogin(LoginReqVo reqVo);
+	ResUserVo procLogin(LoginReqVo reqVo)throws Exception ;
 	
 	
 	/**
@@ -30,7 +30,7 @@ public interface UserDao {
 	 * @param user
 	 * @return
 	 */
-	int insertUser(UserVo user) throws Exception;
+	int insertUser(UserVo user, String pw) throws Exception;
 	
 	/**
 	 * 사용자 정보 수정
@@ -39,11 +39,26 @@ public interface UserDao {
 	 * @throws Exception
 	 */
 	int updateUser(UserVo user) throws Exception;
+	
+	/**
+	 * 암호 변경
+	 * @param user
+	 * @param pw
+	 * @return
+	 * @throws Exception
+	 */
+	int updateUserPw(UserVo user, String pw) throws Exception;
 
 	/**
 	 * 사용자 목록 조회
 	 * @return
 	 */
 	List<UserVo> getUserList();
+
+	/**
+	 * 관리자 초기화 했는지 여부 
+	 * @return true:했음.
+	 */
+	boolean IsInit();
 
 }

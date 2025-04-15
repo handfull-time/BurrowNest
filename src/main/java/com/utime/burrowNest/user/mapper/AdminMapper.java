@@ -14,6 +14,12 @@ import com.utime.burrowNest.user.vo.UserVo;
 public interface AdminMapper {
 	
 	/**
+	 * 초기화 했는지 여부
+	 * @return
+	 */
+	boolean IsInit();
+	
+	/**
 	 * 회원 테이블 생성
 	 * @return
 	 */
@@ -44,6 +50,4 @@ public interface AdminMapper {
 	 * @return
 	 */
 	List<UserVo> getUserList();
-
-
 }

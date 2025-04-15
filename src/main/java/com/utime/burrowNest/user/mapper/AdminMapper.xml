@@ -23,6 +23,15 @@
 		)  
 	</insert>
 
+	<!-- 초기화 했는지 여부 -->
+	<select id="IsInit" resultType="boolean">
+		SELECT 
+			CASE COUNT(1) 
+	   			WHEN 1 THEN 1
+				ELSE 0
+	   		END AS RES
+	   	FROM BN_ADMIN
+	</select>
 
 	<!-- 어드민 pw 조회 -->
 	<select id="getAdminPw" resultType="String">
@@ -31,40 +40,26 @@
 
 
 	<!-- 사용자 추가 -->
-	<insert id="insertUser" parameterType="com.utime.burrowNest.user.vo.UserVo">
+	<insert id="insertUser" parameterType="com.utime.burrowNest.user.vo.UserVo" useGeneratedKeys="true" keyProperty="userNo" >
 		INSERT INTO BN_USER (
 			, UPDATE_DATE 
 			, ENABLED
 			, ID 
 			, NICK_NAME 
 			, ICON 
-			, STORAGES 
 		) VALUES (
 			CURRENT_TIMESTAMP
-			, 'N'
+			, #{enabled}
 			, #{id}
 			, #{nickname}
 			, #{profileImg}
-			, #{rootPath, typeHandler=com.utime.burrowNest.user.typeHandler.LongListTypeHandler}
 		)
 	</insert>
 
-
 	<!-- 사용자 목록 조회 -->
-	<select id="getUserList" resultMap="com.utime.burrowNest.user.mapper.UserMapper.UserVoMap">
+	<select id="getUserList" resultType="com.utime.burrowNest.user.vo.UserVo">
 		SELECT
-			NO
-			, REG_DATE 
-			, UPDATE_DATE
-			, ENABLED
-			, ID 
-			, NICK_NAME 
-			, ICON 
-			, STORAGES 
-			, NOTE 
-			, DAILY_UPLOAD_LIMIT 
-			, DAILY_DOWNLOAD_LIMIT 
-			, MAX_STORAGE_USAGE
+			<include refid="com.utime.burrowNest.user.mapper.UserMapper.UserColumn" /> 
 		FROM BN_USER
 		ORDER BY NO
 	</select>

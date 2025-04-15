@@ -66,6 +66,12 @@ class UserDaoImpl implements UserDao {
 		}
 	}
 	
+	@Override
+	public boolean IsInit() {
+		
+		return adminMapper.IsInit();
+	}
+	
 	/**
 	 * 회원 비번 생성
 	 * @param user
@@ -90,7 +96,8 @@ class UserDaoImpl implements UserDao {
 	}
 	
 	@Override
-	public ResUserVo procLogin(LoginReqVo reqVo) {
+	@Transactional(rollbackFor = Exception.class)
+	public ResUserVo procLogin(LoginReqVo reqVo)throws Exception  {
 		
 		try {Thread.sleep(1000L);} catch (InterruptedException e) {e.printStackTrace();}
 		
@@ -134,28 +141,50 @@ class UserDaoImpl implements UserDao {
 		
 		final UserVo user = this.getAdminInstance();
 		
-		final String genPw = genPwString( user, req.getPw() );
+		final String genPw = this.genPwString( user, req.getPw() );
 		
-		return adminMapper.insertAdmin(genPw);
+		final int res = adminMapper.insertAdmin(genPw);
+		
+		if( res < 1 ) {
+			return res;
+		}
+		
+		user.setEnabled(true);
+		user.setNickname("Owner");
+		user.setProfileImg("profile1.svg");
+		
+		return adminMapper.insertUser(user);
 	}
 
-
-
 	@Override
-	public int insertUser(UserVo user) throws Exception {
-		// TODO Auto-generated method stub
-		return 0;
+	@Transactional(rollbackFor = Exception.class)
+	public int insertUser(UserVo user, String pw) throws Exception {
+		
+		user.setEnabled(false);
+		
+		final int res = adminMapper.insertUser(user);
+		if( res < 1 ) {
+			return res;
+		}
+		
+		return this.updateUserPw( user, pw);
 	}
-
-
-
+	
 	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public int updateUserPw(UserVo user, String pw) throws Exception {
+		
+		final String genPw = this.genPwString( user, pw );
+		
+		return userMapper.updatePw(user.getId(), genPw);
+	}
+	
+	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public int updateUser(UserVo user) throws Exception {
 		// TODO Auto-generated method stub
 		return 0;
 	}
-
-
 
 	@Override
 	public List<UserVo> getUserList() {

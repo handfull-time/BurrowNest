@@ -20,20 +20,19 @@ public interface UserMapper {
 	int createUser();
 	
 	/**
+	 * 비번 
+	 * @return
+	 */
+	int createUserPw();
+	
+	/**
 	 * 로그인 기록
 	 * @return
 	 */
 	int createLoginRecord();
 	
 	
-	UserVo getId(@Param("id") String id);
 	
-	
-	String getPw(@Param("id") String id);
-
-	
-	int updatePw(@Param("id") String id, @Param("pw") String pw);
-
 	/**
 	 * 로그인 기록 추가.
 	 * @param reqVo
@@ -43,8 +42,18 @@ public interface UserMapper {
 	 */
 	int insertLoginRecord(@Param("req") LoginReqVo reqVo, @Param("user") UserVo user, @Param("status") ELoginResult res);
 
+	/**
+	 * id 조회
+	 * @param id
+	 * @return
+	 */
+	UserVo getId(@Param("id") String id);
+	
+	
+	String getPw(@Param("id") String id);
 
 	
+	int updatePw(@Param("id") String id, @Param("pw") String pw);
 
 
 }

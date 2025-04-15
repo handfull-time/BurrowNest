@@ -13,6 +13,12 @@ import jakarta.servlet.http.HttpServletResponse;
 public interface AuthService {
 	
 	/**
+	 * 관리자 초기화 했는지 여부 
+	 * @return true:했음.
+	 */
+	boolean IsInit();
+	
+	/**
 	 * 초기 정보 - 암호화, 유니크 검사 필수 값 등.
 	 * @param request
 	 * @return
@@ -50,5 +56,7 @@ public interface AuthService {
 	 * @return
 	 */
 	ReturnBasic saveInitInfor(InitInforReqVo req);
+
+	
 
 }
