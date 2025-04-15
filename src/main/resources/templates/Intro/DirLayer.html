@@ -25,14 +25,12 @@
     
 	<th:block layout:fragment="modalScript">
 		<script th:inline="javascript" defer>
-		const treeRoot = document.getElementById("directoryTree");
-		const template = document.getElementById("dirItemTemplate");
-
+		
 		// 초기 로딩
-		loadDirectory("root", treeRoot);
+		loadDirectory("root", document.getElementById("directoryTree"));
 
 		// 트리 클릭 이벤트
-		treeRoot.addEventListener("click", async (e) => {
+		document.getElementById("directoryTree").addEventListener("click", async (e) => {
 		  const toggleBtn = e.target.closest(".toggle-btn");
 		  if (toggleBtn) {
 		    const path = toggleBtn.dataset.path;
@@ -68,6 +66,9 @@
 
 		// 디렉토리 로딩
 		async function loadDirectory(path, container) {
+			
+			const template = document.getElementById("dirItemTemplate");
+			
 		  try {
 		    const baseUrl = /*[[@{/Intro/PathList.json}]]*/ null;
 		    const url = `${baseUrl}?path=${encodeURIComponent(path)}`;

@@ -12,10 +12,15 @@
         </div>
     </div>
 </div>
+<!-- 로딩 오버레이 추가 (popupContainer 바깥 or 안쪽 어디든 상관없음) -->
+<div id="loadingOverlay" class="fixed inset-0 z-50 bg-black bg-opacity-40 hidden flex items-center justify-center">
+  <div class="text-white text-xl font-semibold animate-pulse">로딩 중...</div>
+</div>
+
 
 <script>
     let popupIndex = 0; // 중첩 모달을 위한 고유 ID
-
+    
 	// Method 종류
 	const MethodType = Object.freeze({
 		Get: "GET",
@@ -31,12 +36,32 @@
 
     async function openPopup(sendObj) {
     	
-    	if( ! sendObj.url ){
+    	const defaults = {
+   			url: null,
+			method: MethodType.Post,
+			contentType: ContentsType.Json,
+			NotCheck:false,
+			data:null,
+			popupId:null,
+	        width: '800px'
+    	}
+    	
+		const sendValue = { ...defaults, ...sendObj };
+    	
+    	console.info( 'Modal open req : ', JSON.stringify(sendValue) ); 
+
+    	if( ! sendValue.url ){
     		console.warn("❌ [openPopup Error] 'url' 값이 필수입니다.");
 			throw new Error("❌ [openPopup Error] 'url' 값이 필수입니다.");
 		}
     	
-    	if( ! sendObj.NotCheck ){
+    	if( ! sendValue.popupId ){
+    		console.warn("❌ [openPopup Error] 'popupId' 값이 필수입니다.");
+			throw new Error("❌ [openPopup Error] 'popupId' 값이 필수입니다.");
+		}
+
+    	if( ! sendValue.NotCheck ){
+    		console.info( 'Modal open Refresh Check ' );
         	const refresh = await checkAndRefreshToken();
         	if( ! refresh ){
         		console.warn('❌ [authCheck Error] 인증 필요.');
@@ -45,21 +70,18 @@
         	}
     	}
 		
-		const defaults = {
-		        method: MethodType.Post, // 기본값: POST
-		        contentType: ContentsType.Json, // 기본값: JSON
-		        data:null,
-		        width: '800px'
-		    };
-		
-		const finalValue = { ...defaults, ...sendObj };
-		const width = finalValue.width;
+    	
+    	// ✅ 로딩 화면 보이기
+        const loading = document.getElementById("loadingOverlay");
+        if (loading) loading.classList.remove("hidden");
+        
+		const width = sendValue.width;
 		
         // 데이터 로드
-        apiRequest(finalValue.url, {
-	            method: finalValue.method,
-	            headers: { "Content-Type": finalValue.contentType },
-	            body: finalValue.data
+        apiRequest(sendValue.url, {
+	            method: sendValue.method,
+	            headers: { "Content-Type": sendValue.contentType },
+	            body: sendValue.data
 	    	})
         	.then(response => {
         		if (!response.ok) {
@@ -103,16 +125,34 @@
         		// 새로 추가된 script 태그 실행 (Thymeleaf script 실행)
         		console.info('popupIndex', popupIndex);
         		
-        		if( popupIndex === 1 ){
-            		container.querySelectorAll("script").forEach(oldScript => {
-            			const newScript = document.createElement("script");
-            			newScript.textContent = oldScript.textContent;
-            			document.body.appendChild(newScript);
-            			oldScript.remove();
-            		});
-        		}
+           		container.querySelectorAll("script").forEach(oldScript => {
+           			const newScript = document.createElement("script");
+
+           		    if (oldScript.src) {
+           		        newScript.src = oldScript.src;
+           		    } else {
+           		        newScript.textContent = oldScript.textContent;
+           		    }
+
+           		    // 기존 script 속성 복사
+           		    [...oldScript.attributes].forEach(attr => {
+           		        newScript.setAttribute(attr.name, attr.value);
+           		    });
+
+           		    // popupIndex 기반 식별자 추가
+           		    newScript.dataset.popupId = `popupOverlay_${popupIndex}`;
+
+           		    oldScript.remove();
+           		    document.body.appendChild(newScript);
+           		});
+        		
+        		// ✅ 로딩 화면 숨기기
+                if (loading) loading.classList.add("hidden");
         	})
-        	.catch(error => console.error("에러 발생:", error) );
+        	.catch(error => {
+        		console.error("에러 발생:", error)
+        		if (loading) loading.classList.add("hidden");
+        	});
     }
 
     // 팝업 닫기 함수 (해당 모달만 닫기)
@@ -120,6 +160,25 @@
         const modal = buttonElement.closest(".fixed");
         
         if (modal) {
+            const modalId = modal.id;
+            console.info(`🔒 모달 제거: ${modalId}`);
+            
+         // 🔽 1. 내부 내용 초기화 (HTML 요소들, 변수 해제)
+            modal.querySelectorAll("*").forEach(el => {
+                // 스크립트는 따로 처리하므로 생략 가능
+                if (el.tagName !== "SCRIPT") {
+                    el.textContent = '';
+                    el.innerHTML = '';
+                }
+            });
+         
+            // 모달에 속한 script 제거
+            const scripts = document.querySelectorAll(`script[data-popup-id="${modalId}"]`);
+            scripts.forEach(script => {
+                console.info(`🧹 스크립트 제거: ${script.dataset.popupId}`);
+                script.remove();
+            });
+            
             modal.remove();
         }
     }

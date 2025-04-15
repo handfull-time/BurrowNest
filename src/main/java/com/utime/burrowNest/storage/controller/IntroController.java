@@ -56,7 +56,7 @@ public class IntroController {
 	 */
 	@GetMapping(path = { "Intro.html" })
     public String BeginIntro(HttpServletRequest request, ModelMap model, UserVo user) {
-		
+
 		if( ! userService.IsInit() ) {
 			model.addAttribute("unique", authService.getNewGenUnique(request) );
 			return "Intro/Infor";
@@ -128,6 +128,8 @@ public class IntroController {
 			
 			List<DirectoryDto> result = new ArrayList<>();
 			for( File root : roots ) {
+				log.info(root.toPath().toString());
+				
 				if( root.getPath().contains("Y:") )
 					continue;
 				

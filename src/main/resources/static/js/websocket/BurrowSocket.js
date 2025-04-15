@@ -36,6 +36,7 @@ class SocketScript {
 	}
 
 	connect() {
+		console.log("연결 시도", this.connectionInfo.serverAddress);
 		if (this.stompClient && this.stompClient.connected) {
 			console.log("이미 연결됨");
 			return true;
@@ -55,6 +56,9 @@ class SocketScript {
 		);
 
 		socket.onclose = () => this.disconnect();
+		
+		console.log("연결 시도 완료");
+		
 		return true;
 	}
 
