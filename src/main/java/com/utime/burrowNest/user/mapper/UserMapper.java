@@ -31,8 +31,6 @@ public interface UserMapper {
 	 */
 	int createLoginRecord();
 	
-	
-	
 	/**
 	 * 로그인 기록 추가.
 	 * @param reqVo
@@ -47,13 +45,36 @@ public interface UserMapper {
 	 * @param id
 	 * @return
 	 */
-	UserVo getId(@Param("id") String id);
+	UserVo getUserId(@Param("id") String id);
 	
-	
-	String getPw(@Param("id") String id);
+	/**
+	 * 암호 조회
+	 * @param id
+	 * @return
+	 */
+	String getUserPw(@Param("id") String id);
 
+	/**
+	 * pw 추가
+	 * @param user
+	 * @param pw
+	 * @return
+	 */
+	int insertUserPw(@Param("user") UserVo user, @Param("pw") String pw);
 	
-	int updatePw(@Param("id") String id, @Param("pw") String pw);
+	/**
+	 * pw 수정.
+	 * @param user
+	 * @param pw
+	 * @return
+	 */
+	int updateUserPw(@Param("user") UserVo user, @Param("pw") String pw);
 
+	/**
+	 * 사용자 정보 갱신 
+	 * @param user
+	 * @return
+	 */
+	int updateUser( UserVo user );
 
 }

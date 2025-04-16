@@ -148,7 +148,13 @@ class AuthServiceImpl implements AuthService {
 		}
 		reqVo.setPw(pw);		
 		
-		final ResUserVo result = userDao.procLogin(reqVo);
+		ResUserVo result;
+		try {
+			result = userDao.procLogin(reqVo);
+		} catch (Exception e) {
+			log.error("", e);
+			return new ResUserVo("E", "Invalid credentials");
+		}
 		
 		log.info("로그인 결과 : {}", result);
 		

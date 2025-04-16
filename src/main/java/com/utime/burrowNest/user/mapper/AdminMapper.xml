@@ -64,4 +64,20 @@
 		ORDER BY NO
 	</select>
 	
+	<!-- 사용자 정보 갱신 -->
+	<update id="updateUser" parameterType="com.utime.burrowNest.user.vo.UserVo" >
+		UPDATE BN_USER SET
+			UPDATE_DATE = CURRENT_TIMESTAMP
+			, ENABLED = #{enabled}
+			, NICK_NAME = #{nickname} 
+			, ICON = #{profileImg}
+			, ROLE = #{role}
+			, NOTE = #{note}
+			, DAILY_UPLOAD_LIMIT = #{dailyUploadLimit} 
+			, DAILY_DOWNLOAD_LIMIT = #{dailyDownloadLimit}
+			, MAX_STORAGE_USAGE = #{maxStorageUsage}
+		WHERE NO = #{userNo}
+	</update>
+	
+	
 </mapper>

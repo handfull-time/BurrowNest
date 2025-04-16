@@ -44,6 +44,14 @@ public interface AdminMapper {
 	 * @return
 	 */
 	int insertUser(UserVo user);
+	
+	/**
+	 * 사용자 정보 상세 갱신 
+	 * @param user
+	 * @return
+	 */
+	int updateUser( UserVo user );
+
 
 	/**
 	 * 사용자 목록 조회

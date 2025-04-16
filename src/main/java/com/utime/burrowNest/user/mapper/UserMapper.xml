@@ -14,6 +14,7 @@
 			, ICON VARCHAR(32) NOT NULL <!-- 아이콘 이미지 이름 -->
 			, ROLE VARCHAR(16) NOT NULL <!-- 권한 -->
 			, NOTE VARCHAR(255) DEFAULT NULL <!-- 비고 -->
+			, AUTH_HINT VARCHAR(128) DEFAULT NULL <!-- 계정 찾기 힌트 (이름 + 질문1 + 질문2 + 질문3: 해쉬) -->
 			, DAILY_UPLOAD_LIMIT BIGINT DEFAULT 0 <!-- 하루 업로드 제한 (byte) -->
 			, DAILY_DOWNLOAD_LIMIT BIGINT DEFAULT 0  <!-- 일일 최대 다운로드 용량 -->
 			, MAX_STORAGE_USAGE BIGINT DEFAULT 0 <!-- 저장공간 최대 사용 용량 -->
@@ -99,20 +100,50 @@
 	</sql>
 
 	<!-- id 조회 -->	
-	<select id="getId" parameterType="map" resultType="com.utime.burrowNest.user.vo.UserVo">
+	<select id="getUserId" parameterType="map" resultType="com.utime.burrowNest.user.vo.UserVo">
 		SELECT 
-			<include refid="com.utime.burrowNest.user.mapper.UserMapper.UserColumn" /> 
+			<include refid="UserColumn" /> 
 		FROM BN_USER
 		WHERE ID = #{id}
 	</select>
 
 	<!-- pw 조회 -->	
-	<select id="getPw" parameterType="map" resultType="String">
+	<select id="getUserPw" parameterType="map" resultType="String">
+		SELECT 
+			 AUTH_VALUE
+		FROM BN_USER_PW PW 
+			INNER JOIN BN_USER UR ON PW.USER_NO = UR.NO
+		WHERE UR.ID = #{id}
 	</select>
 	
-	<!--  -->	
-	<select id="" parameterType="map">
-	</select>
+	<!-- pw 추가 -->	
+	<update id="insertUserPw" parameterType="map">
+		INSERT INTO BN_USER_PW (
+			USER_NO
+			, UPDATE_DATE
+			, AUTH_VALUE
+		) VALUES (
+			#{user.userNo}
+			, CURRENT_TIMESTAMP
+			, #{pw, typeHandler=com.utime.burrowNest.user.typeHandler.PasswordEncoderTypeHandler}
+		)  
+	</update>
 	
+	<!-- pw 수정. -->
+	<update id="updateUserPw" parameterType="map">
+		UPDATE BN_USER_PW SET 
+			UPDATE_DATE = CURRENT_TIMESTAMP
+			, AUTH_VALUE = #{pw, typeHandler=com.utime.burrowNest.user.typeHandler.PasswordEncoderTypeHandler}
+		WHERE USER_NO = #{user.userNo}
+	</update>
+	
+	<!-- 사용자 정보 갱신 -->
+	<update id="updateUser" parameterType="com.utime.burrowNest.user.vo.UserVo" >
+		UPDATE BN_USER SET
+			UPDATE_DATE = CURRENT_TIMESTAMP
+			, NICK_NAME = #{nickname} 
+			, ICON = #{profileImg}
+		WHERE NO = #{userNo}
+	</update>
 	
 </mapper>

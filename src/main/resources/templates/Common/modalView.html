@@ -157,31 +157,45 @@
 
     // 팝업 닫기 함수 (해당 모달만 닫기)
     function closePopup(buttonElement) {
-        const modal = buttonElement.closest(".fixed");
-        
-        if (modal) {
-            const modalId = modal.id;
-            console.info(`🔒 모달 제거: ${modalId}`);
-            
-         // 🔽 1. 내부 내용 초기화 (HTML 요소들, 변수 해제)
-            modal.querySelectorAll("*").forEach(el => {
-                // 스크립트는 따로 처리하므로 생략 가능
-                if (el.tagName !== "SCRIPT") {
-                    el.textContent = '';
-                    el.innerHTML = '';
-                }
-            });
-         
-            // 모달에 속한 script 제거
-            const scripts = document.querySelectorAll(`script[data-popup-id="${modalId}"]`);
-            scripts.forEach(script => {
-                console.info(`🧹 스크립트 제거: ${script.dataset.popupId}`);
-                script.remove();
-            });
-            
-            modal.remove();
+	    const modal = buttonElement.closest(".fixed");
+	
+	    if (! modal) {
+	    	return;
+	    }
+	    
+        const modalId = modal.id;
+        console.info(`🔒 모달 제거: ${modalId}`);
+
+        // ✅ 1. 내부 요소 초기화 (메모리 릴리즈 유도)
+        modal.querySelectorAll("*").forEach(el => {
+            if (el.tagName !== "SCRIPT") {
+                el.textContent = '';
+                el.innerHTML = '';
+            }
+        });
+
+        // ✅ 2. 관련 script 제거 (data-popup-id or src 기준)
+        const scripts = document.getElementsByTagName('script');
+        for (let i = scripts.length - 1; i >= 0; i--) {
+            const script = scripts[i];
+
+            // src 기반 제거
+            if (script.src && script.src.includes(modalId)) {
+                console.info(`🧹 외부 스크립트 제거: ${script.src}`);
+                script.parentNode.removeChild(script);
+            }
+
+            // data-popup-id 기반 제거
+            if (script.dataset && script.dataset.popupId === modalId) {
+                console.info(`🧹 인라인 스크립트 제거: ${modalId}`);
+                script.parentNode.removeChild(script);
+            }
         }
-    }
+
+        // ✅ 3. 모달 DOM 제거
+        modal.remove();
+	}
+
     
 	// 드래그 시작 함수 (각 모달별 dragObj 사용)
     function startDrag(event, headerElement) {

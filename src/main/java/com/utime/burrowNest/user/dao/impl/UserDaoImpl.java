@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.utime.burrowNest.common.mapper.CommonMapper;
+import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.util.Sha256;
 import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.user.dao.UserDao;
@@ -60,6 +61,14 @@ class UserDaoImpl implements UserDao {
 				userMapper.createLoginRecord();
 				common.createIndex("BN_USER_LOGIN_RECORD_IP_INDX", "BN_USER_LOGIN_RECORD", "IP");
 				common.createIndex("BN_USER_LOGIN_RECORD_USER_NO_INDX", "BN_USER_LOGIN_RECORD", "USER_NO");
+				common.createIndex("BN_USER_LOGIN_RECORD_REG_DATE_INDX", "BN_USER_LOGIN_RECORD", "REG_DATE");
+				
+			}
+
+			if( ! common.existTable("BN_USER_PW") ) {
+				log.info("BN_USER_PW 생성");
+				userMapper.createUserPw();
+				
 			}
 		} catch (Exception e) {
 			log.error("", e);
@@ -111,7 +120,7 @@ class UserDaoImpl implements UserDao {
 			
 			dbPw = adminMapper.getAdminPw();
 		}else {
-			user = userMapper.getId( id );
+			user = userMapper.getUserId( id );
 
 			if( user == null ) {
 				userMapper.insertLoginRecord( reqVo, user, ELoginResult.IdNotFound );
@@ -119,18 +128,23 @@ class UserDaoImpl implements UserDao {
 				return result;
 			}
 			
-			dbPw = userMapper.getPw( id );
+			if( ! user.isEnabled() ) {
+				userMapper.insertLoginRecord( reqVo, user, ELoginResult.Denied );
+				result.setCodeMessage("E", "다시 시도 하세요.");
+				return result;
+			}
+			
+			dbPw = userMapper.getUserPw( id );
 		}
 
 		final String genPw = Sha256.encrypt(genPwString( user, reqVo.getPw()));
 		if( ! genPw.equals(dbPw) ) {
 			userMapper.insertLoginRecord( reqVo, user, ELoginResult.MismatchPw );
 			result.setCodeMessage("E", "다시 시도 하세요.");
-			return result;
+		}else {
+			result.setUser(user);
+			userMapper.insertLoginRecord( reqVo, user, ELoginResult.Success );
 		}
-		
-		result.setUser(user);
-		userMapper.insertLoginRecord( reqVo, user, ELoginResult.Success );
 		
 		return result;
 	}
@@ -176,7 +190,14 @@ class UserDaoImpl implements UserDao {
 		
 		final String genPw = this.genPwString( user, pw );
 		
-		return userMapper.updatePw(user.getId(), genPw);
+		final int result;
+		if( BurrowUtils.isEmpty( userMapper.getUserPw(user.getId()) ) ) {
+			result = userMapper.insertUserPw(user, genPw);
+		}else {
+			result = userMapper.updateUserPw(user, genPw);
+		}
+		
+		return result;
 	}
 	
 	@Override
