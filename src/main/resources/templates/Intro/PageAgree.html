@@ -17,16 +17,7 @@
     
     <script>
     	function checkChange(){
-    		const agreeCheckBtn = document.getElementById("agreeCheckBtn")
-    		if( document.getElementById("agreeCheck").checked ){
-    			agreeCheckBtn.disabled = false;
-    			agreeCheckBtn.classList.remove("bg-gray-500", "text-black", "hover:bg-gray-600");
-    			agreeCheckBtn.classList.add("bg-blue-500", "text-white", "hover:bg-blue-600");
-    		}else{
-    			agreeCheckBtn.disabled = true;
-    			agreeCheckBtn.classList.remove("bg-blue-500", "text-white", "hover:bg-blue-600");
-    			agreeCheckBtn.classList.add("bg-gray-500", "text-black", "hover:bg-gray-600");
-    		}
+    		buttonStatus( "agreeCheckBtn", document.getElementById("agreeCheck").checked);
     	}
     </script>
 </div>

@@ -6,9 +6,9 @@
 	<!-- 어드민 테이블 생성 -->
 	<insert id="createAdmin">
 		CREATE TABLE BN_ADMIN (
-			AUTH_DATA VARCHAR(255), <!-- 암호값 -->
-			REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP, <!-- 생성일 -->
-			UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
+			AUTH_DATA VARCHAR(255) <!-- 암호값 -->
+			, REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP <!-- 생성일 -->
+			, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
 		)
 	</insert>
 
@@ -42,7 +42,7 @@
 	<!-- 사용자 추가 -->
 	<insert id="insertUser" parameterType="com.utime.burrowNest.user.vo.UserVo" useGeneratedKeys="true" keyProperty="userNo" >
 		INSERT INTO BN_USER (
-			, UPDATE_DATE 
+			UPDATE_DATE 
 			, ENABLED
 			, ID 
 			, NICK_NAME 

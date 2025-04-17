@@ -21,7 +21,7 @@
 		    </div>
 		  </div>
 		</div>
-        <button type="button" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" th:onclick="apply()">진행</button>
+        <button type="button" id="applyBtn" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" th:onclick="apply()">진행</button>
     </div>
     
     <script th:inline="javascript">
@@ -63,6 +63,8 @@
 	    let socketScript = null;
 	    
 	    function apply(){
+	    	
+	    	buttonStatus( "applyBtn", false);
 	    	
 	    	// 1. 웹 소켓 접속.
 	    	const wsUrl = /*[[@{/BackEvent}]]*/ null;
@@ -124,6 +126,7 @@
     	        return true;
     	    } catch (err) {
     	        console.error("refreshToken 실패:", err);
+    	        buttonStatus( "applyBtn", true);
     	        return false;
     	    }
     	}

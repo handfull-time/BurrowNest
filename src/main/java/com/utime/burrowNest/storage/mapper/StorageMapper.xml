@@ -540,7 +540,7 @@
 </insert>
 
 <!-- UPDATE -->
-<update id="updateThumbnail" parameterType="BnFileThumbnail">
+<update id="updateThumbnail" parameterType="map">
     UPDATE BN_FILE_THUMBNAIL SET
         UPDATE_DATE = CURRENT_TIMESTAMP
         , THUMBNAIL = #{thumbnail}<!-- #{thumbnail, jdbcType=VARBINARY} -->

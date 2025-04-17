@@ -8,7 +8,7 @@
 			NO INT PRIMARY KEY AUTO_INCREMENT
 			, REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP <!-- 생성일 -->
 			, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
-			, ENABLED CHAR(1) DEFAULT 'N' <!-- 사용 여부 -->
+			, ENABLED BOOLEAN DEFAULT 'N' <!-- 사용 여부 -->
 			, ID VARCHAR(32) NOT NULL <!-- ID -->
 			, NICK_NAME VARCHAR(128) NOT NULL <!-- 별명 -->
 			, ICON VARCHAR(32) NOT NULL <!-- 아이콘 이미지 이름 -->

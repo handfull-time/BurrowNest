@@ -34,7 +34,7 @@
     <script>
         function checkPasswordMatch() {
             // for test
-            buttonStatus( true );
+            buttonStatus( "pwNextBtn", true );
             
         }
         
@@ -46,21 +46,21 @@
             // 조건: 비어있음
             if (!pwd1 || !pwd2) {
                 msg.textContent = '◆ 패스워드를 입력하세요.';
-                buttonStatus(false);
+                buttonStatus("pwNextBtn", false);
                 return false;
             }
 
             // 조건: 길이
             if (pwd1.length < 8 || pwd1.length > 64) {
                 msg.textContent = '◆ 패스워드는 8자 이상 64자 이하로 입력하세요.';
-                buttonStatus(false);
+                buttonStatus("pwNextBtn", false);
                 return false;
             }
 
             // 조건: 일치 여부
             if (pwd1 !== pwd2) {
                 msg.textContent = '◆ 패스워드가 일치하지 않습니다.';
-                buttonStatus(false);
+                buttonStatus("pwNextBtn", false);
                 return false;
             }
 
@@ -74,19 +74,20 @@
 
             if (count < 2) {
                 msg.textContent = '◆ 영문, 숫자, 특수문자 중 두 가지 이상 조합해야 합니다.';
-                buttonStatus(false);
+                buttonStatus("pwNextBtn", false);
                 return false;
             }
 
             // 성공
             msg.textContent = '';
-            buttonStatus(true);
+            buttonStatus("pwNextBtn", true);
             return true;
         }
 
         
-        function buttonStatus( status ){
-        	const pwNextBtn = document.getElementById("pwNextBtn")
+        function buttonStatus( btnId, status ){
+        	const pwNextBtn = document.getElementById(btnId);
+        	
     		if( status ){
     			pwNextBtn.disabled = false;
     			pwNextBtn.classList.remove("bg-gray-500", "text-black", "hover:bg-gray-600");
