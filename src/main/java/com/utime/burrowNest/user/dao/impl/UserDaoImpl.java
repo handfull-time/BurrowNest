@@ -39,6 +39,8 @@ class UserDaoImpl implements UserDao {
 	@Value("${security.pwSaltKey}")
     private String saltKey;
 	
+	private final String AdminId = "admin";
+	
 	
 	@PostConstruct
 	private void construct() {
@@ -90,8 +92,6 @@ class UserDaoImpl implements UserDao {
 	private String genPwString( UserVo user, String pw ) {
 		return saltKey + "[" + user.getId() + "]-{" +  user.getUserNo() + "}" + pw;
 	}
-	
-	private final String AdminId = "admin";
 	
 	private UserVo getAdminInstance() {
 		
@@ -198,6 +198,12 @@ class UserDaoImpl implements UserDao {
 		}
 		
 		return result;
+	}
+	
+	@Override
+	public UserVo getManageUser() {
+		
+		return userMapper.getUserId(AdminId);
 	}
 	
 	@Override

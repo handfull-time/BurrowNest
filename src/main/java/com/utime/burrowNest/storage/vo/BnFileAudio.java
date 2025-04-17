@@ -10,7 +10,7 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString( callSuper = true)
-public class BnFileAudio extends AbsBnFileInfor{
+public class BnFileAudio extends AbsBnFileInfo{
 
     /**
      * Total playback duration (in seconds or minutes).

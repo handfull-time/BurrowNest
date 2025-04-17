@@ -9,7 +9,9 @@
     INSERT INTO BN_DIRECTORY (
     	UPDATE_DATE
     	, ENABLED
+    	, PUBLIC_ACCESSIBLE
     	, PARENT_NO
+    	, OWNER_NO
     	, HAS_CHILD
     	, CREATION
 		, LAST_MODIFIED 
@@ -18,7 +20,9 @@
 	) VALUES (
 		CURRENT_TIMESTAMP
 		, #{enabled}
+		, #{publicAccessible}
 		, #{parentNo}
+		, #{ownerNo}
 		, #{hasChild}
 		, #{creation}
 		, #{lastModified}
@@ -32,6 +36,7 @@
     UPDATE BN_DIRECTORY
     SET UPDATE_DATE = CURRENT_TIMESTAMP
     	, ENABLED = #{enabled}
+    	, PUBLIC_ACCESSIBLE = #{publicAccessible}
     	, PARENT_NO = #{parentNo}
     	, HAS_CHILD = #{hasChild}
 		, LAST_MODIFIED = #{lastModified}
@@ -47,7 +52,9 @@
     	, REG_DATE
     	, UPDATE_DATE
     	, ENABLED
+    	, PUBLIC_ACCESSIBLE
     	, PARENT_NO
+    	, OWNER_NO
     	, HAS_CHILD
     	, CREATION
 		, LAST_MODIFIED 
@@ -64,7 +71,7 @@
 </delete>
 
 <!-- Dir 권한 추가하기 -->
-<insert id="InsertDirectoryAccess" parameterType="map">
+<insert id="insertDirectoryAccess" parameterType="map">
 	INSERT INTO BN_DIRECTORY_ACCESS (
 		DIR_NO 
 		, USER_NO  
@@ -77,7 +84,7 @@
 </insert>
 
 <!-- 파일 권한 추가하기 -->
-<insert id="InsertFileAccess" parameterType="map">
+<insert id="insertFileAccess" parameterType="map">
 	INSERT INTO BN_File_ACCESS (
 		FILE_NO 
 		, USER_NO  
@@ -96,6 +103,7 @@
     	, UPDATE_DATE
     	, ENABLED
     	, PARENT_NO
+    	, OWNER_NO
     	, FILE_LENGTH
     	, FILE_TYPE
     	, CREATION
@@ -107,6 +115,7 @@
     	, CURRENT_TIMESTAMP
     	, #{enabled}
     	, #{parentNo}
+    	, #{ownerNo}
     	, #{fileLength}
     	, #{fileType}
     	, #{creation}
@@ -124,6 +133,7 @@
     	, UPDATE_DATE
     	, ENABLED
     	, PARENT_NO
+    	, OWNER_NO
     	, FILE_LENGTH
     	, FILE_TYPE
     	, CREATION
@@ -503,5 +513,47 @@
         , COMMENT = <choose> <when test="comment != null and comment != '' ">#{comment}</when> <otherwise>NULL</otherwise> </choose>
     WHERE FILE_NO = #{fileNo}
 </update>
+
+<!-- 섬네일이 있는지 -->
+<select id="existThumbnail" parameterType="map" resultType="boolean">
+	SELECT 
+		CASE COUNT(1) 
+  			WHEN 1 THEN 1
+			ELSE 0
+  		END AS RES
+  	FROM BN_FILE_THUMBNAIL
+  	WHERE FILE_NO = #{fileNo}
+</select>
+	
+<!-- INSERT -->
+<insert id="insertThumbnail" parameterType="map">
+    INSERT INTO BN_FILE_THUMBNAIL (
+        FILE_NO
+        , UPDATE_DATE
+        , THUMBNAIL
+    ) VALUES (
+        #{fileNo},
+        ,CURRENT_TIMESTAMP
+        <!-- ,#{thumbnail, jdbcType=VARBINARY} -->
+        ,#{thumbnail}
+    )
+</insert>
+
+<!-- UPDATE -->
+<update id="updateThumbnail" parameterType="BnFileThumbnail">
+    UPDATE BN_FILE_THUMBNAIL SET
+        UPDATE_DATE = CURRENT_TIMESTAMP
+        , THUMBNAIL = #{thumbnail}<!-- #{thumbnail, jdbcType=VARBINARY} -->
+    WHERE FILE_NO = #{fileNo}
+</update>
+
+<!-- SELECT -->
+<select id="selectThumbnail" parameterType="long" resultType="String">
+    SELECT
+        THUMBNAIL
+    FROM BN_FILE_THUMBNAIL
+    WHERE FILE_NO = #{fileNo}
+</select>
+
 
 </mapper>

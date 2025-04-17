@@ -14,7 +14,7 @@ public class BnFile {
     /**
      * Unique identifier for the file.
      */
-    private long no;
+    private long no = -1L;
 
     /**
      * The date and time when the file was registered or created.
@@ -35,6 +35,11 @@ public class BnFile {
      * The unique identifier of the parent directory that contains the file.
      */
     private long parentNo;
+    
+    /**
+     * The owner of the file
+     */
+    private int ownerNo;
 
     /**
      * The size of the file in bytes.
@@ -55,6 +60,12 @@ public class BnFile {
      * The date and time when the folder or file was last modified.
      */
     private Timestamp lastModified;
+    
+    /**
+     * The full name of the file, including its extension.
+     * For example, "document.txt" or "photo.jpeg".
+     */
+    private String fullName;
 
     /**
      * The file extension (e.g., ".txt", ".jpg").
@@ -69,6 +80,6 @@ public class BnFile {
     /**
      * extends file information
      */
-    private AbsBnFileInfor infor;
+    private AbsBnFileInfo info;
 
 }

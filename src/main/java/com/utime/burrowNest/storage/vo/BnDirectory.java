@@ -13,7 +13,7 @@ public class BnDirectory {
     /**
      * The primary key of the directory entity.
      */
-    private long no;
+    private long no = -1L;
 
     /**
      * The registration date of the directory.
@@ -42,6 +42,11 @@ public class BnDirectory {
      */
     private long parentNo;
 
+    /**
+     * The owner of the directory.
+     */
+    private int ownerNo;
+    
     /**
      * Indicates whether the directory has child directories.
      * True for having children, false otherwise.

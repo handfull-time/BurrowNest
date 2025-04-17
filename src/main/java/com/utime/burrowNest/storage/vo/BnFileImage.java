@@ -10,12 +10,12 @@ import lombok.ToString;
 /**
  * Represents an image file with metadata such as camera details, dimensions,
  * GPS coordinates, and other photographic properties.
- * This class extends the {@link AbsBnFileInfor} abstract class.
+ * This class extends the {@link AbsBnFileInfo} abstract class.
  */
 @Setter
 @Getter
 @ToString(callSuper = true)
-public class BnFileImage extends AbsBnFileInfor {
+public class BnFileImage extends AbsBnFileInfo {
     /**
      * The model name of the camera used to capture the image.
      */

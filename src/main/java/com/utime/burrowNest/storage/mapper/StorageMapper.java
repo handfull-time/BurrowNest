@@ -20,7 +20,7 @@ public interface StorageMapper {
 	 * @param accType
 	 * @return
 	 */
-	int InsertDirectoryAccess(@Param("dirNo") long dirNo, @Param("userNo") int userNo, @Param("accType") int accType);
+	int insertDirectoryAccess(@Param("dirNo") long dirNo, @Param("userNo") int userNo, @Param("accType") int accType);
 
 	/**
 	 * 파일 권한 추가하기
@@ -29,7 +29,7 @@ public interface StorageMapper {
 	 * @param accType
 	 * @return
 	 */
-	int InsertFileAccess(@Param("fileNo") long fileNo, @Param("userNo") int userNo, @Param("accType") int accType);
+	int insertFileAccess(@Param("fileNo") long fileNo, @Param("userNo") int userNo, @Param("accType") int accType);
 
 	/**
 	 * dir 추가
@@ -50,14 +50,14 @@ public interface StorageMapper {
 	 * @param dirNo
 	 * @return
 	 */
-	BnDirectory selectBnDirectoryByNo( long dirNo );
+	BnDirectory selectBnDirectoryByNo( @Param("dirNo") long dirNo );
 	
 	/**
 	 * 삭제
 	 * @param dirNo
 	 * @return
 	 */
-	int deleteBnDirectoryByNo( long dirNo );
+	int deleteBnDirectoryByNo( @Param("dirNo") long dirNo );
 	
 	/**
 	 * 파일 추가.
@@ -71,7 +71,7 @@ public interface StorageMapper {
 	 * @param fileNo
 	 * @return
 	 */
-	BnFile selectBnFileByNo( long fileNo );
+	BnFile selectBnFileByNo( @Param("fileNo") long fileNo );
 	
 	/**
 	 * 파일 수정
@@ -85,7 +85,7 @@ public interface StorageMapper {
 	 * @param fileNo
 	 * @return
 	 */
-	int deleteBnFileById( long fileNo );
+	int deleteBnFileById( @Param("fileNo") long fileNo );
 	
 	/**
 	 * file doc 추가.
@@ -99,7 +99,7 @@ public interface StorageMapper {
 	 * @param fileNo
 	 * @return
 	 */
-	BnFileDocument selectBnFileDocumentByFileNo( long fileNo );
+	BnFileDocument selectBnFileDocumentByFileNo( @Param("fileNo") long fileNo );
 	
 	/**
 	 * 파일 doc 수정
@@ -120,7 +120,7 @@ public interface StorageMapper {
 	 * @param fileNo
 	 * @return
 	 */
-	BnFileImage selectBnFileImageByFileNo( long fileNo );
+	BnFileImage selectBnFileImageByFileNo( @Param("fileNo") long fileNo );
 	
 	/**
 	 * 파일 이미지 수정
@@ -141,7 +141,7 @@ public interface StorageMapper {
 	 * @param fileNo
 	 * @return
 	 */
-	BnFileVideo selectBnFileVideoByFileNo( long fileNo );
+	BnFileVideo selectBnFileVideoByFileNo( @Param("fileNo") long fileNo );
 	
 	/**
 	 * 파일 비디오 수정
@@ -162,7 +162,7 @@ public interface StorageMapper {
 	 * @param fileNo
 	 * @return
 	 */
-	BnFileAudio selectBnFileAudioByFileNo( long fileNo );
+	BnFileAudio selectBnFileAudioByFileNo( @Param("fileNo") long fileNo );
 	/**
 	 * 오디오 파일 수정
 	 * @param audio
@@ -182,7 +182,7 @@ public interface StorageMapper {
 	 * @param fileNo
 	 * @return
 	 */
-	BnFileArchive selectBnFileArchiveByFileNo( long fileNo );
+	BnFileArchive selectBnFileArchiveByFileNo( @Param("fileNo") long fileNo );
 	
 	/**
 	 * 압축 파일 수정
@@ -190,6 +190,36 @@ public interface StorageMapper {
 	 * @return
 	 */
 	int updateBnFileArchive( BnFileArchive archive );
+	
+	/**
+	 * 섬네일이 있는지
+	 * @param fileNo
+	 * @return true: 있다.
+	 */
+	boolean existThumbnail( @Param("fileNo") long fileNo );
+	
+	/**
+	 * 섬네일 추가
+	 * @param fileNo
+	 * @param thumbnail
+	 * @return
+	 */
+	int insertThumbnail( @Param("fileNo") long fileNo, @Param("thumbnail") String thumbnail);
+	
+	/**
+	 * 섬네일 조회
+	 * @param fileNo
+	 * @param thumbnail
+	 * @return
+	 */
+	int updateThumbnail( @Param("fileNo") long fileNo, @Param("thumbnail") String thumbnail);
+	
+	/**
+	 * 섬네일 조회
+	 * @param fileNo
+	 * @return
+	 */
+	String selectThumbnail( @Param("fileNo") long fileNo );
 }
 
 /*

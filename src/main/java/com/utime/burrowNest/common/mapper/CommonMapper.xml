@@ -4,7 +4,7 @@
 <mapper namespace="com.utime.burrowNest.common.mapper.CommonMapper">
 
 	<!-- 테이블 이름 일치 여부 -->
-	<select id="existTable" resultType="boolean" parameterType="map">
+	<select id="existTable" parameterType="map" resultType="boolean">
 		SELECT 
 			CASE COUNT(1) 
 	   			WHEN 1 THEN 1

@@ -13,6 +13,7 @@ public class BurrowNestApplication {
 	// https://www.h2database.com/html/datatypes.html
 	
 	public static void main(String[] args) throws InterruptedException, IOException {
+		
 		SpringApplication.run(BurrowNestApplication.class, args);
 	}
 

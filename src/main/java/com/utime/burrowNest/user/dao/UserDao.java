@@ -48,6 +48,12 @@ public interface UserDao {
 	 * @throws Exception
 	 */
 	int updateUserPw(UserVo user, String pw) throws Exception;
+	
+	/**
+	 * 관리자 조회
+	 * @return
+	 */
+	UserVo getManageUser();
 
 	/**
 	 * 사용자 목록 조회

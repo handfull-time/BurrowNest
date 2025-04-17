@@ -1,69 +1,91 @@
 package com.utime.burrowNest.storage.dao;
 
-import java.io.File;
+import java.util.Map;
 
+import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
-import com.utime.burrowNest.storage.vo.BnFileArchive;
-import com.utime.burrowNest.storage.vo.BnFileAudio;
-import com.utime.burrowNest.storage.vo.BnFileDocument;
-import com.utime.burrowNest.storage.vo.BnFileImage;
-import com.utime.burrowNest.storage.vo.BnFileVideo;
+import com.utime.burrowNest.storage.vo.EBnFileType;
 
 public interface StorageDao {
+	
+	/**
+	 * 확장자 별 파일 종류
+	 * @return
+	 */
+	Map<String, EBnFileType> getBnFileType();
 
 	/**
-	 * Dir 추가
+	 * Dir 저장
 	 * @param dir
 	 * @return
 	 */
-	BnDirectory insertDirectory(File dir) throws Exception;
+	int saveDirectory(BnDirectory dir) throws Exception;
 	
 	/**
-	 * File 추가
+	 * File 저장
 	 * @param file
 	 * @return
 	 * @throws Exception
 	 */
-	BnFile insertFile(File file) throws Exception;
+	int saveFile(BnFile file) throws Exception;
 	
 	/**
-	 * 문서 파일 추가.
+	 * 파일 확장 저장
 	 * @param file
 	 * @return
 	 * @throws Exception
 	 */
-	int insertFileDocument( BnFileDocument file )throws Exception;
+	int saveFileInfor( AbsBnFileInfo file )throws Exception;
 	
 	/**
-	 * 이미지 파일 추가
+	 * 이미지 섬네일 저장
 	 * @param file
+	 * @param binary
 	 * @return
-	 * @throws Exception
 	 */
-	int insertFileImage( BnFileImage file )throws Exception;
+	int saveThumbnail( BnFile file, String base64);
 	
 	/**
-	 * 영상 파일 추가
-	 * @param file
+	 * Dierctory 삭제
+	 * @param dir
 	 * @return
-	 * @throws Exception
 	 */
-	int insertFileVideo( BnFileVideo file )throws Exception;
+	int deleteDirectory( BnDirectory dir )throws Exception;
 	
 	/**
-	 * 소리 파일 추가
+	 * 파일 삭제
 	 * @param file
 	 * @return
-	 * @throws Exception
 	 */
-	int insertFileAudio( BnFileAudio file )throws Exception;
+	int deleteFile( BnFile file )throws Exception;
 	
 	/**
-	 * 압축 파일 추가
+	 * directory 정보 조회
+	 * @param dirNo
+	 * @return
+	 */
+	BnDirectory getDirectory( long dirNo );
+	
+	/**
+	 *  정보 조회
+	 * @param fileNo
+	 * @return
+	 */
+	BnFile getFile( long fileNo );
+	
+	/**
+	 * 섬네일
+	 * @param fileNo
+	 * @return base64 Encode String
+	 */
+	String getFileThumbnail( long fileNo );
+	
+	/**
+	 * 파일 확장 조회
 	 * @param file
 	 * @return
-	 * @throws Exception
 	 */
-	int insertFileArchive( BnFileArchive file )throws Exception;
+	AbsBnFileInfo getFileInfor( BnFile file );
+	
 }

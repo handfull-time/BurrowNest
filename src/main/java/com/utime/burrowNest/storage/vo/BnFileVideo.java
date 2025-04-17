@@ -6,12 +6,12 @@ import lombok.ToString;
 
 /**
  * Represents a video file with metadata such as duration, resolution, frame rate,
- * and codec information. This class extends the {@link AbsBnFileInfor} abstract class.
+ * and codec information. This class extends the {@link AbsBnFileInfo} abstract class.
  */
 @Getter
 @Setter
 @ToString(callSuper = true)
-public class BnFileVideo extends AbsBnFileInfor {
+public class BnFileVideo extends AbsBnFileInfo {
     /**
      * The total playback duration of the video in seconds.
      */

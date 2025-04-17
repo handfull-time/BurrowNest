@@ -2,11 +2,14 @@ package com.utime.burrowNest.storage.service.impl;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +18,14 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.storage.dao.StorageDao;
 import com.utime.burrowNest.storage.service.StorageService;
+import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
 import com.utime.burrowNest.storage.vo.BnDirectory;
+import com.utime.burrowNest.storage.vo.BnFile;
+import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.storage.vo.MessageDataVo;
+import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.vo.InitInforReqVo;
+import com.utime.burrowNest.user.vo.UserVo;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,32 +41,22 @@ public class StorageServiceImpl implements StorageService {
 	
 	private final ExecutorService executor = Executors.newWorkStealingPool();
 	
-	
+	private final UserDao userDao;
+
 	private final StorageDao storageDao;
 	
-	// socket 예.
-    public void searchFiles(String keyword) {
-        // 검색 시작 알림
-        messagingTemplate.convertAndSend("/topic/search-status", "🔍 검색 시작: " + keyword);
-
-        // 예: 검색 작업 중간 단계마다 전송
-        try {
-            Thread.sleep(1000); // 실제 파일 처리
-            messagingTemplate.convertAndSend("/topic/search-status", "📁 파일 100개 검색 완료");
-
-            Thread.sleep(1000); // 더 처리
-            messagingTemplate.convertAndSend("/topic/search-status", "📁 파일 300개 검색 완료");
-
-            Thread.sleep(1000);
-            messagingTemplate.convertAndSend("/topic/search-status", "✅ 검색 완료");
-
-        } catch (InterruptedException e) {
-            messagingTemplate.convertAndSend("/topic/search-status", "❌ 검색 중 오류 발생");
-        }
-    }
-
+	private Map<String, EBnFileType> mapFileType;
+	
+	/**
+	 * ApplicationReadyEvent
+	 */
+	@EventListener(ApplicationReadyEvent.class)
+	protected void handleApplicationReadyEvent() {
+		this.mapFileType = storageDao.getBnFileType();
+	}
+	
     /**
-     * Front에 웹 소
+     * Front에 웹 소켓 키워드
      */
     final String KeyToWsFileRecieveStatus = "/toFront/RecieveStatus";
     
@@ -67,9 +65,11 @@ public class StorageServiceImpl implements StorageService {
         final AtomicLong counterFile = new AtomicLong(0);
         final MessageDataVo message = new MessageDataVo();
         final String wsUserName;
+        final UserVo owner;
         
-        public InitFileLoad(String userName) {
+        public InitFileLoad(String userName, UserVo owner) {
 			this.wsUserName = userName;
+			this.owner = owner;
 		}
     }
     
@@ -95,7 +95,79 @@ public class StorageServiceImpl implements StorageService {
     	@Override
     	public void run() {
     		// 파일 추가 및 확장자 분석.
-    		this.ifl.counterFile.incrementAndGet();
+    		final long fileCount = this.ifl.counterFile.incrementAndGet();
+    		
+    		{
+    			// 파일 읽을 때도 가끔 메시지 쏘자.
+        		if( fileCount % 10L == 0L ) {
+        			ifl.message.setProgress( fileCount );
+        			messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, ifl.message);
+        		}
+    		}
+    		
+    		final BnFile bnFile;
+    		try {
+				bnFile = StorageUtils.getFileInfo(file);
+			} catch (Exception e) {
+				log.error("", e);
+				return;
+			}
+    		
+    		bnFile.setParentNo(this.parent.getNo());
+    		bnFile.setEnabled(true);
+    		bnFile.setOwnerNo(ifl.owner.getUserNo());
+    		
+    		final EBnFileType fileType = mapFileType.containsKey( bnFile.getExtension() )? mapFileType.get(bnFile.getExtension()):EBnFileType.Basic;
+    		bnFile.setFileType(fileType);
+    		
+    		try {
+				if( storageDao.saveFile(bnFile) < 0 ) {
+					log.warn("파일 저장 실패: " + bnFile);
+					return;
+				}
+			} catch (Exception e) {
+				log.error("", e);
+				return;
+			}
+    		
+    		{
+    			// 파일 섬네일 추출
+    			try {
+    				final String thumbnail = StorageUtils.getFileThumbnail(file, bnFile);
+    				if( thumbnail != null ) {
+    					storageDao.saveThumbnail(bnFile, thumbnail);
+    				}
+				} catch (Exception e) {
+					log.error("섬네일 실패", e);
+				}
+    		}
+    		
+    		{
+    			// 확장 정보 저장
+        		AbsBnFileInfo fileInfo = null;
+        		try {
+            		switch( fileType ) {
+            		case Basic: fileInfo = null; break;
+            		case Document: fileInfo = StorageUtils.getFileInfoDocument(file, bnFile); break;
+            		case Image: fileInfo = StorageUtils.getFileInfoImage(file, bnFile); break;
+            		case Video: fileInfo = StorageUtils.getFileInfoVideo(file, bnFile); break;
+            		case Audio: fileInfo = StorageUtils.getFileInfoAudio(file, bnFile); break;
+            		case Archive: fileInfo = StorageUtils.getFileInfoArchive(file, bnFile); break;
+            		}
+    			} catch (Exception e) {
+    				log.error("확장 정보 추출 실패", e);
+    				fileInfo = null;
+    			}
+        		
+        		if( fileInfo != null ) {
+        			try {
+    					storageDao.saveFileInfor(fileInfo);
+    				} catch (Exception e) {
+    					log.error("확장 정보 저장 실패", e);
+    				}
+        		}
+    		}
+    		
     	}
     }
     
@@ -112,23 +184,37 @@ public class StorageServiceImpl implements StorageService {
 			if( count > 0 ) ifl.counterDir.addAndGet( count );
 		}
     	
-    	ifl.message.setMessage(f.getName() + "분석 중");
+    	ifl.message.setMessage("Loading... [" + f.getName() + "]");
     	ifl.message.setTotal( ifl.counterDir.get() );
     	ifl.message.setProgress( ifl.counterFile.get() );
 		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, ifl.message);
 
+		final long parentDirNo = parent.getNo();
+		final int ownerDirNo = ifl.owner.getUserNo();
+		
 		for( File file : files ) {
 			if( file.isDirectory() ) {
-				BnDirectory childDir;
+				// directory 추가.
+				final BnDirectory childDir;
+				
 				try {
-					childDir = storageDao.insertDirectory( file );
+					childDir = StorageUtils.getDirectoryInfo(file);
+					childDir.setEnabled(true);
+					childDir.setPublicAccessible(true);
+					childDir.setParentNo( parentDirNo );
+					childDir.setOwnerNo( ownerDirNo );
+					if( storageDao.saveDirectory( childDir ) < 1 ) {
+						log.warn("Dir 저장 실패: " + childDir);
+					};
+					
 				} catch (Exception e) {
 					log.error("", e);
 					continue;
 				}
-				
+
 				this.LoadDir( file, ifl, childDir );
 			}else {
+				// 파일 추가.
 				executor.execute( new LoadFile( file, ifl, parent ) );
 			}
 		}
@@ -137,7 +223,7 @@ public class StorageServiceImpl implements StorageService {
 	@Override
 	public ReturnBasic saveInitStorage(InitInforReqVo req) {
 
-		final InitFileLoad ifl = new InitFileLoad(req.getWsUserName());
+		final InitFileLoad ifl = new InitFileLoad(req.getWsUserName(), userDao.getManageUser());
 		
 		final MessageDataVo message = ifl.message;
 		message.setDone(false);
@@ -159,9 +245,16 @@ public class StorageServiceImpl implements StorageService {
 				for( String s : list ) {
 					
 					final File file = new File(s);
-					BnDirectory parentDir;
+					final BnDirectory parentDir;
+					
 					try {
-						parentDir = storageDao.insertDirectory( file );
+						parentDir = StorageUtils.getDirectoryInfo(file);
+						parentDir.setEnabled(true);
+						parentDir.setPublicAccessible(true);
+						if( storageDao.saveDirectory( parentDir ) < 1 ) {
+							log.warn("Dir 저장 실패: " + s);
+						};
+						
 					} catch (Exception e) {
 						log.error("", e);
 						continue;

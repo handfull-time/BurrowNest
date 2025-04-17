@@ -43,8 +43,8 @@
 		, OWNER_NO INT NOT NULL <!-- 소유자 회원 번호 -->
 		, FILE_LENGTH BIGINT NOT NULL <!-- 파일 크기 -->
 		, FILE_TYPE ENUM('Basic', 'Document', 'Image', 'Video', 'Audio', 'Archive' ) NOT NULL <!-- 파일 종류 -->
-		, CREATION TIMESTAMP NOT NULL <!-- 폴더 생성일 -->
-		, LAST_MODIFIED TIMESTAMP NOT NULL <!-- 폴더 수정일 -->
+		, CREATION TIMESTAMP NOT NULL <!-- 파일 생성일 -->
+		, LAST_MODIFIED TIMESTAMP NOT NULL <!-- 파일 수정일 -->
 		, EXTENSION CHARACTER VARYING(16) DEFAULT NULL <!-- 파일 확장자 -->
 		, NAME CHARACTER VARYING(255) NOT NULL <!-- 순수 이름 확장자 미포함 -->
 		, FOREIGN KEY(PARENT_NO) REFERENCES BN_DIRECTORY(NO) ON DELETE CASCADE

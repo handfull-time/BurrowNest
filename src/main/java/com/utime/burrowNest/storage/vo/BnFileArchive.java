@@ -6,12 +6,12 @@ import lombok.ToString;
 
 /**
  * Represents archive metadata for compressed files in the BN_FILE_ARCHIVE table.
- * This class extends the {@link AbsBnFileInfor} abstract class.
+ * This class extends the {@link AbsBnFileInfo} abstract class.
  */
 @Getter
 @Setter
 @ToString(callSuper = true)
-public class BnFileArchive extends AbsBnFileInfor {
+public class BnFileArchive extends AbsBnFileInfo {
 	/**
      * The format of the archive (ZIP, RAR, 7Z, etc).
      */
