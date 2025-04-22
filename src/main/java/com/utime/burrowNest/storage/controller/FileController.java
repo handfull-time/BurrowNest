@@ -25,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -244,7 +245,69 @@ public class FileController {
 //	    }
 //	}
 
-	
+	/**
+	 * 대용량 파일 다운로드
+	 * @param fileGuid
+	 * @return
+	 * @throws IOException
+	 */
+	@GetMapping("StreamDownload/{fileNo}")
+	public ResponseEntity<StreamingResponseBody> streamDownload(@PathVariable("fileNo") String fileGuid) throws IOException {
+//		// 경로를 환경 변수 또는 설정 파일에서 로드
+//	    String storageDirectory = System.getenv("FILE_STORAGE_PATH");
+//	    if (storageDirectory == null) {
+//	        storageDirectory = "/data/storage"; // 기본 경로
+//	    }
+		
+		// create table test(id int primary key, data uuid default random_uuid());
+		
+		String storageDirectory="", fileName = fileGuid;
+
+	    Path filePath = Paths.get(storageDirectory).resolve(fileName).normalize();
+		
+
+	    // 경로 탐색 공격 방지: 저장소 디렉토리 안의 파일만 허용
+	    if (!filePath.startsWith(Paths.get(storageDirectory)) || !Files.exists(filePath)) {
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                .body(null);
+	    }
+
+	    try {
+	        // 파일 크기 확인
+	        long fileSize = Files.size(filePath);
+
+	        StreamingResponseBody stream = outputStream -> {
+	            try (InputStream inputStream = Files.newInputStream(filePath)) {
+	                byte[] buffer = new byte[4096];
+	                int bytesRead;
+	                while ((bytesRead = inputStream.read(buffer)) != -1) {
+	                    outputStream.write(buffer, 0, bytesRead);
+	                    outputStream.flush(); // chunk 단위 전송
+	                }
+	            } catch (IOException e) {
+	                // 스트리밍 중 에러 처리
+	                throw new RuntimeException("Error occurred during file streaming", e);
+	            }
+	        };
+
+	        return ResponseEntity.ok()
+	                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+	                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+	                .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(fileSize)) // 파일 크기 헤더 추가
+	                .body(stream);
+
+	    } catch (IOException e) {
+	        // 파일 접근 및 크기 확인 중 에러 처리
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(null);
+	    }
+	}
+//	
+//	
+//	@GetMapping("/stream-download/{fileName:.+}")
+//	public ResponseEntity<StreamingResponseBody> streamDownload(@PathVariable String fileName) {
+//	    
+//	}
 	
 	@GetMapping("Download")
 	public ResponseEntity<Resource> download(@RequestParam String path) throws IOException {

@@ -21,6 +21,10 @@
 		CREATE INDEX ${indexName} ON ${tableName} ( ${columns} )
 	</update>
 	
+	<update id="createUniqueIndex" parameterType="map">
+		CREATE UNIQUE INDEX ${indexName} ON ${tableName} ( ${columns} )
+	</update>
+
 	<!-- 테이블 삭제 -->
 	<update id="dropTable" parameterType="map">
 		DROP TABLE ${tableName}

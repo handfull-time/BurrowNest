@@ -52,6 +52,7 @@
     	, REG_DATE
     	, UPDATE_DATE
     	, ENABLED
+    	, UID
     	, PUBLIC_ACCESSIBLE
     	, PARENT_NO
     	, OWNER_NO
@@ -132,6 +133,7 @@
     	, REG_DATE
     	, UPDATE_DATE
     	, ENABLED
+    	, UID
     	, PARENT_NO
     	, OWNER_NO
     	, FILE_LENGTH

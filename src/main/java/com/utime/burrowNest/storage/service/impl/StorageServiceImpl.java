@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.utime.burrowNest.common.util.CommandUtil;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.storage.dao.StorageDao;
 import com.utime.burrowNest.storage.service.StorageService;
@@ -46,6 +47,10 @@ public class StorageServiceImpl implements StorageService {
 	private final StorageDao storageDao;
 	
 	private Map<String, EBnFileType> mapFileType;
+	
+	private void delay() {
+		try {Thread.sleep(200);} catch (InterruptedException e) {e.printStackTrace();}
+	}
 	
 	/**
 	 * ApplicationReadyEvent
@@ -220,6 +225,118 @@ public class StorageServiceImpl implements StorageService {
 		}
     }
     
+    private class LibDownLoad implements Runnable{
+    	final InitInforReqVo req;
+    	final InitFileLoad ifl;
+    	
+    	public LibDownLoad(InitInforReqVo req, InitFileLoad ifl) {
+			this.req = req;
+			this.ifl = ifl;
+		}
+    	
+    	@Override
+    	public void run() {
+        	final MessageDataVo message = ifl.message;
+
+        	final String os = System.getProperty("os.name").toLowerCase();
+    		log.info( "현재 OS: " + os );
+            
+            if (os.contains("windows")) {
+            	message.setMessage("파일 로딩 준비");
+        		
+        		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
+        		delay();
+            	new Thread( new FileLoad(req, ifl) ).start();
+            	return;
+            }
+    		
+    	    // ffmpeg 설치 여부 확인
+            final List<String> result = CommandUtil.workExe("ffmpeg", "-version");
+
+            if (result.isEmpty() || result.get(0).contains("command not found")) {
+        		log.info( "ffmpeg 설치 진행" );
+                message.setMessage("ffmpeg를 설치합니다...");
+        		
+        		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
+        		delay();
+                
+                // ffmpeg 설치 명령 실행
+        		final List<String> installResult = CommandUtil.workExe("apt", "install", "-y", "ffmpeg");
+
+                if (installResult.isEmpty()) {
+                    message.setMessage("ffmpeg를 설치 실패했습니다.");
+            		
+            		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
+            		delay();
+                    return;
+                }else {
+                	log.info( "ffmpeg 설치: " + result.get(0) );
+                }
+            }else {
+            	log.info( "ffmpeg 설치된 버전: " + result.get(0) );
+            }
+            
+            new Thread( new FileLoad(req, ifl) ).start();
+    	}
+    }
+
+    /**
+     * 파일 로드
+     */
+    private class FileLoad implements Runnable{
+    	
+    	final InitInforReqVo req;
+    	final InitFileLoad ifl;
+    	
+    	public FileLoad(InitInforReqVo req, InitFileLoad ifl) {
+			this.req = req;
+			this.ifl = ifl;
+		}
+    	
+    	@Override
+		public void run() {
+			
+    		delay();
+			
+			final List<String> list = req.getRoots();
+			for( String s : list ) {
+				log.info("FileLoad : " + s);
+				
+				final File file = new File(s);
+				final BnDirectory parentDir;
+				
+				try {
+					parentDir = StorageUtils.getDirectoryInfo(file);
+					parentDir.setEnabled(true);
+					parentDir.setPublicAccessible(true);
+					if( storageDao.saveDirectory( parentDir ) < 1 ) {
+						log.warn("Dir 저장 실패: " + s);
+					};
+					
+				} catch (Exception e) {
+					log.error("", e);
+					continue;
+				}
+				
+				LoadDir( file, ifl, parentDir );
+			}
+			
+			log.info("FileLoad Complete.");
+			
+			executor.shutdown(); // 작업 제출 중단 (기존 작업은 계속 실행됨)
+
+			boolean finished = false;
+			try {
+				finished = executor.awaitTermination(10000, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			log.info("파일 로딩 종료 작업 : " + finished);
+		}
+	}
+    
+    
 	@Override
 	public ReturnBasic saveInitStorage(InitInforReqVo req) {
 
@@ -229,52 +346,12 @@ public class StorageServiceImpl implements StorageService {
 		message.setDone(false);
 		message.setProgress(0);
 		message.setProgress(10);
-		message.setMessage("파일 로딩 준비");
+		message.setMessage("준비");
 		
 		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
+		delay();
 		
-		
-		new Thread( new Runnable() {
-			
-			@Override
-			public void run() {
-				
-				try {Thread.sleep(200);} catch (InterruptedException e) {e.printStackTrace();}
-				
-				List<String> list = req.getRoots();
-				for( String s : list ) {
-					
-					final File file = new File(s);
-					final BnDirectory parentDir;
-					
-					try {
-						parentDir = StorageUtils.getDirectoryInfo(file);
-						parentDir.setEnabled(true);
-						parentDir.setPublicAccessible(true);
-						if( storageDao.saveDirectory( parentDir ) < 1 ) {
-							log.warn("Dir 저장 실패: " + s);
-						};
-						
-					} catch (Exception e) {
-						log.error("", e);
-						continue;
-					}
-					
-					LoadDir( file, ifl, parentDir );
-				}
-				
-				executor.shutdown(); // 작업 제출 중단 (기존 작업은 계속 실행됨)
-
-				boolean finished = false;
-				try {
-					finished = executor.awaitTermination(10000, TimeUnit.SECONDS);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				
-				log.info("파일 로딩 종료 작업 : " + finished);
-			}
-		} ).start();
+		new Thread( new LibDownLoad(req, ifl) ).start();
 		
 		return new ReturnBasic();
 	}

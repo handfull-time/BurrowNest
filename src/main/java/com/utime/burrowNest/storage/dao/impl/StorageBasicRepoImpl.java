@@ -28,6 +28,7 @@ class StorageBasicRepoImpl {
 				log.info("BN_DIRECTORY 생성");
 				mapper.CreateDirectory();
 				common.createIndex("BN_DIRECTORY_PARENT_NO_INDX", "BN_DIRECTORY", "PARENT_NO");
+				common.createUniqueIndex("BN_DIRECTORY_UID_INDX", "BN_DIRECTORY", "UID");
 			}
 			
 			if( ! common.existTable("BN_DIRECTORY_ACCESS") ) {
@@ -39,6 +40,7 @@ class StorageBasicRepoImpl {
 				log.info("BN_FILE 생성");
 				mapper.CreateFile();
 				common.createIndex("BN_FILE_PARENT_NO_INDX", "BN_FILE", "PARENT_NO");
+				common.createUniqueIndex("BN_FILE_UID_INDX", "BN_FILE", "UID");
 			}
 
 			if( ! common.existTable("BN_FILE_ACCESS") ) {

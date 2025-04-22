@@ -8,6 +8,7 @@
 		, REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP <!-- 생성일 -->
 		, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
 		, ENABLED BOOLEAN DEFAULT FALSE <!-- 사용 여부. T:사용, F:미사용 -->
+		, UID UUID DEFAULT RANDOM_UUID() <!-- 고유 ID -->
 		, PUBLIC_ACCESSIBLE BOOLEAN DEFAULT TRUE <!-- 공용 DIR 여부. T:공용, F:private용 -->
 		, PARENT_NO	BIGINT NOT NULL	<!-- 부모 번호 -->
 		, OWNER_NO INT NOT NULL <!-- 소유자 회원 번호 -->
@@ -39,6 +40,7 @@
 		, REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP <!-- 생성일 -->
 		, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
 		, ENABLED BOOLEAN DEFAULT FALSE <!-- 사용 여부 -->
+		, UID UUID DEFAULT RANDOM_UUID() <!-- 고유 ID -->
 		, PARENT_NO	BIGINT NOT NULL	<!-- 부모 번호 -->
 		, OWNER_NO INT NOT NULL <!-- 소유자 회원 번호 -->
 		, FILE_LENGTH BIGINT NOT NULL <!-- 파일 크기 -->

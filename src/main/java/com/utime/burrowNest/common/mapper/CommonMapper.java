@@ -25,6 +25,15 @@ public interface CommonMapper {
 	public int createIndex(@Param("indexName") String indexName, @Param("tableName") String tableName, @Param("columns") String columns);
 
 	/**
+	 * 유니크 인덱스 생성
+	 * @param indexName
+	 * @param tableName
+	 * @param columns
+	 * @return
+	 */
+	public int createUniqueIndex(@Param("indexName") String indexName, @Param("tableName") String tableName, @Param("columns") String columns);
+
+	/**
 	 * 테이블 삭제
 	 * @param string
 	 * @return
