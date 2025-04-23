@@ -20,23 +20,18 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Timestamp;
 import java.util.Base64;
+import java.util.List;
+import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.imageio.ImageIO;
 
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.apache.poi.hpsf.SummaryInformation;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ooxml.POIXMLProperties.CoreProperties;
-import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xslf.usermodel.XSLFSlide;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
+import com.utime.burrowNest.common.util.CommandUtil;
 import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
@@ -55,6 +50,9 @@ public class StorageUtils {
 	
 	//exiftool -Model -Make -FNumber -ShutterSpeedValue -ISO -SubjectDistance -DateTimeOriginal -ImageWidth -ImageHeight -GPSLatitude -GPSLongitude -Flash -WhiteBalance -SceneCaptureType -Software 파일명
 	//exiftool -b -ThumbnailImage 20250128_010059.cr2 > ./thumb/20250128.jpg
+	
+	//  exiftool -ThumbnailImage -b 20190417_123809.jpg | base64 
+	// /9j/2wCEAAUDBAQEAwUEBAQFBQUGB .... 여러 라인 
 
 /* 
 exiftool -list 20190417_123809.jpg
@@ -593,76 +591,127 @@ App Version                     : 16.0300
 	    return result;
 	}
 
-	private static void procDoc(BnFileDocument doc, CoreProperties props) {
-		doc.setTitle( props.getTitle() );
-		doc.setSubject( props.getSubject());
-		doc.setAuthor(props.getCreator());
-		doc.setManager(props.getLastModifiedByUser());
-		doc.setCompany(props.getContentType());
-		doc.setCategory(props.getCategory());
-		doc.setKeywords(props.getKeywords());
-		doc.setNotes(props.getDescription());
-	}
+//	private static void procDoc(BnFileDocument doc, CoreProperties props) {
+//		doc.setTitle( props.getTitle() );
+//		doc.setSubject( props.getSubject());
+//		doc.setAuthor(props.getCreator());
+//		doc.setManager(props.getLastModifiedByUser());
+//		doc.setCompany(props.getContentType());
+//		doc.setCategory(props.getCategory());
+//		doc.setKeywords(props.getKeywords());
+//		doc.setNotes(props.getDescription());
+//	}
+//	
+//	public static BnFileDocument getFileInfoDocument(File file, BnFile bnFile ) throws Exception {
+//		
+//		final BnFileDocument result = new BnFileDocument();
+//		result.setFileNo(bnFile.getNo());
+//
+//        // ---------------- OOXML (.docx/.xlsx/.pptx) ----------------
+//		switch( bnFile.getExtension() ) {
+//		case "doc":
+//		case "docx":{
+//			try (XWPFDocument doc = new XWPFDocument(OPCPackage.open(file))) {
+//				procDoc(result, doc.getProperties().getCoreProperties() );
+//            }
+//			break;
+//		}
+//		case "xlsx":{
+//			try (XSSFWorkbook wb = new XSSFWorkbook(OPCPackage.open(file))) {
+//				procDoc(result, wb.getProperties().getCoreProperties() );
+//            }
+//			break;
+//		}
+//		case "ppt":
+//		case "pptx":{
+//			try (XMLSlideShow ppt = new XMLSlideShow(OPCPackage.open(file))) {
+//				procDoc(result, ppt.getProperties().getCoreProperties() );
+//            }
+//			break;
+//		}
+//		case "xls":{
+//			try (HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream(file))) {
+//                final SummaryInformation si = wb.getSummaryInformation();
+//                if( si != null ) {
+//            		result.setTitle( si.getTitle() );
+//            		result.setSubject( si.getSubject());
+//            		result.setKeywords(si.getKeywords());
+//                }
+//            }
+//			break;
+//		}
+//		case "hwp":{
+//			break;
+//		}
+//		case "pdf":{
+//			try (PDDocument document = Loader.loadPDF(file)) {
+//	            final PDDocumentInformation info = document.getDocumentInformation();
+//	            
+//	            result.setTitle( info.getTitle() );
+//	            result.setSubject( info.getSubject());
+//	            result.setAuthor(info.getCreator());
+//	            result.setKeywords(info.getKeywords());
+//
+//	        } catch (IOException e) {
+//	            log.warn( "PDF 메타데이터 추출 실패: " + e.getMessage());
+//	        }
+//			break;
+//		}
+//		}// switch end
+//		
+//		return result;
+//	}
 	
-	public static BnFileDocument getFileInfoDocument(File file, BnFile bnFile ) throws Exception {
+	private static Properties parserExifToolResult( List<String> cmdRes ) {
+		final Properties result = new Properties();
 		
-		final BnFileDocument result = new BnFileDocument();
-		result.setFileNo(bnFile.getNo());
-
-        // ---------------- OOXML (.docx/.xlsx/.pptx) ----------------
-		switch( bnFile.getExtension() ) {
-		case "doc":
-		case "docx":{
-			try (XWPFDocument doc = new XWPFDocument(OPCPackage.open(file))) {
-				procDoc(result, doc.getProperties().getCoreProperties() );
-            }
-			break;
+		// Date                            : 2020-02-17
+		for( String line : cmdRes ) {
+			final int index = line.indexOf(":");
+			if( index < 0 )
+				continue;
+			
+			final String header = line.substring(0, index -1 ).trim();
+			final String value = line.substring(index+1, line.length()).trim();
+			
+			if( header.length() < 1 || value.length() < 1 )
+				continue;
+			
+			result.setProperty(header, value);
 		}
-		case "xlsx":{
-			try (XSSFWorkbook wb = new XSSFWorkbook(OPCPackage.open(file))) {
-				procDoc(result, wb.getProperties().getCoreProperties() );
-            }
-			break;
-		}
-		case "ppt":
-		case "pptx":{
-			try (XMLSlideShow ppt = new XMLSlideShow(OPCPackage.open(file))) {
-				procDoc(result, ppt.getProperties().getCoreProperties() );
-            }
-			break;
-		}
-		case "xls":{
-			try (HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream(file))) {
-                final SummaryInformation si = wb.getSummaryInformation();
-                if( si != null ) {
-            		result.setTitle( si.getTitle() );
-            		result.setSubject( si.getSubject());
-            		result.setKeywords(si.getKeywords());
-                }
-            }
-			break;
-		}
-		case "hwp":{
-			break;
-		}
-		case "pdf":{
-			try (PDDocument document = Loader.loadPDF(file)) {
-	            final PDDocumentInformation info = document.getDocumentInformation();
-	            
-	            result.setTitle( info.getTitle() );
-	            result.setSubject( info.getSubject());
-	            result.setAuthor(info.getCreator());
-	            result.setKeywords(info.getKeywords());
-
-	        } catch (IOException e) {
-	            log.warn( "PDF 메타데이터 추출 실패: " + e.getMessage());
-	        }
-			break;
-		}
-		}// switch end
 		
 		return result;
 	}
+	
+	public static BnFileDocument getFileInfoDocument(File file, BnFile bnFile ) throws Exception {
+//		exiftool -Model -Make -FNumber -ShutterSpeedValue -ISO -SubjectDistance -DateTimeOriginal -ImageWidth -ImageHeight -GPSLatitude -GPSLongitude -Flash -WhiteBalance -SceneCaptureType -Software 파일명
+
+		final List<String> cmdRes = CommandUtil.workExe("exiftool"
+				, "-Title"	// title
+				, "-Subject"	// subject
+				, "-Creator"	// author
+				, "-Keywords"	// keywords
+				, "-Description"	// notes
+				, "-Company"	// company
+				, "-Application"	// 
+				, file.getAbsolutePath()
+				);
+		
+		if( BurrowUtils.isEmpty(cmdRes) ) {
+			return null;
+		}
+		
+		final Properties values = StorageUtils.parserExifToolResult(cmdRes);
+		if( values.size() < 1 ) {
+			return null;
+		}
+		
+		final BnFileDocument result = new BnFileDocument();
+		result.setFileNo( bnFile.getNo() );
+		
+		return result;
+	}
+
 
 	public static AbsBnFileInfo getFileInfoImage(File file, BnFile bnFile) throws Exception{
 		final BnFileImage result = new BnFileImage();
@@ -772,6 +821,7 @@ App Version                     : 16.0300
 		return result;
 	}
 	
+
     public static String getPptThumb(File f) throws Exception {
         // PPTX 파일 읽기
         final FileInputStream fis = new FileInputStream(f);
@@ -801,6 +851,75 @@ App Version                     : 16.0300
         graphics.dispose();
 
         return result;
+	}
+	
+    /**
+     * DMS (Degree Minute Second) 형식의 위도 또는 경도 문자열을 Decimal Degree 형식으로 변환합니다.
+     *
+     * @param dmsString DMS 형식의 문자열 (예: "37 33' 59.78\" N", "126 58' 41.23\" E")
+     * @return 변환된 Decimal Degree 값 (Double)
+     * @throws IllegalArgumentException DMS 문자열 형식이 올바르지 않은 경우 발생
+     */
+    public static double dmsToDecimal(String dmsString) {
+        String[] parts = dmsString.trim().split("\\s+");
+        if (parts.length < 3) {
+            throw new IllegalArgumentException("잘못된 DMS 형식: " + dmsString);
+        }
+
+        double degrees;
+        double minutes;
+        double seconds;
+        String direction = "";
+
+        try {
+            degrees = Double.parseDouble(parts[0]);
+            minutes = Double.parseDouble(parts[1].replace("'", ""));
+            seconds = Double.parseDouble(parts[2].replace("\"", ""));
+
+            if (parts.length > 3) {
+                direction = parts[3].toUpperCase();
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("숫자 형식 오류: " + dmsString);
+        }
+
+        double decimalDegrees = degrees + (minutes / 60.0) + (seconds / 3600.0);
+
+        if (direction.equals("S") || direction.equals("W")) {
+            decimalDegrees *= -1;
+        } else if (!direction.isEmpty() && !direction.equals("N") && !direction.equals("E")) {
+            throw new IllegalArgumentException("잘못된 방향 표시: " + direction);
+        }
+
+        return decimalDegrees;
+    }
+    
+    /**
+     * Decimal Degree 형식의 위도 또는 경도를 DMS (Degree Minute Second) 형식의 문자열로 변환합니다.
+     *
+     * @param decimalDegree Decimal Degree 값
+     * @param isLatitude    위도인 경우 true, 경도인 경우 false
+     * @return DMS 형식의 문자열 (예: "37° 33' 59.78\" N", "126° 58' 41.23\" E")
+     */
+    public static String decimalToDMS(double decimalDegree, boolean isLatitude) {
+        int degrees = (int) decimalDegree;
+        double remainingMinutes = (decimalDegree - degrees) * 60;
+        int minutes = (int) remainingMinutes;
+        double seconds = (remainingMinutes - minutes) * 60;
+
+        String direction = "";
+        if (isLatitude) {
+            direction = (decimalDegree >= 0) ? "N" : "S";
+        } else {
+            direction = (decimalDegree >= 0) ? "E" : "W";
+        }
+
+        degrees = Math.abs(degrees);
+        minutes = Math.abs(minutes);
+        seconds = Math.abs(seconds);
+
+        return String.format("%d° %d' %.2f\" %s", degrees, minutes, seconds, direction);
     }
 
 }
+

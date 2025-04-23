@@ -12,38 +12,129 @@ import lombok.ToString;
 @Setter
 @ToString(callSuper = true)
 public class BnFileVideo extends AbsBnFileInfo {
-    /**
-     * The total playback duration of the video in seconds.
-     */
-    private int duration;
+	/**
+	 * Represents the MIME type of the file.
+	 * 파일의 MIME 타입을 나타냅니다.
+	 */
+	private String mimeType;
 
-    /**
-     * The resolution of the video (e.g., "1920x1080").
-     */
-    private String resolution;
+	/**
+	 * Represents the author of the file.
+	 * 파일의 작성자를 나타냅니다.
+	 */
+	private String author;
 
-    /**
-     * The frame rate of the video in frames per second (FPS).
-     */
-    private float frameRate;
+	/**
+	 * Represents the duration of the media file.
+	 * 미디어 파일의 재생 시간을 나타냅니다.
+	 */
+	private String duration;
 
-    /**
-     * The video codec used to encode the video (e.g., "H.264", "H.265").
-     */
-    private String videoCodec;
+	/**
+	 * Represents the preferred playback rate.
+	 * 선호하는 재생 속도를 나타냅니다.
+	 */
+	private double preferredRate;
 
-    /**
-     * The audio codec used in the video file (e.g., "AAC", "MP3").
-     */
-    private String audioCodec;
+	/**
+	 * Represents the preferred playback volume.
+	 * 선호하는 재생 볼륨을 나타냅니다.
+	 */
+	private String preferredVolume;
 
-    /**
-     * The bitrate of the video and audio streams in kilobits per second (kbps).
-     */
-    private int bitrate;
+	/**
+	 * Represents the format of the audio file.
+	 * 오디오 파일의 형식을 나타냅니다.
+	 */
+	private String audioFormat;
 
-    /**
-     * Metadata tags associated with the video file.
-     */
-    private String tags;
+	/**
+	 * Represents the number of bits per audio sample.
+	 * 오디오 샘플당 비트 수를 나타냅니다.
+	 */
+	private int audioBitsPerSample;
+
+	/**
+	 * Represents the audio sample rate in Hz.
+	 * 오디오 샘플링 속도를 Hz 단위로 나타냅니다.
+	 */
+	private int audioSampleRate;
+
+	/**
+	 * Represents the layout flags used in the media file.
+	 * 미디어 파일에서 사용되는 레이아웃 플래그를 나타냅니다.
+	 */
+	private String layoutFlags;
+
+	/**
+	 * Represents the number of audio channels.
+	 * 오디오 채널 수를 나타냅니다.
+	 */
+	private int audioChannels;
+
+	/**
+	 * Represents the version of the compressor used.
+	 * 사용된 압축기 버전을 나타냅니다.
+	 */
+	private String compressorVersion;
+
+	/**
+	 * Represents the camera model name.
+	 * 카메라 모델명을 나타냅니다.
+	 */
+	private String cameraModelName;
+
+	/**
+	 * Represents the firmware version of the camera.
+	 * 카메라의 펌웨어 버전을 나타냅니다.
+	 */
+	private String firmwareVersion;
+
+	/**
+	 * Represents the average bitrate of the media file.
+	 * 미디어 파일의 평균 비트레이트를 나타냅니다.
+	 */
+	private String avgBitrate;
+
+	/**
+	 * Represents the rotation angle of the image or video.
+	 * 이미지 또는 비디오의 회전 각도를 나타냅니다.
+	 */
+	private int rotation;
+
+	/**
+	 * Represents the width of the image in pixels.
+	 * 이미지의 너비(픽셀 단위)를 나타냅니다.
+	 */
+	private int imageWidth;
+
+	/**
+	 * Represents the height of the image in pixels.
+	 * 이미지의 높이(픽셀 단위)를 나타냅니다.
+	 */
+	private int imageHeight;
+
+	/**
+	 * Represents the creation date of the media file.
+	 * 미디어 파일의 생성 날짜를 나타냅니다.
+	 */
+	private String createDate;
+
+	/**
+	 * Represents the last modification date of the media file.
+	 * 미디어 파일의 마지막 수정 날짜를 나타냅니다.
+	 */
+	private String modifyDate;
+
+	/**
+	 * Represents the latitude coordinate of the image location.
+	 * 이미지가 촬영된 위치의 위도를 나타냅니다.
+	 */
+	private double gpsLatitude;
+
+	/**
+	 * Represents the longitude coordinate of the image location.
+	 * 이미지가 촬영된 위치의 경도를 나타냅니다.
+	 */
+	private double gpsLongitude;
 }

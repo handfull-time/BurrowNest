@@ -16,83 +16,111 @@ import lombok.ToString;
 @Getter
 @ToString(callSuper = true)
 public class BnFileImage extends AbsBnFileInfo {
-    /**
-     * The model name of the camera used to capture the image.
-     */
-    private String cameraModel;
+	/**
+	 * Represents the make of the camera.
+	 * 카메라 제조사를 나타냅니다.
+	 */
+	private String make;
 
-    /**
-     * The manufacturer of the camera.
-     */
-    private String cameraManufacturer;
+	/**
+	 * Represents the model name of the camera.
+	 * 카메라 모델명을 나타냅니다.
+	 */
+	private String cameraModelName;
 
-    /**
-     * The aperture value used during image capture.
-     */
-    private float apertureValue;
+	/**
+	 * Represents the orientation of the image.
+	 * 이미지의 방향(회전 상태)을 나타냅니다.
+	 */
+	private String orientation;
 
-    /**
-     * The shutter speed used during image capture.
-     */
-    private float shutterSpeed;
+	/**
+	 * Represents the f-number (aperture setting).
+	 * F값(조리개 설정)을 나타냅니다.
+	 */
+	private double fNumber;
 
-    /**
-     * The ISO sensitivity value of the camera.
-     */
-    private int isoValue;
+	/**
+	 * Represents the exposure time in seconds.
+	 * 노출 시간을 초 단위로 나타냅니다.
+	 */
+	private String exposureTime;
 
-    /**
-     * The focal length of the lens used for image capture.
-     */
-    private float focalLength;
+	/**
+	 * Represents the sensing method used by the camera sensor.
+	 * 카메라 센서의 감지 방식을 나타냅니다.
+	 */
+	private String sensingMethod;
 
-    /**
-     * The date the image was captured.
-     */
-    private Date captureDate;
+	/**
+	 * Represents whether the flash was used.
+	 * 플래시 사용 여부를 나타냅니다.
+	 */
+	private String flash;
 
-    /**
-     * The time the image was captured.
-     */
-    private Time captureTime;
+	/**
+	 * Represents the light source used in the image capture.
+	 * 이미지 촬영에 사용된 광원을 나타냅니다.
+	 */
+	private String lightSource;
 
-    /**
-     * The width of the image in pixels.
-     */
-    private int imageWidth;
+	/**
+	 * Represents the white balance setting.
+	 * 화이트 밸런스 설정을 나타냅니다.
+	 */
+	private String whiteBalance;
 
-    /**
-     * The height of the image in pixels.
-     */
-    private int imageHeight;
+	/**
+	 * Represents the calculated shutter speed.
+	 * 계산된 셔터 속도를 나타냅니다.
+	 */
+	private double shutterSpeed;
 
-    /**
-     * The GPS latitude where the image was captured.
-     */
-    private double gpsLatitude;
+	/**
+	 * Represents the ISO sensitivity setting.
+	 * ISO 감도 설정을 나타냅니다.
+	 */
+	private int iso;
 
-    /**
-     * The GPS longitude where the image was captured.
-     */
-    private double gpsLongitude;
+	/**
+	 * Represents the width of the image in pixels.
+	 * 이미지의 너비(픽셀 단위)를 나타냅니다.
+	 */
+	private int imageWidth;
 
-    /**
-     * Indicates whether the camera flash was used during capture.
-     */
-    private boolean flashUsed;
+	/**
+	 * Represents the height of the image in pixels.
+	 * 이미지의 높이(픽셀 단위)를 나타냅니다.
+	 */
+	private int imageHeight;
 
-    /**
-     * The white balance setting used during image capture.
-     */
-    private String whiteBalance;
+	/**
+	 * Represents the creation date of the image.
+	 * 이미지의 생성 날짜를 나타냅니다.
+	 */
+	private String createDate;
 
-    /**
-     * The scene mode used during image capture.
-     */
-    private String sceneMode;
+	/**
+	 * Represents the original date and time of the image capture.
+	 * 이미지 원본 촬영 날짜와 시간을 나타냅니다.
+	 */
+	private String dateTimeOriginal;
 
-    /**
-     * The version of the software used for image processing.
-     */
-    private String softwareVersion;
+	/**
+	 * Represents the last modification date of the image.
+	 * 이미지의 마지막 수정 날짜를 나타냅니다.
+	 */
+	private String modifyDate;
+
+	/**
+	 * Represents the latitude coordinate of the image location.
+	 * 이미지가 촬영된 위치의 위도를 나타냅니다.
+	 */
+	private double gpsLatitude;
+
+	/**
+	 * Represents the longitude coordinate of the image location.
+	 * 이미지가 촬영된 위치의 경도를 나타냅니다.
+	 */
+	private double gpsLongitude;
 }

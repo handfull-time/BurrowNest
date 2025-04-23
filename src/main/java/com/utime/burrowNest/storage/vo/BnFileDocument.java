@@ -39,9 +39,9 @@ public class BnFileDocument extends AbsBnFileInfo {
     private String company;
 
     /**
-     * Category or classification of the document.
+     * 작성한 어플리케이션
      */
-    private String category;
+    private String application;
 
     /**
      * Keywords associated with the document, for easier searching or filtering.

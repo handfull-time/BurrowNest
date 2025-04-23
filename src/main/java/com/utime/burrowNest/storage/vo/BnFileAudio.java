@@ -11,84 +11,94 @@ import lombok.ToString;
 @Getter
 @ToString( callSuper = true)
 public class BnFileAudio extends AbsBnFileInfo{
+	
+	/**
+	 * Represents the MIME type of the file.
+	 * 파일의 MIME 타입을 나타냅니다.
+	 */
+	private String mimeType;
 
-    /**
-     * Total playback duration (in seconds or minutes).
-     */
-    private int duration;
-
-    /**
-     * Audio format of the file (e.g., MP3, WAV, FLAC).
-     */
-    private String audioFormat;
-
-    /**
-     * Sampling rate in Hz (e.g., 44100).
+	/**
+     * Sample rate of the audio file
+     * 오디오 파일의 샘플 레이트
      */
     private int sampleRate;
 
     /**
-     * Channel configuration (e.g., Mono, Stereo, Surround).
+     * Number of channels in the audio file
+     * 오디오 파일의 채널 수
      */
-    private String channels;
+    private int channels;
 
     /**
-     * Bit depth representing sound quality (e.g., 16, 24).
+     * Bits per sample of the audio file
+     * 오디오 파일의 샘플 당 비트 수
      */
-    private int bitDepth;
+    private int bitsPerSample;
 
     /**
-     * Audio codec used for compression (e.g., AAC, MP3).
+     * Total samples in the audio file
+     * 오디오 파일의 총 샘플 수
      */
-    private String audioCodec;
+    private long totalSamples;
 
     /**
-     * Bitrate of the audio in kbps (e.g., 320).
+     * Title of the track
+     * 트랙 제목
      */
-    private int bitrate;
+    private String title;
 
     /**
-     * Minimum volume level detected in the track.
+     * Name of the artist
+     * 아티스트 이름
      */
-    private float volumeLevelMin;
+    private String artist;
 
     /**
-     * Maximum volume level detected in the track.
+     * Album name
+     * 앨범 이름
      */
-    private float volumeLevelMax;
+    private String album;
 
     /**
-     * Average volume level across the track.
+     * Genre of the track
+     * 트랙 장르
      */
-    private float volumeLevelAvg;
+    private String genre;
 
     /**
-     * Frequency spectrum information (e.g., bass, mid, treble).
+     * Album artist name
+     * 앨범 아티스트 이름
      */
-    private String frequencySpectrum;
+    private String albumArtist;
 
     /**
-     * Year the song or album was released.
+     * Disc number of the album
+     * 앨범 디스크 번호
      */
-    private int releaseYear;
+    private int discNumber;
 
     /**
-     * Title of the song.
+     * Release date of the track
+     * 트랙 발매 날짜
      */
-    private String songTitle;
+    private String date;
 
     /**
-     * Title of the album the song belongs to.
+     * Organization associated with the track
+     * 트랙과 관련된 조직
      */
-    private String albumTitle;
+    private String organization;
 
     /**
-     * Name of the artist who created the track.
+     * Track number in the album
+     * 앨범 내 트랙 번호
      */
-    private String artistName;
+    private int trackNumber;
 
     /**
-     * Embedded lyrics within the audio file, if available.
+     * Duration of the track in seconds
+     * 트랙의 재생 길이(초)
      */
-    private String embeddedLyrics;
+    private String duration;
 }
