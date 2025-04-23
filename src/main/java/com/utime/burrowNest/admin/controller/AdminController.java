@@ -15,7 +15,7 @@ public class AdminController {
 	 * @return
 	 */
 	public String adminPage(UserVo user) {
-		return "Admin/Main";
+		return "Admin/AdminMain";
 	}
 }
 

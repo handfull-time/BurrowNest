@@ -177,7 +177,7 @@
     	<if test="author != null and author != '' ">, AUTHOR</if>
     	<if test="manager != null and manager != '' ">, MANAGER</if>
     	<if test="company != null and company != '' ">, COMPANY</if>
-    	<if test="category != null and category != '' ">, CATEGORY</if>
+    	<if test="application != null and application != '' ">, APPLICATION</if>
     	<if test="keywords != null and keywords != '' ">, KEYWORDS</if>
     	<if test="notes != null and notes != '' ">, NOTES</if>
     ) VALUES (
@@ -188,7 +188,7 @@
     	<if test="author != null and author != '' ">, #{author}</if> 
     	<if test="manager != null and manager != '' ">, #{manager}</if> 
     	<if test="company != null and company != '' ">, #{company}</if> 
-    	<if test="category != null and category != '' ">, #{category}</if> 
+    	<if test="application != null and application != '' ">, #{application}</if> 
     	<if test="keywords != null and keywords != '' ">, #{keywords}</if> 
     	<if test="notes != null and notes != '' ">, #{notes}</if> 
     )
@@ -204,7 +204,7 @@
     	, AUTHOR
     	, MANAGER
     	, COMPANY
-    	, CATEGORY
+    	, APPLICATION
     	, KEYWORDS
     	, NOTES
     FROM BN_FILE_DOCUMENT
@@ -220,7 +220,7 @@
         , AUTHOR = <choose> <when test="author != null and author != '' ">#{author}</when> <otherwise>NULL</otherwise> </choose>
         , MANAGER = <choose> <when test="manager != null and manager != '' ">#{whiteBalance}</when> <otherwise>NULL</otherwise> </choose>
         , COMPANY = <choose> <when test="company != null and company != '' ">#{company}</when> <otherwise>NULL</otherwise> </choose>
-        , CATEGORY = <choose> <when test="category != null and category != '' ">#{category}</when> <otherwise>NULL</otherwise> </choose>
+        , APPLICATION = <choose> <when test="application != null and application != '' ">#{application}</when> <otherwise>NULL</otherwise> </choose>
         , KEYWORDS = <choose> <when test="keywords != null and keywords != '' ">#{keywords}</when> <otherwise>NULL</otherwise> </choose>
         , NOTES = <choose> <when test="notes != null and notes != '' ">#{notes}</when> <otherwise>NULL</otherwise> </choose>
     WHERE FILE_NO = #{fileNo}

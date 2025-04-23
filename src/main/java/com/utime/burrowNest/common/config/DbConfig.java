@@ -13,7 +13,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import com.utime.burrowNest.storage.typeHandler.EArchiveTypeTypeHandler;
+import com.utime.burrowNest.storage.typeHandler.EOrientationTypeHandler;
 import com.utime.burrowNest.storage.vo.EArchiveType;
+import com.utime.burrowNest.storage.vo.EOrientation;
 
 /**
  * DB 환경 정보
@@ -40,8 +42,12 @@ public class DbConfig {
 	
 	@Bean
     public ConfigurationCustomizer configurationCustomizer() {
-        return configuration -> configuration.getTypeHandlerRegistry()
-            .register(EArchiveType.class, EArchiveTypeTypeHandler.class);
+		return configuration -> {
+	        configuration.getTypeHandlerRegistry()
+	            .register(EArchiveType.class, EArchiveTypeTypeHandler.class);
+	        configuration.getTypeHandlerRegistry()
+	            .register(EOrientation.class, EOrientationTypeHandler.class);
+	    };
     }
 
 }
