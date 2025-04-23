@@ -1,7 +1,9 @@
 package com.utime.burrowNest.storage.service.impl;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -18,7 +20,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Timestamp;
 import java.util.Base64;
-import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -770,5 +771,36 @@ App Version                     : 16.0300
 		
 		return result;
 	}
+	
+    public static String getPptThumb(File f) throws Exception {
+        // PPTX 파일 읽기
+        final FileInputStream fis = new FileInputStream(f);
+        final XMLSlideShow ppt = new XMLSlideShow(fis);
+
+        // 첫 번째 슬라이드 가져오기
+        final XSLFSlide slide = ppt.getSlides().get(0);
+
+        // 이미지 크기 설정
+        final Dimension pageSize = ppt.getPageSize();
+        final BufferedImage img = new BufferedImage(pageSize.width, pageSize.height, BufferedImage.TYPE_INT_RGB);
+
+        // Graphics2D로 렌더링
+        final Graphics2D graphics = img.createGraphics();
+        graphics.setPaint(Color.WHITE);
+        graphics.fill(new Rectangle(0, 0, pageSize.width, pageSize.height));
+        slide.draw(graphics);
+
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(img, "jpg", baos);
+        baos.flush();
+
+        // ByteArrayOutputStream의 내용을 Base64로 변환
+        final String result = Base64.getEncoder().encodeToString(baos.toByteArray());
+        baos.close();
+
+        graphics.dispose();
+
+        return result;
+    }
 
 }
