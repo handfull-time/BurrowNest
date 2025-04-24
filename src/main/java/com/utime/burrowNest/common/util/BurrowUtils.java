@@ -1,7 +1,12 @@
 package com.utime.burrowNest.common.util;
 
-import jakarta.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class BurrowUtils {
 	
 	private static final String UnknownIp = "unknown";
@@ -79,9 +84,15 @@ public class BurrowUtils {
      * @throws IllegalArgumentException DMS 문자열 형식이 올바르지 않은 경우 발생
      */
     public static double dmsToDecimal(String dmsString) {
-        String[] parts = dmsString.trim().split("\\s+");
+    	
+    	if( BurrowUtils.isEmpty(dmsString) ) {
+    		return 0D;
+    	}
+    	
+        final String[] parts = dmsString.trim().split("\\s+");
         if (parts.length < 3) {
-            throw new IllegalArgumentException("잘못된 DMS 형식: " + dmsString);
+        	log.warn("잘못된 DMS 형식: " + dmsString);
+        	return 0D;
         }
 
         double degrees;
@@ -98,7 +109,8 @@ public class BurrowUtils {
                 direction = parts[3].toUpperCase();
             }
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("숫자 형식 오류: " + dmsString);
+        	log.warn("숫자 형식 오류: " + dmsString);
+        	return 0D;
         }
 
         double decimalDegrees = degrees + (minutes / 60.0) + (seconds / 3600.0);
@@ -106,7 +118,8 @@ public class BurrowUtils {
         if (direction.equals("S") || direction.equals("W")) {
             decimalDegrees *= -1;
         } else if (!direction.isEmpty() && !direction.equals("N") && !direction.equals("E")) {
-            throw new IllegalArgumentException("잘못된 방향 표시: " + direction);
+        	log.warn("잘못된 방향 표시: " + direction);
+        	decimalDegrees = 0D;
         }
 
         return decimalDegrees;
@@ -138,5 +151,25 @@ public class BurrowUtils {
 
         return String.format("%d° %d' %.2f\" %s", degrees, minutes, seconds, direction);
     }
+    
+    public static LocalDateTime convertToLocalDateTime(String dateTimeStr) {
+    	if( BurrowUtils.isEmpty(dateTimeStr) ) {
+    		return null;
+    	}
+    	
+//    	2022:07:26 13:49:59+09:00, 2024:01:23 07:19:00Z
+    	
+    	LocalDateTime result = null;
+    	
+    	try {
+    		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss");
+            result = LocalDateTime.parse(dateTimeStr, formatter);
+		} catch (Exception e) {
+			log.error("", e);
+		}
+    	
+        return result;
+    }
+
 
 }

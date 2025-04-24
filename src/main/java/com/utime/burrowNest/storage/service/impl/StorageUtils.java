@@ -711,8 +711,8 @@ App Version                     : 16.0300
 		result.setImageHeight( values.getProperty("ImageHeight", null) );
 		result.setCreateDate( values.getProperty("CreateDate", null) );
 		result.setModifyDate( values.getProperty("ModifyDate", null) );
-		result.setGpsLatitude( values.getProperty("GpsLatitude", null) );
-		result.setGpsLongitude( values.getProperty("GpsLongitude", null) );
+		result.setGpsLatitude( BurrowUtils.dmsToDecimal(values.getProperty("GpsLatitude", null)) );
+		result.setGpsLongitude( BurrowUtils.dmsToDecimal(values.getProperty("GpsLongitude", null)) );
 		
 		return result;
 	}
@@ -734,7 +734,7 @@ App Version                     : 16.0300
 				, "-CameraModelName"
 				, "-FirmwareVersion"
 				, "-AvgBitrate"
-				, "-AvgBitrate"
+				, "-Rotation"
 				, "-ImageWidth"
 				, "-ImageHeight"
 				, "-CreateDate"
@@ -770,13 +770,13 @@ App Version                     : 16.0300
 		result.setCameraModelName( values.getProperty("CameraModelName", null) );
 		result.setFirmwareVersion( values.getProperty("FirmwareVersion", null) );
 		result.setAvgBitrate( values.getProperty("AvgBitrate", null) );
-		result.setAvgBitrate( values.getProperty("AvgBitrate", null) );
+		result.setRotation( values.getProperty("Rotation", null) );
 		result.setImageWidth( values.getProperty("ImageWidth", null) );
 		result.setImageHeight( values.getProperty("ImageHeight", null) );
 		result.setCreateDate( values.getProperty("CreateDate", null) );
 		result.setModifyDate( values.getProperty("ModifyDate", null) );
-		result.setGpsLatitude( values.getProperty("GpsLatitude", null) );
-		result.setGpsLongitude( values.getProperty("GpsLongitude", null) );
+		result.setGpsLatitude( BurrowUtils.dmsToDecimal(values.getProperty("GpsLatitude", null)) );
+		result.setGpsLongitude( BurrowUtils.dmsToDecimal(values.getProperty("GpsLongitude", null)) );
 		
 		return result;
 	}
