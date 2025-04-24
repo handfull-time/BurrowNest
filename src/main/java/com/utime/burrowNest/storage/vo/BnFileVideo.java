@@ -1,5 +1,7 @@
 package com.utime.burrowNest.storage.vo;
 
+import java.time.LocalDateTime;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -118,13 +120,13 @@ public class BnFileVideo extends AbsBnFileInfo {
 	 * Represents the creation date of the media file.
 	 * 미디어 파일의 생성 날짜를 나타냅니다.
 	 */
-	private String createDate;
+	private LocalDateTime createDate;
 
 	/**
 	 * Represents the last modification date of the media file.
 	 * 미디어 파일의 마지막 수정 날짜를 나타냅니다.
 	 */
-	private String modifyDate;
+	private LocalDateTime modifyDate;
 
 	/**
 	 * Represents the latitude coordinate of the image location.

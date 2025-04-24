@@ -73,69 +73,91 @@ class StorageDaoImpl implements StorageDao{
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public int saveFileInfor(AbsBnFileInfo file) throws Exception {
+	public int saveFileInfor(BnFile file) throws Exception {
 
-		final int result;
-		if( file instanceof BnFileImage ) {
-			if( file.getFileNo() < 0L ) {
-				result = mapper.insertBnFileImage((BnFileImage)file);
-			}else {
-				result = mapper.updateBnFileImage((BnFileImage)file);
-			}
-		}else if (file instanceof BnFileAudio ) {
-			if( file.getFileNo() < 0L ) {
-				result = mapper.insertBnFileAudio((BnFileAudio)file);
-			}else {
-				result = mapper.updateBnFileAudio((BnFileAudio)file);
-			}
-		}else if (file instanceof BnFileDocument ) {
-			if( file.getFileNo() < 0L ) {
-				result = mapper.insertBnFileDocument((BnFileDocument)file);
-			}else {
-				result = mapper.updateBnFileDocument((BnFileDocument)file);
-			}
-		}else if (file instanceof BnFileVideo ) {
-			if( file.getFileNo() < 0L ) {
-				result = mapper.insertBnFileVideo((BnFileVideo)file);
-			}else {
-				result = mapper.updateBnFileVideo((BnFileVideo)file);
-			}
-		}else if (file instanceof BnFileArchive ) {
-			if( file.getFileNo() < 0L ) {
-				result = mapper.insertBnFileArchive((BnFileArchive)file);
-			}else {
-				result = mapper.updateBnFileArchive((BnFileArchive)file);
-			}
-		}else {
-			result = -1;
+		final AbsBnFileInfo fileInfo = file.getInfo();
+		if( fileInfo == null ) {
+			return 0;
 		}
+		
+		if( fileInfo.getFileNo() < 0L ) {
+			fileInfo.setFileNo( file.getNo() );
+		}
+		
+		int result = 0;
+		
+		switch( file.getFileType() ) {
+		case Basic: result = 0; break;
+		case Document: {
+			if( mapper.existFileInfo( "BN_FILE_DOCUMENT", file.getNo() ) ) {
+				result = mapper.updateBnFileDocument((BnFileDocument)fileInfo);
+			}else {
+				result = mapper.insertBnFileDocument((BnFileDocument)fileInfo);
+			}
+			break;
+		}
+		case Image: { 
+			if( mapper.existFileInfo( "BN_FILE_IMAGE", file.getNo() ) ) {
+				result = mapper.updateBnFileImage((BnFileImage)fileInfo);
+			}else {
+				result = mapper.insertBnFileImage((BnFileImage)fileInfo);
+			}
+			break;
+		}
+		case Video:{
+			if( mapper.existFileInfo( "BN_FILE_VIDEO", file.getNo() ) ) {
+				result = mapper.updateBnFileVideo((BnFileVideo)fileInfo);
+			}else {
+				result = mapper.insertBnFileVideo((BnFileVideo)fileInfo);
+			}
+			break;
+		} 
+		case Audio:{
+			if( mapper.existFileInfo( "BN_FILE_AUDIO", file.getNo() ) ) {
+				result = mapper.updateBnFileAudio((BnFileAudio)fileInfo);
+			}else {
+				result = mapper.insertBnFileAudio((BnFileAudio)fileInfo);
+			}
+			break;
+		} 
+		case Archive:{
+			if( mapper.existFileInfo( "BN_FILE_ARCHIVE", file.getNo() ) ) {
+				result = mapper.updateBnFileArchive((BnFileArchive)fileInfo);
+			}else {
+				result = mapper.insertBnFileArchive((BnFileArchive)fileInfo);
+			}
+			break;
+		} 
+		}// case end
 
 		return result;
 	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public int saveThumbnail(BnFile file, String base64) {
+	public int saveThumbnail(BnFile file, byte [] bArray) {
 		
 		int result;
-		if( mapper.existThumbnail( file.getNo() ) ) {
-			result = mapper.insertThumbnail( file.getNo(), base64 );
+		if( mapper.existFileInfo( "BN_FILE_THUMBNAIL", file.getNo() ) ) {
+			result = mapper.insertThumbnail( file.getNo(), bArray );
 		}else {
-			result = mapper.updateThumbnail( file.getNo(), base64 );
+			result = mapper.updateThumbnail( file.getNo(), bArray );
 		}
 		return result;
 	}
 	
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public int deleteDirectory(BnDirectory dir) throws Exception {
 		
 		return mapper.deleteBnDirectoryByNo(dir.getNo());
 	}
 	
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public int deleteFile(BnFile file) throws Exception {
 		
-		return mapper.deleteBnFileById(file.getNo());
+		return mapper.deleteBnFileByNo(file.getNo());
 	}
 
 	@Override
@@ -146,11 +168,6 @@ class StorageDaoImpl implements StorageDao{
 	@Override
 	public BnFile getFile(long fileNo) {
 		return mapper.selectBnFileByNo(fileNo);
-	}
-
-	@Override
-	public String getFileThumbnail(long fileNo) {
-		return "data:image/jpeg;base64," + mapper.selectThumbnail(fileNo);
 	}
 
 	@Override
@@ -167,6 +184,12 @@ class StorageDaoImpl implements StorageDao{
 		}
 
 		return result;
+	}
+	
+	@Override
+	public byte[] getThumbnail(String fid) {
+		
+		return mapper.selectThumbnail(fid);
 	}
 
 	

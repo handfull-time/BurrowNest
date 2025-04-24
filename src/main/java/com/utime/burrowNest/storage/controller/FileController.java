@@ -37,6 +37,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utime.burrowNest.common.util.FileUtils;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.storage.vo.FileDto;
 import com.utime.burrowNest.storage.vo.PasteItem;
 import com.utime.burrowNest.storage.vo.PasteRequest;
@@ -48,6 +49,8 @@ import jakarta.servlet.http.HttpServletResponse;
 @Controller
 @RequestMapping("File")
 public class FileController {
+	
+	StorageService storageService;
 	
 	@GetMapping("Open")
 	public ResponseEntity<Resource> openFile(UserVo user, HttpServletRequest request, @RequestParam String path) {
@@ -407,6 +410,20 @@ public class FileController {
 	    }
 
 	    return result;
+	}
+	
+	@GetMapping("Thumbnail/{fid}")
+	public ResponseEntity<byte[]> getThumbnail(@PathVariable String fid) {
+	    final byte[] image = storageService.getThumbnail(fid);
+	    
+	    if( image == null ) {
+	    	return ResponseEntity.notFound().build();
+	    }
+	    
+	    return ResponseEntity.ok()
+	            .contentType(MediaType.IMAGE_JPEG)
+	            .contentLength(image.length)
+	            .body(image);
 	}
 
 }

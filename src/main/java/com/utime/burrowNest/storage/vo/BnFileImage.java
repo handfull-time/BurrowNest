@@ -1,7 +1,6 @@
 package com.utime.burrowNest.storage.vo;
 
-import java.sql.Date;
-import java.sql.Time;
+import java.time.LocalDateTime;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -74,7 +73,7 @@ public class BnFileImage extends AbsBnFileInfo {
 	 * Represents the calculated shutter speed.
 	 * 계산된 셔터 속도를 나타냅니다.
 	 */
-	private double shutterSpeed;
+	private String shutterSpeed;
 
 	/**
 	 * Represents the ISO sensitivity setting.
@@ -98,19 +97,13 @@ public class BnFileImage extends AbsBnFileInfo {
 	 * Represents the creation date of the image.
 	 * 이미지의 생성 날짜를 나타냅니다.
 	 */
-	private String createDate;
-
-	/**
-	 * Represents the original date and time of the image capture.
-	 * 이미지 원본 촬영 날짜와 시간을 나타냅니다.
-	 */
-	private String dateTimeOriginal;
+	private LocalDateTime createDate;
 
 	/**
 	 * Represents the last modification date of the image.
 	 * 이미지의 마지막 수정 날짜를 나타냅니다.
 	 */
-	private String modifyDate;
+	private LocalDateTime modifyDate;
 
 	/**
 	 * Represents the latitude coordinate of the image location.

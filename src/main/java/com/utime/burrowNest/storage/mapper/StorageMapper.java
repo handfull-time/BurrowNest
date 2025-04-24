@@ -85,7 +85,15 @@ public interface StorageMapper {
 	 * @param fileNo
 	 * @return
 	 */
-	int deleteBnFileById( @Param("fileNo") long fileNo );
+	int deleteBnFileByNo( @Param("fileNo") long fileNo );
+	
+	/**
+	 * 확장 정보 유무
+	 * @param tableName
+	 * @param fileNo
+	 * @return true:있다.
+	 */
+	boolean existFileInfo( @Param("tableName") String tableName, @Param("fileNo") long fileNo );
 	
 	/**
 	 * file doc 추가.
@@ -192,19 +200,12 @@ public interface StorageMapper {
 	int updateBnFileArchive( BnFileArchive archive );
 	
 	/**
-	 * 섬네일이 있는지
-	 * @param fileNo
-	 * @return true: 있다.
-	 */
-	boolean existThumbnail( @Param("fileNo") long fileNo );
-	
-	/**
 	 * 섬네일 추가
 	 * @param fileNo
 	 * @param thumbnail
 	 * @return
 	 */
-	int insertThumbnail( @Param("fileNo") long fileNo, @Param("thumbnail") String thumbnail);
+	int insertThumbnail( @Param("fileNo") long fileNo, @Param("thumbnail") byte [] thumbnail);
 	
 	/**
 	 * 섬네일 조회
@@ -212,14 +213,14 @@ public interface StorageMapper {
 	 * @param thumbnail
 	 * @return
 	 */
-	int updateThumbnail( @Param("fileNo") long fileNo, @Param("thumbnail") String thumbnail);
+	int updateThumbnail( @Param("fileNo") long fileNo, @Param("thumbnail") byte [] thumbnail);
 	
 	/**
 	 * 섬네일 조회
 	 * @param fileNo
 	 * @return
 	 */
-	String selectThumbnail( @Param("fileNo") long fileNo );
+	byte [] selectThumbnail( @Param("fileId") String fid );
 }
 
 /*

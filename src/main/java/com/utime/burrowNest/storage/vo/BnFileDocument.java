@@ -1,5 +1,7 @@
 package com.utime.burrowNest.storage.vo;
 
+import java.time.LocalDateTime;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -13,43 +15,64 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public class BnFileDocument extends AbsBnFileInfo {
 
-    /**
-     * Title of the document.
-     */
-    private String title;
+	/**
+	 * The title of the document.
+	 * 문서 제목
+	 */
+	private String title;
+	
+	/**
+	 * The subject or theme of the document.
+	 * 문서 주제
+	 */
+	private String subject;
+	
+	/**
+	 * The creator or author of the document.
+	 * 문서를 작성한 사람
+	 */
+	private String creator;
+	
+	/**
+	 * The name of the person who last modified the document.
+	 * 마지막으로 문서를 수정한 사람
+	 */
+	private String lastModifiedBy;
+	
+	/**
+	 * The date and time the document was created.
+	 * 문서가 생성된 날짜 및 시간
+	 */
+	private LocalDateTime createDate;
+	
+	/**
+	 * The date and time the document was last modified.
+	 * 문서가 마지막으로 수정된 날짜 및 시간
+	 */
+	private LocalDateTime modifyDate;
+	
+	/**
+	 * A set of keywords associated with the document.
+	 * 문서에 연결된 키워드들
+	 */
+	private String keywords;
+	
+	/**
+	 * A textual description of the document.
+	 * 문서에 대한 설명
+	 */
+	private String description;
+	
+	/**
+	 * Structured information describing the heading pairs in the document.
+	 * 문서의 헤딩 페어(구조적 정보, 목차 등)
+	 */
+	private String headingPairs;
+	
+	/**
+	 * The company associated with the document or its author.
+	 * 문서나 작성자와 관련된 회사 정보
+	 */
+	private String company;
 
-    /**
-     * Subject or topic of the document.
-     */
-    private String subject;
-
-    /**
-     * Author or creator of the document.
-     */
-    private String author;
-
-    /**
-     * Manager or administrator responsible for the document.
-     */
-    private String manager;
-
-    /**
-     * Company associated with the document.
-     */
-    private String company;
-
-    /**
-     * 작성한 어플리케이션
-     */
-    private String application;
-
-    /**
-     * Keywords associated with the document, for easier searching or filtering.
-     */
-    private String keywords;
-
-    /**
-     * Additional notes or comments about the document.
-     */
-    private String notes;
 }

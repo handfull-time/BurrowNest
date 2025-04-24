@@ -138,7 +138,7 @@ public class StorageServiceImpl implements StorageService {
     		{
     			// 파일 섬네일 추출
     			try {
-    				final String thumbnail = StorageUtils.getFileThumbnail(file, bnFile);
+    				final byte [] thumbnail = StorageUtils.getFileThumbnail(file, bnFile);
     				if( thumbnail != null ) {
     					storageDao.saveThumbnail(bnFile, thumbnail);
     				}
@@ -165,8 +165,9 @@ public class StorageServiceImpl implements StorageService {
     			}
         		
         		if( fileInfo != null ) {
+        			bnFile.setInfo(fileInfo);
         			try {
-    					storageDao.saveFileInfor(fileInfo);
+    					storageDao.saveFileInfor(bnFile);
     				} catch (Exception e) {
     					log.error("확장 정보 저장 실패", e);
     				}
@@ -354,5 +355,10 @@ public class StorageServiceImpl implements StorageService {
 		new Thread( new LibDownLoad(req, ifl) ).start();
 		
 		return new ReturnBasic();
+	}
+
+	@Override
+	public byte[] getThumbnail(String fid) {
+		return storageDao.getThumbnail( fid );
 	}
 }

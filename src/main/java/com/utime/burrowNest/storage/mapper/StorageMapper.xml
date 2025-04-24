@@ -167,46 +167,63 @@
     WHERE NO = #{fileNo}
 </delete>
 
+<!-- 확장 정보 유무 -->
+<select id="existFileInfo" parameterType="map" resultType="boolean">
+	SELECT 
+		CASE COUNT(1) 
+  			WHEN 1 THEN 1
+			ELSE 0
+  		END AS RES
+  	FROM ${tableName}
+  	WHERE FILE_NO = #{fileNo}
+</select>
+
 <!-- INSERT -->
 <insert id="insertBnFileDocument" parameterType="com.utime.burrowNest.storage.vo.BnFileDocument">
     INSERT INTO BN_FILE_DOCUMENT (
     	FILE_NO
     	, UPDATE_DATE
     	<if test="title != null and title != '' ">, TITLE</if>
-    	<if test="subject != null and subject != '' ">, SUBJECT</if>
-    	<if test="author != null and author != '' ">, AUTHOR</if>
-    	<if test="manager != null and manager != '' ">, MANAGER</if>
-    	<if test="company != null and company != '' ">, COMPANY</if>
-    	<if test="application != null and application != '' ">, APPLICATION</if>
-    	<if test="keywords != null and keywords != '' ">, KEYWORDS</if>
-    	<if test="notes != null and notes != '' ">, NOTES</if>
+		<if test="subject != null and subject != '' ">, SUBJECT</if>
+		<if test="creator != null and creator != '' ">, CREATOR</if>
+		<if test="lastModifiedBy != null and lastModifiedBy != '' ">, LAST_MODIFIED_BY</if>
+		<if test="createDate != null ">, CREATE_DATE</if>
+		<if test="modifyDate != null ">, MODIFY_DATE</if>
+		<if test="keywords != null and keywords != '' ">, KEYWORDS</if>
+		<if test="description != null and description != '' ">, DESCRIPTION</if>
+		<if test="headingPairs != null and headingPairs != '' ">, HEADING_PAIRS</if>
+		<if test="company != null and company != '' ">, COMPANY</if>
     ) VALUES (
     	#{fileNo}
     	, CURRENT_TIMESTAMP
-    	<if test="title != null and title != '' ">, #{title}</if> 
-    	<if test="subject != null and subject != '' ">, #{subject}</if> 
-    	<if test="author != null and author != '' ">, #{author}</if> 
-    	<if test="manager != null and manager != '' ">, #{manager}</if> 
-    	<if test="company != null and company != '' ">, #{company}</if> 
-    	<if test="application != null and application != '' ">, #{application}</if> 
-    	<if test="keywords != null and keywords != '' ">, #{keywords}</if> 
-    	<if test="notes != null and notes != '' ">, #{notes}</if> 
+    	<if test="title != null and title != '' ">, #{title}</if>
+		<if test="subject != null and subject != '' ">, #{subject}</if>
+		<if test="creator != null and creator != '' ">, #{creator}</if>
+		<if test="lastModifiedBy != null and lastModifiedBy != '' ">, #{lastModifiedBy}</if>
+		<if test="createDate != null ">, #{createDate}</if>
+		<if test="modifyDate != null ">, #{modifyDate}</if>
+		<if test="keywords != null and keywords != '' ">, #{keywords}</if>
+		<if test="description != null and description != '' ">, #{description}</if>
+		<if test="headingPairs != null and headingPairs != '' ">, #{headingPairs}</if>
+		<if test="company != null and company != '' ">, #{company}</if>
     )
 </insert>
 
 <!-- SELECT -->
 <select id="selectBnFileDocumentByFileNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFileDocument">
     SELECT 
-    	FILE_NO
+    	FILE_NO 
     	, UPDATE_DATE
     	, TITLE
-    	, SUBJECT
-    	, AUTHOR
-    	, MANAGER
-    	, COMPANY
-    	, APPLICATION
-    	, KEYWORDS
-    	, NOTES
+		, SUBJECT
+		, CREATOR
+		, LAST_MODIFIED_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, KEYWORDS
+		, DESCRIPTION
+		, HEADING_PAIRS
+		, COMPANY
     FROM BN_FILE_DOCUMENT
     WHERE FILE_NO = #{fileNo};
 </select>
@@ -215,14 +232,16 @@
 <update id="updateBnFileDocument" parameterType="com.utime.burrowNest.storage.vo.BnFileDocument">
     UPDATE BN_FILE_DOCUMENT
     SET UPDATE_DATE = CURRENT_TIMESTAMP
-        , TITLE = <choose> <when test="title != null and title != '' ">#{title}</when> <otherwise>NULL</otherwise> </choose>
-        , SUBJECT = <choose> <when test="subject != null and subject != '' ">#{subject}</when> <otherwise>NULL</otherwise> </choose>
-        , AUTHOR = <choose> <when test="author != null and author != '' ">#{author}</when> <otherwise>NULL</otherwise> </choose>
-        , MANAGER = <choose> <when test="manager != null and manager != '' ">#{whiteBalance}</when> <otherwise>NULL</otherwise> </choose>
-        , COMPANY = <choose> <when test="company != null and company != '' ">#{company}</when> <otherwise>NULL</otherwise> </choose>
-        , APPLICATION = <choose> <when test="application != null and application != '' ">#{application}</when> <otherwise>NULL</otherwise> </choose>
-        , KEYWORDS = <choose> <when test="keywords != null and keywords != '' ">#{keywords}</when> <otherwise>NULL</otherwise> </choose>
-        , NOTES = <choose> <when test="notes != null and notes != '' ">#{notes}</when> <otherwise>NULL</otherwise> </choose>
+    	, TITLE = <choose> <when test="title != null and title != '' ">#{title}</when> <otherwise>NULL</otherwise> </choose>
+		, SUBJECT = <choose> <when test="subject != null and subject != '' ">#{subject}</when> <otherwise>NULL</otherwise> </choose>
+		, CREATOR = <choose> <when test="creator != null and creator != '' ">#{creator}</when> <otherwise>NULL</otherwise> </choose>
+		, LAST_MODIFIED_BY = <choose> <when test="lastModifiedBy != null and lastModifiedBy != '' ">#{lastModifiedBy}</when> <otherwise>NULL</otherwise> </choose>
+		, CREATE_DATE = <choose> <when test="createDate != null ">#{createDate}</when> <otherwise>NULL</otherwise> </choose>
+		, MODIFY_DATE = <choose> <when test="modifyDate != null ">#{modifyDate}</when> <otherwise>NULL</otherwise> </choose>
+		, KEYWORDS = <choose> <when test="keywords != null and keywords != '' ">#{keywords}</when> <otherwise>NULL</otherwise> </choose>
+		, DESCRIPTION = <choose> <when test="description != null and description != '' ">#{description}</when> <otherwise>NULL</otherwise> </choose>
+		, HEADING_PAIRS = <choose> <when test="headingPairs != null and headingPairs != '' ">#{headingPairs}</when> <otherwise>NULL</otherwise> </choose>
+		, COMPANY = <choose> <when test="company != null and company != '' ">#{company}</when> <otherwise>NULL</otherwise> </choose>
     WHERE FILE_NO = #{fileNo}
 </update>
 
@@ -230,63 +249,66 @@
     INSERT INTO BN_FILE_IMAGE (
         FILE_NO
         , UPDATE_DATE
-        <if test="cameraModel != null and cameraModel != '' ">, CAMERA_MODEL</if>
-        <if test="cameraManufacturer != null and cameraManufacturer != '' ">, CAMERA_MANUFACTURER</if>
-        , APERTURE_VALUE
-        , SHUTTER_SPEED
-        , ISO_VALUE
-        , FOCAL_LENGTH
-        <if test="captureDate != null ">, CAPTURE_DATE</if>
-        <if test="captureTime != null ">, CAPTURE_TIME</if>
-        , IMAGE_WIDTH
-        , IMAGE_HEIGHT
-        , GPS_LATITUDE
-        , GPS_LONGITUDE
-        , FLASH_USED
-        <if test="whiteBalance != null and whiteBalance != '' ">, WHITE_BALANCE</if>
-        <if test="sceneMode != null and sceneMode != '' ">, SCENE_MODE</if>
-        <if test="softwareVersion != null and softwareVersion != '' ">, SOFTWARE_VERSION</if>
+        <if test="make != null and make != '' ">, MAKE</if>
+		<if test="cameraModelName != null and cameraModelName != '' ">, CAMERA_MODEL_NAME</if> 
+		<if test="orientation != null and orientation != '' ">, ORIENTATION</if>
+		, F_NUMBER
+		<if test="exposureTime != null and exposureTime != '' ">, EXPOSURE_TIME</if>
+		<if test="sensingMethod != null and sensingMethod != '' ">, SENSING_METHOD</if>
+		<if test="flash != null and flash != '' ">, FLASH</if>
+		<if test="lightSource != null and lightSource != '' ">, LIGHT_SOURCE</if> 
+		<if test="whiteBalance != null and whiteBalance != '' ">, WHITE_BALANCE</if>
+		<if test="shutterSpeed != null and shutterSpeed != '' ">, SHUTTER_SPEED</if>
+		, ISO 
+		, IMAGE_WIDTH 
+		, IMAGE_HEIGHT
+		<if test="createDate != null">, CREATE_DATE</if>
+		<if test="modifyDate != null">, MODIFY_DATE</if>
+		, GPS_LATITUDE
+		, GPS_LONGITUDE
     ) VALUES (
         #{fileNo}
         , CURRENT_TIMESTAMP
-        <if test="cameraModel != null and cameraModel != '' ">,#{cameraModel}</if>
-        <if test="cameraManufacturer != null and cameraManufacturer != '' ">,#{cameraManufacturer}</if> 
-        , #{apertureValue}
-        , #{shutterSpeed}
-        , #{isoValue}
-        , #{focalLength} 
-        <if test="captureDate != null ">, #{captureDate}</if>
-        <if test="captureTime != null ">, #{captureTime}</if>
-        , #{imageWidth}
-        , #{imageHeight} 
-        , #{gpsLatitude}
-        , #{gpsLongitude}
-        , #{flashUsed}, 
-        <if test="whiteBalance != null and whiteBalance != '' ">,#{whiteBalance}</if>
-        <if test="sceneMode != null and sceneMode != '' ">,#{sceneMode}</if>
-        <if test="softwareVersion != null and softwareVersion != '' ">,#{softwareVersion}</if>
+        <if test="make != null and make != '' ">, #{make}</if>
+		<if test="cameraModelName != null and cameraModelName != '' ">, #{cameraModelName}</if> 
+		<if test="orientation != null and orientation != '' ">, #{orientation}</if>
+		, #{fNumber}
+		<if test="exposureTime != null and exposureTime != '' ">, #{exposureTime}</if>
+		<if test="sensingMethod != null and sensingMethod != '' ">, #{sensingMethod}</if>
+		<if test="flash != null and flash != '' ">, #{flash}</if>
+		<if test="lightSource != null and lightSource != '' ">, #{lightSource}</if> 
+		<if test="whiteBalance != null and whiteBalance != '' ">, #{whiteBalance}</if>
+		<if test="shutterSpeed != null and shutterSpeed != '' ">, #{shutterSpeed}</if>
+		, #{iso} 
+		, #{imageWidth} 
+		, #{imageHeight}
+		<if test="createDate != null">, #{createDate}</if>
+		<if test="modifyDate != null">, #{modifyDate}</if>
+		, #{gpsLatitude}
+		, #{gpsLongitude}
     )
 </insert>
 
 <update id="updateBnFileImage" parameterType="com.utime.burrowNest.storage.vo.BnFileImage">
     UPDATE BN_FILE_IMAGE
     SET UPDATE_DATE = CURRENT_TIMESTAMP
-        , CAMERA_MODEL = <choose> <when test="cameraModel != null and cameraModel != '' ">#{cameraModel}</when> <otherwise>NULL</otherwise> </choose> 
-        , CAMERA_MANUFACTURER = <choose> <when test="cameraManufacturer != null and cameraManufacturer != '' ">#{cameraManufacturer}</when> <otherwise>NULL</otherwise> </choose>
-        , APERTURE_VALUE = #{apertureValue}
-        , SHUTTER_SPEED = #{shutterSpeed}
-        , ISO_VALUE = #{isoValue}
-        , FOCAL_LENGTH = #{focalLength}
-        , CAPTURE_DATE = <choose> <when test="captureDate != null ">#{captureDate}</when> <otherwise>NULL</otherwise> </choose>
-        , CAPTURE_TIME = <choose> <when test="captureTime != null ">#{captureTime}</when> <otherwise>NULL</otherwise> </choose>
-        , IMAGE_WIDTH = #{imageWidth}
-        , IMAGE_HEIGHT = #{imageHeight}
-        , GPS_LATITUDE = #{gpsLatitude}
-        , GPS_LONGITUDE = #{gpsLongitude}
-        , FLASH_USED = #{flashUsed}
-        , WHITE_BALANCE = <choose> <when test="whiteBalance != null and whiteBalance != '' ">#{whiteBalance}</when> <otherwise>NULL</otherwise> </choose>
-        , SCENE_MODE = <choose> <when test="sceneMode != null and sceneMode != '' ">#{sceneMode}</when> <otherwise>NULL</otherwise> </choose>
-        , SOFTWARE_VERSION = <choose> <when test="softwareVersion != null and softwareVersion != '' ">#{softwareVersion}</when> <otherwise>NULL</otherwise> </choose>
+        , MAKE = <choose> <when test="make != null and make != '' ">#{make}</when> <otherwise>NULL</otherwise> </choose>
+		, CAMERA_MODEL_NAME = <choose> <when test="cameraModelName != null and cameraModelName != '' ">#{cameraModelName}</when> <otherwise>NULL</otherwise> </choose>
+		, ORIENTATION  = <choose> <when test="orientation != null and orientation != '' ">#{orientation}</when> <otherwise>NULL</otherwise> </choose>
+		, F_NUMBER = #{fNumber}
+		, EXPOSURE_TIME = <choose> <when test="exposureTime != null and exposureTime != '' ">#{exposureTime}</when> <otherwise>NULL</otherwise> </choose> 
+		, SENSING_METHOD  = <choose> <when test="sensingMethod != null and sensingMethod != '' ">#{sensingMethod}</when> <otherwise>NULL</otherwise> </choose>
+		, FLASH  = <choose> <when test="flash != null and flash != '' ">#{flash}</when> <otherwise>NULL</otherwise> </choose>
+		, LIGHT_SOURCE  = <choose> <when test="lightSource != null and lightSource != '' ">#{lightSource}</when> <otherwise>NULL</otherwise> </choose>
+		, WHITE_BALANCE = <choose> <when test="whiteBalance != null and whiteBalance != '' ">#{whiteBalance}</when> <otherwise>NULL</otherwise> </choose>
+		, SHUTTER_SPEED  = <choose> <when test="shutterSpeed != null and shutterSpeed != '' ">#{shutterSpeed}</when> <otherwise>NULL</otherwise> </choose>
+		, ISO = #{iso}
+		, IMAGE_WIDTH = #{imageWidth} 
+		, IMAGE_HEIGHT = #{imageHeight}
+		, CREATE_DATE = <choose> <when test="createDate != null ">#{createDate}</when> <otherwise>NULL</otherwise> </choose> 
+		, MODIFY_DATE = <choose> <when test="modifyDate != null ">#{modifyDate}</when> <otherwise>NULL</otherwise> </choose>
+		, GPS_LATITUDE = #{gpsLatitude}
+		, GPS_LONGITUDE = #{gpsLongitude}
     WHERE FILE_NO = #{fileNo}
 </update>
 
@@ -294,23 +316,24 @@
     SELECT 
     	FILE_NO
     	, UPDATE_DATE
-        , CAMERA_MODEL
-        , CAMERA_MANUFACTURER
-        , APERTURE_VALUE
-        , SHUTTER_SPEED
-        , ISO_VALUE
-        , FOCAL_LENGTH
-        , CAPTURE_DATE
-        , CAPTURE_TIME
-        , IMAGE_WIDTH
-        , IMAGE_HEIGHT
-        , GPS_LATITUDE
-        , GPS_LONGITUDE
-        , FLASH_USED
-        , WHITE_BALANCE
-        , SCENE_MODE
-        , SOFTWARE_VERSION
-    FROM BN_FILE_DOCUMENT
+        , MAKE
+		, CAMERA_MODEL_NAME 
+		, ORIENTATION 
+		, F_NUMBER 
+		, EXPOSURE_TIME 
+		, SENSING_METHOD 
+		, FLASH 
+		, LIGHT_SOURCE 
+		, WHITE_BALANCE
+		, SHUTTER_SPEED 
+		, ISO 
+		, IMAGE_WIDTH 
+		, IMAGE_HEIGHT
+		, CREATE_DATE
+		, MODIFY_DATE
+		, GPS_LATITUDE
+		, GPS_LONGITUDE
+    FROM BN_FILE_IMAGE
     WHERE FILE_NO = #{fileNo}
 </select>
 
@@ -318,148 +341,199 @@
     INSERT INTO BN_FILE_VIDEO (
         FILE_NO
         , UPDATE_DATE
-        , DURATION
-        <if test="resolution != null and resolution != '' ">, RESOLUTION</if>
-        , FRAME_RATE
-        <if test="videoCodec != null and videoCodec != '' ">, VIDEO_CODEC</if>
-        <if test="audioCodec != null and audioCodec != '' ">, AUDIO_CODEC</if>
-        , BITRATE
-        <if test="tags != null and tags != '' ">, TAGS</if>
+        <if test="mimeType != null and mimeType != '' ">, MIME_TYPE</if>
+		<if test="author != null and author != '' ">, AUTHOR</if>
+		<if test="duration != null and duration != '' ">, DURATION</if>
+		, PREFERRED_RATE 
+		<if test="preferredVolume != null and preferredVolume != '' ">, PREFERRED_VOLUME</if>
+		<if test="audioFormat != null and audioFormat != '' ">, AUDIO_FORMAT</if>
+		, AUDIO_BITS_PER_SAMPLE 
+		, AUDIO_SAMPLE_RATE 
+		<if test="layoutFlags != null and layoutFlags != '' ">, LAYOUT_FLAGS</if>
+		, AUDIO_CHANNELS
+		<if test="compressorVersion != null and compressorVersion != '' ">, COMPRESSOR_VERSION</if>
+		<if test="cameraModelName != null and cameraModelName != '' ">, CAMERA_MODEL_NAME</if>
+		<if test="firmwareVersion != null and firmwareVersion != '' ">, FIRMWARE_VERSION</if>
+		<if test="avgBitrate != null and avgBitrate != '' ">, AVG_BITRATE</if>
+		, ROTATION 
+		, IMAGE_WIDTH 
+		, IMAGE_HEIGHT 
+		<if test="createDate != null ">, CREATE_DATE</if>
+		<if test="modifyDate != null ">, MODIFY_DATE</if>
+		, GPS_LATITUDE 
+		, GPS_LONGITUDE 
     ) VALUES (
         #{fileNo}
         , CURRENT_TIMESTAMP
-        , #{duration}
-        <if test="resolution != null and resolution != '' ">, #{resolution}</if>
-        , #{frameRate}
-        <if test="videoCodec != null and videoCodec != '' ">, #{videoCodec}</if>
-        <if test="audioCodec != null and audioCodec != '' ">, #{audioCodec}</if>
-        , #{bitrate}
-        <if test="tags != null and tags != '' ">, #{tags}</if>
+        <if test="mimeType != null and mimeType != '' ">, #{mimeType}</if>
+		<if test="author != null and author != '' ">, #{author}</if>
+		<if test="duration != null and duration != '' ">, #{duration}</if>
+		, #{preferredRate} 
+		<if test="preferredVolume != null and preferredVolume != '' ">, #{preferredVolume}</if>
+		<if test="audioFormat != null and audioFormat != '' ">, #{audioFormat}</if>
+		, #{audioBitsPerSample} 
+		, #{audioSampleRate} 
+		<if test="layoutFlags != null and layoutFlags != '' ">, #{layoutFlags}</if>
+		, #{audioChannels}
+		<if test="compressorVersion != null and compressorVersion != '' ">, #{compressorVersion}</if>
+		<if test="cameraModelName != null and cameraModelName != '' ">, #{cameraModelName}</if>
+		<if test="firmwareVersion != null and firmwareVersion != '' ">, #{firmwareVersion}</if>
+		<if test="avgBitrate != null and avgBitrate != '' ">, #{avgBitrate}</if>
+		, #{rotation} 
+		, #{imageWidth} 
+		, #{imageHeight} 
+		<if test="createDate != null ">, #{createDate}</if>
+		<if test="modifyDate != null ">, #{modifyDate}</if>
+		, #{gpsLatitude} 
+		, #{gpsLongitude} 
     )
 </insert>
+
+<update id="updateBnFileVideo" parameterType="com.utime.burrowNest.storage.vo.BnFileVideo">
+    UPDATE BN_FILE_VIDEO
+    SET UPDATE_DATE = CURRENT_TIMESTAMP
+        , MIME_TYPE = <choose> <when test="mimeType != null and mimeType != '' ">#{mimeType}</when> <otherwise>NULL</otherwise> </choose>
+		, AUTHOR = <choose> <when test="author != null and author != '' ">#{author}</when> <otherwise>NULL</otherwise> </choose>
+		, DURATION = <choose> <when test="duration != null and duration != '' ">#{duration}</when> <otherwise>NULL</otherwise> </choose>
+		, PREFERRED_RATE = #{preferredRate}
+		, PREFERRED_VOLUME = <choose> <when test="preferredVolume != null and preferredVolume != '' ">#{preferredVolume}</when> <otherwise>NULL</otherwise> </choose>
+		, AUDIO_FORMAT = <choose> <when test="audioFormat != null and audioFormat != '' ">#{audioFormat}</when> <otherwise>NULL</otherwise> </choose>
+		, AUDIO_BITS_PER_SAMPLE = #{audioBitsPerSample}
+		, AUDIO_SAMPLE_RATE = #{audioSampleRate}   
+		, LAYOUT_FLAGS = <choose> <when test="layoutFlags != null and layoutFlags != '' ">#{layoutFlags}</when> <otherwise>NULL</otherwise> </choose>
+		, AUDIO_CHANNELS = #{audioChannels}
+		, COMPRESSOR_VERSION = <choose> <when test="compressorVersion != null and compressorVersion != '' ">#{compressorVersion}</when> <otherwise>NULL</otherwise> </choose> 
+		, CAMERA_MODEL_NAME = <choose> <when test="cameraModelName != null and cameraModelName != '' ">#{cameraModelName}</when> <otherwise>NULL</otherwise> </choose>
+		, FIRMWARE_VERSION = <choose> <when test="firmwareVersion != null and firmwareVersion != '' ">#{firmwareVersion}</when> <otherwise>NULL</otherwise> </choose>
+		, AVG_BITRATE = <choose> <when test="avgBitrate != null and avgBitrate != '' ">#{avgBitrate}</when> <otherwise>NULL</otherwise> </choose>
+		, ROTATION = #{rotation}   
+		, IMAGE_WIDTH = #{imageWidth} 
+		, IMAGE_HEIGHT = #{imageHeight}
+		, CREATE_DATE = <choose> <when test="createDate != null ">#{createDate}</when> <otherwise>NULL</otherwise> </choose> 
+		, MODIFY_DATE = <choose> <when test="modifyDate != null ">#{modifyDate}</when> <otherwise>NULL</otherwise> </choose> 
+		, GPS_LATITUDE = #{gpsLatitude} 
+		, GPS_LONGITUDE = #{gpsLongitude}
+    WHERE 
+        FILE_NO = #{fileNo}
+</update>
 
 <select id="selectBnFileVideoByFileNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFileVideo">
     SELECT 
         FILE_NO
         , UPDATE_DATE
-        , DURATION
-        , RESOLUTION
-        , FRAME_RATE
-        , VIDEO_CODEC
-        , AUDIO_CODEC
-        , BITRATE
-        , TAGS
+        , MIME_TYPE
+		, AUTHOR 
+		, DURATION
+		, PREFERRED_RATE 
+		, PREFERRED_VOLUME 
+		, AUDIO_FORMAT 
+		, AUDIO_BITS_PER_SAMPLE 
+		, AUDIO_SAMPLE_RATE 
+		, LAYOUT_FLAGS 
+		, AUDIO_CHANNELS
+		, COMPRESSOR_VERSION 
+		, CAMERA_MODEL_NAME 
+		, FIRMWARE_VERSION 
+		, AVG_BITRATE 
+		, ROTATION 
+		, IMAGE_WIDTH 
+		, IMAGE_HEIGHT 
+		, CREATE_DATE 
+		, MODIFY_DATE 
+		, GPS_LATITUDE 
+		, GPS_LONGITUDE 
     FROM 
         BN_FILE_VIDEO
     WHERE 
         FILE_NO = #{fileNo}
 </select>
 
-<update id="updateBnFileVideo" parameterType="com.utime.burrowNest.storage.vo.BnFileVideo">
-    UPDATE BN_FILE_VIDEO
-    SET UPDATE_DATE = CURRENT_TIMESTAMP
-        , DURATION = #{duration}
-        , RESOLUTION = <choose> <when test="resolution != null and resolution != '' ">#{resolution}</when> <otherwise>NULL</otherwise> </choose>
-        , FRAME_RATE = #{frameRate}
-        , VIDEO_CODEC = <choose> <when test="videoCodec != null and videoCodec != '' ">#{videoCodec}</when> <otherwise>NULL</otherwise> </choose>
-        , AUDIO_CODEC = <choose> <when test="audioCodec != null and audioCodec != '' ">#{audioCodec}</when> <otherwise>NULL</otherwise> </choose>
-        , BITRATE = #{bitrate}
-        , TAGS = <choose> <when test="tags != null and tags != '' ">#{tags}</when> <otherwise>NULL</otherwise> </choose>
-    WHERE 
-        FILE_NO = #{fileNo}
-</update>
-
-
 <!-- INSERT -->
 <insert id="insertBnFileAudio" parameterType="com.utime.burrowNest.storage.vo.BnFileAudio">
     INSERT INTO BN_FILE_AUDIO (
         FILE_NO
         , UPDATE_DATE
-        , DURATION
-        , AUDIO_FORMAT
-        , SAMPLE_RATE
-        <if test="channels != null and channels != '' ">, CHANNELS</if>
-        , BIT_DEPTH
-        <if test="audioCodec != null and audioCodec != '' ">, AUDIO_CODEC</if>
-        , BITRATE
-        , VOLUME_LEVEL_MIN
-        , VOLUME_LEVEL_MAX
-        , VOLUME_LEVEL_AVG
-        <if test="frequencySpectrum != null and frequencySpectrum != '' ">, FREQUENCY_SPECTRUM</if>
-        , RELEASE_YEAR
-        <if test="songTitle != null and songTitle != '' ">, SONG_TITLE</if>
-        <if test="albumTitle != null and albumTitle != '' ">, ALBUM_TITLE</if>
-        <if test="artistName != null and artistName != '' ">, ARTIST_NAME</if>
-        <if test="embeddedLyrics != null and embeddedLyrics != '' ">, EMBEDDED_LYRICS</if>
+        <if test="mimeType != null and mimeType != '' ">, MIME_TYPE</if>
+		, SAMPLE_RATE  
+		, CHANNELS
+		, BITS_PER_SAMPLE
+		, TOTAL_SAMPLES
+		<if test="title != null and title != '' ">, TITLE</if>
+		<if test="artist != null and artist != '' ">, ARTIST</if>
+		<if test="album != null and album != '' ">, ALBUM</if>
+		<if test="genre != null and genre != '' ">, GENRE</if>
+		<if test="albumArtist != null and albumArtist != '' ">, ALBUM_ARTIST</if>
+		, DISCNUMBER
+		<if test="albumDate != null and albumDate != '' ">, ALBUM_DATE</if>
+		<if test="organization != null and organization != '' ">, ORGANIZATION</if>
+		, TRACK_NUMBER
+		<if test="duration != null and duration != '' ">, DURATION</if>
     ) VALUES (
         #{fileNo}
         , CURRENT_TIMESTAMP
-        , #{duration}
-        , #{audioFormat}
-        , #{sampleRate}
-        <if test="channels != null and channels != '' ">, #{channels}</if>
-        , #{bitDepth}
-        <if test="audioCodec != null and audioCodec != '' ">, #{audioCodec}</if>
-        , #{bitrate}
-        , #{volumeLevelMin}
-        , #{volumeLevelMax}
-        , #{volumeLevelAvg}
-        <if test="frequencySpectrum != null and frequencySpectrum != '' ">, #{frequencySpectrum}</if>
-        , #{releaseYear}
-        <if test="songTitle != null and songTitle != '' ">, #{songTitle}</if>
-        <if test="albumTitle != null and albumTitle != '' ">, #{albumTitle}</if>
-        <if test="artistName != null and artistName != '' ">, #{artistName}</if>
-        <if test="embeddedLyrics != null and embeddedLyrics != '' ">, #{embeddedLyrics}</if>
+        <if test="mimeType != null and mimeType != '' ">, #{mimeType}</if>
+		, #{sampleRate}
+		, #{channels}
+		, #{bitsPerSample}
+		, #{totalSamples}
+		<if test="title != null and title != '' ">, #{title}</if>
+		<if test="artist != null and artist != '' ">, #{artist}</if>
+		<if test="album != null and album != '' ">, #{album}</if>
+		<if test="genre != null and genre != '' ">, #{genre}</if>
+		<if test="albumArtist != null and albumArtist != '' ">, #{albumArtist}</if>
+		, #{discNumber}  
+		<if test="albumDate != null and albumDate != '' ">, #{albumDate}</if>
+		<if test="organization != null and organization != '' ">, #{organization}</if>
+		, #{trackNumber}
+		<if test="duration != null and duration != '' ">, #{duration}</if>
     )
 </insert>
+
+<!-- UPDATE -->
+<update id="updateBnFileAudio" parameterType="com.utime.burrowNest.storage.vo.BnFileAudio">
+    UPDATE BN_FILE_AUDIO
+    SET UPDATE_DATE = CURRENT_TIMESTAMP
+        , MIME_TYPE = <choose> <when test="mimeType != null and mimeType != '' ">#{mimeType}</when> <otherwise>NULL</otherwise> </choose>
+		, SAMPLE_RATE = #{sampleRate}
+		, CHANNELS = #{channels}
+		, BITS_PER_SAMPLE = #{bitsPerSample}
+		, TOTAL_SAMPLES = #{totalSamples}
+		, TITLE = <choose> <when test="title != null and title != '' ">#{title}</when> <otherwise>NULL</otherwise> </choose>
+		, ARTIST = <choose> <when test="artist != null and artist != '' ">#{artist}</when> <otherwise>NULL</otherwise> </choose>
+		, ALBUM = <choose> <when test="album != null and album != '' ">#{album}</when> <otherwise>NULL</otherwise> </choose>
+		, GENRE = <choose> <when test="genre != null and genre != '' ">#{genre}</when> <otherwise>NULL</otherwise> </choose>
+		, ALBUM_ARTIST = <choose> <when test="albumArtist != null and albumArtist != '' ">#{albumArtist}</when> <otherwise>NULL</otherwise> </choose>
+		, DISCNUMBER = #{discNumber}
+		, ALBUM_DATE = <choose> <when test="albumDate != null and albumDate != '' ">#{albumDate}</when> <otherwise>NULL</otherwise> </choose>
+		, ORGANIZATION = <choose> <when test="organization != null and organization != '' ">#{organization}</when> <otherwise>NULL</otherwise> </choose>
+		, TRACK_NUMBER = #{trackNumber}
+		, DURATION = <choose> <when test="duration != null and duration != '' ">#{duration}</when> <otherwise>NULL</otherwise> </choose>
+    WHERE FILE_NO = #{fileNo}
+</update>
 
 <!-- SELECT -->
 <select id="selectBnFileAudioByFileNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFileAudio">
     SELECT
         FILE_NO
         , UPDATE_DATE
-        , DURATION
-        , AUDIO_FORMAT
-        , SAMPLE_RATE
-        , CHANNELS
-        , BIT_DEPTH
-        , AUDIO_CODEC
-        , BITRATE
-        , VOLUME_LEVEL_MIN
-        , VOLUME_LEVEL_MAX
-        , VOLUME_LEVEL_AVG
-        , FREQUENCY_SPECTRUM
-        , SONG_TITLE
-        , ALBUM_TITLE
-        , ARTIST_NAME
-        , RELEASE_YEAR
-        , EMBEDDED_LYRICS
+        , MIME_TYPE
+		, SAMPLE_RATE  
+		, CHANNELS
+		, BITS_PER_SAMPLE
+		, TOTAL_SAMPLES
+		, TITLE
+		, ARTIST
+		, ALBUM
+		, GENRE
+		, ALBUM_ARTIST
+		, DISCNUMBER
+		, ALBUM_DATE
+		, ORGANIZATION
+		, TRACK_NUMBER
+		, DURATION
     FROM BN_FILE_AUDIO
     WHERE FILE_NO = #{fileNo}
 </select>
-
-<!-- UPDATE -->
-<update id="updateBnFileAudio" parameterType="com.utime.burrowNest.storage.vo.BnFileAudio">
-    UPDATE BN_FILE_AUDIO
-    SET UPDATE_DATE = CURRENT_TIMESTAMP
-        , DURATION = #{duration}
-        , AUDIO_FORMAT = #{audioFormat}
-        , SAMPLE_RATE = #{sampleRate}
-        , CHANNELS = <choose> <when test="channels != null and channels != '' ">#{channels}</when> <otherwise>NULL</otherwise> </choose>
-        , BIT_DEPTH = #{bitDepth}
-        , AUDIO_CODEC = <choose> <when test="audioCodec != null and audioCodec != '' ">#{audioCodec}</when> <otherwise>NULL</otherwise> </choose>
-        , BITRATE = #{bitrate}
-        , VOLUME_LEVEL_MIN = #{volumeLevelMin}
-        , VOLUME_LEVEL_MAX = #{volumeLevelMax}
-        , VOLUME_LEVEL_AVG = #{volumeLevelAvg}
-        , FREQUENCY_SPECTRUM = <choose> <when test="frequencySpectrum != null and frequencySpectrum != '' ">#{frequencySpectrum}</when> <otherwise>NULL</otherwise> </choose>
-        , RELEASE_YEAR = #{releaseYear}
-        , SONG_TITLE = <choose> <when test="songTitle != null and songTitle != '' ">#{songTitle}</when> <otherwise>NULL</otherwise> </choose>
-        , ALBUM_TITLE = <choose> <when test="albumTitle != null and albumTitle != '' ">#{albumTitle}</when> <otherwise>NULL</otherwise> </choose>
-        , ARTIST_NAME = <choose> <when test="artistName != null and artistName != '' ">#{artistName}</when> <otherwise>NULL</otherwise> </choose>
-        , EMBEDDED_LYRICS = <choose> <when test="embeddedLyrics != null and embeddedLyrics != '' ">#{embeddedLyrics}</when> <otherwise>NULL</otherwise> </choose>
-    WHERE FILE_NO = #{fileNo}
-</update>
 
 <!-- INSERT -->
 <insert id="insertBnFileArchive" parameterType="com.utime.burrowNest.storage.vo.BnFileArchive">
@@ -516,17 +590,6 @@
     WHERE FILE_NO = #{fileNo}
 </update>
 
-<!-- 섬네일이 있는지 -->
-<select id="existThumbnail" parameterType="map" resultType="boolean">
-	SELECT 
-		CASE COUNT(1) 
-  			WHEN 1 THEN 1
-			ELSE 0
-  		END AS RES
-  	FROM BN_FILE_THUMBNAIL
-  	WHERE FILE_NO = #{fileNo}
-</select>
-	
 <!-- INSERT -->
 <insert id="insertThumbnail" parameterType="map">
     INSERT INTO BN_FILE_THUMBNAIL (
@@ -536,8 +599,7 @@
     ) VALUES (
         #{fileNo},
         ,CURRENT_TIMESTAMP
-        <!-- ,#{thumbnail, jdbcType=VARBINARY} -->
-        ,#{thumbnail}
+        ,#{thumbnail, jdbcType=VARBINARY}
     )
 </insert>
 
@@ -545,16 +607,17 @@
 <update id="updateThumbnail" parameterType="map">
     UPDATE BN_FILE_THUMBNAIL SET
         UPDATE_DATE = CURRENT_TIMESTAMP
-        , THUMBNAIL = #{thumbnail}<!-- #{thumbnail, jdbcType=VARBINARY} -->
+        , THUMBNAIL = #{thumbnail, jdbcType=VARBINARY}
     WHERE FILE_NO = #{fileNo}
 </update>
 
 <!-- SELECT -->
-<select id="selectThumbnail" parameterType="long" resultType="String">
+<select id="selectThumbnail" parameterType="long" resultType="byte []">
     SELECT
         THUMBNAIL
-    FROM BN_FILE_THUMBNAIL
-    WHERE FILE_NO = #{fileNo}
+    FROM BN_FILE_THUMBNAIL THM
+    	INNER JOIN BN_FILE F ON THM.FILE_NO = F.NO 
+    WHERE F.UID = #{fid}
 </select>
 
 

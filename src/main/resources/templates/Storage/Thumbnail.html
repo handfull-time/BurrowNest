@@ -1,0 +1,48 @@
+<div th:fragment="directories" xmlns:th="http://www.thymeleaf.org" class="p-2 text-sm bg-white text-black select-none">
+
+<!-- 기본 썸네일 이미지 -->
+<img id="default-thumb" th:src="@{/images/default-thumb.png}" class="hidden" />
+
+<!-- 썸네일 목록 -->
+<div id="thumbnail-container" class="grid grid-cols-4 gap-4 p-4">
+    <div th:each="item : ${items}" class="thumbnail-item w-40 h-40 bg-gray-100 flex items-center justify-center border">
+        <img
+            data-src="/thumbnail/{__${item.id}__}" 
+            alt="thumbnail"
+            class="lazy-thumb max-w-full max-h-full object-cover"
+        />
+    </div>
+</div>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const defaultImage = document.getElementById('default-thumb');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          const realSrc = img.getAttribute('data-src');
+
+          fetch(realSrc, { method: 'HEAD' }) // 존재 확인 (선택)
+            .then(response => {
+              img.src = response.ok ? realSrc : defaultImage.src;
+            })
+            .catch(() => {
+              img.src = defaultImage.src;
+            });
+
+          observer.unobserve(img); // 한 번만 로딩
+        }
+      });
+    }, {
+      rootMargin: '100px',
+      threshold: 0.1
+    });
+
+    document.querySelectorAll('.lazy-thumb').forEach(img => observer.observe(img));
+  });
+</script>
+
+
+</div>

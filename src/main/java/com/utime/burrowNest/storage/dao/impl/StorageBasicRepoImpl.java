@@ -29,6 +29,7 @@ class StorageBasicRepoImpl {
 				mapper.CreateDirectory();
 				common.createIndex("BN_DIRECTORY_PARENT_NO_INDX", "BN_DIRECTORY", "PARENT_NO");
 				common.createUniqueIndex("BN_DIRECTORY_UID_INDX", "BN_DIRECTORY", "UID");
+				common.createIndex("BN_DIRECTORY_NAME_INDX", "BN_DIRECTORY", "NAME");
 			}
 			
 			if( ! common.existTable("BN_DIRECTORY_ACCESS") ) {
@@ -41,6 +42,7 @@ class StorageBasicRepoImpl {
 				mapper.CreateFile();
 				common.createIndex("BN_FILE_PARENT_NO_INDX", "BN_FILE", "PARENT_NO");
 				common.createUniqueIndex("BN_FILE_UID_INDX", "BN_FILE", "UID");
+				common.createIndex("BN_FILE_NAME_INDX", "BN_FILE", "NAME");
 			}
 
 			if( ! common.existTable("BN_FILE_ACCESS") ) {
@@ -111,32 +113,35 @@ class StorageBasicRepoImpl {
 				mapper.CreateFileDocument();
 				common.createIndex("BN_FILE_DOCUMENT_TITLE_INDX", "BN_FILE_DOCUMENT", "TITLE");
 				common.createIndex("BN_FILE_DOCUMENT_SUBJECT_INDX", "BN_FILE_DOCUMENT", "SUBJECT");
-				common.createIndex("BN_FILE_DOCUMENT_AUTHOR_INDX", "BN_FILE_DOCUMENT", "AUTHOR");
+				common.createIndex("BN_FILE_DOCUMENT_CREATOR_INDX", "BN_FILE_DOCUMENT", "CREATOR");
 				common.createIndex("BN_FILE_DOCUMENT_KEYWORDS_INDX", "BN_FILE_DOCUMENT", "KEYWORDS");
+				common.createIndex("BN_FILE_DOCUMENT_CREATE_DATE_INDX", "BN_FILE_DOCUMENT", "CREATE_DATE");
 			}
 
 			if( ! common.existTable("BN_FILE_IMAGE") ) {
 				log.info("BN_FILE_IMAGE 생성");
 				mapper.CreateFileImage();
-				common.createIndex("BN_FILE_IMAGE_CAMERA_MODEL_INDX", "BN_FILE_IMAGE", "CAMERA_MODEL");
+				common.createIndex("BN_FILE_IMAGE_CAMERA_MODEL_NAME_INDX", "BN_FILE_IMAGE", "CAMERA_MODEL_NAME");
 				common.createIndex("BN_FILE_IMAGE_CAMERA_MANUFACTURER_INDX", "BN_FILE_IMAGE", "CAMERA_MANUFACTURER");
-				common.createIndex("BN_FILE_IMAGE_CAPTURE_DATE_INDX", "BN_FILE_IMAGE", "CAPTURE_DATE");
+				common.createIndex("BN_FILE_IMAGE_CREATE_DATE_INDX", "BN_FILE_IMAGE", "CREATE_DATE");
 				common.createIndex("BN_FILE_IMAGE_GPS_INDX", "BN_FILE_IMAGE", "GPS_LATITUDE,GPS_LONGITUDE");
 			}
 
 			if( ! common.existTable("BN_FILE_VIDEO") ) {
 				log.info("BN_FILE_VIDEO 생성");
 				mapper.CreateFileVideo();
-				common.createIndex("BN_FILE_VIDEO_TAGS_INDX", "BN_FILE_VIDEO", "TAGS");
+				common.createIndex("BN_FILE_VIDEO_AUTHOR_INDX", "BN_FILE_VIDEO", "AUTHOR");
+				common.createIndex("BN_FILE_VIDEO_CREATE_DATE_INDX", "BN_FILE_VIDEO", "CREATE_DATE");
+				common.createIndex("BN_FILE_VIDEO_GPS_INDX", "BN_FILE_VIDEO", "GPS_LATITUDE,GPS_LONGITUDE");
 			}
 
 			if( ! common.existTable("BN_FILE_AUDIO") ) {
 				log.info("BN_FILE_AUDIO 생성");
 				mapper.CreateFileAudio();
-				common.createIndex("BN_FILE_AUDIO_RELEASE_YEAR_INDX", "BN_FILE_AUDIO", "RELEASE_YEAR");
-				common.createIndex("BN_FILE_AUDIO_SONG_TITLE_INDX", "BN_FILE_AUDIO", "SONG_TITLE");
-				common.createIndex("BN_FILE_AUDIO_ALBUM_TITLE_INDX", "BN_FILE_AUDIO", "ALBUM_TITLE");
-				common.createIndex("BN_FILE_AUDIO_ARTIST_NAME_INDX", "BN_FILE_AUDIO", "ARTIST_NAME");
+				common.createIndex("BN_FILE_AUDIO_TITLE_INDX", "BN_FILE_AUDIO", "TITLE");
+				common.createIndex("BN_FILE_AUDIO_ARTIST_INDX", "BN_FILE_AUDIO", "ARTIST");
+				common.createIndex("BN_FILE_AUDIO_ALBUM_INDX", "BN_FILE_AUDIO", "ALBUM");
+				common.createIndex("BN_FILE_AUDIO_GENRE_INDX", "BN_FILE_AUDIO", "GENRE");
 			}
 
 			if( ! common.existTable("BN_FILE_ARCHIVE") ) {

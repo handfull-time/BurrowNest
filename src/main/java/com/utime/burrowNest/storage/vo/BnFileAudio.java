@@ -82,7 +82,7 @@ public class BnFileAudio extends AbsBnFileInfo{
      * Release date of the track
      * 트랙 발매 날짜
      */
-    private String date;
+    private String albumDate;
 
     /**
      * Organization associated with the track

@@ -36,15 +36,15 @@ public interface StorageDao {
 	 * @return
 	 * @throws Exception
 	 */
-	int saveFileInfor( AbsBnFileInfo file )throws Exception;
+	int saveFileInfor( BnFile bnFile )throws Exception;
 	
 	/**
 	 * 이미지 섬네일 저장
 	 * @param file
-	 * @param binary
+	 * @param bArray
 	 * @return
 	 */
-	int saveThumbnail( BnFile file, String base64);
+	int saveThumbnail( BnFile file, byte [] bArray);
 	
 	/**
 	 * Dierctory 삭제
@@ -75,17 +75,17 @@ public interface StorageDao {
 	BnFile getFile( long fileNo );
 	
 	/**
-	 * 섬네일
-	 * @param fileNo
-	 * @return base64 Encode String
-	 */
-	String getFileThumbnail( long fileNo );
-	
-	/**
 	 * 파일 확장 조회
 	 * @param file
 	 * @return
 	 */
 	AbsBnFileInfo getFileInfor( BnFile file );
+
+	/**
+	 * 섬네일 조회
+	 * @param fid
+	 * @return
+	 */
+	byte[] getThumbnail(String fid);
 	
 }

@@ -1,9 +1,7 @@
 package com.utime.burrowNest.storage.service.impl;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -19,10 +17,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Timestamp;
-import java.util.Base64;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 import javax.imageio.ImageIO;
@@ -35,8 +34,11 @@ import com.utime.burrowNest.common.util.CommandUtil;
 import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
+import com.utime.burrowNest.storage.vo.BnFileArchive;
+import com.utime.burrowNest.storage.vo.BnFileAudio;
 import com.utime.burrowNest.storage.vo.BnFileDocument;
 import com.utime.burrowNest.storage.vo.BnFileImage;
+import com.utime.burrowNest.storage.vo.BnFileVideo;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,11 +50,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class StorageUtils {
 	
+	private final static int width = 320, height = 320;
+	private final static String ThumFormat = "jpeg";
+	
 	//exiftool -Model -Make -FNumber -ShutterSpeedValue -ISO -SubjectDistance -DateTimeOriginal -ImageWidth -ImageHeight -GPSLatitude -GPSLongitude -Flash -WhiteBalance -SceneCaptureType -Software 파일명
 	//exiftool -b -ThumbnailImage 20250128_010059.cr2 > ./thumb/20250128.jpg
 	
 	//  exiftool -ThumbnailImage -b 20190417_123809.jpg | base64 
-	// /9j/2wCEAAUDBAQEAwUEBAQFBQUGB .... 여러 라인 
+	// /9j/2wCEAAUDBAQEAwUEBAQFBQUGB .... 여러 라인
+	
+	// exiftool -ThumbnailImage -b 20190417_123809.jpg | xxd -p | tr -d '\n'
+
 
 /* 
 exiftool -list 20190417_123809.jpg
@@ -590,77 +598,6 @@ App Version                     : 16.0300
 	    
 	    return result;
 	}
-
-//	private static void procDoc(BnFileDocument doc, CoreProperties props) {
-//		doc.setTitle( props.getTitle() );
-//		doc.setSubject( props.getSubject());
-//		doc.setAuthor(props.getCreator());
-//		doc.setManager(props.getLastModifiedByUser());
-//		doc.setCompany(props.getContentType());
-//		doc.setCategory(props.getCategory());
-//		doc.setKeywords(props.getKeywords());
-//		doc.setNotes(props.getDescription());
-//	}
-//	
-//	public static BnFileDocument getFileInfoDocument(File file, BnFile bnFile ) throws Exception {
-//		
-//		final BnFileDocument result = new BnFileDocument();
-//		result.setFileNo(bnFile.getNo());
-//
-//        // ---------------- OOXML (.docx/.xlsx/.pptx) ----------------
-//		switch( bnFile.getExtension() ) {
-//		case "doc":
-//		case "docx":{
-//			try (XWPFDocument doc = new XWPFDocument(OPCPackage.open(file))) {
-//				procDoc(result, doc.getProperties().getCoreProperties() );
-//            }
-//			break;
-//		}
-//		case "xlsx":{
-//			try (XSSFWorkbook wb = new XSSFWorkbook(OPCPackage.open(file))) {
-//				procDoc(result, wb.getProperties().getCoreProperties() );
-//            }
-//			break;
-//		}
-//		case "ppt":
-//		case "pptx":{
-//			try (XMLSlideShow ppt = new XMLSlideShow(OPCPackage.open(file))) {
-//				procDoc(result, ppt.getProperties().getCoreProperties() );
-//            }
-//			break;
-//		}
-//		case "xls":{
-//			try (HSSFWorkbook wb = new HSSFWorkbook(new FileInputStream(file))) {
-//                final SummaryInformation si = wb.getSummaryInformation();
-//                if( si != null ) {
-//            		result.setTitle( si.getTitle() );
-//            		result.setSubject( si.getSubject());
-//            		result.setKeywords(si.getKeywords());
-//                }
-//            }
-//			break;
-//		}
-//		case "hwp":{
-//			break;
-//		}
-//		case "pdf":{
-//			try (PDDocument document = Loader.loadPDF(file)) {
-//	            final PDDocumentInformation info = document.getDocumentInformation();
-//	            
-//	            result.setTitle( info.getTitle() );
-//	            result.setSubject( info.getSubject());
-//	            result.setAuthor(info.getCreator());
-//	            result.setKeywords(info.getKeywords());
-//
-//	        } catch (IOException e) {
-//	            log.warn( "PDF 메타데이터 추출 실패: " + e.getMessage());
-//	        }
-//			break;
-//		}
-//		}// switch end
-//		
-//		return result;
-//	}
 	
 	private static Properties parserExifToolResult( List<String> cmdRes ) {
 		final Properties result = new Properties();
@@ -684,16 +621,18 @@ App Version                     : 16.0300
 	}
 	
 	public static BnFileDocument getFileInfoDocument(File file, BnFile bnFile ) throws Exception {
-//		exiftool -Model -Make -FNumber -ShutterSpeedValue -ISO -SubjectDistance -DateTimeOriginal -ImageWidth -ImageHeight -GPSLatitude -GPSLongitude -Flash -WhiteBalance -SceneCaptureType -Software 파일명
 
 		final List<String> cmdRes = CommandUtil.workExe("exiftool"
-				, "-Title"	// title
-				, "-Subject"	// subject
-				, "-Creator"	// author
-				, "-Keywords"	// keywords
-				, "-Description"	// notes
-				, "-Company"	// company
-				, "-Application"	// 
+				, "-Title"
+				, "-Subject"
+				, "-Creator"
+				, "-LastModifiedBy"
+				, "-CreateDate"
+				, "-ModifyDate"
+				, "-Keywords"
+				, "-Description"
+				, "-HeadingPairs" 
+				, "-Company"
 				, file.getAbsolutePath()
 				);
 		
@@ -709,217 +648,335 @@ App Version                     : 16.0300
 		final BnFileDocument result = new BnFileDocument();
 		result.setFileNo( bnFile.getNo() );
 		
+		result.setTitle( values.getProperty("Title", null) );
+		result.setSubject( values.getProperty("Subject", null) );
+		result.setCreator( values.getProperty("Creator", null) );
+		result.setCreateDate( values.getProperty("CreateDate", null) );
+		result.setModifyDate( values.getProperty("ModifyDate", null) );
+		result.setKeywords( values.getProperty("Keywords", null) );
+		result.setDescription( values.getProperty("Description", null) );
+		result.setHeadingPairs( values.getProperty("HeadingPairs", null) );
+		result.setCompany( values.getProperty("Company", null) );
+		
 		return result;
 	}
 
 
 	public static AbsBnFileInfo getFileInfoImage(File file, BnFile bnFile) throws Exception{
-		final BnFileImage result = new BnFileImage();
-		result.setFileNo(bnFile.getNo());
-
-        // ---------------- OOXML (.docx/.xlsx/.pptx) ----------------
-		switch( bnFile.getExtension() ) {
-		case "jpg":
-		case "jpeg":{break;}
+		final List<String> cmdRes = CommandUtil.workExe("exiftool"
+				, "-Make"
+				, "-CameraModelName"
+				, "-Orientation"
+				, "-FNumber"
+				, "-ExposureTime"
+				, "-SensingMethod"
+				, "-Flash"
+				, "-LightSource"
+				, "-WhiteBalance" 
+				, "-ShutterSpeed"
+				, "-Iso"
+				, "-ImageWidth"
+				, "-ImageHeight"
+				, "-CreateDate"
+				, "-ModifyDate"
+				, "-GpsLatitude"
+				, "-GpsLongitude"
+				, file.getAbsolutePath()
+				);
 		
-		}// switch end
+		if( BurrowUtils.isEmpty(cmdRes) ) {
+			return null;
+		}
+		
+		final Properties values = StorageUtils.parserExifToolResult(cmdRes);
+		if( values.size() < 1 ) {
+			return null;
+		}
+		
+		final BnFileImage result = new BnFileImage();
+		result.setFileNo( bnFile.getNo() );
+		
+		result.setMake( values.getProperty("Make", null) );
+		result.setCameraModelName( values.getProperty("CameraModelName", null) );
+		result.setOrientation( values.getProperty("Orientation", null) );
+		result.setFNumber( values.getProperty("FNumber", null) );
+		result.setExposureTime( values.getProperty("ExposureTime", null) );
+		result.setSensingMethod( values.getProperty("SensingMethod", null) );
+		result.setFlash( values.getProperty("Flash", null) );
+		result.setLightSource( values.getProperty("LightSource", null) );
+		result.setWhiteBalance( values.getProperty("WhiteBalance", null) );
+		result.setShutterSpeed( values.getProperty("ShutterSpeed", null) );
+		result.setIso( values.getProperty("Iso", null) );
+		result.setImageWidth( values.getProperty("ImageWidth", null) );
+		result.setImageHeight( values.getProperty("ImageHeight", null) );
+		result.setCreateDate( values.getProperty("CreateDate", null) );
+		result.setModifyDate( values.getProperty("ModifyDate", null) );
+		result.setGpsLatitude( values.getProperty("GpsLatitude", null) );
+		result.setGpsLongitude( values.getProperty("GpsLongitude", null) );
 		
 		return result;
 	}
 
 	public static AbsBnFileInfo getFileInfoVideo(File file, BnFile bnFile) throws Exception{
-		final BnFileImage result = new BnFileImage();
-		result.setFileNo(bnFile.getNo());
-
-        // ---------------- OOXML (.docx/.xlsx/.pptx) ----------------
-		switch( bnFile.getExtension() ) {
-		case "docx":{break;}
-		}// switch end
+		
+		final List<String> cmdRes = CommandUtil.workExe("exiftool"
+				, "-MimeType"
+				, "-Author"
+				, "-Duration"
+				, "-PreferredRate"
+				, "-PreferredVolume"
+				, "-AudioFormat"
+				, "-AudioBitsPerSample"
+				, "-AudioSampleRate"
+				, "-LayoutFlags" 
+				, "-AudioChannels"
+				, "-CompressorVersion"
+				, "-CameraModelName"
+				, "-FirmwareVersion"
+				, "-AvgBitrate"
+				, "-AvgBitrate"
+				, "-ImageWidth"
+				, "-ImageHeight"
+				, "-CreateDate"
+				, "-ModifyDate"
+				, "-GpsLatitude"
+				, "-GpsLongitude"
+				, file.getAbsolutePath()
+				);
+		
+		if( BurrowUtils.isEmpty(cmdRes) ) {
+			return null;
+		}
+		
+		final Properties values = StorageUtils.parserExifToolResult(cmdRes);
+		if( values.size() < 1 ) {
+			return null;
+		}
+		
+		final BnFileVideo result = new BnFileVideo();
+		result.setFileNo( bnFile.getNo() );
+		
+		result.setMimeType( values.getProperty("MimeType", null) );
+		result.setAuthor( values.getProperty("Author", null) );
+		result.setDuration( values.getProperty("Duration", null) );
+		result.setPreferredRate( values.getProperty("PreferredRate", null) );
+		result.setPreferredVolume( values.getProperty("PreferredVolume", null) );
+		result.setAudioFormat( values.getProperty("AudioFormat", null) );
+		result.setAudioBitsPerSample( values.getProperty("AudioBitsPerSample", null) );
+		result.setAudioSampleRate( values.getProperty("AudioSampleRate", null) );
+		result.setLayoutFlags( values.getProperty("LayoutFlags", null) );
+		result.setAudioChannels( values.getProperty("AudioChannels", null) );
+		result.setCompressorVersion( values.getProperty("CompressorVersion", null) );
+		result.setCameraModelName( values.getProperty("CameraModelName", null) );
+		result.setFirmwareVersion( values.getProperty("FirmwareVersion", null) );
+		result.setAvgBitrate( values.getProperty("AvgBitrate", null) );
+		result.setAvgBitrate( values.getProperty("AvgBitrate", null) );
+		result.setImageWidth( values.getProperty("ImageWidth", null) );
+		result.setImageHeight( values.getProperty("ImageHeight", null) );
+		result.setCreateDate( values.getProperty("CreateDate", null) );
+		result.setModifyDate( values.getProperty("ModifyDate", null) );
+		result.setGpsLatitude( values.getProperty("GpsLatitude", null) );
+		result.setGpsLongitude( values.getProperty("GpsLongitude", null) );
 		
 		return result;
 	}
 
 	public static AbsBnFileInfo getFileInfoAudio(File file, BnFile bnFile) throws Exception{
-		final BnFileImage result = new BnFileImage();
-		result.setFileNo(bnFile.getNo());
-
-        // ---------------- OOXML (.docx/.xlsx/.pptx) ----------------
-		switch( bnFile.getExtension() ) {
-		case "docx":{break;}
-		}// switch end
+		final List<String> cmdRes = CommandUtil.workExe("exiftool"
+				, "-MimeType"
+				, "-SampleRate"
+				, "-Channels"
+				, "-BitsPerSample"
+				, "-TotalSamples"
+				, "-Title"
+				, "-Artist"
+				, "-Album"
+				, "-Genre" 
+				, "-AlbumArtist"
+				, "-DiscNumber"
+				, "-AlbumDate"
+				, "-Organization"
+				, "-TrackNumber"
+				, "-Duration"
+				, file.getAbsolutePath()
+				);
+		
+		if( BurrowUtils.isEmpty(cmdRes) ) {
+			return null;
+		}
+		
+		final Properties values = StorageUtils.parserExifToolResult(cmdRes);
+		if( values.size() < 1 ) {
+			return null;
+		}
+		
+		final BnFileAudio result = new BnFileAudio();
+		result.setFileNo( bnFile.getNo() );
+		
+		result.setMimeType( values.getProperty("MimeType", null) );
+		result.setSampleRate( values.getProperty("SampleRate", null) );
+		result.setChannels( values.getProperty("Channels", null) );
+		result.setBitsPerSample( values.getProperty("BitsPerSample", null) );
+		result.setTotalSamples( values.getProperty("TotalSamples", null) );
+		result.setTitle( values.getProperty("Title", null) );
+		result.setArtist( values.getProperty("Artist", null) );
+		result.setAlbum( values.getProperty("Album", null) );
+		result.setGenre( values.getProperty("Genre", null) );
+		result.setAlbumArtist( values.getProperty("AlbumArtist", null) );
+		result.setDiscNumber( values.getProperty("DiscNumber", null) );
+		result.setAlbumDate( values.getProperty("AlbumDate", null) );
+		result.setOrganization( values.getProperty("Organization", null) );
+		result.setTrackNumber( values.getProperty("TrackNumber", null) );
+		result.setDuration( values.getProperty("Duration", null) );
 		
 		return result;
 	}
 
 	public static AbsBnFileInfo getFileInfoArchive(File file, BnFile bnFile) throws Exception{
-		final BnFileImage result = new BnFileImage();
-		result.setFileNo(bnFile.getNo());
-
-        // ---------------- OOXML (.docx/.xlsx/.pptx) ----------------
-		switch( bnFile.getExtension() ) {
-		case "docx":{break;}
-		}// switch end
 		
-		return result;
-	}
-
-	public static String getFileThumbnail(File file, BnFile bnFile) throws Exception{
-		String result = null;
-		
-		final int width = 320, height = 320;
-
-        // ---------------- OOXML (.docx/.xlsx/.pptx) ----------------
-		switch( bnFile.getExtension() ) {
-		case "jpg":
-        case "jpeg":
-        case "png":
-        case "bmp":
-        case "gif":{
-        	BufferedImage sourceImage = ImageIO.read(file);
-            BufferedImage thumb = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            Graphics2D g2d = thumb.createGraphics();
-
-            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g2d.drawImage(sourceImage, 0, 0, width, height, null);
-            g2d.dispose();
-            
-            // 이미지 -> Base64
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(thumb, "jpeg", baos); // "jpeg" 또는 "png" 등
-            byte[] imageBytes = baos.toByteArray();
-
-            result = Base64.getEncoder().encodeToString(imageBytes);
-            break;
-        }
-		case "pptx":{
-			try (FileInputStream fis = new FileInputStream(file);
-		             XMLSlideShow ppt = new XMLSlideShow(fis)) {
-
-		            Dimension pageSize = ppt.getPageSize();
-		            XSLFSlide slide = ppt.getSlides().get(0); // 첫 슬라이드
-
-		            BufferedImage img = new BufferedImage(pageSize.width, pageSize.height, BufferedImage.TYPE_INT_ARGB);
-		            Graphics2D graphics = img.createGraphics();
-		            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		            graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-
-		            slide.draw(graphics);
-		            graphics.dispose();
-
-		            // 이미지 -> Base64
-		            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		            ImageIO.write(img, "jpeg", baos); // "jpeg" 또는 "png" 등
-		            byte[] imageBytes = baos.toByteArray();
-
-		            result = Base64.getEncoder().encodeToString(imageBytes);
-		        }
-			
-			break;
+		if( ! "zip".equals( bnFile.getExtension() )){
+			return null;
 		}
-		}// switch end
+		
+		final BnFileArchive result = new BnFileArchive();
+		result.setFileNo(bnFile.getNo());
+		
+		try (ZipFile zip = new ZipFile(file)) {
+			Enumeration<? extends ZipEntry> entries = zip.entries();
+			
+			long totalUncompressed = 0L;
+			long totalCompressed = 0L;
+			int count = 0;
+			
+			while (entries.hasMoreElements()) {
+				ZipEntry entry = entries.nextElement();
+				if (!entry.isDirectory()) {
+					count++;
+					totalUncompressed += entry.getSize(); // -1 if unknown
+					totalCompressed += entry.getCompressedSize(); // -1 if unknown
+                }
+            }
+			
+			result.setTotalEntries(count);
+			result.setUncompressedSize(totalUncompressed);
+			
+			if (totalUncompressed > 0 && totalCompressed > 0) {
+				result.setCompressionRatio( (float) totalCompressed / totalUncompressed );
+			}
+			
+			result.setComment( zip.getComment() );
+        }
 		
 		return result;
 	}
 	
+	private static byte [] getFileThumbnailByJava(File file, BnFile bnFile) throws Exception{
+    	final BufferedImage sourceImage = ImageIO.read(file);
+    	final BufferedImage thumb = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+    	final Graphics2D g2d = thumb.createGraphics();
 
-    public static String getPptThumb(File f) throws Exception {
-        // PPTX 파일 읽기
-        final FileInputStream fis = new FileInputStream(f);
-        final XMLSlideShow ppt = new XMLSlideShow(fis);
-
-        // 첫 번째 슬라이드 가져오기
-        final XSLFSlide slide = ppt.getSlides().get(0);
-
-        // 이미지 크기 설정
-        final Dimension pageSize = ppt.getPageSize();
-        final BufferedImage img = new BufferedImage(pageSize.width, pageSize.height, BufferedImage.TYPE_INT_RGB);
-
-        // Graphics2D로 렌더링
-        final Graphics2D graphics = img.createGraphics();
-        graphics.setPaint(Color.WHITE);
-        graphics.fill(new Rectangle(0, 0, pageSize.width, pageSize.height));
-        slide.draw(graphics);
-
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.drawImage(sourceImage, 0, 0, width, height, null);
+        g2d.dispose();
+        
+        // 이미지 -> binary
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(img, "jpg", baos);
-        baos.flush();
-
-        // ByteArrayOutputStream의 내용을 Base64로 변환
-        final String result = Base64.getEncoder().encodeToString(baos.toByteArray());
+        ImageIO.write(thumb, ThumFormat, baos); // "jpeg" 또는 "png" 등
+        byte [] result = baos.toByteArray();
         baos.close();
-
-        graphics.dispose();
-
+        
         return result;
 	}
+
+	private static byte [] getFileThumbnailByExif(File file, BnFile bnFile) throws Exception{
+		//exiftool -ThumbnailImage -b 20190417_123809.jpg | xxd -p | tr -d '\n'
+		
+		final List<String> cmdRes = CommandUtil.workExe("exiftool"
+				, "-ThumbnailImage"
+				, "-b"
+				, file.getAbsolutePath()
+				, "|"
+				, "xxd"
+				, "-p"
+				, "|"
+				, "tr"
+				, "-d"
+				, "'\n'"
+				);
+		
+		if( BurrowUtils.isEmpty(cmdRes) ) {
+			return null;
+		}
+		
+		final String hexString = cmdRes.get(0);
+		
+        
+        return hexStringToByteArray(hexString);
+	}
 	
-    /**
-     * DMS (Degree Minute Second) 형식의 위도 또는 경도 문자열을 Decimal Degree 형식으로 변환합니다.
-     *
-     * @param dmsString DMS 형식의 문자열 (예: "37 33' 59.78\" N", "126 58' 41.23\" E")
-     * @return 변환된 Decimal Degree 값 (Double)
-     * @throws IllegalArgumentException DMS 문자열 형식이 올바르지 않은 경우 발생
-     */
-    public static double dmsToDecimal(String dmsString) {
-        String[] parts = dmsString.trim().split("\\s+");
-        if (parts.length < 3) {
-            throw new IllegalArgumentException("잘못된 DMS 형식: " + dmsString);
-        }
+	private static byte[] hexStringToByteArray(String hex) {
+	    
+		final int len = hex.length();
+	    
+		if (len % 2 != 0) {
+	        throw new IllegalArgumentException("Hex string must have even length. " + len);
+	    }
+	    
+	    final byte[] data = new byte[len / 2];
+	    for (int i = 0; i < len; i += 2) {
+	        data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
+	                            + Character.digit(hex.charAt(i + 1), 16));
+	    }
+	    return data;
+	}
 
-        double degrees;
-        double minutes;
-        double seconds;
-        String direction = "";
 
-        try {
-            degrees = Double.parseDouble(parts[0]);
-            minutes = Double.parseDouble(parts[1].replace("'", ""));
-            seconds = Double.parseDouble(parts[2].replace("\"", ""));
+	public static byte [] getFileThumbnail(File file, BnFile bnFile) throws Exception{
+		byte [] result = null;
+		
+		final String ext = bnFile.getExtension();
+		switch( ext ) {
+		case "jpg":case "jpeg":case "tiff":
+		case "cr2":case "nef":case "arw":
+		case "orf":case "rw2":case "dng":
+			result = getFileThumbnailByExif( file, bnFile );
+			break;
+		}
+		
+		if( result == null ) {
+			switch( ext ) {
+			case "jpg":case "jpeg":case "png":case "bmp":case "wbmp":case "gif" :{
+				result = getFileThumbnailByJava( file, bnFile );
+				break;
+			}
+			case "ppt":case "pptx":{
+				try (FileInputStream fis = new FileInputStream(file);
+						XMLSlideShow ppt = new XMLSlideShow(fis)) {
 
-            if (parts.length > 3) {
-                direction = parts[3].toUpperCase();
-            }
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("숫자 형식 오류: " + dmsString);
-        }
+			            final Dimension pageSize = ppt.getPageSize();
+			            final XSLFSlide slide = ppt.getSlides().get(0); // 첫 슬라이드
 
-        double decimalDegrees = degrees + (minutes / 60.0) + (seconds / 3600.0);
+			            final BufferedImage img = new BufferedImage(pageSize.width, pageSize.height, BufferedImage.TYPE_INT_ARGB);
+			            final Graphics2D graphics = img.createGraphics();
+			            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			            graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
-        if (direction.equals("S") || direction.equals("W")) {
-            decimalDegrees *= -1;
-        } else if (!direction.isEmpty() && !direction.equals("N") && !direction.equals("E")) {
-            throw new IllegalArgumentException("잘못된 방향 표시: " + direction);
-        }
+			            slide.draw(graphics);
+			            graphics.dispose();
 
-        return decimalDegrees;
-    }
-    
-    /**
-     * Decimal Degree 형식의 위도 또는 경도를 DMS (Degree Minute Second) 형식의 문자열로 변환합니다.
-     *
-     * @param decimalDegree Decimal Degree 값
-     * @param isLatitude    위도인 경우 true, 경도인 경우 false
-     * @return DMS 형식의 문자열 (예: "37° 33' 59.78\" N", "126° 58' 41.23\" E")
-     */
-    public static String decimalToDMS(double decimalDegree, boolean isLatitude) {
-        int degrees = (int) decimalDegree;
-        double remainingMinutes = (decimalDegree - degrees) * 60;
-        int minutes = (int) remainingMinutes;
-        double seconds = (remainingMinutes - minutes) * 60;
-
-        String direction = "";
-        if (isLatitude) {
-            direction = (decimalDegree >= 0) ? "N" : "S";
-        } else {
-            direction = (decimalDegree >= 0) ? "E" : "W";
-        }
-
-        degrees = Math.abs(degrees);
-        minutes = Math.abs(minutes);
-        seconds = Math.abs(seconds);
-
-        return String.format("%d° %d' %.2f\" %s", degrees, minutes, seconds, direction);
-    }
-
+			            // 이미지 -> Base64
+			            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			            ImageIO.write(img, ThumFormat, baos); // "jpeg" 또는 "png" 등
+			            result = baos.toByteArray();
+			            baos.close();
+			        }
+				break;
+			}
+			}
+		}
+		
+		return result;
+	}
+	
 }
 

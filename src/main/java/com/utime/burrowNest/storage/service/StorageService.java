@@ -11,5 +11,12 @@ public interface StorageService {
 	 * @return
 	 */
 	ReturnBasic saveInitStorage(InitInforReqVo req);
+	
+	/**
+	 * 섬네일 조회
+	 * @param fid
+	 * @return
+	 */
+	byte [] getThumbnail(String fid);
 
 }
