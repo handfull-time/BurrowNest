@@ -10,6 +10,7 @@ import org.apache.ibatis.type.JdbcType;
 
 import com.utime.burrowNest.common.vo.BurrowDefine;
 
+@Deprecated
 public class BooleanTypeHandler extends BaseTypeHandler<Boolean> {
 	
 	private static final String YES = BurrowDefine.YES;

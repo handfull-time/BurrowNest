@@ -612,7 +612,7 @@
 </update>
 
 <!-- SELECT -->
-<select id="selectThumbnail" parameterType="long" resultType="byte []">
+<select id="selectThumbnail" parameterType="long" resultType="byte[]">
     SELECT
         THUMBNAIL
     FROM BN_FILE_THUMBNAIL THM

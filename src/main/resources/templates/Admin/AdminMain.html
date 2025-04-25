@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>🐇 BurrowNest Admin</title>
+    <meta charset="UTF-8">
+
+   	<th:block th:replace="~{Common/Favicon :: Favicon}"></th:block>
+
+    <script type="text/javascript" th:src="@{/js/tailwind/tailwind.min.js}"></script>
+    
+    <style>
+	</style>
+		
+</head>
+<body class="min-h-screen flex flex-col bg-gray-100 text-gray-800">
+
+  <!-- Header -->
+  <header class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-blue-600">Admin</h1>
+      <nav class="space-x-4">
+        <a href="#" class="text-gray-600 hover:text-blue-600">User</a>
+        <a href="#" class="text-gray-600 hover:text-blue-600">Storage</a>
+        <a href="#" class="text-gray-600 hover:text-blue-600">Statistics</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 py-10">
+    <section class="text-center">
+      <h2 class="text-3xl font-bold mb-4">Welcome to Tailwind Template</h2>
+      <p class="text-gray-600 mb-6">This is a sample layout using Tailwind CSS.</p>
+      <button class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">Get Started</button>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t">
+    <div class="max-w-7xl mx-auto px-4 py-4 text-center text-sm text-gray-500">
+      © 2025 MySite. All rights reserved.
+    </div>
+  </footer>
+
+</body>
+</html>

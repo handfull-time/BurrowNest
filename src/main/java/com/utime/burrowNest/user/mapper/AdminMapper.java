@@ -26,11 +26,18 @@ public interface AdminMapper {
 	int createAdmin();
 	
 	/**
-	 * 어드민 계정 추가
+	 * 어드민 비번 추가
 	 * @param pw
 	 * @return
 	 */
 	int insertAdmin( @Param("pw") String pw );
+	
+	/**
+	 * 어드민 비번 수정
+	 * @param pw
+	 * @return
+	 */
+	int updateAdmin( @Param("pw") String pw );
 	
 	/**
 	 * 어드민 pw 조회

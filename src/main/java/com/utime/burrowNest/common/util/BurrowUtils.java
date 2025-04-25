@@ -1,7 +1,10 @@
 package com.utime.burrowNest.common.util;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+
+import org.apache.commons.lang3.math.NumberUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -152,24 +155,33 @@ public class BurrowUtils {
         return String.format("%d° %d' %.2f\" %s", degrees, minutes, seconds, direction);
     }
     
-    public static LocalDateTime convertToLocalDateTime(String dateTimeStr) {
-    	if( BurrowUtils.isEmpty(dateTimeStr) ) {
+    private static DateTimeFormatter formatterZoneOffset = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ssXXX");
+    private static DateTimeFormatter formatterUtcTime = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ssX");
+    private static DateTimeFormatter formatterBasic = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss");
+    
+    public static LocalDateTime convertToLocalDateTime(String input) {
+    	
+    	if( BurrowUtils.isEmpty(input) ) {
     		return null;
     	}
-    	
-//    	2022:07:26 13:49:59+09:00, 2024:01:23 07:19:00Z
     	
     	LocalDateTime result = null;
     	
     	try {
-    		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss");
-            result = LocalDateTime.parse(dateTimeStr, formatter);
+        	if (input.matches(".*[+-]\\d{2}:\\d{2}")) {
+                // Case 1: with zone offset (e.g., +09:00)
+                result = OffsetDateTime.parse(input, formatterZoneOffset).toLocalDateTime();
+            } else if (input.endsWith("Z")) {
+                // Case 2: UTC time
+                result = OffsetDateTime.parse(input, formatterUtcTime).toLocalDateTime();
+            } else {
+                // Case 3: basic local format
+                result = LocalDateTime.parse(input, formatterBasic);
+            }
 		} catch (Exception e) {
-			log.error("", e);
+			log.error("" + input, e );
 		}
     	
         return result;
     }
-
-
 }

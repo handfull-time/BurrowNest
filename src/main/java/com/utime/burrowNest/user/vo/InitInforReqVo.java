@@ -9,7 +9,7 @@ public class InitInforReqVo extends ReqUniqueVo{
 	private List<String> roots;
 	
 	private String wsUserName;
-
+	
 	public String getPw() {
 		return pw;
 	}

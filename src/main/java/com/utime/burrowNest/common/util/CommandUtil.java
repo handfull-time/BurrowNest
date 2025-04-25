@@ -108,7 +108,7 @@ public class CommandUtil {
 		public void run() {
 			BufferedReader br = null;
 			try{
-                br = new BufferedReader(new InputStreamReader(this.inputStream));
+                br = new BufferedReader(new InputStreamReader(this.inputStream, "utf-8"));
 
                 String line;
 				while( (line = br.readLine()) != null ){

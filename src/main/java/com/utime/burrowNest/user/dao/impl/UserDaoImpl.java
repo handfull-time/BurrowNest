@@ -55,7 +55,7 @@ class UserDaoImpl implements UserDao {
 			if( ! common.existTable("BN_USER") ) {
 				log.info("BN_USER 생성");
 				userMapper.createUser();
-				common.createIndex("BN_USER_ID_INDX", "BN_USER", "ID");
+				common.createUniqueIndex("BN_USER_ID_INDX", "BN_USER", "ID");
 			}
 
 			if( ! common.existTable("BN_USER_LOGIN_RECORD") ) {
@@ -152,12 +152,21 @@ class UserDaoImpl implements UserDao {
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public int saveInitInfo(InitInforReqVo req) throws Exception {
-		
+
+		int res = 0;
 		final UserVo user = this.getAdminInstance();
 		
 		final String genPw = this.genPwString( user, req.getPw() );
 		
-		final int res = adminMapper.insertAdmin(genPw);
+		final UserVo admin = this.getManageUser();
+		if( admin != null ) {
+			res += adminMapper.updateAdmin(genPw);
+			
+			res += this.updateUserPw( admin, genPw);
+			return res;
+		}
+		
+		res += adminMapper.insertAdmin(genPw);
 		
 		if( res < 1 ) {
 			return res;
@@ -167,7 +176,8 @@ class UserDaoImpl implements UserDao {
 		user.setNickname("Owner");
 		user.setProfileImg("profile1.svg");
 		
-		return adminMapper.insertUser(user);
+		res += adminMapper.insertUser(user);
+		return res;
 	}
 
 	@Override

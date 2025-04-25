@@ -122,7 +122,6 @@ class StorageBasicRepoImpl {
 				log.info("BN_FILE_IMAGE 생성");
 				mapper.CreateFileImage();
 				common.createIndex("BN_FILE_IMAGE_CAMERA_MODEL_NAME_INDX", "BN_FILE_IMAGE", "CAMERA_MODEL_NAME");
-				common.createIndex("BN_FILE_IMAGE_CAMERA_MANUFACTURER_INDX", "BN_FILE_IMAGE", "CAMERA_MANUFACTURER");
 				common.createIndex("BN_FILE_IMAGE_CREATE_DATE_INDX", "BN_FILE_IMAGE", "CREATE_DATE");
 				common.createIndex("BN_FILE_IMAGE_GPS_INDX", "BN_FILE_IMAGE", "GPS_LATITUDE,GPS_LONGITUDE");
 			}

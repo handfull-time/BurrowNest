@@ -59,5 +59,13 @@
             document.body.style.cursor = 'default';
         });
     </script>
+    
+    <!-- alert confirm prompt -->
+	<div th:replace="~{Common/alertView :: alertView}"></div>
+    <!-- 모달창 -->
+    <div th:replace="~{Common/modalView :: modalView}"></div>
+    
+    <th:script th:replace="~{Common/Script :: CommonScript}"/>
+    
 </body>
 </html>

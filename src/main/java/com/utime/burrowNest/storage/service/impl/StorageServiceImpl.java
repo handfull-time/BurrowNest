@@ -226,7 +226,8 @@ public class StorageServiceImpl implements StorageService {
 		}
     }
     
-    private class LibDownLoad implements Runnable{
+    @SuppressWarnings("unused")
+	private class LibDownLoad implements Runnable{
     	final InitInforReqVo req;
     	final InitFileLoad ifl;
     	
@@ -250,31 +251,69 @@ public class StorageServiceImpl implements StorageService {
             	new Thread( new FileLoad(req, ifl) ).start();
             	return;
             }
-    		
-    	    // ffmpeg 설치 여부 확인
-            final List<String> result = CommandUtil.workExe("ffmpeg", "-version");
+            
+            {
+            	// ffmpeg 설치 여부 확인
+                final List<String> result = CommandUtil.workExe("ffmpeg", "-version");
 
-            if (result.isEmpty() || result.get(0).contains("command not found")) {
-        		log.info( "ffmpeg 설치 진행" );
-                message.setMessage("ffmpeg를 설치합니다...");
-        		
-        		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-        		delay();
-                
-                // ffmpeg 설치 명령 실행
-        		final List<String> installResult = CommandUtil.workExe("apt", "install", "-y", "ffmpeg");
-
-                if (installResult.isEmpty()) {
-                    message.setMessage("ffmpeg를 설치 실패했습니다.");
+                if (result.isEmpty() || result.get(0).contains("command not found")) {
+            		log.info( "ffmpeg 설치 진행" );
+                    message.setMessage("ffmpeg를 설치합니다...");
             		
             		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
             		delay();
-                    return;
+                    
+                    // ffmpeg 설치 명령 실행
+            		final List<String> installResult = CommandUtil.workExe("apt", "install", "-y", "ffmpeg");
+
+                    if (installResult.isEmpty()) {
+                        message.setMessage("ffmpeg를 설치 실패했습니다.");
+                		
+                		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
+                		delay();
+                        return;
+                    }else {
+                    	log.info( "ffmpeg 설치: " + result.get(0) );
+                    }
                 }else {
-                	log.info( "ffmpeg 설치: " + result.get(0) );
+                	log.info( "ffmpeg 설치된 버전: " + result.get(0) );
                 }
-            }else {
-            	log.info( "ffmpeg 설치된 버전: " + result.get(0) );
+            }
+    		
+            {
+            	// exiftool 설치 여부 확인
+                final List<String> result = CommandUtil.workExe("exiftool", "-ver");
+                
+                if( result != null && !result.isEmpty() ) {
+                	final String line = result.get(0);
+                	
+                    if ( line.contains("command not found")) {
+                		log.info( "exiftool 설치 진행" );
+                        message.setMessage("exiftool를 설치합니다...");
+                		
+                		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
+                		delay();
+                        
+                        // ffmpeg 설치 명령 실행
+                		final List<String> installResult = CommandUtil.workExe("apt", "install", "-y", "exiftool");
+
+                        if (installResult.isEmpty()) {
+                            message.setMessage("exiftool를 설치 실패했습니다.");
+                    		
+                    		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
+                    		delay();
+                            return;
+                        }else {
+                        	log.info( "exiftool 설치: " + line );
+                        }
+                    }else {
+                    	log.info( "exiftool 설치된 버전: " + line );
+                    }
+                	
+                }else {
+                	log.info("설치 오류...");
+                }
+
             }
             
             new Thread( new FileLoad(req, ifl) ).start();
@@ -352,7 +391,8 @@ public class StorageServiceImpl implements StorageService {
 		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
 		delay();
 		
-		new Thread( new LibDownLoad(req, ifl) ).start();
+//		new Thread( new LibDownLoad(req, ifl) ).start();
+		new Thread( new FileLoad(req, ifl) ).start();
 		
 		return new ReturnBasic();
 	}

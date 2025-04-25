@@ -40,7 +40,6 @@
 			, STATUS VARCHAR(32) NOT NULL
 			, REQ_ID VARCHAR(32) NOT NULL <!-- 요청 ID -->
 			, USER_NO INT DEFAULT -1
-			, FOREIGN KEY(USER_NO) REFERENCES BN_USER(NO)
 		)
 	</insert>
 	
@@ -68,21 +67,6 @@
 			</if>
 		)
 	</insert>
-	
-	<resultMap id="UserVoMap" type="com.utime.burrowNest.user.vo.UserVo"> 
-		<id column="NO" 				property="userNo" />
-		<result column="REG_DATE" 		property="regDate" />
-		<result column="UPDATE_DATE" 	property="updateDate" />
-		<result column="ENABLED" 		property="enabled" typeHandler="com.utime.burrowNest.common.typeHandler.BooleanTypeHandler" />
-		<result column="ID" 			property="id" />
-		<result column="NICK_NAME" 		property="nickname" />
-		<result column="ICON" 			property="profileImg" />
-		<result column="NOTE" 			property="note" />
-		<result column="ROLE" 			property="role" />
-		<result column="DAILY_UPLOAD_LIMIT" 	property="dailyUploadLimit" />
-		<result column="DAILY_DOWNLOAD_LIMIT" 	property="dailyDownloadLimit" />
-		<result column="MAX_STORAGE_USAGE" 		property="maxStorageUsage" />
-	</resultMap>
 	
 	<sql id="UserColumn">
 		NO AS "userNo"

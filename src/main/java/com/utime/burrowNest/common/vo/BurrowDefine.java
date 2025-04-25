@@ -16,4 +16,6 @@ public class BurrowDefine {
 	public static final String YES = "Y";
 	/** NO, False */
 	public static final String NO = "N";
+	
+	final boolean IsLinux = System.getProperty("os.name").toLowerCase().indexOf("windows") < 0;
 }

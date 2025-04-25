@@ -26,6 +26,7 @@ import java.util.zip.ZipInputStream;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xslf.usermodel.XSLFSlide;
 
@@ -475,6 +476,22 @@ App Version                     : 16.0300
 	
  */
 	/**
+	 * Exiftool 결과가 에러인가?
+	 * @param cmdRes
+	 * @return true: 그렇다 에러다. false:정상이다.
+	 */
+	private static boolean isExifToolError(List<String> cmdRes) {
+		if( BurrowUtils.isEmpty(cmdRes) ) {
+			return true;
+		}
+		
+		final String line = cmdRes.get(0).toLowerCase();
+		
+		return line.indexOf("error") > -1 || line.indexOf("exception") > -1;
+	}
+
+
+	/**
 	 * 다운로드
 	 * @param url
 	 * @param outputDir
@@ -636,7 +653,7 @@ App Version                     : 16.0300
 				, file.getAbsolutePath()
 				);
 		
-		if( BurrowUtils.isEmpty(cmdRes) ) {
+		if( StorageUtils.isExifToolError(cmdRes) ) {
 			return null;
 		}
 		
@@ -651,8 +668,8 @@ App Version                     : 16.0300
 		result.setTitle( values.getProperty("Title", null) );
 		result.setSubject( values.getProperty("Subject", null) );
 		result.setCreator( values.getProperty("Creator", null) );
-		result.setCreateDate( values.getProperty("CreateDate", null) );
-		result.setModifyDate( values.getProperty("ModifyDate", null) );
+		result.setCreateDate( BurrowUtils.convertToLocalDateTime(values.getProperty("CreateDate", null)) );
+		result.setModifyDate( BurrowUtils.convertToLocalDateTime(values.getProperty("ModifyDate", null)) );
 		result.setKeywords( values.getProperty("Keywords", null) );
 		result.setDescription( values.getProperty("Description", null) );
 		result.setHeadingPairs( values.getProperty("HeadingPairs", null) );
@@ -684,7 +701,7 @@ App Version                     : 16.0300
 				, file.getAbsolutePath()
 				);
 		
-		if( BurrowUtils.isEmpty(cmdRes) ) {
+		if( StorageUtils.isExifToolError(cmdRes) ) {
 			return null;
 		}
 		
@@ -699,18 +716,18 @@ App Version                     : 16.0300
 		result.setMake( values.getProperty("Make", null) );
 		result.setCameraModelName( values.getProperty("CameraModelName", null) );
 		result.setOrientation( values.getProperty("Orientation", null) );
-		result.setFNumber( values.getProperty("FNumber", null) );
+		result.setFNumber( NumberUtils.toDouble(values.getProperty("FNumber", null)) );
 		result.setExposureTime( values.getProperty("ExposureTime", null) );
 		result.setSensingMethod( values.getProperty("SensingMethod", null) );
 		result.setFlash( values.getProperty("Flash", null) );
 		result.setLightSource( values.getProperty("LightSource", null) );
 		result.setWhiteBalance( values.getProperty("WhiteBalance", null) );
 		result.setShutterSpeed( values.getProperty("ShutterSpeed", null) );
-		result.setIso( values.getProperty("Iso", null) );
-		result.setImageWidth( values.getProperty("ImageWidth", null) );
-		result.setImageHeight( values.getProperty("ImageHeight", null) );
-		result.setCreateDate( values.getProperty("CreateDate", null) );
-		result.setModifyDate( values.getProperty("ModifyDate", null) );
+		result.setIso( NumberUtils.toInt(values.getProperty("Iso", null)) );
+		result.setImageWidth( NumberUtils.toInt(values.getProperty("ImageWidth", null)) );
+		result.setImageHeight( NumberUtils.toInt(values.getProperty("ImageHeight", null)) );
+		result.setCreateDate( BurrowUtils.convertToLocalDateTime(values.getProperty("CreateDate", null)) );
+		result.setModifyDate( BurrowUtils.convertToLocalDateTime(values.getProperty("ModifyDate", null)) );
 		result.setGpsLatitude( BurrowUtils.dmsToDecimal(values.getProperty("GpsLatitude", null)) );
 		result.setGpsLongitude( BurrowUtils.dmsToDecimal(values.getProperty("GpsLongitude", null)) );
 		
@@ -744,7 +761,7 @@ App Version                     : 16.0300
 				, file.getAbsolutePath()
 				);
 		
-		if( BurrowUtils.isEmpty(cmdRes) ) {
+		if( StorageUtils.isExifToolError(cmdRes) ) {
 			return null;
 		}
 		
@@ -759,22 +776,22 @@ App Version                     : 16.0300
 		result.setMimeType( values.getProperty("MimeType", null) );
 		result.setAuthor( values.getProperty("Author", null) );
 		result.setDuration( values.getProperty("Duration", null) );
-		result.setPreferredRate( values.getProperty("PreferredRate", null) );
+		result.setPreferredRate( NumberUtils.toDouble(values.getProperty("PreferredRate", null)) );
 		result.setPreferredVolume( values.getProperty("PreferredVolume", null) );
 		result.setAudioFormat( values.getProperty("AudioFormat", null) );
-		result.setAudioBitsPerSample( values.getProperty("AudioBitsPerSample", null) );
-		result.setAudioSampleRate( values.getProperty("AudioSampleRate", null) );
+		result.setAudioBitsPerSample( NumberUtils.toInt(values.getProperty("AudioBitsPerSample", null)) );
+		result.setAudioSampleRate( NumberUtils.toInt(values.getProperty("AudioSampleRate", null)) );
 		result.setLayoutFlags( values.getProperty("LayoutFlags", null) );
-		result.setAudioChannels( values.getProperty("AudioChannels", null) );
+		result.setAudioChannels( NumberUtils.toInt(values.getProperty("AudioChannels", null)) );
 		result.setCompressorVersion( values.getProperty("CompressorVersion", null) );
 		result.setCameraModelName( values.getProperty("CameraModelName", null) );
 		result.setFirmwareVersion( values.getProperty("FirmwareVersion", null) );
 		result.setAvgBitrate( values.getProperty("AvgBitrate", null) );
-		result.setRotation( values.getProperty("Rotation", null) );
-		result.setImageWidth( values.getProperty("ImageWidth", null) );
-		result.setImageHeight( values.getProperty("ImageHeight", null) );
-		result.setCreateDate( values.getProperty("CreateDate", null) );
-		result.setModifyDate( values.getProperty("ModifyDate", null) );
+		result.setRotation( NumberUtils.toInt(values.getProperty("Rotation", null)) );
+		result.setImageWidth( NumberUtils.toInt(values.getProperty("ImageWidth", null)) );
+		result.setImageHeight( NumberUtils.toInt(values.getProperty("ImageHeight", null)) );
+		result.setCreateDate( BurrowUtils.convertToLocalDateTime(values.getProperty("CreateDate", null)) );
+		result.setModifyDate( BurrowUtils.convertToLocalDateTime(values.getProperty("ModifyDate", null)) );
 		result.setGpsLatitude( BurrowUtils.dmsToDecimal(values.getProperty("GpsLatitude", null)) );
 		result.setGpsLongitude( BurrowUtils.dmsToDecimal(values.getProperty("GpsLongitude", null)) );
 		
@@ -801,7 +818,7 @@ App Version                     : 16.0300
 				, file.getAbsolutePath()
 				);
 		
-		if( BurrowUtils.isEmpty(cmdRes) ) {
+		if( StorageUtils.isExifToolError(cmdRes) ) {
 			return null;
 		}
 		
@@ -814,19 +831,19 @@ App Version                     : 16.0300
 		result.setFileNo( bnFile.getNo() );
 		
 		result.setMimeType( values.getProperty("MimeType", null) );
-		result.setSampleRate( values.getProperty("SampleRate", null) );
-		result.setChannels( values.getProperty("Channels", null) );
-		result.setBitsPerSample( values.getProperty("BitsPerSample", null) );
-		result.setTotalSamples( values.getProperty("TotalSamples", null) );
+		result.setSampleRate( NumberUtils.toInt(values.getProperty("SampleRate", null)) );
+		result.setChannels( NumberUtils.toInt(values.getProperty("Channels", null)) );
+		result.setBitsPerSample( NumberUtils.toInt(values.getProperty("BitsPerSample", null)) );
+		result.setTotalSamples( NumberUtils.toInt(values.getProperty("TotalSamples", null)) );
 		result.setTitle( values.getProperty("Title", null) );
 		result.setArtist( values.getProperty("Artist", null) );
 		result.setAlbum( values.getProperty("Album", null) );
 		result.setGenre( values.getProperty("Genre", null) );
 		result.setAlbumArtist( values.getProperty("AlbumArtist", null) );
-		result.setDiscNumber( values.getProperty("DiscNumber", null) );
+		result.setDiscNumber( NumberUtils.toInt(values.getProperty("DiscNumber", null)) );
 		result.setAlbumDate( values.getProperty("AlbumDate", null) );
 		result.setOrganization( values.getProperty("Organization", null) );
-		result.setTrackNumber( values.getProperty("TrackNumber", null) );
+		result.setTrackNumber( NumberUtils.toInt(values.getProperty("TrackNumber", null)) );
 		result.setDuration( values.getProperty("Duration", null) );
 		
 		return result;
@@ -870,7 +887,14 @@ App Version                     : 16.0300
 		return result;
 	}
 	
-	private static byte [] getFileThumbnailByJava(File file, BnFile bnFile) throws Exception{
+	/**
+	 * java 이미지 축소시켜 섬네일을 만든다.
+	 * @param file
+	 * @param bnFile
+	 * @return
+	 * @throws Exception
+	 */
+	private static byte [] getFileThumbnailByJava(File file) throws Exception{
     	final BufferedImage sourceImage = ImageIO.read(file);
     	final BufferedImage thumb = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
     	final Graphics2D g2d = thumb.createGraphics();
@@ -887,33 +911,36 @@ App Version                     : 16.0300
         
         return result;
 	}
-
-	private static byte [] getFileThumbnailByExif(File file, BnFile bnFile) throws Exception{
+	
+	/**
+	 * exiftool로부터 섬네일을 추출하고 그 섬네일 값은 hex 값으로 받는다.
+	 * @param file
+	 * @return
+	 * @throws Exception
+	 */
+	private static byte [] getFileThumbnailByExif(File file) throws Exception{
 		//exiftool -ThumbnailImage -b 20190417_123809.jpg | xxd -p | tr -d '\n'
 		
-		final List<String> cmdRes = CommandUtil.workExe("exiftool"
-				, "-ThumbnailImage"
-				, "-b"
-				, file.getAbsolutePath()
-				, "|"
-				, "xxd"
-				, "-p"
-				, "|"
-				, "tr"
-				, "-d"
-				, "'\n'"
+		final List<String> cmdRes = CommandUtil.workExe(
+				"sh"
+				, "-c"
+				,"exiftool -ThumbnailImage -b \"" + file.getAbsolutePath() + "\" | xxd -p | tr -d '\\n'"
 				);
 		
-		if( BurrowUtils.isEmpty(cmdRes) ) {
+		if( StorageUtils.isExifToolError(cmdRes) ) {
 			return null;
 		}
 		
 		final String hexString = cmdRes.get(0);
 		
-        
-        return hexStringToByteArray(hexString);
+        return StorageUtils.hexStringToByteArray(hexString);
 	}
 	
+	/**
+	 * hex to byte array
+	 * @param hex
+	 * @return
+	 */
 	private static byte[] hexStringToByteArray(String hex) {
 	    
 		final int len = hex.length();
@@ -930,53 +957,64 @@ App Version                     : 16.0300
 	    return data;
 	}
 
-
+	/**
+	 * 파일로부터 섬네일을 추출한다.
+	 * @param file
+	 * @param bnFile
+	 * @return
+	 * @throws Exception
+	 */
 	public static byte [] getFileThumbnail(File file, BnFile bnFile) throws Exception{
+		
 		byte [] result = null;
 		
 		final String ext = bnFile.getExtension();
+		
 		switch( ext ) {
 		case "jpg":case "jpeg":case "tiff":
 		case "cr2":case "nef":case "arw":
 		case "orf":case "rw2":case "dng":
-			result = getFileThumbnailByExif( file, bnFile );
+			result = StorageUtils.getFileThumbnailByExif( file );
 			break;
+		}// case end
+		
+		if( result != null ) {
+			return result;
 		}
 		
-		if( result == null ) {
-			switch( ext ) {
-			case "jpg":case "jpeg":case "png":case "bmp":case "wbmp":case "gif" :{
-				result = getFileThumbnailByJava( file, bnFile );
-				break;
-			}
-			case "ppt":case "pptx":{
-				try (FileInputStream fis = new FileInputStream(file);
-						XMLSlideShow ppt = new XMLSlideShow(fis)) {
+		switch( ext ) {
+		case "jpg":case "jpeg":case "png":
+		case "bmp":case "wbmp":case "gif" :{
+			// exif로 섬네일을 추출하지 못한 이미지의 경우 
+			result = StorageUtils.getFileThumbnailByJava( file );
+			break;
+		}
+		case "ppt":case "pptx":{
+			try (FileInputStream fis = new FileInputStream(file);
+					XMLSlideShow ppt = new XMLSlideShow(fis)) {
 
-			            final Dimension pageSize = ppt.getPageSize();
-			            final XSLFSlide slide = ppt.getSlides().get(0); // 첫 슬라이드
+		            final Dimension pageSize = ppt.getPageSize();
+		            final XSLFSlide slide = ppt.getSlides().get(0); // 첫 슬라이드
 
-			            final BufferedImage img = new BufferedImage(pageSize.width, pageSize.height, BufferedImage.TYPE_INT_ARGB);
-			            final Graphics2D graphics = img.createGraphics();
-			            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-			            graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		            final BufferedImage img = new BufferedImage(pageSize.width, pageSize.height, BufferedImage.TYPE_INT_ARGB);
+		            final Graphics2D graphics = img.createGraphics();
+		            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		            graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
-			            slide.draw(graphics);
-			            graphics.dispose();
+		            slide.draw(graphics);
+		            graphics.dispose();
 
-			            // 이미지 -> Base64
-			            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			            ImageIO.write(img, ThumFormat, baos); // "jpeg" 또는 "png" 등
-			            result = baos.toByteArray();
-			            baos.close();
-			        }
-				break;
-			}
-			}
+		            // 이미지 -> Base64
+		            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		            ImageIO.write(img, ThumFormat, baos); // "jpeg" 또는 "png" 등
+		            result = baos.toByteArray();
+		            baos.close();
+		        }
+			break;
+		}
 		}
 		
 		return result;
 	}
-	
 }
 

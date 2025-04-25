@@ -126,6 +126,9 @@
 		    li.innerHTML = `<span>${name}</span><button class="text-red-500 hover:text-red-700" onclick="this.closest('li').remove()">삭제</button>`;
 		    list.appendChild(li);
 		  }
+		  
+		  const selectList = getStorageListValues();
+		  buttonStatus( "selectNextBtn", selectList.length > 0);
 
 		  closePopup(element);
 		}

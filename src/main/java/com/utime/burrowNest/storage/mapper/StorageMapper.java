@@ -14,24 +14,6 @@ import com.utime.burrowNest.storage.vo.BnFileVideo;
 @Mapper
 public interface StorageMapper {
 	/**
-	 * Dir 권한 추가하기
-	 * @param dirNo
-	 * @param userNo
-	 * @param accType
-	 * @return
-	 */
-	int insertDirectoryAccess(@Param("dirNo") long dirNo, @Param("userNo") int userNo, @Param("accType") int accType);
-
-	/**
-	 * 파일 권한 추가하기
-	 * @param dirNo
-	 * @param userNo
-	 * @param accType
-	 * @return
-	 */
-	int insertFileAccess(@Param("fileNo") long fileNo, @Param("userNo") int userNo, @Param("accType") int accType);
-
-	/**
 	 * dir 추가
 	 * @param dir
 	 * @return
@@ -87,6 +69,24 @@ public interface StorageMapper {
 	 */
 	int deleteBnFileByNo( @Param("fileNo") long fileNo );
 	
+	/**
+	 * Dir 권한 추가하기
+	 * @param dirNo
+	 * @param userNo
+	 * @param accType
+	 * @return
+	 */
+	int insertDirectoryAccess(@Param("dirNo") long dirNo, @Param("userNo") int userNo, @Param("accType") int accType);
+
+	/**
+	 * 파일 권한 추가하기
+	 * @param dirNo
+	 * @param userNo
+	 * @param accType
+	 * @return
+	 */
+	int insertFileAccess(@Param("fileNo") long fileNo, @Param("userNo") int userNo, @Param("accType") int accType);
+
 	/**
 	 * 확장 정보 유무
 	 * @param tableName

@@ -32,7 +32,6 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             showPage('PageIntroduce');
-        	//showPage('PageStorageLoad');
         });
     </script>
     
@@ -44,6 +43,7 @@
 	            <div id="PageIntroduce" class="intro-page hidden" th:insert="~{Intro/PageIntroduce :: content}"></div>
 	            <div id="PageAgree" class="intro-page hidden" th:insert="~{Intro/PageAgree :: content}"></div>
  	            <div id="PagePasswd" class="intro-page hidden" th:insert="~{Intro/PagePasswd :: content}"></div>
+	            <div id="PageStorageLib" class="intro-page hidden" th:insert="~{Intro/PageStorageLib:: content}"></div>
 	            <div id="PageStorageSelect" class="intro-page hidden" th:insert="~{Intro/PageStorageSelect :: content}"></div>
 	            <div id="PageStorageLoad" class="intro-page hidden" th:insert="~{Intro/PageStorageLoad :: content}"></div>
 	            <div id="PageComplete" class="intro-page hidden" th:insert="~{Intro/PageComplete :: content}"></div>

@@ -1,118 +1,27 @@
 <div xmlns:th="http://www.thymeleaf.org" th:fragment="content">
     <div class="text-center space-y-6">
-        <h1 class="text-4xl font-bold text-blue-600">🐇 BurrowNest</h1>
-        <p class="text-lg text-gray-700">필수 라이브러리</p>
-        <p class="text-sm text-gray-500">BurrowNest를 위해선 아래 라이브러리가 필요합니다.</p>
-        <p class="text-sm text-gray-500">1. ffmpeg :> sudo apt install -y ffmpeg</p>
-        <p class="text-sm text-gray-500">6. exiftool :> sudo apt install -y exiftool </p>
-        <button type="button" id="applyBtn" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" th:onclick="apply()">진행</button>
-    </div>
-    
-    <script th:inline="javascript">
-	    
-	    const eleMessage = document.getElementById("message");
-	    const eleProgressText = document.getElementById("progressText");
-	    const eleProgressBar = document.getElementById("progressBar");
-	    const eleProgressPercent = document.getElementById("progressPercent");
-	    const eleStatus = document.getElementById("status");
-	
-	    // 4. 저장 상태가 전달됨.
-	    function updateProgress(receiveData) {
-	    	
-	    	console.log("User 소켓 데이터 수신 " + receiveData.body);
-	    	const json = JSON.parse(receiveData.body);
-	    	
-	    	if( Boolean(json.done) ){
-	    		// 작업 완료.
-	    		eleStatus.textContent = "✅ 완료";
-	    		
-	    		socketScript.disconnect();
-	    		// 5. 다음 페이지로 이동
-	    		nextPage('PageStorageLoad', 'PageComplete');
-	    		return;
-	    	}
-
-	    	const total = Number(json.total);
-	    	const progress = Number(json.progress);
-	    	const message  = json.message;
-	    	
-	    	const percent = total > 0 ? Math.floor((progress / total) * 100) : 0;
-	    	
-	    	eleMessage.textContent = message || "";
-	    	eleProgressText.textContent = `${progress} / ${total}`;
-	    	eleProgressBar.style.width = `${percent}%`;
-	    	eleProgressPercent.textContent = `${percent}%`;
-	    }
-	    
-	    let socketScript = null;
-	    
-	    function apply(){
-	    	
-	    	buttonStatus( "applyBtn", false);
-	    	
-	    	// 1. 웹 소켓 접속.
-	    	const wsUrl = /*[[@{/BackEvent}]]*/ null;
-	    	const connectionInfo = new ConnectionInfo(wsUrl, { service: 'Burrow' });
-	    	
-	    	connectionInfo.setOpenHandler((frame) => {
-	    		
-	    		// 2. 접속 성공 하면 user-name 획득
-	    		const currentUserKey = frame.headers['user-name'];
-	    		console.log("연결됨", currentUserKey );
-	    		
-	    		SaveInit( currentUserKey );
-	    	});
-	    	
-	    	connectionInfo.setCloseHandler(() => {
-	    		console.log("연결 해제");
-	    	});
-
-	    	socketScript = new SocketScript(connectionInfo);
-	    	
-	    	socketScript.addReceiveInfo(new ReceiveInfo('/user/toFront/RecieveStatus', updateProgress));
-	    	// socketScript.addReceiveInfo(new ReceiveInfo('/toFront/RecieveStatus', publicCallBackStatus));
-	    	
-	    	socketScript.connect();
-	    }
-	    
-	    
-	    // 3. saveInit 호출
-    	async function SaveInit(wsUser){
-    		
-    		const encrypt = new JSEncrypt();
-            encrypt.setPublicKey(/*[[${unique.publicKey}]]*/ null);
-
-            const encPw = encrypt.encrypt( document.getElementById("pwd1").value );	
+    	<h1 class="text-4xl font-bold text-blue-600">🐇 BurrowNest</h1>
+    	<p class="text-lg text-gray-700 font-medium">필수 라이브러리</p>
     	
-            const storageList = getStorageListValues();
-            
-    		const requestData = {
-    		        token: /*[[${unique.token}]]*/ null,
-    		        rsaId: /*[[${unique.rsaId}]]*/ null,
-    		        pw: encPw,
-    		        wsUserName: wsUser,
-    		        roots: storageList
-    		    };
+    	<div class="space-y-1">
+    		<p class="text-sm text-gray-500">BurrowNest를 사용하려면 아래 라이브러리가 필요합니다.</p>
+    		<p class="text-sm text-gray-500">다음 명령어를 통해 설치하세요:</p>
+    		<p class="text-sm text-gray-500">1. ffmpeg: <code class="font-mono">sudo apt install -y ffmpeg</code></p>
+    		<p class="text-sm text-gray-500">2. exiftool: <code class="font-mono">sudo apt install -y exiftool</code></p>
+    	</div>
+    	
+    	<div class="flex justify-between pt-6">
+    		<button type="button"
+    			class="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 transition"
+    			onclick="prevPage('PageStorageLib', 'PagePasswd')">
+    			이전
+    		</button>
     		
-    		try {
-    	        const res = await fetch(/*[[@{/Intro/SaveInit.json}]]*/ null, {
-    	            method: 'POST',
-    	            headers: { "Content-Type": "application/json" },
-    	            credentials: 'include',
-    	            body: JSON.stringify(requestData)
-    	        });
-    	        
-    	        console.info('✅ response', res);
-
-    	        if (res.ok) {
-    	        	console.info('작업 진행 중');
-    	        }
-    	        return true;
-    	    } catch (err) {
-    	        console.error("refreshToken 실패:", err);
-    	        buttonStatus( "applyBtn", true);
-    	        return false;
-    	    }
-    	}
-    </script>
+    		<button type="button"
+    			class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition"
+    			onclick="nextPage('PageStorageLib', 'PageStorageSelect')">
+    			다음
+    		</button>
+    	</div>
+    </div>
 </div>

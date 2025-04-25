@@ -22,6 +22,13 @@
 			, CURRENT_TIMESTAMP
 		)  
 	</insert>
+	
+	<insert id="updateAdmin" parameterType="map">
+		UPDATE BN_ADMIN SET 
+			AUTH_DATA = #{pw, typeHandler=com.utime.burrowNest.user.typeHandler.PasswordEncoderTypeHandler}
+			, UPDATE_DATE = CURRENT_TIMESTAMP
+		WHERE 1=1
+	</insert>
 
 	<!-- 초기화 했는지 여부 -->
 	<select id="IsInit" resultType="boolean">
@@ -46,13 +53,15 @@
 			, ENABLED
 			, ID 
 			, NICK_NAME 
-			, ICON 
+			, ICON
+			, ROLE
 		) VALUES (
 			CURRENT_TIMESTAMP
 			, #{enabled}
 			, #{id}
 			, #{nickname}
 			, #{profileImg}
+			, #{role}
 		)
 	</insert>
 

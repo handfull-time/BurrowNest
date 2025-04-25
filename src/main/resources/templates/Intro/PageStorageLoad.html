@@ -7,7 +7,7 @@
         <div class="bg-gray-50 p-6 font-sans">
         	<div class="max-w-xl mx-auto bg-white shadow-lg rounded-xl p-6 space-y-4">
         	
-		    <div id="progressView" >
+		    <div id="progressView" class="hidden">
 			    <div id="message" class="text-gray-700 text-center text-base font-medium">메시지</div>
 			
 			    <div class="relative w-full h-6 bg-gray-200 rounded-full overflow-hidden">
@@ -21,7 +21,10 @@
 		    </div>
 		  </div>
 		</div>
-        <button type="button" id="applyBtn" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" th:onclick="apply()">진행</button>
+		<div class="flex justify-between">
+            <button type="button" class="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 transition" onclick="prevPage('PageStorageLoad', 'PageStorageSelect')">이전</button>
+            <button type="button" id="applyBtn" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" th:onclick="apply()">진행</button>
+        </div>
     </div>
     
     <script th:inline="javascript">
@@ -86,7 +89,6 @@
 	    	socketScript = new SocketScript(connectionInfo);
 	    	
 	    	socketScript.addReceiveInfo(new ReceiveInfo('/user/toFront/RecieveStatus', updateProgress));
-	    	// socketScript.addReceiveInfo(new ReceiveInfo('/toFront/RecieveStatus', publicCallBackStatus));
 	    	
 	    	socketScript.connect();
 	    }
@@ -95,6 +97,8 @@
 	    // 3. saveInit 호출
     	async function SaveInit(wsUser){
     		
+    		document.getElementById("progressView").classList.remove("hidden");
+	    	
     		const encrypt = new JSEncrypt();
             encrypt.setPublicKey(/*[[${unique.publicKey}]]*/ null);
 

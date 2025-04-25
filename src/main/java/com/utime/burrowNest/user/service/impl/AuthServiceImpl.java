@@ -188,24 +188,24 @@ class AuthServiceImpl implements AuthService {
 		log.info("초기화 시도 : {}", req);
 		
 		if( ! this.validation(req) ) {
-			return new ResUserVo("E", "Invalid credentials");
+			return new ReturnBasic("E", "Invalid credentials");
 		}
 		
 		final String pw = this.convertEncPw( req, req.getPw() );
 		
 		if( pw == null ){
-			return new ResUserVo("E", "Invalid credentials");
+			return new ReturnBasic("E", "Invalid credentials");
 		}
 		req.setPw(pw);
 		
 		try {
 			userDao.saveInitInfo( req );
 		} catch (Exception e) {
-			e.printStackTrace();
-			return new ResUserVo("E", "Invalid credentials");
+			log.error("", e);
+			return new ReturnBasic("E", "Invalid credentials");
 		}
 		
-		return null;
+		return new ReturnBasic();
 	}
 	
 }
