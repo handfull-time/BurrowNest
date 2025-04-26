@@ -38,7 +38,7 @@ public abstract class AbsPath {
     /**
      * The unique identifier of the parent directory that contains the file.
      * The parent directory's primary key. Represents the parent-child relationship.
-     * root is -1;
+     * root is 1;
      */
     protected long parentNo;
     
@@ -57,5 +57,12 @@ public abstract class AbsPath {
      */
     protected Timestamp lastModified;
     
-
+    /**
+     * The name of the file excluding its extension.
+     * or
+     * The pure name of the directory.
+     */
+    private String name;
+    
+    
 }

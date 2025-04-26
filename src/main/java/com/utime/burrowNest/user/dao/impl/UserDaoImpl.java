@@ -97,7 +97,7 @@ class UserDaoImpl implements UserDao {
 		
 		final UserVo result = new UserVo();
 		
-		result.setUserNo(0);
+		result.setUserNo(1);
 		result.setId(AdminId);
 		result.setRole(EJwtRole.Admin);
 		
@@ -177,6 +177,7 @@ class UserDaoImpl implements UserDao {
 		user.setProfileImg("profile1.svg");
 		
 		res += adminMapper.insertUser(user);
+
 		return res;
 	}
 

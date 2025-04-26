@@ -25,11 +25,6 @@ public class BnDirectory extends AbsPath{
     private boolean hasChild;
 
     /**
-     * The pure name of the directory.
-     */
-    private String name;
-
-    /**
      * The absolute path of the directory in the file system.
      */
     private String absolutePath;

@@ -2,7 +2,7 @@
     <div class="text-center space-y-6">
         <h1 class="text-4xl font-bold text-blue-600">🐇 BurrowNest</h1>
         <p class="text-lg text-gray-700">파일 로딩 작업</p>
-        <p class="text-sm text-gray-500">진행을 클릭하면 설정이 저장되고 저장소 검색을 진행 합니다.</p>
+        <p class="text-sm text-gray-500">진행을 클릭하면 설정 정보가 저장되고 파일 정보 읽기를 시작 합니다.</p>
         <p class="text-sm text-gray-500">검색할 양이 많을 경우 오래 걸릴 수 있으니 기다려 주세요.</p>
         <div class="bg-gray-50 p-6 font-sans">
         	<div class="max-w-xl mx-auto bg-white shadow-lg rounded-xl p-6 space-y-4">
@@ -33,7 +33,6 @@
 	    const eleProgressText = document.getElementById("progressText");
 	    const eleProgressBar = document.getElementById("progressBar");
 	    const eleProgressPercent = document.getElementById("progressPercent");
-	    const eleStatus = document.getElementById("status");
 	
 	    // 4. 저장 상태가 전달됨.
 	    function updateProgress(receiveData) {
@@ -43,7 +42,7 @@
 	    	
 	    	if( Boolean(json.done) ){
 	    		// 작업 완료.
-	    		eleStatus.textContent = "✅ 완료";
+	    		eleMessage.textContent = "✅ 완료";
 	    		
 	    		socketScript.disconnect();
 	    		// 5. 다음 페이지로 이동

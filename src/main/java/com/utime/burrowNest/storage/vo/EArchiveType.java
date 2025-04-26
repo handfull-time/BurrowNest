@@ -17,4 +17,18 @@ public enum EArchiveType {
 	public String getArchive() {
 		return archive;
 	}
+	
+	public static EArchiveType getArchiveType( String ext ) {
+		EArchiveType result = null;
+		
+		final EArchiveType [] values = EArchiveType.values();
+		for( EArchiveType item : values ) {
+			if( item.archive.equals(ext) ) {
+				result = item;
+				break;
+			}
+		}
+		
+		return result;
+	}
 }

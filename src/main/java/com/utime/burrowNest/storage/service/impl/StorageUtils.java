@@ -20,6 +20,7 @@ import java.sql.Timestamp;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -32,6 +33,7 @@ import org.apache.poi.xslf.usermodel.XSLFSlide;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.util.CommandUtil;
+import com.utime.burrowNest.common.vo.BurrowDefine;
 import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
@@ -40,6 +42,7 @@ import com.utime.burrowNest.storage.vo.BnFileAudio;
 import com.utime.burrowNest.storage.vo.BnFileDocument;
 import com.utime.burrowNest.storage.vo.BnFileImage;
 import com.utime.burrowNest.storage.vo.BnFileVideo;
+import com.utime.burrowNest.storage.vo.EArchiveType;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,10 +52,21 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public class StorageUtils {
+class StorageUtils {
 	
 	private final static int width = 320, height = 320;
 	private final static String ThumFormat = "jpeg";
+	
+	private final static String Exiftool;
+	
+	static {
+		if( BurrowDefine.IsLinux ) {
+			Exiftool = "exiftool";
+		}else {
+			Exiftool = new File("D:\\Projects\\OtherTools\\exiftool-13.28_64", "exiftool.exe").getAbsolutePath();
+		}
+	}
+	
 	
 	//exiftool -Model -Make -FNumber -ShutterSpeedValue -ISO -SubjectDistance -DateTimeOriginal -ImageWidth -ImageHeight -GPSLatitude -GPSLongitude -Flash -WhiteBalance -SceneCaptureType -Software 파일명
 	//exiftool -b -ThumbnailImage 20250128_010059.cr2 > ./thumb/20250128.jpg
@@ -487,7 +501,7 @@ App Version                     : 16.0300
 		
 		final String line = cmdRes.get(0).toLowerCase();
 		
-		return line.indexOf("error") > -1 || line.indexOf("exception") > -1;
+		return line.indexOf("error") > -1 || line.indexOf("exception") > -1 || line.indexOf("warning") > -1;
 	}
 
 
@@ -639,7 +653,7 @@ App Version                     : 16.0300
 	
 	public static BnFileDocument getFileInfoDocument(File file, BnFile bnFile ) throws Exception {
 
-		final List<String> cmdRes = CommandUtil.workExe("exiftool"
+		final List<String> cmdRes = CommandUtil.workExe(StorageUtils.Exiftool
 				, "-Title"
 				, "-Subject"
 				, "-Creator"
@@ -650,7 +664,7 @@ App Version                     : 16.0300
 				, "-Description"
 				, "-HeadingPairs" 
 				, "-Company"
-				, file.getAbsolutePath()
+				, "\"" + file.getAbsolutePath() + "\""
 				);
 		
 		if( StorageUtils.isExifToolError(cmdRes) ) {
@@ -680,7 +694,7 @@ App Version                     : 16.0300
 
 
 	public static AbsBnFileInfo getFileInfoImage(File file, BnFile bnFile) throws Exception{
-		final List<String> cmdRes = CommandUtil.workExe("exiftool"
+		final List<String> cmdRes = CommandUtil.workExe(StorageUtils.Exiftool
 				, "-Make"
 				, "-CameraModelName"
 				, "-Orientation"
@@ -698,7 +712,7 @@ App Version                     : 16.0300
 				, "-ModifyDate"
 				, "-GpsLatitude"
 				, "-GpsLongitude"
-				, file.getAbsolutePath()
+				, "\"" + file.getAbsolutePath() + "\""
 				);
 		
 		if( StorageUtils.isExifToolError(cmdRes) ) {
@@ -736,7 +750,7 @@ App Version                     : 16.0300
 
 	public static AbsBnFileInfo getFileInfoVideo(File file, BnFile bnFile) throws Exception{
 		
-		final List<String> cmdRes = CommandUtil.workExe("exiftool"
+		final List<String> cmdRes = CommandUtil.workExe(StorageUtils.Exiftool
 				, "-MimeType"
 				, "-Author"
 				, "-Duration"
@@ -758,7 +772,7 @@ App Version                     : 16.0300
 				, "-ModifyDate"
 				, "-GpsLatitude"
 				, "-GpsLongitude"
-				, file.getAbsolutePath()
+				, "\"" + file.getAbsolutePath() + "\""
 				);
 		
 		if( StorageUtils.isExifToolError(cmdRes) ) {
@@ -799,7 +813,7 @@ App Version                     : 16.0300
 	}
 
 	public static AbsBnFileInfo getFileInfoAudio(File file, BnFile bnFile) throws Exception{
-		final List<String> cmdRes = CommandUtil.workExe("exiftool"
+		final List<String> cmdRes = CommandUtil.workExe(StorageUtils.Exiftool
 				, "-MimeType"
 				, "-SampleRate"
 				, "-Channels"
@@ -815,7 +829,7 @@ App Version                     : 16.0300
 				, "-Organization"
 				, "-TrackNumber"
 				, "-Duration"
-				, file.getAbsolutePath()
+				, "\"" + file.getAbsolutePath() + "\""
 				);
 		
 		if( StorageUtils.isExifToolError(cmdRes) ) {
@@ -851,12 +865,18 @@ App Version                     : 16.0300
 
 	public static AbsBnFileInfo getFileInfoArchive(File file, BnFile bnFile) throws Exception{
 		
-		if( ! "zip".equals( bnFile.getExtension() )){
+		final EArchiveType archType = EArchiveType.getArchiveType( bnFile.getExtension() );
+		if( archType == null ) {
 			return null;
 		}
 		
 		final BnFileArchive result = new BnFileArchive();
 		result.setFileNo(bnFile.getNo());
+		result.setArchiveFormat( archType );
+		
+		if( archType != EArchiveType.ZIP ){
+			return result;
+		}
 		
 		try (ZipFile zip = new ZipFile(file)) {
 			Enumeration<? extends ZipEntry> entries = zip.entries();
@@ -919,21 +939,45 @@ App Version                     : 16.0300
 	 * @throws Exception
 	 */
 	private static byte [] getFileThumbnailByExif(File file) throws Exception{
-		//exiftool -ThumbnailImage -b 20190417_123809.jpg | xxd -p | tr -d '\n'
 		
-		final List<String> cmdRes = CommandUtil.workExe(
-				"sh"
-				, "-c"
-				,"exiftool -ThumbnailImage -b \"" + file.getAbsolutePath() + "\" | xxd -p | tr -d '\\n'"
-				);
+		byte [] result = null;
 		
-		if( StorageUtils.isExifToolError(cmdRes) ) {
-			return null;
+		if( BurrowDefine.IsLinux ) {
+			//exiftool -ThumbnailImage -b 20190417_123809.jpg | xxd -p | tr -d '\n'
+			final List<String> cmdRes = CommandUtil.workExe(
+					"sh"
+					, "-c"
+					,StorageUtils.Exiftool + " -ThumbnailImage -b \"" + file.getAbsolutePath() + "\" | xxd -p | tr -d '\\n'"
+					);
+
+			if( StorageUtils.isExifToolError(cmdRes) ) {
+				return result;
+			}
+			
+			final String hexString = cmdRes.stream().collect(Collectors.joining());
+			
+			result = StorageUtils.hexStringToByteArray(hexString);
+			
+		}else {
+			
+			final Path temp = Files.createTempFile("Thumb", ".jpg");
+			final List<String> cmdRes = CommandUtil.workExe(
+					"cmd.exe"
+					, "/c"
+					,StorageUtils.Exiftool + " -ThumbnailImage -b \"" + file.getAbsolutePath() + "\" > " + temp.toAbsolutePath()
+					);
+
+			if( StorageUtils.isExifToolError(cmdRes) ) {
+				temp.toFile().delete();
+				return result;
+			}
+						
+			result = Files.readAllBytes(temp);
+			
+			temp.toFile().delete();
 		}
 		
-		final String hexString = cmdRes.get(0);
-		
-        return StorageUtils.hexStringToByteArray(hexString);
+		return result;
 	}
 	
 	/**

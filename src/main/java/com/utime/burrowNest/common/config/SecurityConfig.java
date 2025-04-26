@@ -52,7 +52,7 @@ public class SecurityConfig {
 	
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers( permitAllWhiteList ).permitAll() // 누구나 접근 가능.
-        	    .requestMatchers("/Admin/**").hasRole(EJwtRole.Admin.name()) 
+        	    .requestMatchers("/Admin/**").hasAuthority(EJwtRole.Admin.name()) 
         	    .requestMatchers("/File/**", "/Dir/**", "/User/**").hasAnyRole(EJwtRole.User.name()) 
                 .anyRequest().authenticated()
             );

@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.user.service.AuthService;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -27,9 +28,11 @@ public class RootController {
 		
 		if( user == null ) {
 			return "redirect:/Auth/Login.html";
+		}else if( user.getRole() == EJwtRole.Admin ){
+			return "redirect:/Admin/AdminHome.html";	
 		}else {
-			return "redirect:/Dir/Index.html";	
-		}		
+			return "redirect:/Dir/Index.html";
+		}
     }
 	
 }

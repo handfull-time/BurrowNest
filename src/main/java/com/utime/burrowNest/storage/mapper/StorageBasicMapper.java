@@ -18,6 +18,12 @@ public interface StorageBasicMapper {
 	 * @return
 	 */
 	int CreateDirectory();
+	
+	/**
+	 * 루트 생성
+	 */
+	int InsertRootDirectory();
+	
 	/**
 	 * dir 접근 권한 테이블 생성
 	 * @return
@@ -125,8 +131,5 @@ public interface StorageBasicMapper {
 	 * @return
 	 */
 	int deleteDeniedFileExtension( @Param("extension") String extension);
-	
-	
-	
 	
 }

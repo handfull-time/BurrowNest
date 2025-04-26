@@ -177,7 +177,7 @@ public class StorageServiceImpl implements StorageService {
     	}
     }
     
-    private void LoadDir(File f, InitFileLoad ifl, BnDirectory parent ) {
+    private void procLoadDir(File f, InitFileLoad ifl, BnDirectory parent ) {
     	
     	final File [] files = f.listFiles();
     	if( files == null || files.length < 1 ) {
@@ -196,7 +196,7 @@ public class StorageServiceImpl implements StorageService {
 		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, ifl.message);
 
 		final long parentDirNo = parent.getNo();
-		final int ownerDirNo = ifl.owner.getUserNo();
+		final int ownerUserNo = ifl.owner.getUserNo();
 		
 		for( File file : files ) {
 			if( file.isDirectory() ) {
@@ -208,7 +208,7 @@ public class StorageServiceImpl implements StorageService {
 					childDir.setEnabled(true);
 					childDir.setPublicAccessible(true);
 					childDir.setParentNo( parentDirNo );
-					childDir.setOwnerNo( ownerDirNo );
+					childDir.setOwnerNo( ownerUserNo );
 					if( storageDao.saveDirectory( childDir ) < 1 ) {
 						log.warn("Dir 저장 실패: " + childDir);
 					};
@@ -218,7 +218,7 @@ public class StorageServiceImpl implements StorageService {
 					continue;
 				}
 
-				this.LoadDir( file, ifl, childDir );
+				this.procLoadDir( file, ifl, childDir );
 			}else {
 				// 파일 추가.
 				executor.execute( new LoadFile( file, ifl, parent ) );
@@ -248,7 +248,7 @@ public class StorageServiceImpl implements StorageService {
         		
         		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
         		delay();
-            	new Thread( new FileLoad(req, ifl) ).start();
+            	new Thread( new BeginFileLoad(req, ifl) ).start();
             	return;
             }
             
@@ -316,19 +316,19 @@ public class StorageServiceImpl implements StorageService {
 
             }
             
-            new Thread( new FileLoad(req, ifl) ).start();
+            new Thread( new BeginFileLoad(req, ifl) ).start();
     	}
     }
 
     /**
-     * 파일 로드
+     * 최초 시작 파일 로드
      */
-    private class FileLoad implements Runnable{
+    private class BeginFileLoad implements Runnable{
     	
     	final InitInforReqVo req;
     	final InitFileLoad ifl;
     	
-    	public FileLoad(InitInforReqVo req, InitFileLoad ifl) {
+    	public BeginFileLoad(InitInforReqVo req, InitFileLoad ifl) {
 			this.req = req;
 			this.ifl = ifl;
 		}
@@ -336,11 +336,26 @@ public class StorageServiceImpl implements StorageService {
     	@Override
 		public void run() {
 			
+    		final MessageDataVo message = ifl.message;
     		delay();
+    		
+    		BnDirectory rootDir;
+			try {
+				rootDir = storageDao.InsertRootDirectory();
+			} catch (Exception e) {
+				log.error("", e);
+				message.setMessage(e.getMessage());
+				
+				messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
+				delay();
+				return;			
+			}
 			
+			final long parentNo = rootDir.getNo();
+			final int ownerUserNo = ifl.owner.getUserNo();
 			final List<String> list = req.getRoots();
 			for( String s : list ) {
-				log.info("FileLoad : " + s);
+				log.info("Begin FileLoad : " + s);
 				
 				final File file = new File(s);
 				final BnDirectory parentDir;
@@ -349,16 +364,18 @@ public class StorageServiceImpl implements StorageService {
 					parentDir = StorageUtils.getDirectoryInfo(file);
 					parentDir.setEnabled(true);
 					parentDir.setPublicAccessible(true);
+					parentDir.setParentNo( parentNo );
+					parentDir.setOwnerNo( ownerUserNo );
 					if( storageDao.saveDirectory( parentDir ) < 1 ) {
-						log.warn("Dir 저장 실패: " + s);
+						log.warn("Dir 저장 실패: " + parentDir);
 					};
 					
 				} catch (Exception e) {
 					log.error("", e);
 					continue;
 				}
-				
-				LoadDir( file, ifl, parentDir );
+
+				procLoadDir( file, ifl, parentDir );
 			}
 			
 			log.info("FileLoad Complete.");
@@ -373,6 +390,11 @@ public class StorageServiceImpl implements StorageService {
 			}
 			
 			log.info("파일 로딩 종료 작업 : " + finished);
+			
+			message.setMessage("작업 완료");
+			message.setDone(finished);
+			
+			messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
 		}
 	}
     
@@ -392,7 +414,7 @@ public class StorageServiceImpl implements StorageService {
 		delay();
 		
 //		new Thread( new LibDownLoad(req, ifl) ).start();
-		new Thread( new FileLoad(req, ifl) ).start();
+		new Thread( new BeginFileLoad(req, ifl) ).start();
 		
 		return new ReturnBasic();
 	}

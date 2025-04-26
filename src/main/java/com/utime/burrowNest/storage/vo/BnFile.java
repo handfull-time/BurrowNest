@@ -36,11 +36,6 @@ public class BnFile extends AbsPath {
     private String extension;
 
     /**
-     * The name of the file excluding its extension.
-     */
-    private String name;
-    
-    /**
      * extends file information
      */
     private AbsBnFileInfo info;

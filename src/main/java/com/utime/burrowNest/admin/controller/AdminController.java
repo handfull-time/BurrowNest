@@ -1,6 +1,7 @@
 package com.utime.burrowNest.admin.controller;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.utime.burrowNest.user.vo.UserVo;
@@ -14,6 +15,7 @@ public class AdminController {
 	 * @param user
 	 * @return
 	 */
+	@GetMapping("AdminHome.html")
 	public String adminPage(UserVo user) {
 		return "Admin/AdminMain";
 	}

@@ -10,6 +10,13 @@ import com.utime.burrowNest.storage.vo.EBnFileType;
 public interface StorageDao {
 	
 	/**
+	 * 최초 Root dir 생성
+	 * @return
+	 * @throws Exception
+	 */
+	BnDirectory InsertRootDirectory()throws Exception;
+	
+	/**
 	 * 확장자 별 파일 종류
 	 * @return
 	 */
@@ -87,5 +94,5 @@ public interface StorageDao {
 	 * @return
 	 */
 	byte[] getThumbnail(String fid);
-	
+
 }

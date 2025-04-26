@@ -33,6 +33,18 @@ class StorageDaoImpl implements StorageDao{
 	
 	@Autowired
 	private StorageMapper mapper;
+	
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public BnDirectory InsertRootDirectory() throws Exception {
+		
+		if( basic.InsertRootDirectory() < 1 ) {
+			log.warn("root 생성 실패");
+			throw new Exception("Root 생성 실패");
+		}
+		
+		return mapper.selectBnDirectoryByNo(1L);
+	}
 
 	@Override
 	public Map<String, EBnFileType> getBnFileType() {

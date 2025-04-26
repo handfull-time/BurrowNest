@@ -11,6 +11,8 @@ spring:
     driver-class-name: org.h2.Driver
     username: BurrowDbAgent
     password: 91-3f48#84
+    dbcp2:
+      validation-query: SELECT 1
     hikari:
       auto-commit: false
   h2:

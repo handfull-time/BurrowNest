@@ -122,7 +122,8 @@ public class AuthenticationController {
     		request.getSession().removeAttribute(BurrowDefine.KeyBeforeUri);
     		url = (String)obj;
     	}else {
-    		url = request.getContextPath() + "/Dir/Index.html";
+//    		url = request.getContextPath() + "/Dir/Index.html";
+    		url = request.getContextPath() + "/";
     	}
     	
     	result.setUser(null);
