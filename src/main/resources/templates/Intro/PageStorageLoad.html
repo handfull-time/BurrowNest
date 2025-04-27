@@ -101,7 +101,7 @@
     		const encrypt = new JSEncrypt();
             encrypt.setPublicKey(/*[[${unique.publicKey}]]*/ null);
 
-            const encPw = encrypt.encrypt( document.getElementById("pwd1").value );	
+            const encPw = encrypt.encrypt( document.getElementById("password").value );	
     	
             const storageList = getStorageListValues();
             
@@ -110,7 +110,10 @@
     		        rsaId: /*[[${unique.rsaId}]]*/ null,
     		        pw: encPw,
     		        wsUserName: wsUser,
-    		        roots: storageList
+    		        roots: storageList,
+    	            myRainbow: document.getElementById("myRainbow").value,
+    	            mySeason: document.getElementById("mySeason").value,
+    	            myNumber: document.getElementById("myNumber").value
     		    };
     		
     		try {

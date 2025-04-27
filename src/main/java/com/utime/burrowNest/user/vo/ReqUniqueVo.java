@@ -1,5 +1,8 @@
 package com.utime.burrowNest.user.vo;
 
+/**
+ * 고유 요청 정보
+ */
 public class ReqUniqueVo {
 
 	protected String token;
@@ -33,6 +36,6 @@ public class ReqUniqueVo {
 	}
 	@Override
 	public String toString() {
-		return "ReqUniqueVo [token=" + token + ", ip=" + ip + ", rsaId=" + rsaId + ", publicKey=" + publicKey + "]";
+		return "ReqUniqueVo [token=" + token + ", ip=" + ip + ", rsaId=" + rsaId + "]";
 	}
 }

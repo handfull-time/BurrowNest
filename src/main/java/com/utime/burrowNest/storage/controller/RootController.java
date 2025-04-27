@@ -5,14 +5,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.utime.burrowNest.common.vo.EJwtRole;
-import com.utime.burrowNest.user.service.AuthService;
+import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.user.vo.UserVo;
 
 @Controller
 public class RootController {
 	
 	@Autowired
-	private AuthService authService;
+	private StorageService storageService;
 	
 	/**
 	 * Root 
@@ -22,7 +22,7 @@ public class RootController {
 	@GetMapping(path = { "/", "Index.html" })
     public String root(UserVo user) {
 		
-		if( ! authService.IsInit() ) {
+		if( ! storageService.IsInit() ) {
 			return "redirect:/Intro/Intro.html";
 		}
 		

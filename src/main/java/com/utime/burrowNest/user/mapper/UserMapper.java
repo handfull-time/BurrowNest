@@ -77,4 +77,11 @@ public interface UserMapper {
 	 */
 	int updateUser( UserVo user );
 
+	/**
+	 * PW 성공 여부 횟수 업데이트
+	 * @param user
+	 * @param isSuccess
+	 * @return
+	 */
+	int updatePwCount(@Param("user") UserVo user, @Param("isSuccess") boolean isSuccess);
 }

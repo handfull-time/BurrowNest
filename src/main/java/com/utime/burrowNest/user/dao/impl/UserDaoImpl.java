@@ -10,12 +10,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.utime.burrowNest.common.mapper.CommonMapper;
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.util.Sha256;
-import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.mapper.AdminMapper;
 import com.utime.burrowNest.user.mapper.UserMapper;
 import com.utime.burrowNest.user.vo.ELoginResult;
-import com.utime.burrowNest.user.vo.InitInforReqVo;
 import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.ResUserVo;
 import com.utime.burrowNest.user.vo.UserVo;
@@ -39,18 +37,16 @@ class UserDaoImpl implements UserDao {
 	@Value("${security.pwSaltKey}")
     private String saltKey;
 	
-	private final String AdminId = "admin";
-	
 	
 	@PostConstruct
 	private void construct() {
 		try {
 			
-			// 가계부 메인 데이터
-			if( ! common.existTable("BN_ADMIN") ) {
-				log.info("BN_ADMIN 생성");
-				adminMapper.createAdmin();
-			}
+//			// 가계부 메인 데이터
+//			if( ! common.existTable("BN_ADMIN") ) {
+//				log.info("BN_ADMIN 생성");
+//				adminMapper.createAdmin();
+//			}
 			
 			if( ! common.existTable("BN_USER") ) {
 				log.info("BN_USER 생성");
@@ -76,13 +72,7 @@ class UserDaoImpl implements UserDao {
 			log.error("", e);
 		}
 	}
-	
-	@Override
-	public boolean IsInit() {
-		
-		return adminMapper.IsInit();
-	}
-	
+
 	/**
 	 * 회원 비번 생성
 	 * @param user
@@ -93,92 +83,43 @@ class UserDaoImpl implements UserDao {
 		return saltKey + "[" + user.getId() + "]-{" +  user.getUserNo() + "}" + pw;
 	}
 	
-	private UserVo getAdminInstance() {
-		
-		final UserVo result = new UserVo();
-		
-		result.setUserNo(1);
-		result.setId(AdminId);
-		result.setRole(EJwtRole.Admin);
-		
-		return result;
-	}
-	
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public ResUserVo procLogin(LoginReqVo reqVo)throws Exception  {
 		
-		try {Thread.sleep(1000L);} catch (InterruptedException e) {e.printStackTrace();}
-		
 		ResUserVo result = new ResUserVo();
 		final String id = reqVo.getId();
 		
-		final UserVo user;
-		final String dbPw;
-		if( AdminId.equals(id) ) {
-			user = this.getAdminInstance();
-			
-			dbPw = adminMapper.getAdminPw();
-		}else {
-			user = userMapper.getUserId( id );
-
-			if( user == null ) {
-				userMapper.insertLoginRecord( reqVo, user, ELoginResult.IdNotFound );
-				result.setCodeMessage("E", "다시 시도 하세요.");
-				return result;
-			}
-			
-			if( ! user.isEnabled() ) {
-				userMapper.insertLoginRecord( reqVo, user, ELoginResult.Denied );
-				result.setCodeMessage("E", "다시 시도 하세요.");
-				return result;
-			}
-			
-			dbPw = userMapper.getUserPw( id );
+		final UserVo user = userMapper.getUserId( id );
+		
+		if( user == null ) {
+			userMapper.insertLoginRecord( reqVo, user, ELoginResult.IdNotFound );
+			result.setCodeMessage("E", "다시 시도 하세요.");
+			try {Thread.sleep(1000L);} catch (InterruptedException e) {e.printStackTrace();}
+			return result;
 		}
 
-		final String genPw = Sha256.encrypt(genPwString( user, reqVo.getPw()));
+		if( ! user.isEnabled() ) {
+			userMapper.insertLoginRecord( reqVo, user, ELoginResult.Denied );
+			result.setCodeMessage("E", "다시 시도 하세요.");
+			try {Thread.sleep(1000L);} catch (InterruptedException e) {e.printStackTrace();}
+			return result;
+		}
+
+		final String dbPw = userMapper.getUserPw( id );
+		final String genPw = Sha256.encrypt(this.genPwString( user, reqVo.getPw()));
 		if( ! genPw.equals(dbPw) ) {
 			userMapper.insertLoginRecord( reqVo, user, ELoginResult.MismatchPw );
+			userMapper.updatePwCount(user, false);
 			result.setCodeMessage("E", "다시 시도 하세요.");
+			try {Thread.sleep(1000L);} catch (InterruptedException e) {e.printStackTrace();}
 		}else {
 			result.setUser(user);
 			userMapper.insertLoginRecord( reqVo, user, ELoginResult.Success );
+			userMapper.updatePwCount(user, true);
 		}
 		
 		return result;
-	}
-
-	@Override
-	@Transactional(rollbackFor = Exception.class)
-	public int saveInitInfo(InitInforReqVo req) throws Exception {
-
-		int res = 0;
-		final UserVo user = this.getAdminInstance();
-		
-		final String genPw = this.genPwString( user, req.getPw() );
-		
-		final UserVo admin = this.getManageUser();
-		if( admin != null ) {
-			res += adminMapper.updateAdmin(genPw);
-			
-			res += this.updateUserPw( admin, genPw);
-			return res;
-		}
-		
-		res += adminMapper.insertAdmin(genPw);
-		
-		if( res < 1 ) {
-			return res;
-		}
-		
-		user.setEnabled(true);
-		user.setNickname("Owner");
-		user.setProfileImg("profile1.svg");
-		
-		res += adminMapper.insertUser(user);
-
-		return res;
 	}
 
 	@Override
@@ -209,6 +150,17 @@ class UserDaoImpl implements UserDao {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * 회원 상태 변경
+	 * @param user
+	 * @return
+	 */
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public int updateUserEnabled(UserVo user) throws Exception {
+		return adminMapper.updateUserEnabled( user );
 	}
 	
 	@Override

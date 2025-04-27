@@ -13,6 +13,13 @@ import com.utime.burrowNest.storage.vo.BnFileVideo;
 
 @Mapper
 public interface StorageMapper {
+	
+	/**
+	 * 관리자 초기화 했는지 여부 
+	 * @return true:했음.
+	 */
+	boolean IsInit();
+	
 	/**
 	 * dir 추가
 	 * @param dir
@@ -221,6 +228,8 @@ public interface StorageMapper {
 	 * @return
 	 */
 	byte [] selectThumbnail( @Param("fileId") String fid );
+
+	
 }
 
 /*

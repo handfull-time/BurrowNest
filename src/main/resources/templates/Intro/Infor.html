@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>BurrowNest 설치 마법사</title>
+    <title>🐇 BurrowNest 설치 마법사</title>
     
     <th:block th:replace="~{Common/Favicon :: Favicon}"></th:block>
 
@@ -28,6 +28,20 @@
         function prevPage(current, prev) {
             document.getElementById(current).classList.add('hidden');
             document.getElementById(prev).classList.remove('hidden');
+        }
+        
+        function buttonStatus( btnId, status ){
+        	const btn = document.getElementById(btnId);
+        	
+    		if( status ){
+    			btn.disabled = false;
+    			btn.classList.remove("bg-gray-500", "text-black", "hover:bg-gray-600");
+    			btn.classList.add("bg-blue-500", "text-white", "hover:bg-blue-600");
+    		}else{
+    			btn.disabled = true;
+    			btn.classList.remove("bg-blue-500", "text-white", "hover:bg-blue-600");
+    			btn.classList.add("bg-gray-500", "text-black", "hover:bg-gray-600");
+    		}
         }
 
         document.addEventListener('DOMContentLoaded', () => {

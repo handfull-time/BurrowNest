@@ -2,7 +2,100 @@
     <div class="space-y-6">
         <h2 class="text-2xl font-semibold text-center text-gray-800">관리자 계정 설정</h2>
         <div class="space-y-4">
-            <div>
+        <table class="w-full border-collapse">
+		    <tbody>
+	            <!-- ID -->
+	            <tr>
+	                <td class="w-1/4 font-medium p-2"><label for="id">아이디</label></td>
+	                <td class="w-3/4 p-2">
+	                    <input type="text" readonly id="id" required
+	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400"  
+	                    	th:value="${T(com.utime.burrowNest.user.dao.UserDao).AdminId}" >
+	                </td>
+	            </tr>
+	
+	            <!-- 비밀번호 -->
+	            <tr>
+	                <td class="font-medium p-2">비밀번호</td>
+	                <td class="p-2">
+	                    <input type="password" id="password" placeholder="숫자, 영문, 특수문자 중 2가지 이상" onblur="confirmJoinInput()"
+	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" minlength="6" maxlength="20" required>
+	                    <p id="passwordError" class="text-sm text-red-500 mt-1 hidden">비밀번호 규칙을 확인하세요.</p>
+	                </td>
+	            </tr>
+	
+	            <!-- 비밀번호 확인 -->
+	            <tr>
+	                <td class="font-medium p-2">비밀번호 확인</td>
+	                <td class="p-2">
+	                    <input type="password" id="confirmPassword" placeholder="최소 6자, 최대 20자" onblur="confirmJoinInput()"
+	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+	                    <p id="confirmPasswordError" class="text-sm text-red-500 mt-1 hidden">비밀번호가 일치하지 않습니다.</p>
+	                </td>
+	            </tr>
+	
+	            <tr>
+	            	<td colspan="2"></td>
+	            </tr>
+	            <tr>
+	            	<td colspan="2"class="font-medium p-2">좋아하는 것을 고르세요.</td>
+	            </tr>
+	
+	            <!-- 보안 질문: 무지개 색깔 -->
+	            <tr>
+	                <td class="font-medium p-2">무지개 색깔</td>
+	                <td class="p-2">
+	                    <select id="myRainbow" onblur="confirmJoinInput()" name="color" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+	                        <option value="">선택하세요</option>
+	                        <option value="빨강">🔴 (빨강)</option>
+	                        <option value="주황">🟠 (주황)</option>
+	                        <option value="노랑">🟡 (노랑)</option>
+	                        <option value="초록">🟢 (초록)</option>
+	                        <option value="파랑">🔵 (파랑)</option>
+	                        <option value="남색">🔵+🟣(남)</option>
+	                        <option value="보라">🟣 (보라)</option>
+	                    </select>
+	                </td>
+	            </tr>
+	
+	            <!-- 보안 질문: 좋아하는 계절 -->
+	            <tr>
+	                <td class="font-medium p-2">계절</td>
+	                <td class="p-2">
+	                    <select id="mySeason" onblur="confirmJoinInput()" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+	                        <option value="">선택하세요</option>
+	                        <option value="춘">🌸 봄</option>
+	                        <option value="하">🏖️ 여름</option>
+	                        <option value="추">🍁 가을</option>
+	                        <option value="동">☃️ 겨울</option>
+	                    </select>
+	                </td>
+	            </tr>
+	
+	            <!-- 보안 질문: 좋아하는 숫자 -->
+	            <tr>
+	                <td class="font-medium p-2">숫자 (0~10)</td>
+	                <td class="p-2">
+	                    <select id="myNumber" onblur="confirmJoinInput()" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+	                        <option value="">선택하세요</option>
+	                        <option>0</option>
+	                        <option>1</option>
+	                        <option>2</option>
+	                        <option>3</option>
+	                        <option>4</option>
+	                        <option>5</option>
+	                        <option>6</option>
+	                        <option>7</option>
+	                        <option>8</option>
+	                        <option>9</option>
+	                        <option>10</option>
+	                    </select>
+	                </td>
+	            </tr>
+	        </tbody>
+	    </table>
+        
+            <!-- <div>
                 <label class="block text-sm text-gray-700">ID</label>
                 <input type="text" value="admin" readonly class="mt-1 w-full border-gray-300 rounded-lg shadow-sm"/>
             </div>
@@ -23,7 +116,7 @@
                 <li>패스워드는 잊어버리면 다시 찾을 수 없습니다.</li>
                 <li>관리자 계정 ID는 변경할 수 없습니다.</li>
                 <li>패스워드가 일치하지 않으면 다음 단계로 진행할 수 없습니다.</li>
-            </ul>
+            </ul> -->
         </div>
         <div class="flex justify-between">
             <button type="button" class="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 transition" onclick="prevPage('PagePasswd', 'PageAgree')">이전</button>
@@ -32,72 +125,43 @@
     </div>
     
     <script>
-        function checkPasswordMatch() {
-            // for test
-            buttonStatus( "pwNextBtn", true );
-            
-        }
-        
-        function checkPasswordMatch2() {
-            const pwd1 = document.getElementById('pwd1').value;
-            const pwd2 = document.getElementById('pwd2').value;
-            const msg = document.getElementById('pwdMsg');
+	    function confirmJoinInput(){
+			const password = document.getElementById("password").value;
+	        const confirmPassword = document.getElementById("confirmPassword").value;
+	        const passwordError = document.getElementById("passwordError");
+	        const confirmPasswordError = document.getElementById("confirmPasswordError");
+	        
+	        // 비밀번호 검사 (숫자, 영문, 특수문자 중 2가지 이상 포함)
+	        const hasNumber = /[0-9]/.test(password);
+	        const hasLetter = /[a-zA-Z]/.test(password);
+	        const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+	        const isValidPassword = (hasNumber && hasLetter) || (hasNumber && hasSpecial) || (hasLetter && hasSpecial);
+	
+	        if (!isValidPassword || password.length < 6 || password.length > 20) {
+	            passwordError.classList.remove("hidden");
+	            buttonStatus( "pwNextBtn", false );
+	            return;
+	        } else {
+	            passwordError.classList.add("hidden");
+	        }
+	
+	        if( password.length > 0 & confirmPassword.length > 0 ){
+	            // 비밀번호 확인 검사
+	            if (password !== confirmPassword) {
+	                confirmPasswordError.classList.remove("hidden");
+	                buttonStatus( "pwNextBtn", false );
+	                return;
+	            } else {
+	                confirmPasswordError.classList.add("hidden");
+	            }
+	        }
+	        
+	        const rainbow = document.getElementById("myRainbow").value;
+	        const season = document.getElementById("mySeason").value;
+	        const num = document.getElementById("myNumber").value;
 
-            // 조건: 비어있음
-            if (!pwd1 || !pwd2) {
-                msg.textContent = '◆ 패스워드를 입력하세요.';
-                buttonStatus("pwNextBtn", false);
-                return false;
-            }
-
-            // 조건: 길이
-            if (pwd1.length < 8 || pwd1.length > 64) {
-                msg.textContent = '◆ 패스워드는 8자 이상 64자 이하로 입력하세요.';
-                buttonStatus("pwNextBtn", false);
-                return false;
-            }
-
-            // 조건: 일치 여부
-            if (pwd1 !== pwd2) {
-                msg.textContent = '◆ 패스워드가 일치하지 않습니다.';
-                buttonStatus("pwNextBtn", false);
-                return false;
-            }
-
-            // 조합 조건: 영문대소문자, 숫자, 특수문자 중 2종류 이상 포함
-            const hasLower = /[a-z]/.test(pwd1);
-            const hasUpper = /[A-Z]/.test(pwd1);
-            const hasNumber = /[0-9]/.test(pwd1);
-            const hasSpecial = /[!@#$%^&*(),.?":{}|<>_\-+=~`\[\]\\\/]/.test(pwd1);
-
-            const count = [hasLower || hasUpper, hasNumber, hasSpecial].filter(Boolean).length;
-
-            if (count < 2) {
-                msg.textContent = '◆ 영문, 숫자, 특수문자 중 두 가지 이상 조합해야 합니다.';
-                buttonStatus("pwNextBtn", false);
-                return false;
-            }
-
-            // 성공
-            msg.textContent = '';
-            buttonStatus("pwNextBtn", true);
-            return true;
-        }
-
-        
-        function buttonStatus( btnId, status ){
-        	const pwNextBtn = document.getElementById(btnId);
-        	
-    		if( status ){
-    			pwNextBtn.disabled = false;
-    			pwNextBtn.classList.remove("bg-gray-500", "text-black", "hover:bg-gray-600");
-    			pwNextBtn.classList.add("bg-blue-500", "text-white", "hover:bg-blue-600");
-    		}else{
-    			pwNextBtn.disabled = true;
-    			pwNextBtn.classList.remove("bg-blue-500", "text-white", "hover:bg-blue-600");
-    			pwNextBtn.classList.add("bg-gray-500", "text-black", "hover:bg-gray-600");
-    		}
-        }
+	        buttonStatus( "pwNextBtn", (rainbow.trim() !== "" && season.trim() !== "" && num.trim() !== "") );
+		}
         
     </script>
 </div>

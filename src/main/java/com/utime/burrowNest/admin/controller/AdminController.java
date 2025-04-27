@@ -17,7 +17,7 @@ public class AdminController {
 	 */
 	@GetMapping("AdminHome.html")
 	public String adminPage(UserVo user) {
-		return "Admin/AdminMain";
+		return "Admin/User/AdminUserMain";
 	}
 }
 

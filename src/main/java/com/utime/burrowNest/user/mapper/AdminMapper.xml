@@ -3,49 +3,6 @@
 <!--//네임스페이스에는 mapper 가 있는 풀 패키지명과 매퍼명을 등록 한다. -->
 <mapper namespace="com.utime.burrowNest.user.mapper.AdminMapper">
 
-	<!-- 어드민 테이블 생성 -->
-	<insert id="createAdmin">
-		CREATE TABLE BN_ADMIN (
-			AUTH_DATA VARCHAR(255) <!-- 암호값 -->
-			, REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP <!-- 생성일 -->
-			, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
-		)
-	</insert>
-
-	<!-- 어드민 계정 추가 -->
-	<insert id="insertAdmin" parameterType="map">
-		INSERT INTO BN_ADMIN (
-			AUTH_DATA
-			, UPDATE_DATE
-		) VALUES (
-			#{pw, typeHandler=com.utime.burrowNest.user.typeHandler.PasswordEncoderTypeHandler}
-			, CURRENT_TIMESTAMP
-		)  
-	</insert>
-	
-	<insert id="updateAdmin" parameterType="map">
-		UPDATE BN_ADMIN SET 
-			AUTH_DATA = #{pw, typeHandler=com.utime.burrowNest.user.typeHandler.PasswordEncoderTypeHandler}
-			, UPDATE_DATE = CURRENT_TIMESTAMP
-		WHERE 1=1
-	</insert>
-
-	<!-- 초기화 했는지 여부 -->
-	<select id="IsInit" resultType="boolean">
-		SELECT 
-			CASE COUNT(1) 
-	   			WHEN 1 THEN 1
-				ELSE 0
-	   		END AS RES
-	   	FROM BN_ADMIN
-	</select>
-
-	<!-- 어드민 pw 조회 -->
-	<select id="getAdminPw" resultType="String">
-		SELECT AUTH_DATA FROM BN_ADMIN
-	</select>
-
-
 	<!-- 사용자 추가 -->
 	<insert id="insertUser" parameterType="com.utime.burrowNest.user.vo.UserVo" useGeneratedKeys="true" keyProperty="userNo" >
 		INSERT INTO BN_USER (
@@ -55,6 +12,7 @@
 			, NICK_NAME 
 			, ICON
 			, ROLE
+			, AUTH_HINT
 		) VALUES (
 			CURRENT_TIMESTAMP
 			, #{enabled}
@@ -62,6 +20,7 @@
 			, #{nickname}
 			, #{profileImg}
 			, #{role}
+			, #{authHint}
 		)
 	</insert>
 
@@ -88,5 +47,12 @@
 		WHERE NO = #{userNo}
 	</update>
 	
+	<!-- 회원 활성화 정보 수정 -->
+	<update id="updateUserEnabled" parameterType="com.utime.burrowNest.user.vo.UserVo" >
+		UPDATE BN_USER SET
+			UPDATE_DATE = CURRENT_TIMESTAMP
+			, ENABLED = #{enabled}
+		WHERE NO = #{userNo}
+	</update>
 	
 </mapper>

@@ -6,6 +6,9 @@ import com.utime.burrowNest.common.vo.EJwtRole;
 
 import lombok.Data;
 
+/**
+ * 사용자 정보
+ */
 @Data
 public class UserVo {
 	/** 회원 번호 */
@@ -26,6 +29,8 @@ public class UserVo {
 	EJwtRole role;
 	/** 비고 */
 	String note;
+	/** 암호 찾기 값 */
+	private String authHint;
 	/** 하루 업로드 제한 byte 단위 */
 	long dailyUploadLimit;
 	/** 일일 최대 다운로드 용량 */

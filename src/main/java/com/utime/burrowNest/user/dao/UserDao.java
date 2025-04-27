@@ -2,20 +2,13 @@ package com.utime.burrowNest.user.dao;
 
 import java.util.List;
 
-import com.utime.burrowNest.user.vo.InitInforReqVo;
 import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.ResUserVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
 public interface UserDao {
-
-	/**
-	 * 초기화 처리
-	 * @param req
-	 * @return
-	 * @throws Exception
-	 */
-	int saveInitInfo(InitInforReqVo req) throws Exception;
+	
+	public final String AdminId = "admin";
 
 	/**
 	 * 회원 로그인
@@ -62,9 +55,10 @@ public interface UserDao {
 	List<UserVo> getUserList();
 
 	/**
-	 * 관리자 초기화 했는지 여부 
-	 * @return true:했음.
+	 * 회원 상태 변경
+	 * @param user
+	 * @return
 	 */
-	boolean IsInit();
+	int updateUserEnabled(UserVo user)throws Exception;
 
 }

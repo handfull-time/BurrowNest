@@ -2,7 +2,17 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.utime.burrowNest.storage.mapper.StorageMapper">
 
-
+<!-- 초기화 했는지 여부 -->
+<select id="IsInit" resultType="boolean">
+	SELECT 
+		CASE COUNT(1) 
+   			WHEN 1 THEN 1
+			ELSE 0
+   		END AS RES
+   	FROM BN_DIRECTORY 
+   	WHERE NO = 1
+</select>
+	
  <!-- Insert: 새 디렉토리 생성 -->
 <insert id="insertBnDirectory" parameterType="com.utime.burrowNest.storage.vo.BnDirectory" 
 	useGeneratedKeys="true" keyProperty="no">

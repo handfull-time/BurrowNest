@@ -1,49 +1,30 @@
 package com.utime.burrowNest.user.vo;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+/**
+ * 로그인 요청 정보
+ */
+@Setter
+@Getter
+@ToString(callSuper = true)
 public class LoginReqVo extends ReqUniqueVo{
 	
+	/**
+	 * id 
+	 */
 	private String id;
+
+	/**
+	 * 암호
+	 */
 	private String pw;
+	
+	/**
+	 * 접속 브라우져 정보
+	 */
 	private String userAgent;
 	
-	public String getId() {
-		return id;
-	}
-	public void setId(String id) {
-		this.id = id;
-	}
-	public String getPw() {
-		return pw;
-	}
-	public void setPw(String pw) {
-		this.pw = pw;
-	}
-	
-	public String getUserAgent() {
-		return userAgent;
-	}
-	public void setUserAgent(String userAgent) {
-		this.userAgent = userAgent;
-	}
-	@Override
-	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("LoginReqVo [");
-		if (id != null) {
-			builder.append("id=");
-			builder.append(id);
-			builder.append(", ");
-		}
-		if (pw != null) {
-			builder.append("pw=");
-			builder.append(pw);
-			builder.append(", ");
-		}
-		if (userAgent != null) {
-			builder.append("userAgent=");
-			builder.append(userAgent);
-		}
-		builder.append("]");
-		return builder.toString();
-	}
 }

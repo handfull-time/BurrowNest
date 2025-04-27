@@ -35,6 +35,11 @@ class StorageDaoImpl implements StorageDao{
 	private StorageMapper mapper;
 	
 	@Override
+	public boolean IsInit() {
+		return mapper.IsInit();
+	}
+	
+	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public BnDirectory InsertRootDirectory() throws Exception {
 		

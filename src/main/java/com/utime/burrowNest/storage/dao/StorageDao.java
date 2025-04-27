@@ -10,6 +10,12 @@ import com.utime.burrowNest.storage.vo.EBnFileType;
 public interface StorageDao {
 	
 	/**
+	 * 관리자 초기화 했는지 여부 
+	 * @return true:했음.
+	 */
+	boolean IsInit();
+	
+	/**
 	 * 최초 Root dir 생성
 	 * @return
 	 * @throws Exception

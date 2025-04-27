@@ -53,16 +53,12 @@ public class IntroController {
 	@GetMapping(path = { "Intro.html" })
     public String BeginIntro(HttpServletRequest request, ModelMap model, UserVo user) {
 
-		if( ! authService.IsInit() ) {
+		if( ! storageService.IsInit() ) {
 			model.addAttribute("unique", authService.getNewGenUnique(request) );
 			return "Intro/Infor";
 		}
 		
-		if( user == null ) {
-			return "redirect:/Auth/Login.html";
-		}else {
-			return "redirect:/Dir/Index.html";	
-		}		
+		return "redirect:/";
     }
 	
 	/**
@@ -114,7 +110,7 @@ public class IntroController {
 	@GetMapping("PathList.json")
     public List<DirectoryDto> list(@RequestParam String path) {
         
-		if( authService.IsInit() ) {
+		if( storageService.IsInit() ) {
 			// 이미 초기화 했다면 무효
 			return null;
 		}

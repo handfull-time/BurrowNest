@@ -6,6 +6,12 @@ import com.utime.burrowNest.user.vo.InitInforReqVo;
 public interface StorageService {
 
 	/**
+	 * 관리자 초기화 했는지 여부 
+	 * @return true:했음.
+	 */
+	boolean IsInit();
+	
+	/**
 	 * 저장소 초기 정보 저장
 	 * @param req
 	 * @return
@@ -18,5 +24,7 @@ public interface StorageService {
 	 * @return
 	 */
 	byte [] getThumbnail(String fid);
+
+	
 
 }

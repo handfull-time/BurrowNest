@@ -5,19 +5,23 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.utime.burrowNest.common.jwt.JwtProvider;
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.util.CacheIntervalMap;
 import com.utime.burrowNest.common.util.RsaEncDec;
+import com.utime.burrowNest.common.util.Sha256;
+import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.service.AuthService;
-import com.utime.burrowNest.user.vo.InitInforReqVo;
 import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.ReqUniqueVo;
 import com.utime.burrowNest.user.vo.ResUserVo;
+import com.utime.burrowNest.user.vo.UserReqVo;
+import com.utime.burrowNest.user.vo.UserVo;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -35,11 +39,8 @@ class AuthServiceImpl implements AuthService {
 	@Autowired
 	private UserDao userDao;
 	
-	@Override
-	public boolean IsInit() {
-		
-		return userDao.IsInit();
-	}
+	@Value("${security.pwSaltKey}")
+    private String saltKey;
 	
 	/**
 	 * Interval 에 추가.
@@ -183,8 +184,17 @@ class AuthServiceImpl implements AuthService {
 		return jwtUtil.procRefresh( request, response, refreshToken );
 	}
 	
+	/**
+	 * 계정 찾기 정보 해싱
+	 * @param user
+	 * @return
+	 */
+	private String genUserUniqueHashing( UserReqVo user ) {
+		return Sha256.encrypt(user.getId() + saltKey + user.getMyNumber() + user.getMyRainbow() + user.getMySeason());
+	}
+	
 	@Override
-	public ReturnBasic saveInitInfor(InitInforReqVo req) {
+	public ReturnBasic saveInitInfor(UserReqVo req) {
 		log.info("초기화 시도 : {}", req);
 		
 		if( ! this.validation(req) ) {
@@ -196,16 +206,28 @@ class AuthServiceImpl implements AuthService {
 		if( pw == null ){
 			return new ReturnBasic("E", "Invalid credentials");
 		}
-		req.setPw(pw);
 		
+		final UserVo user = new UserVo();
+		user.setUserNo(-1);
+		user.setEnabled(true);
+		user.setId(UserDao.AdminId);
+		user.setNickname("Owner");
+		user.setRole(EJwtRole.Admin);
+		user.setProfileImg("profile1.svg");
+		user.setAuthHint( this.genUserUniqueHashing( req ) );
+		
+		final ReturnBasic result = new ReturnBasic();
 		try {
-			userDao.saveInitInfo( req );
+			userDao.insertUser(user, pw);
+			user.setEnabled(true);
+			userDao.updateUserEnabled(user);
+			this.validationRemove(req);
 		} catch (Exception e) {
 			log.error("", e);
-			return new ReturnBasic("E", "Invalid credentials");
+			result.setCodeMessage("E", e.getMessage());
 		}
 		
-		return new ReturnBasic();
+		return result;
 	}
 	
 }

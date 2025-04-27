@@ -60,6 +60,12 @@ public class StorageServiceImpl implements StorageService {
 		this.mapFileType = storageDao.getBnFileType();
 	}
 	
+	@Override
+	public boolean IsInit() {
+		
+		return storageDao.IsInit();
+	}
+	
     /**
      * Front에 웹 소켓 키워드
      */

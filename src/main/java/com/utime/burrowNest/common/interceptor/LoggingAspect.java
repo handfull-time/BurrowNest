@@ -126,7 +126,7 @@ class LoggingAspect {
 			paramStrBuffer.append(RequestValues);
 			req.getParameterMap().forEach((key, value) -> {
 				
-				if (key.equals("pw") || key.equals("pwCheck") || key.indexOf("{")==0 || key.indexOf("[")==0) {
+				if (key.equals("pw") || key.equals("authHint") || key.indexOf("{")==0 || key.indexOf("[")==0) {
 				}else {
 					paramStrBuffer.append(ValueFront);
 					paramStrBuffer.append(key).append(equals);
