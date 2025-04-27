@@ -48,6 +48,13 @@ public interface UserMapper {
 	UserVo getUserId(@Param("id") String id);
 	
 	/**
+	 * 기본 회원 정보 조회
+	 * @param id
+	 * @return
+	 */
+	UserVo getUserIdBasic(@Param("id") String id);
+	
+	/**
 	 * 암호 조회
 	 * @param id
 	 * @return

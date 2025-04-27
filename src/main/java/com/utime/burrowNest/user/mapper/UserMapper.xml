@@ -77,9 +77,6 @@
 		, ICON AS "profileImg"
 		, NOTE 
 		, ROLE
-		, DAILY_UPLOAD_LIMIT 
-		, DAILY_DOWNLOAD_LIMIT 
-		, MAX_STORAGE_USAGE
 	</sql>
 
 	<!-- id 조회 -->	
@@ -91,7 +88,16 @@
 		WHERE ID = #{id} AND FAIL_COUNT <![CDATA[ <= ]]> 5
 	</select>
 	
-	
+	<!-- 기본 회원 정보 조회 -->
+	<select id="getUserIdBasic" parameterType="map" resultType="com.utime.burrowNest.user.vo.UserVo">
+		SELECT 
+			<include refid="UserColumn" /> 
+			, DAILY_UPLOAD_LIMIT 
+			, DAILY_DOWNLOAD_LIMIT 
+			, MAX_STORAGE_USAGE
+		FROM BN_USER 
+		WHERE ID = #{id} AND ENABLED = true
+	</select>
 
 	<!-- pw 조회 -->	
 	<select id="getUserPw" parameterType="map" resultType="String">

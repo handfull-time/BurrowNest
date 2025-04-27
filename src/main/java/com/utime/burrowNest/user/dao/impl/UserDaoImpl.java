@@ -1,6 +1,7 @@
 package com.utime.burrowNest.user.dao.impl;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.utime.burrowNest.common.mapper.CommonMapper;
 import com.utime.burrowNest.common.util.BurrowUtils;
+import com.utime.burrowNest.common.util.CacheIntervalMap;
 import com.utime.burrowNest.common.util.Sha256;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.mapper.AdminMapper;
@@ -37,6 +39,7 @@ class UserDaoImpl implements UserDao {
 	@Value("${security.pwSaltKey}")
     private String saltKey;
 	
+	final CacheIntervalMap<String, UserVo> intervalMap = new CacheIntervalMap<>(10L, TimeUnit.MINUTES);
 	
 	@PostConstruct
 	private void construct() {
@@ -180,5 +183,21 @@ class UserDaoImpl implements UserDao {
 	public List<UserVo> getUserList() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	@Override
+	public UserVo getUserFormIdByProvider(String id) {
+		
+		final UserVo result;
+		if( intervalMap.containsKey(id) ) {
+			result = intervalMap.get(id);
+		}else {
+			result = userMapper.getUserIdBasic(id);
+			if( result != null ) {
+				intervalMap.put(id, result);
+			}
+		}
+		
+		return result; 
 	}
 }

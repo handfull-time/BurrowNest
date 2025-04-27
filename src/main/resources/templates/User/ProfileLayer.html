@@ -1,0 +1,125 @@
+<div xmlns:th="http://www.thymeleaf.org" 
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{Common/LayoutModal}">
+    
+    <th:block layout:fragment="modalTitle">
+        회원 상세
+    </th:block>
+
+	<th:block layout:fragment="modalContent">
+	<form id="updateUserForm">
+		<input type="hidden" id="userNo" name="userNo" th:value="${user.userNo}">
+        <table class="w-full border-collapse">
+		    <tbody>
+	            <!-- ID -->
+	            <tr>
+	                <td class="w-1/4 font-medium p-2"><label for="id">아이디</label></td>
+	                <td class="w-3/4 p-2">
+	                    <input type="text" readonly id="id" required
+	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400"  
+	                    	th:value="${user.id}" >
+	                </td>
+	            </tr>
+	
+	            <!-- 비밀번호 -->
+	            <tr>
+	                <td class="font-medium p-2">비밀번호</td>
+	                <td class="p-2">
+	                    <input type="password" id="password" placeholder="숫자, 영문, 특수문자 중 2가지 이상" onblur="confirmJoinInput()"
+	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" minlength="6" maxlength="20" required>
+	                    <p id="passwordError" class="text-sm text-red-500 mt-1 hidden">비밀번호 규칙을 확인하세요.</p>
+	                </td>
+	            </tr>
+	
+	            <!-- 비밀번호 확인 -->
+	            <tr>
+	                <td class="font-medium p-2">비밀번호 확인</td>
+	                <td class="p-2">
+	                    <input type="password" id="confirmPassword" placeholder="최소 6자, 최대 20자" onblur="confirmJoinInput()"
+	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+	                    <p id="confirmPasswordError" class="text-sm text-red-500 mt-1 hidden">비밀번호가 일치하지 않습니다.</p>
+	                </td>
+	            </tr>
+	            <tr>
+	                <td class="w-1/4 font-medium p-2"><label for="nickname">별명</label></td>
+	                <td class="w-3/4 p-2">
+	                    <input type="text" id="nickname" required
+	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400"  
+	                    	th:value="${user.nickname}" >
+	                </td>
+	            </tr>
+	
+	            <tr>
+	            	<td colspan="2"></td>
+	            </tr>
+	            <tr>
+	            	<td colspan="2"class="font-medium p-2">좋아하는 것을 고르세요.</td>
+	            </tr>
+	
+	            <!-- 보안 질문: 무지개 색깔 -->
+	            <tr>
+	                <td class="font-medium p-2">무지개 색깔</td>
+	                <td class="p-2">
+	                    <select id="myRainbow" onblur="confirmJoinInput()" name="color" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+	                        <option value="">선택하세요</option>
+	                        <option value="빨강">🔴 (빨강)</option>
+	                        <option value="주황">🟠 (주황)</option>
+	                        <option value="노랑">🟡 (노랑)</option>
+	                        <option value="초록">🟢 (초록)</option>
+	                        <option value="파랑">🔵 (파랑)</option>
+	                        <option value="남색">🔵+🟣(남)</option>
+	                        <option value="보라">🟣 (보라)</option>
+	                    </select>
+	                </td>
+	            </tr>
+	
+	            <!-- 보안 질문: 좋아하는 계절 -->
+	            <tr>
+	                <td class="font-medium p-2">계절</td>
+	                <td class="p-2">
+	                    <select id="mySeason" onblur="confirmJoinInput()" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+	                        <option value="">선택하세요</option>
+	                        <option value="춘">🌸 봄</option>
+	                        <option value="하">🏖️ 여름</option>
+	                        <option value="추">🍁 가을</option>
+	                        <option value="동">☃️ 겨울</option>
+	                    </select>
+	                </td>
+	            </tr>
+	
+	            <!-- 보안 질문: 좋아하는 숫자 -->
+	            <tr>
+	                <td class="font-medium p-2">숫자 (0~10)</td>
+	                <td class="p-2">
+	                    <select id="myNumber" onblur="confirmJoinInput()" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+	                        <option value="">선택하세요</option>
+	                        <option>0</option>
+	                        <option>1</option>
+	                        <option>2</option>
+	                        <option>3</option>
+	                        <option>4</option>
+	                        <option>5</option>
+	                        <option>6</option>
+	                        <option>7</option>
+	                        <option>8</option>
+	                        <option>9</option>
+	                        <option>10</option>
+	                    </select>
+	                </td>
+	            </tr>
+	        </tbody>
+	    </table>
+    </form>
+    </th:block>
+    
+    
+    <th:block layout:fragment="modalScript">
+		<script>
+		 // 데이터 저장
+         function saveData() {
+			alert('Save');
+		 }
+		</script>
+    </th:block>
+</div>
+	   

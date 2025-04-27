@@ -8,43 +8,152 @@
    	<th:block th:replace="~{Common/Favicon :: Favicon}"></th:block>
 
     <script type="text/javascript" th:src="@{/js/tailwind/tailwind.min.js}"></script>
-    
+
     <th:block layout:fragment="css"></th:block>
-		
+
 </head>
 <body class="min-h-screen flex flex-col bg-gray-100 text-gray-800">
 
-  	<!-- Header -->
 	<header class="bg-white shadow">
-		<div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-		  <h1 class="text-2xl font-bold text-blue-600"><th:block layout:fragment="title">Admin</th:block></h1>
-		  <nav class="space-x-4">
-			<!-- <a th:href="@{/Admin/User.html}" th:classappend="${#request.requestURI == '/Admin/User.html'} ? 'font-bold text-indigo-700'" class="text-blue-600 hover:text-blue-600'">User</a> -->
-<!-- 			<a th:href="@{/Admin/Storage.html}" th:class="${#httpServletRequest.requestURI == '/Admin/Storage.html' ? 'text-blue-600 font-bold' : 'text-gray-600 hover:text-blue-600'}">Storage</a>
-			<a th:href="@{/Admin/Statistics.html}" th:class="${#httpServletRequest.requestURI == '/Admin/Statistics.html' ? 'text-blue-600 font-bold' : 'text-gray-600 hover:text-blue-600'}">Statistics</a>
- -->		  </nav>
-		</div>
-	</header>
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-blue-600"><th:block layout:fragment="title">Admin</th:block></h1>
+        <nav class="space-x-4">
+			<a th:href="@{/Admin/User/User.html}" th:class="${currentURI == '/Admin/User/User.html' ? 'text-blue-600 font-bold' : 'text-gray-600 hover:text-blue-600'}">User</a>
+			<a th:href="@{/Admin/Storage/Storage.html}" th:class="${currentURI == '/Admin/Storage/Storage.html' ? 'text-blue-600 font-bold' : 'text-gray-600 hover:text-blue-600'}">Storage</a>
+			<a th:href="@{/Admin/Statistics/Statistics.html}" th:class="${currentURI == '/Admin/Statistics/Statistics.html' ? 'text-blue-600 font-bold' : 'text-gray-600 hover:text-blue-600'}">Statistics</a>
+        </nav>
+        <div class="relative">
+            <button id="userMenuButton" class="flex items-center space-x-2 focus:outline-none">
+               <img th:src="@{'/images/profile/'} + ${user.profileImg}" th:alt="${user.id}" class="w-10 h-10 rounded-full">
+            </button>
 
-  <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-4 py-10">
+            <div id="userMenu" class="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md opacity-0 scale-95 transform transition-all duration-200 hidden">
+                <button class="menuItem flex items-center px-4 py-2 hover:bg-gray-100 w-full">
+                    <svg class="w-5 h-5 mr-2 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 10a4 4 0 110-8 4 4 0 010 8zm0 2c-4 0-8 2-8 4v1h16v-1c0-2-4-4-8-4z"></path>
+                    </svg>
+                    Profile
+                </button>
+                <button class="menuItem flex items-center px-4 py-2 hover:bg-gray-100 w-full">
+                    <svg class="w-5 h-5 mr-2 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3 10a7 7 0 1114 0A7 7 0 013 10zm6-3a1 1 0 102 0 1 1 0 00-2 0zm-1 3a1 1 0 112 0v2a1 1 0 11-2 0v-2z" clip-rule="evenodd"></path>
+                    </svg>
+                    Logout
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+  <main class="w-full mx-auto p-2 flex-grow">
     <th:block layout:fragment="content"/>
   </main>
 
-  <!-- Footer -->
   <footer class="bg-white border-t">
-    <div class="max-w-7xl mx-auto px-4 py-4 text-center text-sm text-gray-500">
-      © 2025 🐇 BurrowNest. All rights reserved.
-    </div>
-  </footer>
-  
-  	<!-- alert confirm prompt -->
-	<div th:replace="~{Common/alertView :: alertView}"></div>
-    <!-- 모달창 -->
+        <div class="w-full px-4 py-4 text-center text-sm text-gray-500">
+            © 2025 🐇 BurrowNest. All rights reserved.
+        </div>
+    </footer>
+
+  	<div th:replace="~{Common/alertView :: alertView}"></div>
     <div th:replace="~{Common/modalView :: modalView}"></div>
-    
+
     <th:script th:replace="~{Common/Script :: CommonScript}"/>
     
+    <script th:inline="javascript">
+    		
+    const userMenuButton = document.getElementById("userMenuButton");
+    const userMenu = document.getElementById("userMenu");
+    const menuItems = document.querySelectorAll(".menuItem");
+
+    function toggleMenu() {
+        if (userMenu.classList.contains("hidden")) {
+            userMenu.classList.remove("hidden");
+            setTimeout(() => {
+                userMenu.classList.add("opacity-100", "scale-100");
+                userMenu.classList.remove("opacity-0", "scale-95");
+            }, 10);
+        } else {
+            closeMenu();
+        }
+    }
+
+    function closeMenu() {
+        userMenu.classList.remove("opacity-100", "scale-100");
+        userMenu.classList.add("opacity-0", "scale-95");
+        setTimeout(() => userMenu.classList.add("hidden"), 200);
+    }
+
+    // 사용자 아이콘 클릭 시 메뉴 토글
+    userMenuButton.addEventListener("click", toggleMenu);
+
+    // 메뉴 항목 클릭 시 닫기
+    menuItems.forEach(item => {
+        item.addEventListener("click", closeMenu);
+    });
+                
+    // 메뉴 바깥을 클릭하면 닫기
+    document.addEventListener("click", (event) => {
+        if (!userMenu.contains(event.target) && !userMenuButton.contains(event.target)) {
+            closeMenu();
+    	}
+    });
+    
+ 	// 메뉴 내 버튼 클릭 이벤트 등록
+    userMenu.addEventListener("click", function (event) {
+        let target = event.target.closest(".menuItem");
+
+     	// 버튼이 아닌 다른 곳 클릭 시 무시
+        if (!target) return;
+     	
+     	const targetTxt = target.innerText.trim();
+
+        if ( targetTxt === "Profile") {
+            console.log("Profile Clicked");
+            // 여기에 프로필 페이지 이동 로직 추가 가능
+            const sendValue = {
+			        url: /*[[@{/User/MyProfile.layer}]]*/ null,
+					method: MethodType.Get, 
+					popupId:'MyProfile',
+			        width: '600px'
+			    };
+			
+			openPopup(sendValue);
+            
+        } else if (targetTxt === "Logout") {
+            console.log("Logout Clicked");
+            showCustomConfirm('로그아웃하시겠습니까?', async (isConfirm) => {
+            	
+            	if( ! isConfirm ){
+            		return;
+            	}
+            	
+            	const options = {
+            	        method: "GET",
+            	        headers: {
+            	            "Content-Type": "application/json"
+            	        }
+            	    };
+            	
+            	const response = await apiRequest( /*[[@{/Auth/Logout.json}]]*/ null, options );
+            	
+            	if (response.ok) {
+		            const data = await response.json();
+		            if( data.code === '0' ){
+	            		window.location.href = /*[[@{/Auth/Login.html}]]*/ null;
+		            }else{
+		            	showCustomAlert(data.code + " - " + data.message);
+		            }
+		        } else {
+		        	console.error("로그아웃 실패:");
+		        }
+            })
+        }
+    });
+    
+    
+	</script>
+
     <th:block layout:fragment="script"></th:block>
 
 </body>

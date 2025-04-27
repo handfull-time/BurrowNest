@@ -29,7 +29,7 @@ public class RootController {
 		if( user == null ) {
 			return "redirect:/Auth/Login.html";
 		}else if( user.getRole() == EJwtRole.Admin ){
-			return "redirect:/Admin/AdminHome.html";	
+			return "redirect:/Admin/User/User.html";
 		}else {
 			return "redirect:/Dir/Index.html";
 		}

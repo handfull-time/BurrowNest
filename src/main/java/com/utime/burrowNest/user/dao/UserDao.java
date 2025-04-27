@@ -61,4 +61,11 @@ public interface UserDao {
 	 */
 	int updateUserEnabled(UserVo user)throws Exception;
 
+	/**
+	 * 사용자 정보 조회
+	 * @param id
+	 * @return
+	 */
+	UserVo getUserFormIdByProvider(String id);
+
 }

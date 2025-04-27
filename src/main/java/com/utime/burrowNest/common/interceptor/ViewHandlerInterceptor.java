@@ -36,8 +36,11 @@ class ViewHandlerInterceptor implements AsyncHandlerInterceptor {
 		
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-		if (authentication != null && authentication.getPrincipal() instanceof UserVo) {
-        	model.addAttribute(BurrowDefine.KeyParamUser, authentication.getPrincipal() );
+		if (authentication != null) {
+			final Object obj = authentication.getPrincipal();
+			if( obj != null && obj instanceof UserVo ) {
+				model.addAttribute(BurrowDefine.KeyParamUser, obj );
+			}
         }
 	}
 }

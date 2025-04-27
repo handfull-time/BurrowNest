@@ -20,6 +20,7 @@ import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.user.service.AuthService;
 import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.ResUserVo;
+import com.utime.burrowNest.user.vo.UserVo;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,5 +32,12 @@ public class UserController {
 	@Autowired
 	private AuthService userService;
 	
+	@GetMapping("MyProfile.layer")
+    public String getUserProfile(ModelMap model, UserVo user) {
+		
+		model.addAttribute(BurrowDefine.KeyParamUser, user);
+        
+		return "User/ProfileLayer";
+    }
 }
 

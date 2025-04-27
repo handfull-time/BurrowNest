@@ -8,13 +8,14 @@ import java.util.Optional;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.BurrowDefine;
-import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.vo.ResUserVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -48,6 +49,9 @@ public class JwtProvider {
     private String secret;
 
     private SecretKey key;
+    
+    @Autowired
+    private UserDao userDao;
     
     /**
      * 암호 알고리즘
@@ -196,12 +200,17 @@ public class JwtProvider {
      */
     private UserVo extractUserFromClaims(Claims claims) {
     	
-    	UserVo user = new UserVo();
-    	user.setId(claims.getId());
-    	user.setNickname(claims.get(JWT_KEY.NickName, String.class));
-    	user.setRole(EJwtRole.valueOf(claims.get(JWT_KEY.Role, String.class)));
+    	final String id = claims.getId();
+    	if( id == null || id.length() < 1 ) {
+    		return null;
+    	}
     	
-        return user;
+    	return userDao.getUserFormIdByProvider( id );
+//    	
+//    	UserVo user = new UserVo();
+//    	user.setId();
+//    	user.setNickname(claims.get(JWT_KEY.NickName, String.class));
+//    	user.setRole(EJwtRole.valueOf(claims.get(JWT_KEY.Role, String.class)));
     }
 
 //    /**
