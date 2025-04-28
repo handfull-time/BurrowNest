@@ -1,17 +1,22 @@
 package com.utime.burrowNest.admin.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import com.utime.burrowNest.admin.service.AdminUserService;
 import com.utime.burrowNest.user.vo.UserVo;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
 @RequestMapping("Admin/User")
 public class AdminUserController {
+	
+	@Autowired
+	private AdminUserService userService;
 	
 	/**
 	 * 어드민 관리 페이지
@@ -22,5 +27,22 @@ public class AdminUserController {
 	public String adminUserPage(Model model, UserVo user) {
 		return "Admin/User/AdminUserMain";
 	}
+	
+	
+	@GetMapping("UserList.layer")
+	public String adminUserList(Model model, @RequestParam(name = "id", required = false) String id) {
+		
+		model.addAttribute("users", userService.userList(id) );
+		
+		return "Admin/User/AdminUserList";
+	}
+	
+	@GetMapping("Profile.layer")
+    public String getUserProfile(ModelMap model, @RequestParam(name="userNo") int userNo) {
+		
+		model.addAttribute("item", userService.getUserFromNo(userNo));
+        
+		return "User/ProfileLayer";
+    }
 }
 

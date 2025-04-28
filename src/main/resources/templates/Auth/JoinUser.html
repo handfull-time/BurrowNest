@@ -1,0 +1,390 @@
+<div xmlns:th="http://www.thymeleaf.org"
+     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+     layout:decorate="~{Auth/UserLayout}">
+     
+    <th:block layout:fragment="title"></th:block>
+
+	<th:block layout:fragment="css"></th:block>
+    
+    <div layout:fragment="content">
+    	<form id="signupForm" class="w-full">
+		    <table class="w-full border-collapse">
+		        <tbody>
+		            <!-- ID -->
+		            <tr>
+		                <td class="w-1/4 font-medium p-2"><label for="id">아이디</label></td>
+		                <td class="w-3/4 p-2">
+		                    <input type="text" id="id" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" minlength="4" maxlength="20" required>
+		                    <p id="idCheckMessage" class="text-sm mt-1 text-red-500"></p>
+		                </td>
+		            </tr>
+		
+		            <!-- Birthday -->
+		            <tr>
+		                <td class="font-medium p-2">생년월일</td>
+		                <td class="p-2">
+		                    <input type="date" id="birthday" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+		                </td>
+		            </tr>
+		
+		            <!-- 비밀번호 -->
+		            <tr>
+		                <td class="font-medium p-2">비밀번호</td>
+		                <td class="p-2">
+		                    <input type="password" id="password" placeholder="숫자, 영문, 특수문자 중 2가지 이상" 
+		                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" minlength="6" maxlength="20" required>
+		                    <p id="passwordError" class="text-sm text-red-500 mt-1 hidden">비밀번호 규칙을 확인하세요.</p>
+		                </td>
+		            </tr>
+		
+		            <!-- 비밀번호 확인 -->
+		            <tr>
+		                <td class="font-medium p-2">비밀번호 확인</td>
+		                <td class="p-2">
+		                    <input type="password" id="confirmPassword" placeholder="최소 6자, 최대 20자" 
+		                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+		                    <p id="confirmPasswordError" class="text-sm text-red-500 mt-1 hidden">비밀번호가 일치하지 않습니다.</p>
+		                </td>
+		            </tr>
+		
+		            <!-- 닉네임 및 프로필 이미지 -->
+		            <tr>
+		                <td class="font-medium p-2">닉네임</td>
+		                <td class="p-2 flex items-center">
+		                	<input type="text" id="nickname" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" minlength="1" maxlength="20" required>
+		                	<div class="relative ml-4">
+	                			<img id="profilePreview" th:src="@{/images/undraw_profile.svg}" class="w-14 h-12 rounded-full border" alt="프로필 이미지">
+		                		<label for="profileImageInput" class="cursor-pointer">
+		                			<span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 bg-gray-300 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center opacity-50">➕</span>
+		                		</label>
+		                		<input type="file" id="profileImageInput" class="hidden" accept="image/png, image/jpeg, image/svg+xml">
+		                	</div>
+		                </td>
+		            </tr>
+		            
+		            <tr>
+		            	<td colspan="2"></td>
+		            </tr>
+		            <tr>
+		            	<td colspan="2" class="font-medium p-2">좋아하는 것을 고르세요.</td>
+		            </tr>
+		
+		            <!-- 보안 질문: 무지개 색깔 -->
+		            <tr>
+		                <td class="font-medium p-2">무지개 색깔</td>
+		                <td class="p-2">
+		                    <select id="myRainbow" name="color" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+		                        <option value="">선택하세요</option>
+		                        <option value="빨강">🔴 (빨강)</option>
+		                        <option value="주황">🟠 (주황)</option>
+		                        <option value="노랑">🟡 (노랑)</option>
+		                        <option value="초록">🟢 (초록)</option>
+		                        <option value="파랑">🔵 (파랑)</option>
+		                        <option value="남색">🔵+🟣(남색)</option>
+		                        <option value="보라">🟣 (보라)</option>
+		                    </select>
+		                </td>
+		            </tr>
+		
+		            <!-- 보안 질문: 좋아하는 계절 -->
+		            <tr>
+		                <td class="font-medium p-2">계절</td>
+		                <td class="p-2">
+		                    <select id="mySeason" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+		                        <option value="">선택하세요</option>
+		                        <option value="춘">🌸 봄</option>
+		                        <option value="하">🏖️ 여름</option>
+		                        <option value="추">🍁 가을</option>
+		                        <option value="동">☃️ 겨울</option>
+		                    </select>
+		                </td>
+		            </tr>
+		
+		            <!-- 보안 질문: 좋아하는 숫자 -->
+		            <tr>
+		                <td class="font-medium p-2">숫자 (0~10)</td>
+		                <td class="p-2">
+		                    <select id="myNumber" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+								<option value="">선택하세요</option>
+								<option value="0">0 🌀</option>
+								<option value="1">1 🌱</option>
+								<option value="2">2 🐣</option>
+								<option value="3">3 🎈</option>
+								<option value="4">4 🍀</option>
+								<option value="5">5 🌟</option>
+								<option value="6">6 🌊</option>
+								<option value="7">7 🎵</option>
+								<option value="8">8 🧩</option>
+								<option value="9">9 🔥</option>
+								<option value="10">10 🎯</option>
+							</select>
+		                </td>
+		            </tr>
+		        </tbody>
+		    </table>
+		    
+            <div class="mt-6 transition-opacity duration-300" id="hiddenButtons">
+	            <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">가입하기</button>
+	            <div class="flex justify-between mt-2 text-sm text-blue-500 cursor-pointer">
+	                <a th:href="@{/User/FindUserPw.html}" class="hover:underline">비밀번호 찾기</a>
+	                <a th:href="@{/User/Login.html}" class="hover:underline" >로그인</a>
+	                <a th:href="@{/User/FindUserId.html}" class="hover:underline">계정 찾기</a>
+	            </div>
+	        </div>
+		</form>
+    </div>
+
+    <th:block layout:fragment="script">
+    
+    <script th:inline="javascript">
+		document.getElementById("id").addEventListener("blur", async function() {
+		    const idInput = this.value.trim(); // 입력된 ID 값
+		    const messageElement = document.getElementById("idCheckMessage");
+		    
+		    const idInputLen = idInput.length;
+		    if( idInputLen < 1 ){
+		    	messageElement.classList.add("hidden");
+		    	return;
+		    }
+		    
+		    messageElement.classList.remove("hidden");
+		
+		    // ID 길이 검사 (4~20자)
+		    if (idInputLen < 4 || idInputLen > 20) {
+		        messageElement.textContent = "아이디는 4~20자 사이로 입력해주세요.";
+		        messageElement.className = "text-red-500";
+		        return;
+		    }
+		    
+		    try {
+		        // API 요청 보내기
+		        const checkIdUri = /*[[@{/User/CheckId.json}]]*/ null;
+		        const response = await fetch(`${checkIdUri}?id=${encodeURIComponent(idInput)}`);
+		        const data = await response.json();
+		
+		        if (data.code === "0") {
+		            messageElement.textContent = "사용 가능한 아이디입니다.";
+		            messageElement.className = "text-green-500";
+		        } else if (data.code === "E") {
+		            messageElement.textContent = "이미 사용 중인 아이디입니다.";
+		            messageElement.className = "text-red-500";
+		        } else {
+		            messageElement.textContent = "서버 오류가 발생했습니다.";
+		            messageElement.className = "text-red-500";
+		        }
+		    } catch (error) {
+		        console.error("ID 체크 오류:", error);
+		        messageElement.textContent = "네트워크 오류가 발생했습니다.";
+		        messageElement.className = "text-red-500";
+		    }
+		});
+		
+		function comparePassword(){
+			const password = document.getElementById("password").value;
+            const confirmPassword = document.getElementById("confirmPassword").value;
+            const passwordError = document.getElementById("passwordError");
+            const confirmPasswordError = document.getElementById("confirmPasswordError");
+            
+            // 비밀번호 검사 (숫자, 영문, 특수문자 중 2가지 이상 포함)
+            const hasNumber = /[0-9]/.test(password);
+            const hasLetter = /[a-zA-Z]/.test(password);
+            const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+            const isValidPassword = (hasNumber && hasLetter) || (hasNumber && hasSpecial) || (hasLetter && hasSpecial);
+
+            if (!isValidPassword || password.length < 6 || password.length > 20) {
+                passwordError.classList.remove("hidden");
+                return;
+            } else {
+                passwordError.classList.add("hidden");
+            }
+
+            if( password.length > 0 & confirmPassword.length > 0 ){
+                // 비밀번호 확인 검사
+                if (password !== confirmPassword) {
+                    confirmPasswordError.classList.remove("hidden");
+                } else {
+                    confirmPasswordError.classList.add("hidden");
+                }
+            }
+		}
+		
+		document.getElementById("password").addEventListener("blur", comparePassword);
+		document.getElementById("confirmPassword").addEventListener("blur", comparePassword);
+	</script>
+	
+	<script>
+	// 프로필 이미지 미리보기 기능
+    document.getElementById("profileImageInput").addEventListener("change", function(event) {
+        const file = event.target.files[0];
+        if (! file) {
+        	return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+        	const fileType = file.type;
+            
+            if (fileType === "image/svg+xml") {
+                // SVG 처리
+                const img = new Image();
+                img.onload = function() {
+                	document.getElementById("profilePreview").src = convertSVGToPNG(img);
+                };
+                img.src = e.target.result;
+            } else {
+                // 일반 이미지 처리 (PNG, JPG)
+                const img = new Image();
+                img.onload = function() {
+                	document.getElementById("profilePreview").src = resizeImage(img);
+                };
+                img.src = e.target.result;
+            }
+
+        };
+        reader.readAsDataURL(file);
+        
+    });
+	
+    function createCanvas(width, height) {
+    	const canvas = document.createElement("canvas");
+    	canvas.width = width;
+    	canvas.height = height;
+    	return canvas;
+    }
+    
+    function convertSVGToPNG(img, maxSize = 100) {
+    	console.info('convertSVGToPNG', img);
+	    const canvas = createCanvas(maxSize, maxSize);
+	    const ctx = canvas.getContext("2d");
+
+	    const width = maxSize;
+	    const height = maxSize;
+
+	    canvas.width = width;
+	    canvas.height = height;
+	    ctx.drawImage(img, 0, 0, width, height);
+
+	    return canvas.toDataURL("image/png");
+	}
+
+	function resizeImage(img, maxSize = 100) {
+		console.info('resizeImage', img);
+	    let width = img.width;
+	    let height = img.height;
+
+	    if (width > maxSize || height > maxSize) {
+	        if (width > height) {
+	            height *= maxSize / width;
+	            width = maxSize;
+	        } else {
+	            width *= maxSize / height;
+	            height = maxSize;
+	        }
+	    }
+
+	    const canvas = createCanvas(maxSize, maxSize);
+	    const ctx = canvas.getContext("2d");
+	    canvas.width = width;
+	    canvas.height = height;
+	    ctx.drawImage(img, 0, 0, width, height);
+
+	    return canvas.toDataURL("image/png");
+	}
+	</script>
+    
+    <script th:inline="javascript">
+    
+    async function getProfileImage() {
+    	const profileImg = document.getElementById("profilePreview");
+    	const imageFile = document.getElementById("profileImageInput").files[0];
+
+    	if (!imageFile) {
+    		console.info( '리사이징 안된 원래 이미지 처리');
+    		const img = new Image();
+    		img.crossOrigin = "anonymous"; // 크로스오리진 문제 방지
+    		img.src = profileImg.src;
+    		
+    		await new Promise((resolve) => {
+    			img.onload = function() {
+    				profileImg.src = convertSVGToPNG(img);
+    				resolve(); // 이미지 로드가 완료되면 계속 진행
+    			};
+    		});
+    	}
+
+    	try {
+    		const imageUrl = profileImg.src;
+    		let imageBlob;
+
+    		if (imageUrl.startsWith("data:")) {
+    			// Base64 데이터를 Blob으로 변환
+    			const byteCharacters = atob(imageUrl.split(",")[1]);
+    			const byteNumbers = new Array(byteCharacters.length);
+    			for (let i = 0; i < byteCharacters.length; i++) {
+    				byteNumbers[i] = byteCharacters.charCodeAt(i);
+    			}
+    			const byteArray = new Uint8Array(byteNumbers);
+    			imageBlob = new Blob([byteArray], { type: "image/png" });
+    		} else {
+    			// URL에서 직접 Blob 가져오기
+    			const response = await fetch(imageUrl);
+    			imageBlob = await response.blob();
+    		}
+
+    		return new File([imageBlob], "default-profile.png", { type: imageBlob.type });
+    	} catch (error) {
+    		console.error("기본 이미지 변환 오류:", error);
+    		return null;
+    	}
+    }
+    
+        document.getElementById("signupForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            
+        	saveUser();
+        });
+        
+        async function saveUser() {
+        	
+        	const imageData = await getProfileImage();
+        	if (!imageData) {
+        		showCustomAlert("이미지 처리 오류가 발생했습니다.");
+        		return;
+        	}
+        	
+            const formData = new FormData();
+            formData.append("id", document.getElementById("id").value);
+            formData.append("pw", encryptPassword( document.getElementById("password").value) );
+            formData.append("birthday", document.getElementById("birthday").value);
+            formData.append("nickname", document.getElementById("nickname").value);
+            formData.append("myRainbow", document.getElementById("myRainbow").value);
+            formData.append("mySeason", document.getElementById("mySeason").value);
+            formData.append("myNumber", document.getElementById("myNumber").value);
+            formData.append("token", /*[[${unique.token}]]*/ null);
+            formData.append("rsaId", /*[[${unique.rsaId}]]*/ null);
+            formData.append("image", imageData);
+
+            try {
+                const response = await fetch(/*[[@{/Auth/JoinUser.json}]]*/ null, {
+                    method: "POST",
+                    body: formData,
+                    credentials: "include"
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                	showCustomAlert("회원가입이 완료되었습니다.", () => {
+                		window.location.href = /*[[@{/User/Login.html}]]*/ null;
+                	});
+                } else {
+                	showCustomAlert(result.message || "회원가입에 실패했습니다.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                showCustomAlert("서버 오류가 발생했습니다.");
+            }
+        }
+
+    </script>
+    </th:block>
+</div>

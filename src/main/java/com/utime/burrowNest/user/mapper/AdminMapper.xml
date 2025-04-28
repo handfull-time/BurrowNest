@@ -25,11 +25,22 @@
 	</insert>
 
 	<!-- 사용자 목록 조회 -->
-	<select id="getUserList" resultType="com.utime.burrowNest.user.vo.UserVo">
+	<select id="getUserList" parameterType="map" resultType="com.utime.burrowNest.user.vo.UserVo">
 		SELECT
 			<include refid="com.utime.burrowNest.user.mapper.UserMapper.UserColumn" /> 
 		FROM BN_USER
-		ORDER BY NO
+		<if test="id != null and id != '' ">
+		WHERE ID LIKE '%${id}%'
+		</if>
+		ORDER BY NO DESC
+	</select>
+	
+	
+	<select id="getUserDetail" parameterType="map" resultType="com.utime.burrowNest.user.vo.UserVo">
+		SELECT
+			<include refid="com.utime.burrowNest.user.mapper.UserMapper.UserAllColumn" /> 
+		FROM BN_USER
+		WHERE NO = #{userNo}
 	</select>
 	
 	<!-- 사용자 정보 갱신 -->
@@ -40,7 +51,10 @@
 			, NICK_NAME = #{nickname} 
 			, ICON = #{profileImg}
 			, ROLE = #{role}
-			, NOTE = #{note}
+			, NOTE = <choose> <when test="note != null and note != '' ">#{note}</when> <otherwise>NULL</otherwise> </choose>
+			<if test="authHint != null and authHint != '' ">
+			, AUTH_HINT = #{authHint}
+			</if>
 			, DAILY_UPLOAD_LIMIT = #{dailyUploadLimit} 
 			, DAILY_DOWNLOAD_LIMIT = #{dailyDownloadLimit}
 			, MAX_STORAGE_USAGE = #{maxStorageUsage}

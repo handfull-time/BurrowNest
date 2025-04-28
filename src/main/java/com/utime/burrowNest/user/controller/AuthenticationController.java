@@ -3,6 +3,7 @@ package com.utime.burrowNest.user.controller;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -107,7 +108,7 @@ public class AuthenticationController {
     public ResponseEntity<?> login( HttpServletRequest request, HttpServletResponse response, @RequestBody LoginReqVo reqVo) throws Exception {
     	
 		reqVo.setIp( BurrowUtils.getRemoteAddress( request ) );
-		reqVo.setUserAgent( request.getHeader("User-Agent") );
+		reqVo.setUserAgent( request.getHeader(HttpHeaders.USER_AGENT) );
 		
     	final ResUserVo result = authService.procLogin(request, response, reqVo);
     	

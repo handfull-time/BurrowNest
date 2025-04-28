@@ -71,12 +71,22 @@
 	
 	<sql id="UserColumn">
 		NO AS "userNo"
+		, REG_DATE
 		, ENABLED
 		, ID 
 		, NICK_NAME 
 		, ICON AS "profileImg"
-		, NOTE 
 		, ROLE
+	</sql>
+	
+	<sql id="UserAllColumn">
+		<include refid="com.utime.burrowNest.user.mapper.UserMapper.UserColumn"/>
+		, UPDATE_DATE 
+		, NOTE 
+		, AUTH_HINT 
+		, DAILY_UPLOAD_LIMIT 
+		, DAILY_DOWNLOAD_LIMIT 
+		, MAX_STORAGE_USAGE
 	</sql>
 
 	<!-- id 조회 -->	
@@ -91,10 +101,7 @@
 	<!-- 기본 회원 정보 조회 -->
 	<select id="getUserIdBasic" parameterType="map" resultType="com.utime.burrowNest.user.vo.UserVo">
 		SELECT 
-			<include refid="UserColumn" /> 
-			, DAILY_UPLOAD_LIMIT 
-			, DAILY_DOWNLOAD_LIMIT 
-			, MAX_STORAGE_USAGE
+			<include refid="UserAllColumn" /> 
 		FROM BN_USER 
 		WHERE ID = #{id} AND ENABLED = true
 	</select>

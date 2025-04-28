@@ -1,0 +1,62 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="AuthHint">
+    
+<tr>
+	<td colspan="2"></td>
+</tr>
+<tr>
+	<td colspan="2" class="font-medium p-2">좋아하는 것을 고르세요.</td>
+</tr>
+
+<!-- 보안 질문: 무지개 색깔 -->
+<tr>
+    <td class="font-medium p-2">무지개 색깔</td>
+    <td class="p-2">
+        <select id="myRainbow" name="myRainbow" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+            <option value="">선택하세요</option>
+            <option value="빨강">🔴 (빨강)</option>
+            <option value="주황">🟠 (주황)</option>
+            <option value="노랑">🟡 (노랑)</option>
+            <option value="초록">🟢 (초록)</option>
+            <option value="파랑">🔵 (파랑)</option>
+            <option value="남색">🔵+🟣(남색)</option>
+            <option value="보라">🟣 (보라)</option>
+        </select>
+    </td>
+</tr>
+
+<!-- 보안 질문: 좋아하는 계절 -->
+<tr>
+    <td class="font-medium p-2">계절</td>
+    <td class="p-2">
+        <select id="mySeason" name="mySeason" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+            <option value="">선택하세요</option>
+            <option value="춘">🌸 봄</option>
+            <option value="하">🏖️ 여름</option>
+            <option value="추">🍁 가을</option>
+            <option value="동">☃️ 겨울</option>
+        </select>
+    </td>
+</tr>
+
+<!-- 보안 질문: 좋아하는 숫자 -->
+<tr>
+     <td class="font-medium p-2">숫자 (0~10)</td>
+     <td class="p-2">
+     	<select id="myNumber" name="myNumber" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+     		<option value="">선택하세요</option>
+			<option value="0">0 🌀</option>
+			<option value="1">1 🌱</option>
+			<option value="2">2 🐣</option>
+			<option value="3">3 🎈</option>
+			<option value="4">4 🍀</option>
+			<option value="5">5 🌟</option>
+			<option value="6">6 🌊</option>
+			<option value="7">7 🎵</option>
+			<option value="8">8 🧩</option>
+			<option value="9">9 🔥</option>
+			<option value="10">10 🎯</option>
+         </select>
+     </td>
+</tr>
+
+</th:block>

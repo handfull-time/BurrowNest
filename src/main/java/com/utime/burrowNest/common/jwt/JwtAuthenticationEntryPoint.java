@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -25,8 +26,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     	
     	final String requestUri = request.getRequestURI();
     	
-    	if( this.isBot(request.getHeader("User-Agent"))) {
-    		log.info("Bot 진입 : " + request.getHeader("User-Agent"));
+    	if( this.isBot(request.getHeader(HttpHeaders.USER_AGENT))) {
+    		log.info("Bot 진입 : " + request.getHeader(HttpHeaders.USER_AGENT));
     		
     		String originalUrl = requestUri;
     		final String query = request.getQueryString();

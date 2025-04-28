@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>🐇 BurrowNest<th:block layout:fragment="title"></th:block></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <th:block th:replace="~{Common/Favicon :: Favicon}"></th:block>
+
+    <script type="text/javascript" th:src="@{/js/tailwind/tailwind.min.js}"></script>
+
+    <style>
+    /* 별 회전 애니메이션 */
+    @keyframes rotateStar {
+        0% { opacity: 1; transform: rotate(0deg) scale(1); }
+        100% { opacity: 0; transform: rotate(720deg) scale(1.5); } /* 2바퀴 돌고 사라짐 */
+    }
+
+    .animate-star {
+        animation: rotateStar 2s ease-in-out forwards;
+    }
+    </style>
+    <th:block layout:fragment="css"></th:block>
+</head>
+<body class="h-screen flex items-center justify-center bg-gray-100">
+    <div class="bg-white p-8 shadow-lg rounded-lg w-full max-w-2xl text-center"> <!-- bg-white p-8 shadow-lg rounded-lg w-96 text-center"> -->
+        <!-- 제목 -->
+        <h1 id="houseTitle" class="text-5xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-pink-500 to-yellow-500 animate-wiggle shadow-text">
+        	🐇 BurrowNest <th:block layout:fragment="title"></th:block>
+		</h1>
+		
+        <!-- Main Content Area -->
+        <div class="flex-1 p-6 overflow-auto">
+            <th:block layout:fragment="content"></th:block>
+        </div>
+		
+    </div>
+    
+	<!-- alert confirm prompt -->
+	<div th:replace="~{Common/alertView :: alertView}"></div>
+    <!-- 모달창 -->
+    <div th:replace="~{Common/modalView :: modalView}"></div>
+
+    <script type="text/javascript" th:src="@{/js/MyToast.js}"></script>
+    <script type="text/javascript" th:src="@{/js/jsencrypt/jsencrypt.min.js}"></script>
+    
+    <script th:inline="javascript">
+	    function encryptPassword( value ) {
+	        const encrypt = new JSEncrypt();
+	        encrypt.setPublicKey(/*[[${unique.publicKey}]]*/ null);
+
+	        return encrypt.encrypt(value);
+	    }
+	</script>
+    
+	<th:block layout:fragment="script"></th:block>
+	
+</body>
+</html>
+
+
+

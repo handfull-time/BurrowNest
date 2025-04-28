@@ -10,41 +10,31 @@
         <!-- 회원 검색 -->
         <div class="bg-white shadow p-6 rounded-md mb-6">
             <h2 class="text-xl font-bold text-gray-700 mb-4">회원 검색</h2>
-            <form th:action="@{/Admin/User/Search}" method="get" class="flex space-x-4">
-                <input type="text" name="userId" placeholder="회원 ID 입력"
+            <div class="flex space-x-4">
+                <input type="text" id="userId" placeholder="회원 ID 입력"
                        class="border p-2 rounded w-1/3 focus:outline-none focus:ring-2 focus:ring-blue-600">
-                <button type="submit" class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700">검색</button>
-            </form>
+                <button type="button" class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" onclick="search()">검색</button>
+            </div>
         </div>
 
         <!-- 회원 목록 -->
-        <div class="bg-white shadow p-6 rounded-md">
-            <h2 class="text-xl font-bold text-gray-700 mb-4">회원 목록</h2>
-            <table class="w-full border-collapse border border-gray-200">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="border p-2 text-left">ID</th>
-                        <th class="border p-2 text-left">별명</th>
-                        <th class="border p-2 text-left">가입일</th>
-                        <th class="border p-2 text-left">사용여부</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="user : ${users}">
-                        <td class="border p-2" th:text="${user.id}"></td>
-                        <td class="border p-2" th:text="${user.nickname}"></td>
-                        <td class="border p-2" th:text="${user.joinDate}"></td>
-                        <td class="border p-2" th:text="${user.email}"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <div id="ResultList"></div>
     </div>
 
     <th:block layout:fragment="script">
-        <script th:inline="javascript">
-            // 여기에 추가적인 JavaScript 기능을 구현할 수 있습니다.
-        </script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            search();
+        });
+        
+        
+        async function search(){
+        	const url = /*[[@{/Admin/User/UserList.layer}]]*/ null;
+        	doSearchList(url, {
+        		
+        	}, 'ResultList') 
+        };
+    </script>
     </th:block>
 
 </div>

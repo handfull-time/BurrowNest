@@ -200,4 +200,10 @@ class UserDaoImpl implements UserDao {
 		
 		return result; 
 	}
+	
+	@Override
+	public UserVo getUserFromNo(int userNo) {
+		
+		return adminMapper.getUserDetail(userNo);
+	}
 }

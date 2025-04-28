@@ -67,5 +67,12 @@ public interface UserDao {
 	 * @return
 	 */
 	UserVo getUserFormIdByProvider(String id);
+	
+	/**
+	 * 사용자 정보 조회
+	 * @param userNo
+	 * @return
+	 */
+	UserVo getUserFromNo(int userNo);
 
 }

@@ -11,6 +11,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
@@ -44,7 +45,7 @@ class LoggingAspect {
 
 	final static ObjectWriter objMapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
 	
-	private final String KEY_USER_AGENT = "User-Agent";
+	private final String KEY_USER_AGENT = HttpHeaders.USER_AGENT;
 
 	private final String line1 = "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
 	private final String line2 = "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";

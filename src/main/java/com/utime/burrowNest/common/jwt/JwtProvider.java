@@ -8,8 +8,10 @@ import java.util.Optional;
 
 import javax.crypto.SecretKey;
 
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
@@ -72,8 +74,7 @@ public class JwtProvider {
         static final String TOKEN_PREFIX = "Bearer ";
         static final String IP = "ReqIp";
         static final String AGENT = "ReqAgent";
-        static final String NickName = "nickName";
-        static final String Role = "role";
+        static final String UserNo = "userNo";
     }
     
     @PostConstruct
@@ -160,8 +161,7 @@ public class JwtProvider {
      */
     private String generateToken(UserVo user, Map<String, Object> claims, long expirationTime) {
     	
-    	claims.put(JWT_KEY.NickName, user.getNickname());
-    	claims.put(JWT_KEY.Role, user.getRole());
+    	claims.put(JWT_KEY.UserNo, "" + user.getUserNo());
     	
         return Jwts.builder()
                 .id(user.getId())
@@ -185,7 +185,7 @@ public class JwtProvider {
 		}
 		
 		final String agent = claims.get(JWT_KEY.AGENT, String.class);
-		final String reqAgent = request.getHeader("user-agent");
+		final String reqAgent = request.getHeader(HttpHeaders.USER_AGENT);
 		if( ! reqAgent.equals( agent ) ) {
 			log.warn("USER-AGENT가 서로 다르다. Token User-agent:{}, Req User-agent:{}", agent, reqAgent);
             return false;
@@ -202,15 +202,22 @@ public class JwtProvider {
     	
     	final String id = claims.getId();
     	if( id == null || id.length() < 1 ) {
+    		log.warn("ID 정보 없음");
     		return null;
     	}
     	
-    	return userDao.getUserFormIdByProvider( id );
-//    	
-//    	UserVo user = new UserVo();
-//    	user.setId();
-//    	user.setNickname(claims.get(JWT_KEY.NickName, String.class));
-//    	user.setRole(EJwtRole.valueOf(claims.get(JWT_KEY.Role, String.class)));
+    	final UserVo result = userDao.getUserFormIdByProvider( id );
+    	if( result == null ) {
+    		log.warn("ID 일치 정보 없음: " + id);
+    		return result;
+    	}
+    	
+    	if( result.getUserNo() !=  NumberUtils.toInt( claims.get(JWT_KEY.UserNo, String.class) ) ) {
+    		log.warn("회원 정보 불일치\n Cookie UserNo:{}\nDb UserNo:{}", claims.get(JWT_KEY.UserNo, String.class), result.getUserNo());
+    		return null;
+    	}
+    	
+    	return result;
     }
 
 //    /**
@@ -231,7 +238,7 @@ public class JwtProvider {
     	final Map<String, Object> claims = new HashMap<>();
         
     	claims.put(JWT_KEY.IP, BurrowUtils.getRemoteAddress(request));
-        claims.put(JWT_KEY.AGENT, request.getHeader("user-agent"));
+        claims.put(JWT_KEY.AGENT, request.getHeader(HttpHeaders.USER_AGENT));
         
         log.info("요청 정보 : " + claims);
         
