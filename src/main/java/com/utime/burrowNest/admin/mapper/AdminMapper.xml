@@ -1,38 +1,37 @@
 <?xml version="1.0" encoding="UTF-8" ?> 
 <!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
 <!--//네임스페이스에는 mapper 가 있는 풀 패키지명과 매퍼명을 등록 한다. -->
-<mapper namespace="com.utime.burrowNest.user.mapper.AdminMapper">
-
-	<!-- 사용자 추가 -->
-	<insert id="insertUser" parameterType="com.utime.burrowNest.user.vo.UserVo" useGeneratedKeys="true" keyProperty="userNo" >
-		INSERT INTO BN_USER (
-			UPDATE_DATE 
-			, ENABLED
-			, ID 
-			, NICK_NAME 
-			, ICON
-			, ROLE
-			, AUTH_HINT
-		) VALUES (
-			CURRENT_TIMESTAMP
-			, #{enabled}
-			, #{id}
-			, #{nickname}
-			, #{profileImg}
-			, #{role}
-			, #{authHint}
-		)
-	</insert>
+<mapper namespace="com.utime.burrowNest.admin.mapper.AdminMapper">
 
 	<!-- 사용자 목록 조회 -->
-	<select id="getUserList" parameterType="map" resultType="com.utime.burrowNest.user.vo.UserVo">
+	<select id="getUserList" parameterType="map" resultType="com.utime.burrowNest.admin.vo.ManageUserVo">
 		SELECT
-			<include refid="com.utime.burrowNest.user.mapper.UserMapper.UserColumn" /> 
-		FROM BN_USER
+			UR.NO AS "userNo"
+			, UR.REG_DATE
+			, UR.ENABLED
+			, UR.ID 
+			, UR.NICK_NAME 
+			, UR.ICON AS "profileImg"
+			, UR.ROLE
+			, LR.LOGIN_COUNT
+			, LR.LAST_LOGIN_TIME
+			, PW.FAIL_COUNT AS "loginFailCount"
+		FROM BN_USER UR
+			INNER JOIN (
+				 SELECT
+				 	USER_NO
+				 	, COUNT(1) AS LOGIN_COUNT
+				 	, MAX(REG_DATE) AS LAST_LOGIN_TIME
+				 FROM BN_USER_LOGIN_RECORD
+				 WHERE STATUS = 'Success'
+				 GROUP BY USER_NO
+			)LR ON UR.NO = LR.USER_NO
+			INNER JOIN BN_USER_PW PW
+				ON UR.NO = PW.USER_NO
 		<if test="id != null and id != '' ">
-		WHERE ID LIKE '%${id}%'
+		WHERE UR.ID LIKE '%${id}%'
 		</if>
-		ORDER BY NO DESC
+		ORDER BY UR.NO DESC
 	</select>
 	
 	
@@ -48,24 +47,11 @@
 		UPDATE BN_USER SET
 			UPDATE_DATE = CURRENT_TIMESTAMP
 			, ENABLED = #{enabled}
-			, NICK_NAME = #{nickname} 
-			, ICON = #{profileImg}
 			, ROLE = #{role}
 			, NOTE = <choose> <when test="note != null and note != '' ">#{note}</when> <otherwise>NULL</otherwise> </choose>
-			<if test="authHint != null and authHint != '' ">
-			, AUTH_HINT = #{authHint}
-			</if>
 			, DAILY_UPLOAD_LIMIT = #{dailyUploadLimit} 
 			, DAILY_DOWNLOAD_LIMIT = #{dailyDownloadLimit}
 			, MAX_STORAGE_USAGE = #{maxStorageUsage}
-		WHERE NO = #{userNo}
-	</update>
-	
-	<!-- 회원 활성화 정보 수정 -->
-	<update id="updateUserEnabled" parameterType="com.utime.burrowNest.user.vo.UserVo" >
-		UPDATE BN_USER SET
-			UPDATE_DATE = CURRENT_TIMESTAMP
-			, ENABLED = #{enabled}
 		WHERE NO = #{userNo}
 	</update>
 	

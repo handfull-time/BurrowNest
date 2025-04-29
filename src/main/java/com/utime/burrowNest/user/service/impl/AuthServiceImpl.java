@@ -169,6 +169,41 @@ class AuthServiceImpl implements AuthService {
 	}
 	
 	@Override
+	public ReturnBasic procJoinUser( UserReqVo reqVo) {
+		log.info("초기화 시도 : {}", reqVo);
+		
+		if( ! this.validation(reqVo) ) {
+			return new ReturnBasic("E", "Invalid credentials");
+		}
+		
+		final String pw = this.convertEncPw( reqVo, reqVo.getPw() );
+		
+		if( pw == null ){
+			return new ReturnBasic("E", "Invalid credentials");
+		}
+		
+		final UserVo user = new UserVo();
+		user.setUserNo(-1);
+		user.setEnabled(false);
+		user.setId(reqVo.getId());
+		user.setNickname(reqVo.getNickname());
+		user.setRole(EJwtRole.User);
+		user.setProfileImg(reqVo.getProfileImg());
+		user.setAuthHint( this.genUserUniqueHashing( reqVo ) );
+		
+		final ReturnBasic result = new ReturnBasic();
+		try {
+			userDao.insertUser(reqVo, user, pw);
+			this.validationRemove(reqVo);
+		} catch (Exception e) {
+			log.error("", e);
+			result.setCodeMessage("E", e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	@Override
 	public void logout(HttpServletRequest request, HttpServletResponse response) {
 		jwtUtil.procLogout( request, response);
 	}
@@ -218,13 +253,74 @@ class AuthServiceImpl implements AuthService {
 		
 		final ReturnBasic result = new ReturnBasic();
 		try {
-			userDao.insertUser(user, pw);
-			user.setEnabled(true);
-			userDao.updateUserEnabled(user);
+			userDao.insertUser(req, user, pw);
 			this.validationRemove(req);
 		} catch (Exception e) {
 			log.error("", e);
 			result.setCodeMessage("E", e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	@Override
+	public ReturnBasic findUserPw(UserReqVo reqVo) {
+		
+		if( ! this.validation(reqVo) ) {
+			return new ReturnBasic("E", "Invalid credentials");
+		}
+		
+		final UserVo user = userDao.findUser( reqVo.getId(), this.genUserUniqueHashing( reqVo ) );
+		if( user == null ) {
+			return new ReturnBasic("E", "Invalid credentials");
+		}
+		
+		final ReturnBasic result = new ReturnBasic();
+		
+		final String key = inputInterval( user.getId() );
+		result.setMessage(key);
+		return result;
+	}
+	
+	@Override
+	public ReturnBasic convertUserPw(LoginReqVo reqVo) {
+		
+		final ReturnBasic result = new ReturnBasic();
+		
+		final String id = intervalMap.get(reqVo.getToken());
+		if( id == null ) {
+			result.setCodeMessage("E", "일치 데이터 없음");
+			return result;
+		}
+		
+		final String pw = this.convertEncPw( reqVo, reqVo.getPw() );
+		if( pw == null ){
+			return result.setCodeMessage("E", "Invalid credentials");
+		}
+		
+		final UserVo user = userDao.getUserFormId(id);
+		if( user == null ) {
+			return result.setCodeMessage("E", "Invalid credentials");
+		}
+		
+		try {
+			userDao.updateUserPw(user, pw);
+		} catch (Exception e) {
+			log.error("", e);
+			result.setCodeMessage("E", e.getMessage());
+		}
+		
+		this.validationRemove(reqVo);
+
+		return result;
+	}
+	
+	@Override
+	public ReturnBasic checkId(String id) {
+		
+		final ReturnBasic result = new ReturnBasic();
+		if( userDao.checkId(id) ) {
+			result.setCodeMessage("E", "사용 중");
 		}
 		
 		return result;

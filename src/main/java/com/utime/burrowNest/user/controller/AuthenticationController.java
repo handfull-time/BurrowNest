@@ -22,6 +22,7 @@ import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.user.service.AuthService;
 import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.ResUserVo;
+import com.utime.burrowNest.user.vo.UserReqVo;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -59,6 +60,37 @@ public class AuthenticationController {
 		model.addAttribute("unique", authService.getNewGenUnique(request) );
 		
         return "Auth/Login";
+    }
+	
+	
+	@GetMapping("FindUserPw.html")
+    public String FindUserPw( HttpServletRequest request, ModelMap model ) {
+		
+		model.addAttribute("unique", authService.getNewGenUnique(request) );
+		
+        return "Auth/FindUserPw";
+    }
+	
+	@GetMapping("JoinUser.html")
+    public String JoinUser( HttpServletRequest request, ModelMap model ) {
+		
+		model.addAttribute("unique", authService.getNewGenUnique(request) );
+		
+        return "Auth/JoinUser";
+    }
+	
+	/**
+	 * id 중복인지 검사
+	 * @param id
+	 * @return
+	 */
+	@ResponseBody
+	@GetMapping("CheckId.json")
+    public ResponseEntity<ReturnBasic> checkId( @RequestParam("id") String id) {
+    	
+    	final ReturnBasic result = authService.checkId(id);
+    	
+    	return ResponseEntity.ok().body(result);
     }
 	
 	/**
@@ -149,5 +181,65 @@ public class AuthenticationController {
     	
     	return ResponseEntity.ok().body(new ReturnBasic());
     }
+	
+	/**
+	 * 회원 가입
+	 * @param request
+	 * @param response
+	 * @param reqVo
+	 * @return
+	 * @throws Exception
+	 */
+	@ResponseBody
+    @PostMapping("JoinUser.json")
+    public ResponseEntity<ReturnBasic> JoinUser( HttpServletRequest request, @RequestBody UserReqVo reqVo) throws Exception {
+    	
+		reqVo.setIp( BurrowUtils.getRemoteAddress( request ) );
+		reqVo.setUserAgent( request.getHeader(HttpHeaders.USER_AGENT) );
+		
+    	final ReturnBasic result = authService.procJoinUser(reqVo);
+    	
+    	if( result.isError() ) {
+    		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
+    	}
+    	
+    	return ResponseEntity.ok().body(result);
+	}
+	
+	/**
+	 * 비번 변경
+	 * @param request
+	 * @param reqVo
+	 * @return
+	 */
+	@PostMapping("ConvertUserPw.json")
+    public ResponseEntity<ReturnBasic> convertUserPw( HttpServletRequest request, LoginReqVo reqVo )throws Exception {
+		
+		reqVo.setIp( BurrowUtils.getRemoteAddress( request ) );
+		
+		final ReturnBasic result = authService.convertUserPw(reqVo);
+    	
+    	return ResponseEntity.ok().body(result);
+    }
+
+	/**
+	 * 비밀번호 찾기
+	 * @param request
+	 * @param reqVo
+	 * @return
+	 */
+	@PostMapping("FindUserPw.layer")
+    public String findUserPwLayer( HttpServletRequest request, ModelMap model, UserReqVo reqVo ) {
+		
+		reqVo.setIp( BurrowUtils.getRemoteAddress( request ) );
+		
+		final ReturnBasic result = authService.findUserPw(reqVo);
+		
+		model.addAttribute("item", result);
+    	
+    	return "Auth/FindUserPwLayer";
+    }
+	
+	
 }
 

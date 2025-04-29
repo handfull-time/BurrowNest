@@ -34,6 +34,14 @@ public interface AuthService {
 	 * @return
 	 */
 	ResUserVo procLogin(HttpServletRequest request, HttpServletResponse response, LoginReqVo reqVo);
+	
+	/**
+	 * 회원 가입
+	 * @param request
+	 * @param reqVo
+	 * @return
+	 */
+	ReturnBasic procJoinUser(UserReqVo reqVo);
 
 	/**
 	 * 로그 아웃
@@ -50,6 +58,29 @@ public interface AuthService {
 	 * @return
 	 */
 	ReturnBasic refreshAccessToken(HttpServletRequest request, HttpServletResponse response, String refreshToken);
+
+	/**
+	 * 비번 찾기
+	 * @param reqVo
+	 * @return
+	 */
+	ReturnBasic findUserPw(UserReqVo reqVo);
+
+	/**
+	 * 암호 변경
+	 * @param reqVo
+	 * @return
+	 */
+	ReturnBasic convertUserPw(LoginReqVo reqVo);
+
+	/**
+	 * id가 사용하던 id 인지 검사.
+	 * @param id
+	 * @return
+	 */
+	ReturnBasic checkId(String id);
+
+	
 
 
 	

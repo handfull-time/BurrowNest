@@ -162,7 +162,7 @@
         if (loading) loading.classList.remove("hidden");
 
         try {
-            const response = await fetch(url, options);
+            const response = await apiRequest(url, options);
             if (!response.ok) {
                 throw new Error(`HTTP 오류 발생: ${response.status} ${response.statusText}`);
             }

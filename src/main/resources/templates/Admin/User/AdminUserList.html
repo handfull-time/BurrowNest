@@ -10,6 +10,9 @@
                 <th class="border p-2 text-center">사용여부</th>
                 <th class="border p-2 text-center">별명</th>
                 <th class="border p-2 text-center">역할</th>
+                <th class="border p-2 text-center">로그인 횟수</th>
+                <th class="border p-2 text-center">마지막 로그인</th>
+                <th class="border p-2 text-center">최근 로그인 실패</th>
             </tr>
         </thead>
         <tbody>
@@ -20,15 +23,17 @@
                 <td class="border p-2 text-center" th:text="${item.enabled? '🟢':'🔴'}"></td>
                 <td class="border p-2" th:text="${item.nickname}"></td>
                 <td class="border p-2 text-center" th:text="${item.role}"></td>
+                <td class="border p-2 text-right" th:text="${#numbers.formatInteger(item.loginCount, T(java.util.Locale).getDefault())}"></td>
+                <td class="border p-2" th:text="${#dates.format(item.lastLoginTime,'YYYY.MM.dd HH:mm')}"></td>
+                <td class="border p-2 text-right" th:text="${#numbers.formatInteger(item.loginFailCount, T(java.util.Locale).getDefault())}"></td>
             </tr>
         </tbody>
     </table>
 </div>
 
 <script th:inline="javascript">
-    const idCells = document.querySelectorAll('.id-cell');
 
-    idCells.forEach(idCell => {
+    document.querySelectorAll('.id-cell').forEach(idCell => {
         idCell.addEventListener('click', function() {
             const row = this.parentNode;
             const userNo = row.dataset.userNo;

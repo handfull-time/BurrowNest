@@ -1,6 +1,5 @@
 package com.utime.burrowNest.user.dao.impl;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,6 @@ import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.util.CacheIntervalMap;
 import com.utime.burrowNest.common.util.Sha256;
 import com.utime.burrowNest.user.dao.UserDao;
-import com.utime.burrowNest.user.mapper.AdminMapper;
 import com.utime.burrowNest.user.mapper.UserMapper;
 import com.utime.burrowNest.user.vo.ELoginResult;
 import com.utime.burrowNest.user.vo.LoginReqVo;
@@ -31,9 +29,6 @@ class UserDaoImpl implements UserDao {
 	private CommonMapper common;
 	
 	@Autowired
-	private AdminMapper adminMapper;
-	
-	@Autowired
 	private UserMapper userMapper;
 	
 	@Value("${security.pwSaltKey}")
@@ -45,12 +40,6 @@ class UserDaoImpl implements UserDao {
 	private void construct() {
 		try {
 			
-//			// 가계부 메인 데이터
-//			if( ! common.existTable("BN_ADMIN") ) {
-//				log.info("BN_ADMIN 생성");
-//				adminMapper.createAdmin();
-//			}
-			
 			if( ! common.existTable("BN_USER") ) {
 				log.info("BN_USER 생성");
 				userMapper.createUser();
@@ -61,9 +50,9 @@ class UserDaoImpl implements UserDao {
 				log.info("BN_USER_LOGIN_RECORD 생성");
 				userMapper.createLoginRecord();
 				common.createIndex("BN_USER_LOGIN_RECORD_IP_INDX", "BN_USER_LOGIN_RECORD", "IP");
+				common.createIndex("BN_USER_LOGIN_RECORD_STATUS_INDX", "BN_USER_LOGIN_RECORD", "STATUS");
 				common.createIndex("BN_USER_LOGIN_RECORD_USER_NO_INDX", "BN_USER_LOGIN_RECORD", "USER_NO");
 				common.createIndex("BN_USER_LOGIN_RECORD_REG_DATE_INDX", "BN_USER_LOGIN_RECORD", "REG_DATE");
-				
 			}
 
 			if( ! common.existTable("BN_USER_PW") ) {
@@ -127,16 +116,19 @@ class UserDaoImpl implements UserDao {
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public int insertUser(UserVo user, String pw) throws Exception {
+	public int insertUser(LoginReqVo reqVo, UserVo user, String pw) throws Exception {
 		
-		user.setEnabled(false);
-		
-		final int res = adminMapper.insertUser(user);
+		int res = userMapper.insertUser(user);
 		if( res < 1 ) {
 			return res;
 		}
 		
-		return this.updateUserPw( user, pw);
+		res += this.updateUserPw( user, pw);
+		
+		
+		userMapper.insertLoginRecord( reqVo, user, ELoginResult.Join );
+		
+		return res;
 	}
 	
 	@Override
@@ -155,17 +147,6 @@ class UserDaoImpl implements UserDao {
 		return result;
 	}
 	
-	/**
-	 * 회원 상태 변경
-	 * @param user
-	 * @return
-	 */
-	@Override
-	@Transactional(rollbackFor = Exception.class)
-	public int updateUserEnabled(UserVo user) throws Exception {
-		return adminMapper.updateUserEnabled( user );
-	}
-	
 	@Override
 	public UserVo getManageUser() {
 		
@@ -178,11 +159,10 @@ class UserDaoImpl implements UserDao {
 		// TODO Auto-generated method stub
 		return 0;
 	}
-
+	
 	@Override
-	public List<UserVo> getUserList() {
-		// TODO Auto-generated method stub
-		return null;
+	public UserVo getUserFormId(String id) {
+		return userMapper.getUserIdBasic(id);
 	}
 	
 	@Override
@@ -202,8 +182,13 @@ class UserDaoImpl implements UserDao {
 	}
 	
 	@Override
-	public UserVo getUserFromNo(int userNo) {
+	public UserVo findUser(String id, String genUserUniqueHashing) {
 		
-		return adminMapper.getUserDetail(userNo);
+		return userMapper.findUser(id, genUserUniqueHashing);
+	}
+	
+	@Override
+	public boolean checkId(String id) {
+		return userMapper.checkId( id );
 	}
 }

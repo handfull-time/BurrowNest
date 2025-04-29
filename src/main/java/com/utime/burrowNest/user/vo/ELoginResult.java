@@ -12,4 +12,6 @@ public enum ELoginResult {
 	, Denied
 	/** 비번 틀림 */
 	, MismatchPw
+	/** 가입 */
+	, Join;
 }

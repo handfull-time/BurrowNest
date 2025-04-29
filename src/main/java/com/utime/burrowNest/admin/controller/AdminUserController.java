@@ -5,10 +5,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.utime.burrowNest.admin.service.AdminUserService;
+import com.utime.burrowNest.common.vo.EJwtRole;
+import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.user.vo.UserVo;
 
 @Controller
@@ -41,8 +45,15 @@ public class AdminUserController {
     public String getUserProfile(ModelMap model, @RequestParam(name="userNo") int userNo) {
 		
 		model.addAttribute("item", userService.getUserFromNo(userNo));
+		model.addAttribute("roles", EJwtRole.values() );
         
-		return "User/ProfileLayer";
+		return "Admin/User/UserLayer";
+    }
+	
+	@PostMapping("SaveUser.json")
+    public ReturnBasic saveUser(ModelMap model, @RequestBody UserVo user) {
+		
+		return userService.saveUser( user );
     }
 }
 

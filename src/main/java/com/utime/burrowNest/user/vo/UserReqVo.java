@@ -12,6 +12,12 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public class UserReqVo extends LoginReqVo{
 	
+	/** 별명 */
+	private String nickname;
+	
+	/** 사용자 아이콘 */
+	private String profileImg;
+	
 	/**
 	 * 암호 찾기 : 무지개 색 
 	 */

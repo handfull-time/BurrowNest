@@ -17,13 +17,15 @@ public interface UserDao {
 	 */
 	ResUserVo procLogin(LoginReqVo reqVo)throws Exception ;
 	
-	
 	/**
 	 * 사용자 추가
+	 * @param reqVo
 	 * @param user
+	 * @param pw
 	 * @return
+	 * @throws Exception
 	 */
-	int insertUser(UserVo user, String pw) throws Exception;
+	int insertUser(LoginReqVo reqVo, UserVo user, String pw) throws Exception;
 	
 	/**
 	 * 사용자 정보 수정
@@ -49,30 +51,33 @@ public interface UserDao {
 	UserVo getManageUser();
 
 	/**
-	 * 사용자 목록 조회
-	 * @return
-	 */
-	List<UserVo> getUserList();
-
-	/**
-	 * 회원 상태 변경
-	 * @param user
-	 * @return
-	 */
-	int updateUserEnabled(UserVo user)throws Exception;
-
-	/**
 	 * 사용자 정보 조회
+	 * @param id
+	 * @return
+	 */
+	UserVo getUserFormId(String id);
+
+	/**
+	 * 사용자 정보 조회 (캐시 사용 )
 	 * @param id
 	 * @return
 	 */
 	UserVo getUserFormIdByProvider(String id);
 	
 	/**
-	 * 사용자 정보 조회
-	 * @param userNo
+	 * 해당 id 찾기
+	 * @param id
+	 * @param genUserUniqueHashing
 	 * @return
 	 */
-	UserVo getUserFromNo(int userNo);
+	UserVo findUser(String id, String genUserUniqueHashing);
+
+	/**
+	 * id 사용 여부
+	 * @param id
+	 * @return
+	 */
+	boolean checkId(String id);
+
 
 }

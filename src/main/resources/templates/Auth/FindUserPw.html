@@ -2,7 +2,7 @@
      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
      layout:decorate="~{Auth/UserLayout}">
     
-    <th:block layout:fragment="title">비밀번호 찾기</th:block>
+    <th:block layout:fragment="title"><br/><br/>비밀번호 찾기</th:block>
 
 	<th:block layout:fragment="css"></th:block>
 	
@@ -22,73 +22,15 @@
 			                </td>
 			            </tr>
 			            
-			            <tr>
-			            	<td colspan="2"></td>
-			            </tr>
-			            <tr>
-			            	<td colspan="2" class="font-medium p-2">좋아하는 것을 고르세요.</td>
-			            </tr>
-			
-			            <!-- 보안 질문: 무지개 색깔 -->
-			            <tr>
-			                <td class="font-medium p-2">무지개 색깔</td>
-			                <td class="p-2">
-			                    <select id="myRainbow" name="myRainbow" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
-			                        <option value="">선택하세요</option>
-			                        <option value="빨강">🔴 (빨강)</option>
-			                        <option value="주황">🟠 (주황)</option>
-			                        <option value="노랑">🟡 (노랑)</option>
-			                        <option value="초록">🟢 (초록)</option>
-			                        <option value="파랑">🔵 (파랑)</option>
-			                        <option value="남색">🔵+🟣(남색)</option>
-			                        <option value="보라">🟣 (보라)</option>
-			                    </select>
-			                </td>
-			            </tr>
-			
-			            <!-- 보안 질문: 좋아하는 계절 -->
-			            <tr>
-			                <td class="font-medium p-2">계절</td>
-			                <td class="p-2">
-			                    <select id="mySeason" name="mySeason" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
-			                        <option value="">선택하세요</option>
-			                        <option value="춘">🌸 봄</option>
-			                        <option value="하">🏖️ 여름</option>
-			                        <option value="추">🍁 가을</option>
-			                        <option value="동">☃️ 겨울</option>
-			                    </select>
-			                </td>
-			            </tr>
-			
-			            <!-- 보안 질문: 좋아하는 숫자 -->
-			            <tr>
-			                <td class="font-medium p-2">숫자 (0~10)</td>
-			                <td class="p-2">
-			                    <select id="myNumber" name="myNumber" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
-			                        <option value="">선택하세요</option>
-									<option value="0">0 🌀</option>
-									<option value="1">1 🌱</option>
-									<option value="2">2 🐣</option>
-									<option value="3">3 🎈</option>
-									<option value="4">4 🍀</option>
-									<option value="5">5 🌟</option>
-									<option value="6">6 🌊</option>
-									<option value="7">7 🎵</option>
-									<option value="8">8 🧩</option>
-									<option value="9">9 🔥</option>
-									<option value="10">10 🎯</option>
-			                    </select>
-			                </td>
-			            </tr>
+			            <th:block th:replace="~{Auth/AuthHint :: AuthHint}"></th:block>
 			        </tbody>
 			    </table>
 
                 <div class="mt-6 transition-opacity duration-300" id="hiddenButtons">
 		            <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">비밀번호 찾기</button>
 		            <div class="flex justify-between mt-2 text-sm text-blue-500 cursor-pointer">
-		                <a th:href="@{/User/FindUserId.html}" class="hover:underline">ID 찾기</a>
-		                <a th:href="@{/User/Login.html}" class="hover:underline">로그인</a>
-		                <a th:href="@{/User/JoinUser.html}" class="hover:underline">회원 가입</a>
+		                <a th:href="@{/Auth/Login.html}" class="hover:underline">로그인</a>
+		                <a th:href="@{/Auth/JoinUser.html}" class="hover:underline">회원 가입</a>
 		            </div>
 		        </div>
 	        </form>
@@ -104,7 +46,7 @@
             
             const formData = new FormData(this);
             try {
-                const response = await fetch(/*[[@{/User/FindUserPw.layer}]]*/ null, {
+                const response = await fetch(/*[[@{/Auth/FindUserPw.layer}]]*/ null, {
                     method: "POST",
                     body: formData,
                     headers: {

@@ -31,6 +31,14 @@ public interface UserMapper {
 	 */
 	int createLoginRecord();
 	
+	
+	/**
+	 * 사용자 추가
+	 * @param user
+	 * @return
+	 */
+	int insertUser(UserVo user);
+	
 	/**
 	 * 로그인 기록 추가.
 	 * @param reqVo
@@ -76,13 +84,21 @@ public interface UserMapper {
 	 * @return
 	 */
 	int updateUserPw(@Param("user") UserVo user, @Param("pw") String pw);
+	
+	/**
+	 * 해당 id 찾기
+	 * @param id
+	 * @param genUserUniqueHashing
+	 * @return
+	 */
+	UserVo findUser(@Param("id") String id, @Param("authHint") String genUserUniqueHashing);
 
 	/**
 	 * 사용자 정보 갱신 
 	 * @param user
 	 * @return
 	 */
-	int updateUser( UserVo user );
+	int updateUser( UserVo user )throws Exception ;
 
 	/**
 	 * PW 성공 여부 횟수 업데이트
@@ -91,4 +107,11 @@ public interface UserMapper {
 	 * @return
 	 */
 	int updatePwCount(@Param("user") UserVo user, @Param("isSuccess") boolean isSuccess);
+
+	/**
+	 * id 사용 여부
+	 * @param id
+	 * @return true: 있다. false:없다.
+	 */
+	boolean checkId(@Param("id") String id);
 }

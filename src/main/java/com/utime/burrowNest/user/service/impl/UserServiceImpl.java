@@ -15,12 +15,4 @@ class UserServiceImpl implements UserService {
 	
 	@Autowired
 	private UserDao userDao;
-	
-	@Override
-	public UserVo getUserFromNo(int userNo) {
-		UserVo result = userDao.getUserFromNo(userNo);
-		return result;
-	}
-	
-	
 }

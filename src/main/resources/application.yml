@@ -26,6 +26,11 @@ spring:
     user:
       name: admin
       password: my#9709
+  servlet:
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 1024MB
+      
 jwt:
   secret: f4e42d85-73b0-4884-913f-f88ad661a1cc
 
