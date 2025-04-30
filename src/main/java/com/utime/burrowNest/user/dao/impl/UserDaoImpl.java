@@ -11,6 +11,7 @@ import com.utime.burrowNest.common.mapper.CommonMapper;
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.util.CacheIntervalMap;
 import com.utime.burrowNest.common.util.Sha256;
+import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.mapper.UserMapper;
 import com.utime.burrowNest.user.vo.ELoginResult;
@@ -194,6 +195,8 @@ class UserDaoImpl implements UserDao {
 	@Override
 	public byte[] getProfileImg(int userNo) {
 		
-		return userMapper.getProfileImg( userNo );
+		final BinResultVo result = userMapper.getProfileImg( userNo );
+		
+		return result.getBinary();
 	}
 }

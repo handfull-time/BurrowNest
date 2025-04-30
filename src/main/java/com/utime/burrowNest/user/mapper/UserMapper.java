@@ -3,6 +3,7 @@ package com.utime.burrowNest.user.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.user.vo.ELoginResult;
 import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.UserVo;
@@ -120,5 +121,5 @@ public interface UserMapper {
 	 * @param userNo
 	 * @return
 	 */
-	byte[] getProfileImg(@Param("userNo") int userNo);
+	BinResultVo getProfileImg(@Param("userNo") int userNo);
 }

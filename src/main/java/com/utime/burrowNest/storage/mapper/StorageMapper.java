@@ -3,6 +3,7 @@ package com.utime.burrowNest.storage.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
 import com.utime.burrowNest.storage.vo.BnFileArchive;
@@ -227,7 +228,7 @@ public interface StorageMapper {
 	 * @param fileNo
 	 * @return
 	 */
-	byte [] selectThumbnail( @Param("fileId") String fid );
+	BinResultVo selectThumbnail( @Param("fileId") String fid );
 
 	
 }

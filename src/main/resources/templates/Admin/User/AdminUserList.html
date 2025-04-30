@@ -18,14 +18,14 @@
         <tbody>
             <tr th:unless="${#lists.isEmpty(users)}"
             	th:each="item : ${users}" th:data-user-no="${item.userNo}">
-                <td class="border p-2" th:text="${#dates.format(item.regDate,'YYYY.MM.dd HH:mm')}"></td>
+                <td class="border p-2 text-center" th:text="${#temporals.format(item.regDate,'yyyy.MM.dd HH:mm')}"></td>
                 <td class="border p-2 id-cell underline cursor-pointer" th:text="${item.id}"></td>
                 <td class="border p-2 text-center" th:text="${item.enabled? '🟢':'🔴'}"></td>
                 <td class="border p-2" th:text="${item.nickname}"></td>
                 <td class="border p-2 text-center" th:text="${item.role}"></td>
-                <td class="border p-2 text-right" th:text="${#numbers.formatInteger(item.loginCount, T(java.util.Locale).getDefault())}"></td>
-                <td class="border p-2" th:text="${#dates.format(item.lastLoginTime,'YYYY.MM.dd HH:mm')}"></td>
-                <td class="border p-2 text-right" th:text="${#numbers.formatInteger(item.loginFailCount, T(java.util.Locale).getDefault())}"></td>
+                <td class="border p-2 text-right" th:text="${#numbers.formatInteger(item.loginCount, 3)}"></td>
+                <td class="border p-2 text-center" th:text="${#temporals.format(item.lastLoginTime,'yyyy.MM.dd HH:mm')}"></td>
+                <td class="border p-2 text-right" th:text="${#numbers.formatInteger(item.loginFailCount, 3)}"></td>
             </tr>
         </tbody>
     </table>

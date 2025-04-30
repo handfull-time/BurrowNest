@@ -30,4 +30,9 @@
 		DROP TABLE ${tableName}
 	</update>
 	
+	<resultMap id="BinResultVoMap" type="com.utime.burrowNest.common.vo.BinResultVo">
+		<result column="BIN_DATA" property="binary" jdbcType="VARBINARY" />
+	</resultMap>
+	
+	
 </mapper>

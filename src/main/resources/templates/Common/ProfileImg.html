@@ -1,7 +1,7 @@
 <!-- 프로필 이미지 관련 작업 -->
 
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="imageEle(userNo, userId)">
-<img id="profilePreview" th:src="@{/User/{no}/Thumbnail.jpg(no=${userNo})}" th:alt="${userId}" class="w-14 h-12 rounded-full border">
+<img id="profilePreview" th:src="@{/User/{no}/Profile.img(no=${userNo})}" th:alt="${userId}" class="w-14 h-12 rounded-full border">
 <label for="profileImageInput" class="cursor-pointer">
 	<span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 bg-gray-300 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center opacity-50">➕</span>
 </label>

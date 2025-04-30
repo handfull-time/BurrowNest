@@ -204,11 +204,11 @@
 	</select>
 	
 	<!-- 사용자 프로필 이미지 -->
-	<select id="getProfileImg" parameterType="map" resultType="byte[]">
+	<select id="getProfileImg" parameterType="map" resultMap="com.utime.burrowNest.common.mapper.CommonMapper.BinResultVoMap">
 		SELECT
-			PROFILE_IMG
+			PROFILE_IMG AS BIN_DATA
 		FROM BN_USER
-		WHERE USER_NO = #{userNo}
+		WHERE NO = #{userNo}
 	</select>
 	
 </mapper>

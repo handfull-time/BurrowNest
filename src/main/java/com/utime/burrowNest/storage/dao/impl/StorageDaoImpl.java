@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.storage.dao.StorageDao;
 import com.utime.burrowNest.storage.mapper.StorageBasicMapper;
 import com.utime.burrowNest.storage.mapper.StorageMapper;
@@ -205,8 +206,9 @@ class StorageDaoImpl implements StorageDao{
 	
 	@Override
 	public byte[] getThumbnail(String fid) {
+		BinResultVo result = mapper.selectThumbnail(fid);
 		
-		return mapper.selectThumbnail(fid);
+		return result.getBinary();
 	}
 
 	

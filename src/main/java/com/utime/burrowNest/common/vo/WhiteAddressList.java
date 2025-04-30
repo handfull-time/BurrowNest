@@ -19,7 +19,6 @@ public class WhiteAddressList {
 			, "/images/"
 			, "/css/"
 			, "/Auth/"
-			, "/User/"
 			, "/Error/"
 			, "/error/"
 			, "/Intro/"

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.http.MediaType;
 import org.springframework.util.StreamUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -198,5 +199,31 @@ public class BurrowUtils {
         }
         
         return imageBytes;
+    }
+    
+    public static final MediaType MEDIA_TYPE_SVG = new MediaType("image", "svg+xml");
+
+    
+    public static MediaType detectImageType(byte[] header) {
+    	
+        if (header[0] == (byte) 0xFF && header[1] == (byte) 0xD8 &&
+            header[2] == (byte) 0xFF && header[3] == (byte) 0xE0) {
+            return MediaType.IMAGE_JPEG;
+        }
+
+        if (header[0] == (byte) 0x89 && header[1] == (byte) 0x50 &&
+            header[2] == (byte) 0x4E && header[3] == (byte) 0x47 &&
+            header[4] == (byte) 0x0D && header[5] == (byte) 0x0A &&
+            header[6] == (byte) 0x1A && header[7] == (byte) 0x0A) {
+            return MediaType.IMAGE_PNG;
+        }
+
+        if (header[0] == (byte) 0x3C && header[1] == (byte) 0x3F &&
+            header[2] == (byte) 0x78 && header[3] == (byte) 0x6D &&
+            header[4] == (byte) 0x6C) {
+            return MEDIA_TYPE_SVG;
+        }
+
+        return null;
     }
 }

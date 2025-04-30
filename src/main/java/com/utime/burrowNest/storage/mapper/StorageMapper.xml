@@ -622,9 +622,9 @@
 </update>
 
 <!-- SELECT -->
-<select id="selectThumbnail" parameterType="long" resultType="byte[]">
+<select id="selectThumbnail" parameterType="long" resultMap="com.utime.burrowNest.common.mapper.CommonMapper.BinResultVoMap">
     SELECT
-        THUMBNAIL
+        THUMBNAIL AS BIN_DATA
     FROM BN_FILE_THUMBNAIL THM
     	INNER JOIN BN_FILE F ON THM.FILE_NO = F.NO 
     WHERE F.UID = #{fid}

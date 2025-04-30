@@ -90,7 +90,7 @@ public class IntroController {
 	 */
 	@ResponseBody
 	@PostMapping(path = { "SaveInit.json" })
-    public ReturnBasic SaveInitinfor(HttpServletRequest request, @RequestBody InitInforReqVo req) {
+    public ReturnBasic SaveInitinfor(HttpServletRequest request, InitInforReqVo req) {
 		
 		req.setIp( BurrowUtils.getRemoteAddress( request ) );
 		req.setUserAgent( request.getHeader(HttpHeaders.USER_AGENT) );

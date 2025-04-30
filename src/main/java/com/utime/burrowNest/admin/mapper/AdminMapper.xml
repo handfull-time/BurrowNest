@@ -11,7 +11,6 @@
 			, UR.ENABLED
 			, UR.ID 
 			, UR.NICK_NAME 
-			, UR.PROFILE_IMG
 			, UR.ROLE
 			, LR.LOGIN_COUNT
 			, LR.LAST_LOGIN_TIME

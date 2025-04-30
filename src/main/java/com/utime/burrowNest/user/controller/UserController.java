@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.user.service.UserService;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -32,7 +33,7 @@ public class UserController {
 	 * @param userNo
 	 * @return
 	 */
-	@GetMapping("{userNo}/Thumbnail.jpg")
+	@GetMapping("{userNo}/Profile.img")
     public ResponseEntity<byte[]> getUserThumbnail(@PathVariable("userNo") int userNo) {
 		
 		final byte[] image = userService.getThumbnail( userNo );
@@ -40,9 +41,11 @@ public class UserController {
 		if( image == null ) {
 	    	return ResponseEntity.notFound().build();
 	    }
+		
+		final MediaType mediaType = BurrowUtils.detectImageType( image );
 	    
 	    return ResponseEntity.ok()
-	            .contentType(MediaType.IMAGE_PNG)
+	            .contentType(mediaType)
 	            .contentLength(image.length)
 	            .body(image);
     }
@@ -52,7 +55,7 @@ public class UserController {
      * @param user
      * @return
      */
-    @GetMapping("Thumbnail.jpg")
+    @GetMapping("Profile.img")
     public ResponseEntity<byte[]> getMyThumbnail(UserVo user) {
     	
     	final int userNo = user == null ? 0:user.getUserNo();
