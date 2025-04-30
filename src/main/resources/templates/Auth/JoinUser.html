@@ -8,7 +8,6 @@
     
     <div layout:fragment="content">
     	<form id="signupForm" class="w-full">
-    	<input type="hidden" value="profile1.svg" id="profileImg">
 		    <table class="w-full border-collapse">
 		        <tbody>
 		            <!-- ID -->
@@ -45,6 +44,9 @@
 		                <td class="font-medium p-2">닉네임</td>
 		                <td class="p-2 flex items-center">
 		                	<input type="text" id="nickname" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" minlength="1" maxlength="20" required>
+		                	<div class="relative ml-4">
+	                			<script th:replace="~{Common/ProfileImg :: imageEle( userNo='0', userId='프로필이미지' )}"></script>
+		                	</div>
 		                </td>
 		            </tr>
 		            
@@ -140,12 +142,18 @@
 		document.getElementById("confirmPassword").addEventListener("blur", comparePassword);
 	</script>
 	
-	
+	<script th:replace="~{Common/ProfileImg :: script}"></script>
     
     <script th:inline="javascript">
     
         document.getElementById("signupForm").addEventListener("submit", async function(event) {
             event.preventDefault();
+            
+            const imageData = await getProfileImage();
+        	if (!imageData) {
+        		showCustomAlert("이미지 처리 오류가 발생했습니다.");
+        		return;
+        	}
             
             const formData = new FormData();
             formData.append("token", /*[[${unique.token}]]*/ null);
@@ -153,10 +161,10 @@
             formData.append("id", document.getElementById("id").value);
             formData.append("pw", encryptPassword( document.getElementById("password").value) );
             formData.append("nickname", document.getElementById("nickname").value);
-            formData.append("profileImg" , document.getElementById("profileImg").value);
             formData.append("myRainbow", document.getElementById("myRainbow").value);
             formData.append("mySeason", document.getElementById("mySeason").value);
             formData.append("myNumber", document.getElementById("myNumber").value);
+            formData.append("profileImg", imageData);
 
             try {
                 const response = await fetch(/*[[@{/Auth/JoinUser.json}]]*/ null, {

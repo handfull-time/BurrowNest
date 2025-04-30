@@ -1,11 +1,13 @@
 package com.utime.burrowNest.user.service.impl;
 
+import java.io.IOException;
 import java.security.KeyPair;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import com.utime.burrowNest.common.jwt.JwtProvider;
@@ -168,8 +170,7 @@ class AuthServiceImpl implements AuthService {
 		return result;		
 	}
 	
-	@Override
-	public ReturnBasic procJoinUser( UserReqVo reqVo) {
+	private ReturnBasic procJoinUser( UserReqVo reqVo, boolean enabled, EJwtRole role ) {
 		log.info("초기화 시도 : {}", reqVo);
 		
 		if( ! this.validation(reqVo) ) {
@@ -182,18 +183,25 @@ class AuthServiceImpl implements AuthService {
 			return new ReturnBasic("E", "Invalid credentials");
 		}
 		
+		byte[] profileImg;
+		try {
+			profileImg = BurrowUtils.encodeImageToByteArray( reqVo.getProfileImg().getInputStream() );
+		} catch (IOException e) {
+			log.error("", e);
+			return new ReturnBasic("E", e.getMessage());
+		}
+		
 		final UserVo user = new UserVo();
 		user.setUserNo(-1);
-		user.setEnabled(false);
+		user.setEnabled(enabled);
 		user.setId(reqVo.getId());
 		user.setNickname(reqVo.getNickname());
-		user.setRole(EJwtRole.User);
-		user.setProfileImg(reqVo.getProfileImg());
+		user.setRole(role);
 		user.setAuthHint( this.genUserUniqueHashing( reqVo ) );
 		
 		final ReturnBasic result = new ReturnBasic();
 		try {
-			userDao.insertUser(reqVo, user, pw);
+			userDao.insertUser(reqVo, user, pw, profileImg);
 			this.validationRemove(reqVo);
 		} catch (Exception e) {
 			log.error("", e);
@@ -201,6 +209,12 @@ class AuthServiceImpl implements AuthService {
 		}
 		
 		return result;
+	}
+	
+	@Override
+	public ReturnBasic procJoinUser( UserReqVo reqVo) {
+		
+		return this.procJoinUser( reqVo, false, EJwtRole.User);
 	}
 	
 	@Override
@@ -230,37 +244,8 @@ class AuthServiceImpl implements AuthService {
 	
 	@Override
 	public ReturnBasic saveInitInfor(UserReqVo req) {
-		log.info("초기화 시도 : {}", req);
 		
-		if( ! this.validation(req) ) {
-			return new ReturnBasic("E", "Invalid credentials");
-		}
-		
-		final String pw = this.convertEncPw( req, req.getPw() );
-		
-		if( pw == null ){
-			return new ReturnBasic("E", "Invalid credentials");
-		}
-		
-		final UserVo user = new UserVo();
-		user.setUserNo(-1);
-		user.setEnabled(true);
-		user.setId(UserDao.AdminId);
-		user.setNickname("Owner");
-		user.setRole(EJwtRole.Admin);
-		user.setProfileImg("profile1.svg");
-		user.setAuthHint( this.genUserUniqueHashing( req ) );
-		
-		final ReturnBasic result = new ReturnBasic();
-		try {
-			userDao.insertUser(req, user, pw);
-			this.validationRemove(req);
-		} catch (Exception e) {
-			log.error("", e);
-			result.setCodeMessage("E", e.getMessage());
-		}
-		
-		return result;
+		return this.procJoinUser( req, true, EJwtRole.Admin);
 	}
 	
 	@Override

@@ -105,24 +105,31 @@
     	
             const storageList = getStorageListValues();
             
-    		const requestData = {
-    		        token: /*[[${unique.token}]]*/ null,
-    		        rsaId: /*[[${unique.rsaId}]]*/ null,
-    		        pw: encPw,
-    		        wsUserName: wsUser,
-    		        roots: storageList,
-    	            myRainbow: document.getElementById("myRainbow").value,
-    	            mySeason: document.getElementById("mySeason").value,
-    	            myNumber: document.getElementById("myNumber").value
-    		    };
-    		
+            const imageData = await getProfileImage();
+        	if (!imageData) {
+        		showCustomAlert("이미지 처리 오류가 발생했습니다.");
+        		return;
+        	}
+            
+            const formData = new FormData();
+            formData.append("token", /*[[${unique.token}]]*/ null);
+            formData.append("rsaId", /*[[${unique.rsaId}]]*/ null);
+            formData.append("id", document.getElementById("id").value);
+            formData.append("pw", encPw );
+            formData.append("roots", storageList);
+            formData.append("wsUserName", wsUser);
+            formData.append("profileImg", imageData);
+            formData.append("nickname", document.getElementById("nickname").value);
+            formData.append("myRainbow", document.getElementById("myRainbow").value);
+            formData.append("mySeason", document.getElementById("mySeason").value);
+            formData.append("myNumber", document.getElementById("myNumber").value);
+            
     		try {
     	        const res = await fetch(/*[[@{/Intro/SaveInit.json}]]*/ null, {
-    	            method: 'POST',
-    	            headers: { "Content-Type": "application/json" },
-    	            credentials: 'include',
-    	            body: JSON.stringify(requestData)
-    	        });
+                    method: "POST",
+                    body: formData,
+                    credentials: "include"
+                });
     	        
     	        console.info('✅ response', res);
 

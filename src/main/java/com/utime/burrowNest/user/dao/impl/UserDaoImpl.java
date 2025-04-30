@@ -116,15 +116,14 @@ class UserDaoImpl implements UserDao {
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public int insertUser(LoginReqVo reqVo, UserVo user, String pw) throws Exception {
+	public int insertUser(LoginReqVo reqVo, UserVo user, String pw, byte [] profileImg) throws Exception {
 		
-		int res = userMapper.insertUser(user);
+		int res = userMapper.insertUser(user, profileImg);
 		if( res < 1 ) {
 			return res;
 		}
 		
 		res += this.updateUserPw( user, pw);
-		
 		
 		userMapper.insertLoginRecord( reqVo, user, ELoginResult.Join );
 		
@@ -155,9 +154,9 @@ class UserDaoImpl implements UserDao {
 	
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public int updateUser(UserVo user) throws Exception {
-		// TODO Auto-generated method stub
-		return 0;
+	public int updateUser(UserVo user, byte [] profileImg) throws Exception {
+		
+		return userMapper.updateUser(user, profileImg);
 	}
 	
 	@Override
@@ -190,5 +189,11 @@ class UserDaoImpl implements UserDao {
 	@Override
 	public boolean checkId(String id) {
 		return userMapper.checkId( id );
+	}
+	
+	@Override
+	public byte[] getProfileImg(int userNo) {
+		
+		return userMapper.getProfileImg( userNo );
 	}
 }

@@ -23,14 +23,12 @@ public class UserVo {
 	String id;
 	/** 닉네임 */
 	String nickname;
-	/** 내 이미지 */
-	String profileImg;
 	/** 권한 */
 	EJwtRole role;
 	/** 비고 */
 	String note;
 	/** 암호 찾기 값 */
-	private String authHint;
+	String authHint;
 	/** 하루 업로드 제한 byte 단위 */
 	long dailyUploadLimit;
 	/** 일일 최대 다운로드 용량 */

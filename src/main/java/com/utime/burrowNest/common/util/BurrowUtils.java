@@ -1,10 +1,12 @@
 package com.utime.burrowNest.common.util;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
-import org.apache.commons.lang3.math.NumberUtils;
+import org.springframework.util.StreamUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -183,5 +185,18 @@ public class BurrowUtils {
 		}
     	
         return result;
+    }
+    
+    public static byte [] encodeImageToByteArray(InputStream inputStream) throws IOException {
+        if (inputStream == null || inputStream.available() < 1) {
+            return null; 
+        }
+
+        final byte[] imageBytes = StreamUtils.copyToByteArray(inputStream);
+        if( imageBytes == null || imageBytes.length < 10 ) {
+        	return null;
+        }
+        
+        return imageBytes;
     }
 }

@@ -33,6 +33,17 @@
 	                    <p id="confirmPasswordError" class="text-sm text-red-500 mt-1 hidden">비밀번호가 일치하지 않습니다.</p>
 	                </td>
 	            </tr>
+	            
+	            <!-- 닉네임 및 프로필 이미지 -->
+	            <tr>
+	                <td class="font-medium p-2">닉네임</td>
+	                <td class="p-2 flex items-center">
+	                	<input type="text" id="nickname" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" minlength="1" maxlength="20" required>
+	                	<div class="relative ml-4">
+                			<script th:replace="~{Common/ProfileImg :: imageEle( userNo='0', userId='프로필이미지' )}"></script>
+	                	</div>
+	                </td>
+	            </tr>
 	
 	            <tr>
 	            	<td colspan="2"></td>
@@ -123,6 +134,8 @@
             <button type="button" disabled id="pwNextBtn" class="bg-gray-500 text-black px-6 py-2 rounded hover:bg-gray-600 transition" onclick="nextPage('PagePasswd', 'PageStorageLib')">다음</button>
         </div>
     </div>
+    
+    <script th:replace="~{Common/ProfileImg :: script}"></script>
     
     <script>
 	    function confirmJoinInput(){

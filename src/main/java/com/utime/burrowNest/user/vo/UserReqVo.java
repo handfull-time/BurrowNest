@@ -1,5 +1,7 @@
 package com.utime.burrowNest.user.vo;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -16,7 +18,7 @@ public class UserReqVo extends LoginReqVo{
 	private String nickname;
 	
 	/** 사용자 아이콘 */
-	private String profileImg;
+	private MultipartFile profileImg;
 	
 	/**
 	 * 암호 찾기 : 무지개 색 

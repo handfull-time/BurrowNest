@@ -21,10 +21,12 @@
 			<a th:href="@{/Admin/User/User.html}" th:class="${currentURI == '/Admin/User/User.html' ? 'text-blue-600 font-bold' : 'text-gray-600 hover:text-blue-600'}">User</a>
 			<a th:href="@{/Admin/Storage/Storage.html}" th:class="${currentURI == '/Admin/Storage/Storage.html' ? 'text-blue-600 font-bold' : 'text-gray-600 hover:text-blue-600'}">Storage</a>
 			<a th:href="@{/Admin/Statistics/Statistics.html}" th:class="${currentURI == '/Admin/Statistics/Statistics.html' ? 'text-blue-600 font-bold' : 'text-gray-600 hover:text-blue-600'}">Statistics</a>
+			<a th:href="@{/DbConsoleH2}" target="_blank" class="text-gray-600 hover:text-blue-600">Db Console</a>
         </nav>
         <div class="relative">
             <button id="userMenuButton" class="flex items-center space-x-2 focus:outline-none">
-               <img th:src="@{'/images/profile/'} + ${user.profileImg}" th:alt="${user.id}" class="w-10 h-10 rounded-full">
+               <!-- <img th:src="@{/User/{no}/Thumbnail.jpg(no=${user.userNo})}" th:alt="${user.id}" class="w-10 h-10 rounded-full"> -->
+               <img th:src="@{/User/Thumbnail.jpg}" th:alt="${user.id}" class="w-10 h-10 rounded-full">
             </button>
 
             <div id="userMenu" class="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md opacity-0 scale-95 transform transition-all duration-200 hidden">

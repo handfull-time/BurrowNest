@@ -37,7 +37,7 @@ public interface UserMapper {
 	 * @param user
 	 * @return
 	 */
-	int insertUser(UserVo user);
+	int insertUser(@Param("user") UserVo user, @Param("profileImg") byte [] profileImg);
 	
 	/**
 	 * 로그인 기록 추가.
@@ -98,7 +98,7 @@ public interface UserMapper {
 	 * @param user
 	 * @return
 	 */
-	int updateUser( UserVo user )throws Exception ;
+	int updateUser( @Param("user") UserVo user, @Param("profileImg") byte [] profileImg )throws Exception ;
 
 	/**
 	 * PW 성공 여부 횟수 업데이트
@@ -114,4 +114,11 @@ public interface UserMapper {
 	 * @return true: 있다. false:없다.
 	 */
 	boolean checkId(@Param("id") String id);
+
+	/**
+	 * 사용자 프로필 이미지
+	 * @param userNo
+	 * @return
+	 */
+	byte[] getProfileImg(@Param("userNo") int userNo);
 }

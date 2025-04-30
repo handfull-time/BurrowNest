@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -91,7 +92,8 @@ public class IntroController {
 	@PostMapping(path = { "SaveInit.json" })
     public ReturnBasic SaveInitinfor(HttpServletRequest request, @RequestBody InitInforReqVo req) {
 		
-		req.setIp( BurrowUtils.getRemoteAddress(request) );
+		req.setIp( BurrowUtils.getRemoteAddress( request ) );
+		req.setUserAgent( request.getHeader(HttpHeaders.USER_AGENT) );
 		
 		final ReturnBasic userRes = authService.saveInitInfor(req);
 		if( userRes.isError() ) {

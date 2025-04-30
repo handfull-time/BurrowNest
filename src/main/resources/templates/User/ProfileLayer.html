@@ -9,7 +9,6 @@
 	<th:block layout:fragment="modalContent">
 	<form id="updateUserForm" th:object="${item}">
 		<input type="hidden" th:field="*{userNo}">
-		<input type="hidden" th:field="*{profileImg}">
         <table class="w-full border-collapse">
 		    <tbody>
 	            <!-- ID -->
@@ -41,12 +40,14 @@
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="nickname">별명</label></td>
-	                <td class="w-3/4 p-2">
-	                    <input type="text" th:field="*{nickname}" required
-	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" >
-	                </td>
-	            </tr>
+		            <td class="font-medium p-2">별명</td>
+		                <td class="p-2 flex items-center">
+		                	<input type="text" th:field="*{nickname}" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" minlength="1" maxlength="20" required>
+		                	<div class="relative ml-4">
+	                			<script th:replace="~{Common/ProfileImg :: imageEle( userNo='0', userId='프로필이미지' )}"></script>
+		                	</div>
+		                </td>
+		            </tr>
 	
 	            <th:block th:replace="~{Auth/AuthHint :: AuthHint}"></th:block>
 	        </tbody>
@@ -56,6 +57,9 @@
     
     
     <th:block layout:fragment="modalScript">
+    
+    	<script th:replace="~{Common/ProfileImg :: script}"></script>
+    	
 		<script>
 		
 		function comparePassword(){

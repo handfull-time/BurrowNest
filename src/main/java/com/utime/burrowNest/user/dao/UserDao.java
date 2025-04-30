@@ -25,7 +25,7 @@ public interface UserDao {
 	 * @return
 	 * @throws Exception
 	 */
-	int insertUser(LoginReqVo reqVo, UserVo user, String pw) throws Exception;
+	int insertUser(LoginReqVo reqVo, UserVo user, String pw, byte [] profileImg) throws Exception;
 	
 	/**
 	 * 사용자 정보 수정
@@ -33,7 +33,7 @@ public interface UserDao {
 	 * @return
 	 * @throws Exception
 	 */
-	int updateUser(UserVo user) throws Exception;
+	int updateUser(UserVo user, byte [] profileImg) throws Exception;
 	
 	/**
 	 * 암호 변경
@@ -78,6 +78,13 @@ public interface UserDao {
 	 * @return
 	 */
 	boolean checkId(String id);
+
+	/**
+	 * 사용자 프로필 이미지
+	 * @param userNo
+	 * @return
+	 */
+	byte[] getProfileImg(int userNo);
 
 
 }

@@ -11,7 +11,7 @@
 			, ENABLED BOOLEAN DEFAULT 'N' <!-- 사용 여부 -->
 			, ID VARCHAR(32) NOT NULL <!-- ID -->
 			, NICK_NAME VARCHAR(128) NOT NULL <!-- 별명 -->
-			, ICON VARCHAR(32) NOT NULL <!-- 아이콘 이미지 이름 -->
+			, PROFILE_IMG BINARY VARYING(307200) NOT NULL <!-- 아이콘 이미지  -->
 			, ROLE VARCHAR(16) NOT NULL <!-- 권한 -->
 			, NOTE VARCHAR(255) DEFAULT NULL <!-- 비고 -->
 			, AUTH_HINT VARCHAR(64) DEFAULT NULL <!-- 계정 찾기 힌트 (이름 + 질문1 + 질문2 + 질문3: 해쉬) -->
@@ -45,23 +45,27 @@
 	</insert>
 	
 	<!-- 사용자 추가 -->
-	<insert id="insertUser" parameterType="com.utime.burrowNest.user.vo.UserVo" useGeneratedKeys="true" keyProperty="userNo" >
+	<insert id="insertUser" parameterType="map" useGeneratedKeys="true" keyProperty="user.userNo" >
 		INSERT INTO BN_USER (
 			UPDATE_DATE 
 			, ENABLED
 			, ID 
 			, NICK_NAME 
-			, ICON
+			<if test="profileImg != null ">
+			, PROFILE_IMG
+			</if>
 			, ROLE
 			, AUTH_HINT
 		) VALUES (
 			CURRENT_TIMESTAMP
-			, #{enabled}
-			, #{id}
-			, #{nickname}
-			, #{profileImg}
-			, #{role}
-			, #{authHint}
+			, #{user.enabled}
+			, #{user.id}
+			, #{user.nickname}
+			<if test="profileImg != null ">
+			, #{profileImg, jdbcType=VARBINARY}
+			</if>
+			, #{user.role}
+			, #{user.authHint}
 		)
 	</insert>
 
@@ -96,7 +100,6 @@
 		, ENABLED
 		, ID 
 		, NICK_NAME 
-		, ICON AS "profileImg"
 		, ROLE
 	</sql>
 	
@@ -158,12 +161,14 @@
 	</update>
 	
 	<!-- 사용자 정보 갱신 -->
-	<update id="updateUser" parameterType="com.utime.burrowNest.user.vo.UserVo" >
+	<update id="updateUser" parameterType="map" >
 		UPDATE BN_USER SET
 			UPDATE_DATE = CURRENT_TIMESTAMP
-			, NICK_NAME = #{nickname} 
-			, ICON = #{profileImg}
-		WHERE NO = #{userNo}
+			, NICK_NAME = #{user.nickname}
+			<if test=" profileImg != null "> 
+			, PROFILE_IMG = #{profileImg, jdbcType=VARBINARY}
+			</if>
+		WHERE NO = #{user.userNo}
 	</update>
 	
 	<!-- PW 성공 여부 횟수 업데이트 -->
@@ -196,6 +201,14 @@
 		WHERE 1=1
 			AND ID = #{id} 
 			AND ENABLED = TRUE
+	</select>
+	
+	<!-- 사용자 프로필 이미지 -->
+	<select id="getProfileImg" parameterType="map" resultType="byte[]">
+		SELECT
+			PROFILE_IMG
+		FROM BN_USER
+		WHERE USER_NO = #{userNo}
 	</select>
 	
 </mapper>

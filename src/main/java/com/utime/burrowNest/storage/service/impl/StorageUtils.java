@@ -45,6 +45,7 @@ import com.utime.burrowNest.storage.vo.BnFileVideo;
 import com.utime.burrowNest.storage.vo.EArchiveType;
 
 import lombok.extern.slf4j.Slf4j;
+import net.coobird.thumbnailator.Thumbnails;
 
 /**
  * 저장소 유틸
@@ -915,16 +916,15 @@ App Version                     : 16.0300
 	 * @throws Exception
 	 */
 	private static byte [] getFileThumbnailByJava(File file) throws Exception{
+		
     	final BufferedImage sourceImage = ImageIO.read(file);
-    	final BufferedImage thumb = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-    	final Graphics2D g2d = thumb.createGraphics();
+    	
+    	final BufferedImage thumb = Thumbnails.of(sourceImage)
+    			.size(width, height)
+    			.asBufferedImage();
 
-        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g2d.drawImage(sourceImage, 0, 0, width, height, null);
-        g2d.dispose();
-        
-        // 이미지 -> binary
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
         ImageIO.write(thumb, ThumFormat, baos); // "jpeg" 또는 "png" 등
         byte [] result = baos.toByteArray();
         baos.close();

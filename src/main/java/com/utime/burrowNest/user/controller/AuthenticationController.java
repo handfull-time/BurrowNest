@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.BurrowDefine;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.user.service.AuthService;
 import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.ResUserVo;
@@ -33,6 +34,9 @@ public class AuthenticationController {
 	
 	@Autowired
 	private AuthService authService;
+	
+	@Autowired
+	private StorageService storageService;
 	
 	/**
 	 * 메타 처리
@@ -56,6 +60,10 @@ public class AuthenticationController {
 	 */
 	@GetMapping("Login.html")
     public String loginPage( HttpServletRequest request, ModelMap model ) {
+		
+		if( ! storageService.IsInit() ) {
+			return "redirect:/Intro/Intro.html";
+		}
 		
 		model.addAttribute("unique", authService.getNewGenUnique(request) );
 		
