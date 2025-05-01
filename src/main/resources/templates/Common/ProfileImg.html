@@ -8,6 +8,14 @@
 <input type="file" id="profileImageInput" class="hidden" accept="image/png, image/jpeg, image/svg+xml">
 </th:block>
 
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="JoinImageEle">
+<img id="profilePreview" th:src="@{/images/profile/DefaultProfile.png}" alt="프로필 이미지" class="w-14 h-12 rounded-full border">
+<label for="profileImageInput" class="cursor-pointer">
+	<span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 bg-gray-300 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center opacity-50">➕</span>
+</label>
+<input type="file" id="profileImageInput" class="hidden" accept="image/png, image/jpeg, image/svg+xml">
+</th:block>
+
 <script xmlns:th="http://www.thymeleaf.org" th:fragment="script">
 
 //프로필 이미지 미리보기 기능

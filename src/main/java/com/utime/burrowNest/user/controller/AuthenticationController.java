@@ -200,7 +200,7 @@ public class AuthenticationController {
 	 */
 	@ResponseBody
     @PostMapping("JoinUser.json")
-    public ResponseEntity<ReturnBasic> JoinUser( HttpServletRequest request, @RequestBody UserReqVo reqVo) throws Exception {
+    public ResponseEntity<ReturnBasic> JoinUser( HttpServletRequest request, UserReqVo reqVo) throws Exception {
     	
 		reqVo.setIp( BurrowUtils.getRemoteAddress( request ) );
 		reqVo.setUserAgent( request.getHeader(HttpHeaders.USER_AGENT) );

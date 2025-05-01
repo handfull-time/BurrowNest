@@ -24,7 +24,7 @@
                 <td class="border p-2" th:text="${item.nickname}"></td>
                 <td class="border p-2 text-center" th:text="${item.role}"></td>
                 <td class="border p-2 text-right" th:text="${#numbers.formatInteger(item.loginCount, 3)}"></td>
-                <td class="border p-2 text-center" th:text="${#temporals.format(item.lastLoginTime,'yyyy.MM.dd HH:mm')}"></td>
+                <td class="border p-2 text-center" th:text="${#temporals.format(item?.lastLoginTime,'yyyy.MM.dd HH:mm')}"></td>
                 <td class="border p-2 text-right" th:text="${#numbers.formatInteger(item.loginFailCount, 3)}"></td>
             </tr>
         </tbody>

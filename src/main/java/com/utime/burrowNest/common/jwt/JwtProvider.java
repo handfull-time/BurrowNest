@@ -61,12 +61,6 @@ public class JwtProvider {
     private final MacAlgorithm macAlgo = Jwts.SIG.HS256;
     
     /**
-     * Refresh 접근 주소
-     */
-    private final String RefreshAddress = "/Auth/Refresh";
-    
-    
-    /**
      * JWT 키 상수 관리
      */
     private static class JWT_KEY {
@@ -268,7 +262,12 @@ public class JwtProvider {
         		user, new HashMap<>(claims), 
         		PAGING_EXPIRATION_TIME, 
         		domain, BurrowDefine.ContextPath));
-        
+
+        response.addCookie( this.createTokenAndCookie( BurrowDefine.KeyRefreshToken, 
+        		user, new HashMap<>(claims), 
+        		REFRESH_EXPIRATION_TIME, 
+        		domain, BurrowDefine.ContextPath));
+
         return new ReturnBasic();
 
 	}
@@ -377,7 +376,7 @@ public class JwtProvider {
         response.addCookie( this.createTokenAndCookie( BurrowDefine.KeyRefreshToken, 
         		user, new HashMap<>(claims), 
         		REFRESH_EXPIRATION_TIME, 
-        		domain, contextPath + RefreshAddress));
+        		domain, contextPath));
 		
 	}
 
