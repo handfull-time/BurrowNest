@@ -12,22 +12,7 @@
 		                    	th:value="${T(com.utime.burrowNest.user.dao.UserDao).AdminId}" >
 		                </td>
 		            </tr>
-		            <tr>
-		                <td class="font-medium p-2">비밀번호</td>
-		                <td class="p-2">
-		                    <input type="password" id="password" placeholder="숫자, 영문, 특수문자 중 2가지 이상" onblur="confirmJoinInput()"
-		                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" minlength="6" maxlength="20" required>
-		                    <p id="passwordError" class="text-sm text-red-500 mt-1 hidden">비밀번호 규칙을 확인하세요.</p>
-		                </td>
-		            </tr>
-		            <tr>
-		                <td class="font-medium p-2">비밀번호 확인</td>
-		                <td class="p-2">
-		                    <input type="password" id="confirmPassword" placeholder="최소 6자, 최대 20자" onblur="confirmJoinInput()"
-		                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
-		                    <p id="confirmPasswordError" class="text-sm text-red-500 mt-1 hidden">비밀번호가 일치하지 않습니다.</p>
-		                </td>
-		            </tr>
+				    <th:block th:replace="~{Auth/AuthPassword :: AuthPassword}"></th:block>
 		            <tr>
 		                <td class="font-medium p-2">닉네임</td>
 		                <td class="p-2 flex items-center">
@@ -50,48 +35,26 @@
     
     <script th:replace="~{Common/ProfileImg :: script}"></script>
     
+    <script th:replace="~{Auth/AuthPassword :: script( func = 'btnStatus' )}"></script>
+    
     <script>
-	    function confirmJoinInput(){
-			const password = document.getElementById("password").value;
-	        const confirmPassword = document.getElementById("confirmPassword").value;
-	        const passwordError = document.getElementById("passwordError");
-	        const confirmPasswordError = document.getElementById("confirmPasswordError");
-	        
-	        // 비밀번호 검사 (숫자, 영문, 특수문자 중 2가지 이상 포함)
-	        const hasNumber = /[0-9]/.test(password);
-	        const hasLetter = /[a-zA-Z]/.test(password);
-	        const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-	        const isValidPassword = (hasNumber && hasLetter) || (hasNumber && hasSpecial) || (hasLetter && hasSpecial);
-	
-	        if (!isValidPassword || password.length < 6 || password.length > 20) {
-	            passwordError.classList.remove("hidden");
-	            buttonStatus( "pwNextBtn", false );
-	            return;
-	        } else {
-	            passwordError.classList.add("hidden");
-	        }
-	
-	        if( password.length > 0 & confirmPassword.length > 0 ){
-	            // 비밀번호 확인 검사
-	            if (password !== confirmPassword) {
-	                confirmPasswordError.classList.remove("hidden");
-	                buttonStatus( "pwNextBtn", false );
-	                return;
-	            } else {
-	                confirmPasswordError.classList.add("hidden");
-	            }
-	        }
-	        
-	        const rainbow = document.getElementById("myRainbow").value;
-	        const season = document.getElementById("mySeason").value;
-	        const num = document.getElementById("myNumber").value;
+    	function btnStauts( status ){
+    		if( status ){
+    	        const rainbow = document.getElementById("myRainbow").value;
+    	        const season = document.getElementById("mySeason").value;
+    	        const num = document.getElementById("myNumber").value;
 
-	        buttonStatus( "pwNextBtn", (rainbow.trim() !== "" && season.trim() !== "" && num.trim() !== "") );
-		}
-        
-	    document.getElementById("myRainbow").addEventListener("blur", confirmJoinInput);
-	    document.getElementById("mySeason").addEventListener("blur", confirmJoinInput);
-	    document.getElementById("myNumber").addEventListener("blur", confirmJoinInput);
+    	        buttonStatus( "pwNextBtn", (rainbow.trim() !== "" && season.trim() !== "" && num.trim() !== "") );
+    		}else{
+    			buttonStatus( "pwNextBtn", status );
+    		}
+    	}
+	    
+	    document.addEventListener('DOMContentLoaded', () => {
+		    document.getElementById("myRainbow").addEventListener("blur", confirmJoinInput);
+		    document.getElementById("mySeason").addEventListener("blur", confirmJoinInput);
+		    document.getElementById("myNumber").addEventListener("blur", confirmJoinInput);
+        });
 	    
     </script>
 </div>

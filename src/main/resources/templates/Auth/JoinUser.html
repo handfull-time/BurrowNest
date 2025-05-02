@@ -19,25 +19,7 @@
 		                </td>
 		            </tr>
 		
-		            <!-- 비밀번호 -->
-		            <tr>
-		                <td class="font-medium p-2">비밀번호</td>
-		                <td class="p-2">
-		                    <input type="password" id="password" placeholder="숫자, 영문, 특수문자 중 2가지 이상" 
-		                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" minlength="6" maxlength="20" required>
-		                    <p id="passwordError" class="text-sm text-red-500 mt-1 hidden">비밀번호 규칙을 확인하세요.</p>
-		                </td>
-		            </tr>
-		
-		            <!-- 비밀번호 확인 -->
-		            <tr>
-		                <td class="font-medium p-2">비밀번호 확인</td>
-		                <td class="p-2">
-		                    <input type="password" id="confirmPassword" placeholder="최소 6자, 최대 20자" 
-		                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
-		                    <p id="confirmPasswordError" class="text-sm text-red-500 mt-1 hidden">비밀번호가 일치하지 않습니다.</p>
-		                </td>
-		            </tr>
+		            <th:block th:replace="~{Auth/AuthPassword :: AuthPassword}"></th:block>
 		
 		            <!-- 닉네임 및 프로필 이미지 -->
 		            <tr>
@@ -55,7 +37,7 @@
 		    </table>
 		    
             <div class="mt-6 transition-opacity duration-300" id="hiddenButtons">
-	            <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">가입하기</button>
+	            <button type="submit" id="UserJoinBtn" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">가입하기</button>
 	            <div class="flex justify-between mt-2 text-sm text-blue-500 cursor-pointer">
 	                <a th:href="@{/Auth/FindUserPw.html}" class="hover:underline">비밀번호 찾기</a>
 	                <a th:href="@{/Auth/Login.html}" class="hover:underline" >로그인</a>
@@ -109,83 +91,63 @@
 		    }
 		});
 		
-		function comparePassword(){
-			const password = document.getElementById("password").value;
-            const confirmPassword = document.getElementById("confirmPassword").value;
-            const passwordError = document.getElementById("passwordError");
-            const confirmPasswordError = document.getElementById("confirmPasswordError");
-            
-            // 비밀번호 검사 (숫자, 영문, 특수문자 중 2가지 이상 포함)
-            const hasNumber = /[0-9]/.test(password);
-            const hasLetter = /[a-zA-Z]/.test(password);
-            const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-            const isValidPassword = (hasNumber && hasLetter) || (hasNumber && hasSpecial) || (hasLetter && hasSpecial);
-
-            if (!isValidPassword || password.length < 6 || password.length > 20) {
-                passwordError.classList.remove("hidden");
-                return;
-            } else {
-                passwordError.classList.add("hidden");
-            }
-
-            if( password.length > 0 & confirmPassword.length > 0 ){
-                // 비밀번호 확인 검사
-                if (password !== confirmPassword) {
-                    confirmPasswordError.classList.remove("hidden");
-                } else {
-                    confirmPasswordError.classList.add("hidden");
-                }
-            }
-		}
-		
-		document.getElementById("password").addEventListener("blur", comparePassword);
-		document.getElementById("confirmPassword").addEventListener("blur", comparePassword);
 	</script>
 	
 	<script th:replace="~{Common/ProfileImg :: script}"></script>
+	
+	<script th:replace="~{Auth/AuthPassword :: script( func = 'btnStatus' )}"></script>
+	
     
     <script th:inline="javascript">
     
-        document.getElementById("signupForm").addEventListener("submit", async function(event) {
-            event.preventDefault();
+    document.addEventListener('DOMContentLoaded', () => {
+    	buttonStatus( 'UserJoinBtn', false );
+    });
+    
+    function btnStatus(status){
+    	buttonStatus( 'UserJoinBtn', status );
+    }
+    
+    document.getElementById("signupForm").addEventListener("submit", async function(event) {
+    	event.preventDefault();
+    	
+    	const imageData = await getProfileImage();
+    	if (!imageData) {
+    		showCustomAlert("이미지 처리 오류가 발생했습니다.");
+    		return;
+        }
             
-            const imageData = await getProfileImage();
-        	if (!imageData) {
-        		showCustomAlert("이미지 처리 오류가 발생했습니다.");
-        		return;
-        	}
-            
-            const formData = new FormData();
-            formData.append("token", /*[[${unique.token}]]*/ null);
-            formData.append("rsaId", /*[[${unique.rsaId}]]*/ null);
-            formData.append("id", document.getElementById("id").value);
-            formData.append("pw", encryptPassword( document.getElementById("password").value) );
-            formData.append("nickname", document.getElementById("nickname").value);
-            formData.append("myRainbow", document.getElementById("myRainbow").value);
-            formData.append("mySeason", document.getElementById("mySeason").value);
-            formData.append("myNumber", document.getElementById("myNumber").value);
-            formData.append("profileImg", imageData);
+        const formData = new FormData();
+        formData.append("token", /*[[${unique.token}]]*/ null);
+        formData.append("rsaId", /*[[${unique.rsaId}]]*/ null);
+        formData.append("id", document.getElementById("id").value);
+        formData.append("pw", encryptPassword( document.getElementById("password").value) );
+        formData.append("nickname", document.getElementById("nickname").value);
+        formData.append("myRainbow", document.getElementById("myRainbow").value);
+        formData.append("mySeason", document.getElementById("mySeason").value);
+        formData.append("myNumber", document.getElementById("myNumber").value);
+        formData.append("profileImg", imageData);
 
-            try {
-                const response = await fetch(/*[[@{/Auth/JoinUser.json}]]*/ null, {
-                    method: "POST",
-                    body: formData,
-                    credentials: "include"
-                });
+        try {
+            const response = await fetch(/*[[@{/Auth/JoinUser.json}]]*/ null, {
+                method: "POST",
+                body: formData,
+                credentials: "include"
+            });
 
-                const result = await response.json();
-                if (response.ok) {
-                	showCustomAlert("회원가입이 완료되었습니다.\n관리자 승인 후 사용 가능 합니다.", () => {
-                		window.location.href = /*[[@{/Auth/Login.html}]]*/ null;
-                	});
-                } else {
-                	showCustomAlert(result.message || "회원가입에 실패했습니다.");
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                showCustomAlert("서버 오류가 발생했습니다.");
+            const result = await response.json();
+            if (response.ok) {
+            	showCustomAlert("회원가입이 완료되었습니다.\n관리자 승인 후 사용 가능 합니다.", () => {
+            		window.location.href = /*[[@{/Auth/Login.html}]]*/ null;
+            	});
+            } else {
+            	showCustomAlert(result.message || "회원가입에 실패했습니다.");
             }
-        });
+        } catch (error) {
+            console.error("Error:", error);
+            showCustomAlert("서버 오류가 발생했습니다.");
+        }
+    });
     </script>
     </th:block>
 </div>

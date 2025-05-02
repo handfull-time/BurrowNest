@@ -9,8 +9,6 @@
     <div layout:fragment="content">
     	<div id="requestLayer" class="grid grid-cols-1 gap-4">
 	        <form id="findPwForm" >
-	        	<input type="hidden" id="rsaId" th:value="${unique.rsaId}">
-	        	<input type="hidden" id="token" th:value="${unique.token}">
 	        	<table class="w-full border-collapse">
 			        <tbody>
 			            <!-- ID -->
@@ -45,6 +43,9 @@
             event.preventDefault();
             
             const formData = new FormData(this);
+            formData.append("token", /*[[${unique.token}]]*/ null);
+            formData.append("rsaId", /*[[${unique.rsaId}]]*/ null);
+            
             try {
                 const response = await fetch(/*[[@{/Auth/FindUserPw.layer}]]*/ null, {
                     method: "POST",

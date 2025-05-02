@@ -224,6 +224,7 @@ public class AuthenticationController {
     public ResponseEntity<ReturnBasic> convertUserPw( HttpServletRequest request, LoginReqVo reqVo )throws Exception {
 		
 		reqVo.setIp( BurrowUtils.getRemoteAddress( request ) );
+		reqVo.setUserAgent( request.getHeader(HttpHeaders.USER_AGENT) );
 		
 		final ReturnBasic result = authService.convertUserPw(reqVo);
     	
@@ -240,6 +241,7 @@ public class AuthenticationController {
     public String findUserPwLayer( HttpServletRequest request, ModelMap model, UserReqVo reqVo ) {
 		
 		reqVo.setIp( BurrowUtils.getRemoteAddress( request ) );
+		reqVo.setUserAgent( request.getHeader(HttpHeaders.USER_AGENT) );
 		
 		final ReturnBasic result = authService.findUserPw(reqVo);
 		

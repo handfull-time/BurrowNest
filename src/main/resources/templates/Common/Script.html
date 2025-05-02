@@ -131,4 +131,22 @@ async function refreshToken() {
     }
 }
 
+ 
+function buttonStatus( btnId, status ){
+	const btn = document.getElementById(btnId);
+	if( ! btn ){
+		console.warn('btnId를 찾을 수 없습니다.');
+		return;
+	}
+	
+	if( status ){
+		btn.disabled = false;
+		btn.classList.remove("bg-gray-500", "text-black", "hover:bg-gray-600");
+		btn.classList.add("bg-blue-500", "text-white", "hover:bg-blue-600");
+	}else{
+		btn.disabled = true;
+		btn.classList.remove("bg-blue-500", "text-white", "hover:bg-blue-600");
+		btn.classList.add("bg-gray-500", "text-black", "hover:bg-gray-600");
+	}
+}
 </script>

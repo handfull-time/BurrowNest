@@ -5,19 +5,11 @@
      <form id="pwSelectForm">
          <div class="space-y-4">
              <th:block th:if="${item.code eq '0'}">
-		    	<!-- 비밀번호 -->
-                <div class="flex items-center">
-                    <label class="w-1/4 font-medium">비밀번호</label>
-                    <input type="password" id="password" class="w-3/4 p-2 border rounded-md focus:ring-2 focus:ring-blue-400" minlength="6" maxlength="20" required>
-                </div>
-                <p id="passwordError" class="text-sm text-red-500 mt-1 hidden">비밀번호 규칙을 확인하세요.</p>
-
-                <!-- 비밀번호 확인 -->
-                <div class="flex items-center">
-                    <label class="w-1/4 font-medium">비밀번호 확인</label>
-                    <input type="password" id="confirmPassword" class="w-3/4 p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
-                </div>
-                <p id="confirmPasswordError" class="text-sm text-red-500 mt-1 hidden">비밀번호가 일치하지 않습니다.</p>
+		    	<table class="w-full border-collapse">
+			        <tbody>
+			            <th:block th:replace="~{Auth/AuthHint :: AuthHint}"></th:block>
+			        </tbody>
+			    </table>
 		    </th:block>
              
              <div th:if="${item.code ne '0'}">
@@ -26,82 +18,68 @@
          </div>
          
          <div class="mt-6 transition-opacity duration-300" id="hiddenButtons">
-            <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600" 
+            <button type="submit" id="FindUserPwBtn" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600" 
             	th:text="${item.code eq '0'? 'PW 변경':'PW 찾기'}" ></button>
             <div class="flex justify-between mt-2 text-sm text-blue-500 cursor-pointer">
-                <a th:href="@{/User/FindUserId.html}" class="hover:underline">계정 찾기</a>
                 <a th:href="@{/User/Login.html}" class="hover:underline" th:if="${item.code eq '0'}" >로그인</a>
                 <a th:href="@{/User/JoinUser.html}" class="hover:underline">회원 가입</a>
             </div>
         </div>
      </form>
      
-     <script th:inline="javascript">
-	    document.getElementById("pwSelectForm").addEventListener("submit", async function(event) {
-            event.preventDefault();
+    <script th:replace="~{Auth/AuthPassword :: script( func = 'btnStatus' )}"></script>
+     
+    <script th:inline="javascript">
+     
+	document.addEventListener('DOMContentLoaded', () => {
+    	buttonStatus( 'FindUserPwBtn', false );
+    });
+     
+    function btnStatus(status){
+    	buttonStatus( 'FindUserPwBtn', status );
+    }
+     
+ 	document.getElementById("pwSelectForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+        
+        if( /*[[${item.code eq '0'}]]*/ false ){
+        	
+        	const password = document.getElementById("password").value;
             
-            if( /*[[${item.code eq '0'}]]*/ false ){
-            	
-            	const password = document.getElementById("password").value;
-                const confirmPassword = document.getElementById("confirmPassword").value;
-                const passwordError = document.getElementById("passwordError");
-                const confirmPasswordError = document.getElementById("confirmPasswordError");
-                
-                // 비밀번호 검사 (숫자, 영문, 특수문자 중 2가지 이상 포함)
-                const hasNumber = /[0-9]/.test(password);
-                const hasLetter = /[a-zA-Z]/.test(password);
-                const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-                const isValidPassword = (hasNumber && hasLetter) || (hasNumber && hasSpecial) || (hasLetter && hasSpecial);
-
-                if (!isValidPassword || password.length < 6 || password.length > 20) {
-                    passwordError.classList.remove("hidden");
-                    return;
-                } else {
-                    passwordError.classList.add("hidden");
-                }
-
-                // 비밀번호 확인 검사
-                if (password !== confirmPassword) {
-                    confirmPasswordError.classList.remove("hidden");
-                    return;
-                } else {
-                    confirmPasswordError.classList.add("hidden");
-                }
-                
-                const formData = new FormData();
-                formData.append("token", /*[[${item.message}]]*/ null);
-                formData.append("pw", encryptPassword(password));
-                formData.append("rsaId", document.getElementById("rsaId").value);
-                
-                try {
-    		        const response = await fetch(/*[[@{/Auth/ConvertUserPw.json}]]*/ null, {
-    		            method: "POST",
-    		            //headers: { "Content-Type": "application/json" },
-    		            body: formData,
-    		            credentials: "include"
-    		        });
-    		
-    		        if (response.ok) {
-    		            const data = await response.json();
-    		            if( data.code === '0' ){
-    		            	showCustomAlert('성공적으로 변경됐습니다.', () => {
-    		            		window.location.href = /*[[@{/User/Login.html}]]*/ null;
-    		            	});
-    		            }else{
-    		            	showCustomAlert(data.code + " - " + data.message);
-    		            }
-    		        } else {
-    		        	showCustomAlert("비밀번호를 확인하세요.");
-    		        }
-    		    } catch (error) {
-    		        console.error("변경 오류:", error);
-    		        showCustomAlert("서버 오류가 발생했습니다.");
-    		    }
-            }else{
-            	window.location.href = /*[[@{/User/FindUserPw.html}]]*/ null;
-            }
+            const formData = new FormData();
+            formData.append("token", /*[[${item.message}]]*/ null);
+            formData.append("pw", encryptPassword(password));
+            formData.append("rsaId", document.getElementById("rsaId").value);
             
-        });
+            try {
+		        const response = await fetch(/*[[@{/Auth/ConvertUserPw.json}]]*/ null, {
+		            method: "POST",
+		            //headers: { "Content-Type": "application/json" },
+		            body: formData,
+		            credentials: "include"
+		        });
+		
+		        if (response.ok) {
+		            const data = await response.json();
+		            if( data.code === '0' ){
+		            	showCustomAlert('성공적으로 변경됐습니다.', () => {
+		            		window.location.href = /*[[@{/User/Login.html}]]*/ null;
+		            	});
+		            }else{
+		            	showCustomAlert(data.code + " - " + data.message);
+		            }
+		        } else {
+		        	showCustomAlert("비밀번호를 확인하세요.");
+		        }
+		    } catch (error) {
+		        console.error("변경 오류:", error);
+		        showCustomAlert("서버 오류가 발생했습니다.");
+		    }
+        }else{
+        	window.location.href = /*[[@{/User/FindUserPw.html}]]*/ null;
+        }
+        
+    });
     </script>
 </div>
 
