@@ -54,4 +54,10 @@
 		WHERE NO = #{userNo}
 	</update>
 	
+	<!-- 회원 삭제 -->
+	<delete id="deleteUser" parameterType="integer">
+		DELETE FROM BN_USER
+		WHERE NO = #{userNo}
+	</delete>
+	
 </mapper>

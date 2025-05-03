@@ -102,9 +102,22 @@
     
     document.addEventListener('DOMContentLoaded', () => {
     	buttonStatus( 'UserJoinBtn', false );
+    	document.getElementById("myRainbow").addEventListener("blur", comparePassword);
+	    document.getElementById("mySeason").addEventListener("blur", comparePassword);
+	    document.getElementById("myNumber").addEventListener("blur", comparePassword);
     });
     
     function btnStatus(status){
+    	
+    	if( status ){
+    		
+    		const rainbow = document.getElementById("myRainbow").value;
+	        const season = document.getElementById("mySeason").value;
+	        const num = document.getElementById("myNumber").value;
+
+	        status = rainbow.trim() !== "" && season.trim() !== "" && num.trim() !== "";
+    	}
+    	
     	buttonStatus( 'UserJoinBtn', status );
     }
     
@@ -116,6 +129,9 @@
     		showCustomAlert("이미지 처리 오류가 발생했습니다.");
     		return;
         }
+    	
+    	const loading = document.getElementById("loadingOverlay");
+        if (loading) loading.classList.remove("hidden");
             
         const formData = new FormData();
         formData.append("token", /*[[${unique.token}]]*/ null);
@@ -134,6 +150,8 @@
                 body: formData,
                 credentials: "include"
             });
+            
+            if (loading) loading.classList.add("hidden");
 
             const result = await response.json();
             if (response.ok) {

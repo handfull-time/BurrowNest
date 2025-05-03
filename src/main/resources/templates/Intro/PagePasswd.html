@@ -44,16 +44,16 @@
     	        const season = document.getElementById("mySeason").value;
     	        const num = document.getElementById("myNumber").value;
 
-    	        buttonStatus( "pwNextBtn", (rainbow.trim() !== "" && season.trim() !== "" && num.trim() !== "") );
-    		}else{
-    			buttonStatus( "pwNextBtn", status );
+    	        status = rainbow.trim() !== "" && season.trim() !== "" && num.trim() !== "";
     		}
+    		
+    		buttonStatus( "pwNextBtn", status );
     	}
 	    
 	    document.addEventListener('DOMContentLoaded', () => {
-		    document.getElementById("myRainbow").addEventListener("blur", confirmJoinInput);
-		    document.getElementById("mySeason").addEventListener("blur", confirmJoinInput);
-		    document.getElementById("myNumber").addEventListener("blur", confirmJoinInput);
+		    document.getElementById("myRainbow").addEventListener("blur", comparePassword);
+		    document.getElementById("mySeason").addEventListener("blur", comparePassword);
+		    document.getElementById("myNumber").addEventListener("blur", comparePassword);
         });
 	    
     </script>

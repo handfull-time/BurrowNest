@@ -35,4 +35,11 @@ public interface AdminMapper {
 	 */
 	UserVo getUserDetail( @Param("userNo") int userNo);
 
+	/**
+	 * 회원 삭제
+	 * @param userNo
+	 * @return
+	 */
+	int deleteUser(int userNo);
+
 }

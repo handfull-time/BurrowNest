@@ -29,4 +29,11 @@ public interface AdminUserService {
 	 */
 	ReturnBasic saveUser(UserVo user);
 
+	/**
+	 * 회원 삭제
+	 * @param user
+	 * @return
+	 */
+	ReturnBasic deleteUser(UserVo user);
+
 }

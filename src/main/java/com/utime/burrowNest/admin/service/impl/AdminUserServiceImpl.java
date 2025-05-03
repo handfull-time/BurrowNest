@@ -40,4 +40,17 @@ class AdminUserServiceImpl implements AdminUserService{
 		
 		return result;
 	}
+	
+	@Override
+	public ReturnBasic deleteUser(UserVo user) {
+		ReturnBasic result = new ReturnBasic();
+		
+		try {
+			adminUserDao.deleteUser( user );
+		} catch (Exception e) {
+			result.setCodeMessage("E", e.getMessage());
+		}
+		
+		return result;
+	}
 }

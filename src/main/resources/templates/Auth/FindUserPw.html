@@ -7,6 +7,7 @@
 	<th:block layout:fragment="css"></th:block>
 	
     <div layout:fragment="content">
+    	<input type="hidden" id="rsaId" th:value="${unique.rsaId}">
     	<div id="requestLayer" class="grid grid-cols-1 gap-4">
 	        <form id="findPwForm" >
 	        	<table class="w-full border-collapse">
@@ -25,7 +26,7 @@
 			    </table>
 
                 <div class="mt-6 transition-opacity duration-300" id="hiddenButtons">
-		            <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">비밀번호 찾기</button>
+		            <button id="UserFindPwBtn" type="submit" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">비밀번호 찾기</button>
 		            <div class="flex justify-between mt-2 text-sm text-blue-500 cursor-pointer">
 		                <a th:href="@{/Auth/Login.html}" class="hover:underline">로그인</a>
 		                <a th:href="@{/Auth/JoinUser.html}" class="hover:underline">회원 가입</a>
@@ -39,42 +40,64 @@
     <th:block layout:fragment="script">
     
     <script th:inline="javascript">
-        document.getElementById("findPwForm").addEventListener("submit", async function(event) {
-            event.preventDefault();
-            
-            const formData = new FormData(this);
-            formData.append("token", /*[[${unique.token}]]*/ null);
-            formData.append("rsaId", /*[[${unique.rsaId}]]*/ null);
-            
-            try {
-                const response = await fetch(/*[[@{/Auth/FindUserPw.layer}]]*/ null, {
-                    method: "POST",
-                    body: formData,
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest" // AJAX 요청임을 알림
-                    }
-                });
+    
+    document.addEventListener('DOMContentLoaded', () => {
+    	buttonStatus( 'UserFindPwBtn', false );
+    	document.getElementById("myRainbow").addEventListener("blur", onBlurAuthHint);
+	    document.getElementById("mySeason").addEventListener("blur", onBlurAuthHint);
+	    document.getElementById("myNumber").addEventListener("blur", onBlurAuthHint);
+    });
+    
+    function onBlurAuthHint(){
+    	const rainbow = document.getElementById("myRainbow").value;
+        const season = document.getElementById("mySeason").value;
+        const num = document.getElementById("myNumber").value;
 
-                const result = await response.text();
+        const status = rainbow.trim() !== "" && season.trim() !== "" && num.trim() !== "";
+	
+		buttonStatus( 'UserFindPwBtn', status );
+    }
+    
+    document.getElementById("findPwForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+        
+        const formData = new FormData(this);
+        formData.append("token", /*[[${unique.token}]]*/ null);
+        formData.append("rsaId", /*[[${unique.rsaId}]]*/ null);
+        
+        try {
+            const response = await fetch(/*[[@{/Auth/FindUserPw.layer}]]*/ null, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest" // AJAX 요청임을 알림
+                }
+            });
 
-                // 응답을 처리하여 결과 Layer 표시
-                const resultLayer = document.getElementById("resultLayer");
-                resultLayer.innerHTML = result;
-                
-        		// 새로 추가된 script 태그 실행 (Thymeleaf script 실행)
-        		resultLayer.querySelectorAll("script").forEach(oldScript => {
-        			const newScript = document.createElement("script");
-        			newScript.textContent = oldScript.textContent;
-        			document.body.appendChild(newScript);
-        			oldScript.remove();
-        		});
-                
-        		resultLayer.classList.remove("hidden");
-                document.getElementById("requestLayer").classList.add("hidden");
-            } catch (error) {
-                console.error("Error:", error);
+            const result = await response.text();
+
+            // 응답을 처리하여 결과 Layer 표시
+            const resultLayer = document.getElementById("resultLayer");
+            resultLayer.innerHTML = result;
+            
+    		// 새로 추가된 script 태그 실행 (Thymeleaf script 실행)
+    		resultLayer.querySelectorAll("script").forEach(oldScript => {
+    			const newScript = document.createElement("script");
+    			newScript.textContent = oldScript.textContent;
+    			document.body.appendChild(newScript);
+    			oldScript.remove();
+    		});
+            
+    		resultLayer.classList.remove("hidden");
+            document.getElementById("requestLayer").classList.add("hidden");
+            
+            if (typeof initFindUserPwLayer === 'function') {
+            	initFindUserPwLayer();
             }
-        });
+	        } catch (error) {
+            console.error("Error:", error);
+        }
+    });
     </script>
     </th:block>
 </div>

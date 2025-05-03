@@ -60,7 +60,7 @@
 	        }
 	    } );
     	
-    	if (response.ok) {
+    if (response.ok) {
          const data = await response.json();
          if( data.code === '0' ){
         		window.location.href = /*[[@{/Auth/Login.html}]]*/ null;

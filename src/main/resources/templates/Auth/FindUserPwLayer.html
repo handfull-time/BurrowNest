@@ -7,7 +7,7 @@
              <th:block th:if="${item.code eq '0'}">
 		    	<table class="w-full border-collapse">
 			        <tbody>
-			            <th:block th:replace="~{Auth/AuthHint :: AuthHint}"></th:block>
+			            <th:block th:replace="~{Auth/AuthPassword :: AuthPassword}"></th:block>
 			        </tbody>
 			    </table>
 		    </th:block>
@@ -21,7 +21,7 @@
             <button type="submit" id="FindUserPwBtn" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600" 
             	th:text="${item.code eq '0'? 'PW 변경':'PW 찾기'}" ></button>
             <div class="flex justify-between mt-2 text-sm text-blue-500 cursor-pointer">
-                <a th:href="@{/User/Login.html}" class="hover:underline" th:if="${item.code eq '0'}" >로그인</a>
+                <a th:href="@{/User/Login.html}" class="hover:underline" >로그인</a>
                 <a th:href="@{/User/JoinUser.html}" class="hover:underline">회원 가입</a>
             </div>
         </div>
@@ -30,10 +30,12 @@
     <script th:replace="~{Auth/AuthPassword :: script( func = 'btnStatus' )}"></script>
      
     <script th:inline="javascript">
-     
-	document.addEventListener('DOMContentLoaded', () => {
-    	buttonStatus( 'FindUserPwBtn', false );
-    });
+    
+    function initFindUserPwLayer(){
+		document.getElementById("password").addEventListener("blur", comparePassword);
+		document.getElementById("confirmPassword").addEventListener("blur", comparePassword);
+    	buttonStatus( 'FindUserPwBtn', /*[[${item.code ne '0'}]]*/ false );
+    }
      
     function btnStatus(status){
     	buttonStatus( 'FindUserPwBtn', status );
@@ -43,7 +45,6 @@
         event.preventDefault();
         
         if( /*[[${item.code eq '0'}]]*/ false ){
-        	
         	const password = document.getElementById("password").value;
             
             const formData = new FormData();
@@ -63,7 +64,7 @@
 		            const data = await response.json();
 		            if( data.code === '0' ){
 		            	showCustomAlert('성공적으로 변경됐습니다.', () => {
-		            		window.location.href = /*[[@{/User/Login.html}]]*/ null;
+		            		window.location.href = /*[[@{/Auth/Login.html}]]*/ null;
 		            	});
 		            }else{
 		            	showCustomAlert(data.code + " - " + data.message);
@@ -76,7 +77,7 @@
 		        showCustomAlert("서버 오류가 발생했습니다.");
 		    }
         }else{
-        	window.location.href = /*[[@{/User/FindUserPw.html}]]*/ null;
+        	window.location.href = /*[[@{/Auth/FindUserPw.html}]]*/ null;
         }
         
     });

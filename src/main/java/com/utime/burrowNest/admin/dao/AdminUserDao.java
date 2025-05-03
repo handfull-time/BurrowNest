@@ -26,6 +26,14 @@ public interface AdminUserDao {
 	 * @param user
 	 * @return
 	 */
-	int updateUser(UserVo user);
+	int updateUser(UserVo user)throws Exception;
+
+	/**
+	 * 회원 삭제
+	 * @param user
+	 * @return
+	 * @throws Exception
+	 */
+	int deleteUser(UserVo user)throws Exception;
 
 }

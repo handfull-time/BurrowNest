@@ -53,9 +53,16 @@ public class AdminUserController {
 	
 	@ResponseBody
 	@PostMapping("SaveUser.json")
-    public ReturnBasic saveUser(ModelMap model, @RequestBody UserVo user) {
+    public ReturnBasic saveUser( @RequestBody UserVo user) {
 		
 		return userService.saveUser( user );
+    }
+	
+	@ResponseBody
+	@PostMapping("DeleteUser.json")
+    public ReturnBasic deleteUser(@RequestBody UserVo user) {
+		
+		return userService.deleteUser( user );
     }
 }
 

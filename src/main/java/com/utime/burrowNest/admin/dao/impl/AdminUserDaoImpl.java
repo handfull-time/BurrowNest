@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.utime.burrowNest.admin.dao.AdminUserDao;
 import com.utime.burrowNest.admin.mapper.AdminMapper;
@@ -27,8 +28,14 @@ class AdminUserDaoImpl implements AdminUserDao{
 	}
 	
 	@Override
-	public int updateUser(UserVo user) {
+	@Transactional(rollbackFor = Exception.class)
+	public int updateUser(UserVo user) throws Exception{
 		return mapper.updateUser(user);
+	}
+
+	@Override
+	public int deleteUser(UserVo user) throws Exception {
+		return mapper.deleteUser( user.getUserNo() );
 	}
 
 }

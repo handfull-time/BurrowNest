@@ -63,16 +63,38 @@
 
 	document.getElementById("loginForm").addEventListener("submit", async function(event) {
 	    event.preventDefault();
+	    
+	    const reqId = document.getElementById("id").value.trim();
+	    if( reqId.length < 1 ){
+	    	showCustomAlert('아이디를 입력하세요.');
+	    	return;
+	    }
+
+	    const reqPw = document.getElementById("pw").value.trim();
+	    if( reqPw.length < 1 ){
+	    	showCustomAlert('비밀번호를 입력하세요.');
+	    	return;
+	    }
+
+	    document.getElementById("pw").value = '';
+	    
+	    procLogin( reqId, reqPw);
+	});
 	
-	    const encPw = encryptPassword( document.getElementById("pw").value );
+	async function procLogin(reqId, reqPw){
+
+		const loading = document.getElementById("loadingOverlay");
+        if (loading) loading.classList.remove("hidden");
+	
+		const encPw = encryptPassword( reqPw );
 	    
 	    const requestData = {
-	        id: document.getElementById("id").value,
+	        id: reqId,
 	        pw: encPw,
 	        token: /*[[${unique.token}]]*/ null,
 	        rsaId: /*[[${unique.rsaId}]]*/ null
 	    };
-	
+	    
 	    try {
 	        const response = await fetch(/*[[@{/Auth/Login.json}]]*/ null, {
 	            method: "POST",
@@ -80,22 +102,24 @@
 	            body: JSON.stringify(requestData),
 	            credentials: "include"
 	        });
+	        
+	        if (loading) loading.classList.add("hidden");
 	
 	        if (response.ok) {
 	            const data = await response.json();
 	            if( data.code === '0' ){
 	            	window.location.href = data.message;
 	            }else{
-	            	alert(data.code + " - " + data.message);
+	            	showCustomAlert(data.code + " - " + data.message);
 	            }
 	        } else {
-	        	alert("아이디 또는 비밀번호를 확인하세요.");
+	        	showCustomAlert("아이디 또는 비밀번호를 확인하세요.");
 	        }
 	    } catch (error) {
 	        console.error("로그인 오류:", error);
-	        alert("서버 오류가 발생했습니다.");
+	        showCustomAlert("서버 오류가 발생했습니다.");
 	    }
-	});
+	}
 </script>
 </th:block>
 </html> 
