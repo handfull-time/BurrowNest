@@ -12,9 +12,11 @@ import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.util.CacheIntervalMap;
 import com.utime.burrowNest.common.util.Sha256;
 import com.utime.burrowNest.common.vo.BinResultVo;
+import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.mapper.UserMapper;
 import com.utime.burrowNest.user.vo.ELoginResult;
+import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.ResUserVo;
 import com.utime.burrowNest.user.vo.UserVo;
@@ -25,6 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Repository
 class UserDaoImpl implements UserDao {
+	
+	private final String KeyGroupAdmin = "Admin";
+	private final String KeyGroupUnsel = "Unselected";
 	
 	@Autowired
 	private CommonMapper common;
@@ -41,6 +46,14 @@ class UserDaoImpl implements UserDao {
 	private void construct() {
 		try {
 			
+			if( ! common.existTable("BN_USER_GROUP") ) {
+				log.info("BN_USER_GROUP 생성");
+				userMapper.createUserGroup();
+				common.createUniqueIndex("BN_USER_GROUP_NAME_INDX", "BN_USER_GROUP", "NAME");
+				this.insertAdminGroup();
+				this.insertNoramGroup();
+			}
+
 			if( ! common.existTable("BN_USER") ) {
 				log.info("BN_USER 생성");
 				userMapper.createUser();
@@ -67,6 +80,38 @@ class UserDaoImpl implements UserDao {
 	}
 
 	/**
+	 * 미지정 사용자 그룹 추가
+	 * @return
+	 * @throws Exception
+	 */
+	@Transactional(rollbackFor = Exception.class)
+	private int insertNoramGroup() throws Exception {
+		final GroupVo group = new GroupVo();
+		group.setEnabled(true);
+		group.setName( KeyGroupUnsel );
+		group.setRole(EJwtRole.User);
+		group.setNote("처음 회원 가입시 포함될 그룹");
+		
+		return this.userMapper.insertGroup(group);
+	}
+
+	/**
+	 * 관리자 그룹 추가
+	 * @return
+	 * @throws Exception
+	 */
+	@Transactional(rollbackFor = Exception.class)
+	private int insertAdminGroup() throws Exception {
+		final GroupVo group = new GroupVo();
+		group.setEnabled(true);
+		group.setName( KeyGroupAdmin );
+		group.setRole(EJwtRole.Admin);
+		group.setNote("관리자 그룹");
+		
+		return this.userMapper.insertGroup(group);
+	}
+
+	/**
 	 * 회원 비번 생성
 	 * @param user
 	 * @param pw
@@ -83,7 +128,7 @@ class UserDaoImpl implements UserDao {
 		ResUserVo result = new ResUserVo();
 		final String id = reqVo.getId();
 		
-		final UserVo user = userMapper.getUserId( id );
+		final UserVo user = userMapper.selectUserId( id );
 		
 		if( user == null ) {
 			userMapper.insertLoginRecord( reqVo, user, ELoginResult.IdNotFound );
@@ -99,7 +144,7 @@ class UserDaoImpl implements UserDao {
 			return result;
 		}
 
-		final String dbPw = userMapper.getUserPw( id );
+		final String dbPw = userMapper.selectUserPw( id );
 		final String genPw = Sha256.encrypt(this.genPwString( user, reqVo.getPw()));
 		if( ! genPw.equals(dbPw) ) {
 			userMapper.insertLoginRecord( reqVo, user, ELoginResult.MismatchPw );
@@ -117,7 +162,7 @@ class UserDaoImpl implements UserDao {
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public int insertUser(LoginReqVo reqVo, UserVo user, String pw, byte [] profileImg) throws Exception {
+	public int addUser(LoginReqVo reqVo, UserVo user, String pw, byte [] profileImg) throws Exception {
 		
 		int res = userMapper.insertUser(user, profileImg);
 		if( res < 1 ) {
@@ -138,7 +183,7 @@ class UserDaoImpl implements UserDao {
 		final String genPw = this.genPwString( user, pw );
 		
 		final int result;
-		if( BurrowUtils.isEmpty( userMapper.getUserPw(user.getId()) ) ) {
+		if( BurrowUtils.isEmpty( userMapper.selectUserPw(user.getId()) ) ) {
 			result = userMapper.insertUserPw(user, genPw);
 		}else {
 			result = userMapper.updateUserPw(user, genPw);
@@ -148,9 +193,21 @@ class UserDaoImpl implements UserDao {
 	}
 	
 	@Override
+	public GroupVo getAdminGroup() {
+		
+		return userMapper.selectGroupByName(this.KeyGroupAdmin);
+	}
+	
+	@Override
+	public GroupVo getNormalGroup() {
+		
+		return userMapper.selectGroupByName(this.KeyGroupUnsel);
+	}
+	
+	@Override
 	public UserVo getManageUser() {
 		
-		return userMapper.getUserId(AdminId);
+		return userMapper.selectUserId(AdminId);
 	}
 	
 	@Override
@@ -162,7 +219,7 @@ class UserDaoImpl implements UserDao {
 	
 	@Override
 	public UserVo getUserFormId(String id) {
-		return userMapper.getUserIdBasic(id);
+		return userMapper.selectUserIdBasic(id);
 	}
 	
 	@Override
@@ -172,7 +229,7 @@ class UserDaoImpl implements UserDao {
 		if( intervalMap.containsKey(id) ) {
 			result = intervalMap.get(id);
 		}else {
-			result = userMapper.getUserIdBasic(id);
+			result = userMapper.selectUserIdBasic(id);
 			if( result != null ) {
 				intervalMap.put(id, result);
 			}
@@ -195,7 +252,7 @@ class UserDaoImpl implements UserDao {
 	@Override
 	public byte[] getProfileImg(int userNo) {
 		
-		final BinResultVo result = userMapper.getProfileImg( userNo );
+		final BinResultVo result = userMapper.selectProfileImg( userNo );
 		
 		return result.getBinary();
 	}

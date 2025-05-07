@@ -3,18 +3,22 @@
 <!--//네임스페이스에는 mapper 가 있는 풀 패키지명과 매퍼명을 등록 한다. -->
 <mapper namespace="com.utime.burrowNest.admin.mapper.AdminMapper">
 
+	<resultMap id="ManageUserVoMap" 
+		type="com.utime.burrowNest.admin.vo.ManageUserVo" 
+		extends="com.utime.burrowNest.user.mapper.UserMapper.UserVoMap">
+		
+	    <result property="LOGIN_COUNT" column="loginCount"/>
+	    <result property="LAST_LOGIN_TIME" column="lastLoginTime"/>
+	    <result property="FAIL_COUNT" column="loginFailCount"/>
+	</resultMap>
+
 	<!-- 사용자 목록 조회 -->
-	<select id="getUserList" parameterType="map" resultType="com.utime.burrowNest.admin.vo.ManageUserVo">
+	<select id="getUserList" parameterType="map" resultMap="ManageUserVoMap">
 		SELECT
-			UR.NO AS "userNo"
-			, UR.REG_DATE
-			, UR.ENABLED
-			, UR.ID 
-			, UR.NICK_NAME 
-			, UR.ROLE
+			<include refid="com.utime.burrowNest.user.mapper.UserMapper.UserColumn" /> 
 			, NVL(LR.LOGIN_COUNT, 0) AS LOGIN_COUNT
 			, LR.LAST_LOGIN_TIME
-			, PW.FAIL_COUNT AS "loginFailCount"
+			, PW.FAIL_COUNT
 		FROM BN_USER UR
 			LEFT OUTER JOIN (
 				 SELECT
@@ -37,8 +41,8 @@
 	<select id="getUserDetail" parameterType="map" resultType="com.utime.burrowNest.user.vo.UserVo">
 		SELECT
 			<include refid="com.utime.burrowNest.user.mapper.UserMapper.UserAllColumn" /> 
-		FROM BN_USER
-		WHERE NO = #{userNo}
+		FROM BN_USER UR
+		WHERE UR.NO = #{userNo}
 	</select>
 	
 	<!-- 사용자 정보 갱신 -->
@@ -56,8 +60,43 @@
 	
 	<!-- 회원 삭제 -->
 	<delete id="deleteUser" parameterType="integer">
-		DELETE FROM BN_USER
-		WHERE NO = #{userNo}
+		DELETE FROM BN_USER UR
+		WHERE UR.NO = #{userNo}
 	</delete>
+	
+	<!-- 사용자 그룹 정보 조회 -->
+	<select id="selectUserGroupList" resultType="com.utime.burrowNest.user.vo.GroupVo">
+		SELECT
+			<include refid="com.utime.burrowNest.user.mapper.UserMapper.UserColumn"/>
+		FROM BN_USER_GROUP GR
+		WHERE 1=1
+			<if test="enabled != null">
+			AND ENABLED = #{enabled}
+			</if>
+			<if test="grName != null and grName != '' ">
+			AND NAME LIKE ${grName}
+			</if>
+		ORDER BY
+        CASE
+            WHEN GR.NO IN (1, 2) THEN 0
+            ELSE 1
+        END, GR.NAME ASC
+	</select>
+	
+	<!-- 사용자 그룹 정보 수정 -->
+	<update id="updateGroup" parameterType="com.utime.burrowNest.user.vo.GroupVo">
+		UPDATE BN_USER_GROUP SET 
+			UPDATE_DATE = CURRENT_TIMESTAMP
+			, ENABLED = #{enabled}
+			, NAME = #{name}
+			, ROLE = #{role}
+			<if test="note != null and note != '' "> 
+			, NOTE = #{note}
+			</if>
+			, DAILY_UPLOAD_LIMIT  = #{dailyUploadLimit}
+			, DAILY_DOWNLOAD_LIMIT = #{dailyDownloadLimit}
+			, MAX_STORAGE_USAGE = #{maxStorageUsage}
+		WHERE NO = #{groupNo}
+	</update>
 	
 </mapper>

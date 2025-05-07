@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import com.utime.burrowNest.common.jwt.JwtProvider;
@@ -19,6 +18,7 @@ import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.service.AuthService;
+import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.ReqUniqueVo;
 import com.utime.burrowNest.user.vo.ResUserVo;
@@ -170,7 +170,7 @@ class AuthServiceImpl implements AuthService {
 		return result;		
 	}
 	
-	private ReturnBasic procJoinUser( UserReqVo reqVo, boolean enabled, EJwtRole role ) {
+	private ReturnBasic procJoinUser( UserReqVo reqVo, GroupVo group, boolean enabled, EJwtRole role ) {
 		log.info("초기화 시도 : {}", reqVo);
 		
 		if( ! this.validation(reqVo) ) {
@@ -194,6 +194,7 @@ class AuthServiceImpl implements AuthService {
 		final UserVo user = new UserVo();
 		user.setUserNo(-1);
 		user.setEnabled(enabled);
+		user.setGroup(group);
 		user.setId(reqVo.getId());
 		user.setNickname(reqVo.getNickname());
 		user.setRole(role);
@@ -201,7 +202,7 @@ class AuthServiceImpl implements AuthService {
 		
 		final ReturnBasic result = new ReturnBasic();
 		try {
-			userDao.insertUser(reqVo, user, pw, profileImg);
+			userDao.addUser(reqVo, user, pw, profileImg);
 			this.validationRemove(reqVo);
 		} catch (Exception e) {
 			log.error("", e);
@@ -214,7 +215,7 @@ class AuthServiceImpl implements AuthService {
 	@Override
 	public ReturnBasic procJoinUser( UserReqVo reqVo) {
 		
-		return this.procJoinUser( reqVo, false, EJwtRole.User);
+		return this.procJoinUser( reqVo, this.userDao.getNormalGroup(), false, EJwtRole.User);
 	}
 	
 	@Override
@@ -245,7 +246,7 @@ class AuthServiceImpl implements AuthService {
 	@Override
 	public ReturnBasic saveInitInfor(UserReqVo req) {
 		
-		return this.procJoinUser( req, true, EJwtRole.Admin);
+		return this.procJoinUser( req, this.userDao.getAdminGroup(), true, EJwtRole.Admin);
 	}
 	
 	@Override

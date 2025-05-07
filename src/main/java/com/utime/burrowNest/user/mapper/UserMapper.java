@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Param;
 
 import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.user.vo.ELoginResult;
+import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -13,6 +14,31 @@ import com.utime.burrowNest.user.vo.UserVo;
  */
 @Mapper
 public interface UserMapper {
+	
+	/**
+	 * 사용자 그룹
+	 * @return
+	 */
+	int createUserGroup();
+	
+	/**
+	 * 그룹 추가
+	 * @return
+	 */
+	int insertGroup( GroupVo group );
+	
+	/**
+	 * 그룹 조회
+	 * @return
+	 */
+	GroupVo selectGroupByName( @Param("name") String name );
+	
+	/**
+	 * 그룹 조회
+	 * @param groupNo
+	 * @return
+	 */
+	GroupVo selectGroupByNo( @Param("groupNo") int groupNo );
 	
 	/**
 	 * 회원 테이블 생성
@@ -54,21 +80,21 @@ public interface UserMapper {
 	 * @param id
 	 * @return
 	 */
-	UserVo getUserId(@Param("id") String id);
+	UserVo selectUserId(@Param("id") String id);
 	
 	/**
 	 * 기본 회원 정보 조회
 	 * @param id
 	 * @return
 	 */
-	UserVo getUserIdBasic(@Param("id") String id);
+	UserVo selectUserIdBasic(@Param("id") String id);
 	
 	/**
 	 * 암호 조회
 	 * @param id
 	 * @return
 	 */
-	String getUserPw(@Param("id") String id);
+	String selectUserPw(@Param("id") String id);
 
 	/**
 	 * pw 추가
@@ -121,5 +147,5 @@ public interface UserMapper {
 	 * @param userNo
 	 * @return
 	 */
-	BinResultVo getProfileImg(@Param("userNo") int userNo);
+	BinResultVo selectProfileImg(@Param("userNo") int userNo);
 }

@@ -17,8 +17,8 @@ import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.user.vo.UserVo;
 
 @Controller
-@RequestMapping("Admin/User")
-public class AdminUserController {
+@RequestMapping("Admin/Group")
+public class AdminGroupUserController {
 	
 	@Autowired
 	private AdminUserService userService;
@@ -28,42 +28,34 @@ public class AdminUserController {
 	 * @param user
 	 * @return
 	 */
-	@GetMapping("User.html")
+	@GetMapping("Group.html")
 	public String adminUserPage(Model model, UserVo user) {
-		return "Admin/User/AdminUserMain";
+		return "Admin/Group/AdminGroupUserMain";
 	}
 	
 	
-	@GetMapping("UserList.layer")
-	public String adminUserList(Model model, @RequestParam(name = "id", required = false) String id) {
+	@GetMapping("GroupUserList.layer")
+	public String adminUserList(Model model, @RequestParam(name = "grName", required = false) String grName) {
 		
-		model.addAttribute("users", userService.userList(id) );
+		model.addAttribute("groups", userService.getUserGroupListAll(grName) );
 		
-		return "Admin/User/AdminUserList";
+		return "Admin/Group/AdminGroupUserList";
 	}
 	
-	@GetMapping("Profile.layer")
-    public String getUserProfile(ModelMap model, @RequestParam(name="userNo") int userNo) {
+	@GetMapping("GroupItem.layer")
+    public String getUserProfile(ModelMap model, @RequestParam(name="groupNo") int groupNo) {
 		
-		model.addAttribute("item", userService.getUserFromNo(userNo));
+		model.addAttribute("item", userService.getUserFromNo(groupNo));
 		model.addAttribute("roles", EJwtRole.values() );
-		model.addAttribute("groups", userService.getUserGroupList() );
         
-		return "Admin/User/UserLayer";
+		return "Admin/Group/GroupUserLayer";
     }
 	
 	@ResponseBody
-	@PostMapping("SaveUser.json")
+	@PostMapping("SaveGroupUser.json")
     public ReturnBasic saveUser( @RequestBody UserVo user) {
 		
 		return userService.saveUser( user );
-    }
-	
-	@ResponseBody
-	@PostMapping("DeleteUser.json")
-    public ReturnBasic deleteUser(@RequestBody UserVo user) {
-		
-		return userService.deleteUser( user );
     }
 }
 

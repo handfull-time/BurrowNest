@@ -10,27 +10,21 @@ import lombok.Data;
  * 사용자 정보
  */
 @Data
-public class UserVo {
+public class GroupVo {
 	/** 회원 번호 */
-	int userNo;
+	int groupNo;
 	/** 생성일 */
 	LocalDateTime regDate;
 	/** 수정일 */
 	LocalDateTime updateDate;
 	/** 사용 여부 */
 	boolean enabled;
-	/** 속한 그룹 */
-	GroupVo group;
-	/** id */
-	String id;
 	/** 닉네임 */
-	String nickname;
+	String name;
 	/** 권한 */
 	EJwtRole role;
 	/** 비고 */
 	String note;
-	/** 암호 찾기 값 */
-	String authHint;
 	/** 하루 업로드 제한 byte 단위 */
 	long dailyUploadLimit;
 	/** 일일 최대 다운로드 용량 */

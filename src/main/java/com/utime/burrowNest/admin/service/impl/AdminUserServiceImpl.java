@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 import com.utime.burrowNest.admin.dao.AdminUserDao;
 import com.utime.burrowNest.admin.service.AdminUserService;
 import com.utime.burrowNest.admin.vo.ManageUserVo;
+import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
 @Service
@@ -47,6 +49,44 @@ class AdminUserServiceImpl implements AdminUserService{
 		
 		try {
 			adminUserDao.deleteUser( user );
+		} catch (Exception e) {
+			result.setCodeMessage("E", e.getMessage());
+		}
+		
+		return result;
+	}
+
+	@Override
+	public List<GroupVo> getUserGroupListAll(String grName) {
+		return adminUserDao.getUserGroupList(null, grName);	
+	}
+	
+	@Override
+	public List<GroupVo> getUserGroupList() {
+		return adminUserDao.getUserGroupList(true, null);
+	}
+
+	@Override
+	public GroupVo getGroupByNo(int groupNo) {
+		final GroupVo result;
+		if( groupNo < 1 ) {
+			result = new GroupVo();
+			result.setGroupNo(0);
+			result.setEnabled(false);
+			result.setRole(EJwtRole.User);
+		}else {
+			result = adminUserDao.getGroupByNo(groupNo);
+		}
+		
+		return result;
+	}
+
+	@Override
+	public ReturnBasic saveGroup(GroupVo vo) {
+		ReturnBasic result = new ReturnBasic();
+		
+		try {
+			adminUserDao.saveGroup( vo );
 		} catch (Exception e) {
 			result.setCodeMessage("E", e.getMessage());
 		}

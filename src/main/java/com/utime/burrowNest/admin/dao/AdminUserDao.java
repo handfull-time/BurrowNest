@@ -3,6 +3,7 @@ package com.utime.burrowNest.admin.dao;
 import java.util.List;
 
 import com.utime.burrowNest.admin.vo.ManageUserVo;
+import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
 public interface AdminUserDao {
@@ -35,5 +36,28 @@ public interface AdminUserDao {
 	 * @throws Exception
 	 */
 	int deleteUser(UserVo user)throws Exception;
+	
+	/**
+	 * 사용자 그룹 정보 조회
+	 * @return
+	 */
+	List<GroupVo> getUserGroupList(Boolean enabled, String grName);
+	
+	/**
+	 * 그룹 정보 조회
+	 * @param groupNo
+	 * @return
+	 */
+	GroupVo getGroupByNo(int groupNo);
+	
+	/**
+	 * 그룹 정보 저장
+	 * @param vo
+	 * @return
+	 */
+	int saveGroup(GroupVo vo)throws Exception;
+	
+	
+	
 
 }

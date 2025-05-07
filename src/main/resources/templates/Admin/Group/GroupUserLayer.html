@@ -22,7 +22,7 @@
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="enabled">사용여부</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="nickname">사용여부</label></td>
 	                <td class="w-3/4 p-2">
 	                    <div class="flex items-center space-x-4">
 				            <div>
@@ -37,9 +37,9 @@
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="role">역할</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="nickname">역할</label></td>
 	                <td class="w-3/4 p-2">
-	                    <select th:field="*{role}" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+	                    <select id="role" name="role" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
 	                        <option value="">선택하세요</option>
 						    <option th:each="role : ${roles}" 
 						            th:value="${role}" 
@@ -50,41 +50,28 @@
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="group.groupNo">소속 그룹</label></td>
-	                <td class="w-3/4 p-2">
-	                    <select th:field="*{group.groupNo}" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
-	                        <option value="">선택하세요</option>
-						    <option th:each="group : ${groups}" 
-						            th:value="${group.groupNo}" 
-						            th:text="${group.name}"
-						            th:selected="${item.group.groupNo eq group.groupNo}">
-						    </option>
-	                    </select>
-	                </td>
-	            </tr>
-	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="note">비고</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="id">비고</label></td>
 	                <td class="w-3/4 p-2">
 	                    <input type="text" th:field="*{note}" maxlength="255" 
 	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" >
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="dailyUploadLimit">하루 업로드 제한</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="id">하루 업로드 제한</label></td>
 	                <td class="w-3/4 p-2">
 	                    <input type="number" th:field="*{dailyUploadLimit}"  
 	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" >
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="dailyDownloadLimit">일일 최대 다운로드</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="id">일일 최대 다운로드</label></td>
 	                <td class="w-3/4 p-2">
 	                    <input type="number" th:field="*{dailyDownloadLimit}"  
 	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" >
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="maxStorageUsage">저장공간 최대 사용</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="id">저장공간 최대 사용</label></td>
 	                <td class="w-3/4 p-2">
 	                    <input type="number" th:field="*{maxStorageUsage}"  
 	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" >

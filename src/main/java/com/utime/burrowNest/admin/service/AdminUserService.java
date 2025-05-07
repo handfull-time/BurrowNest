@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.utime.burrowNest.admin.vo.ManageUserVo;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
 public interface AdminUserService {
@@ -35,5 +36,32 @@ public interface AdminUserService {
 	 * @return
 	 */
 	ReturnBasic deleteUser(UserVo user);
+	
+	/**
+	 * 사용자 그룹 전체 조회
+	 * @param grName 
+	 * @return
+	 */
+	List<GroupVo> getUserGroupListAll(String grName);
+
+	/**
+	 * 사용자 그룹 정보 조회
+	 * @return
+	 */
+	List<GroupVo> getUserGroupList();
+	
+	/**
+	 * 그룹 정보 조회
+	 * @param groupNo
+	 * @return
+	 */
+	GroupVo getGroupByNo(int groupNo);
+	
+	/**
+	 * 그룹 정보 저장
+	 * @param vo
+	 * @return
+	 */
+	ReturnBasic saveGroup(GroupVo vo);
 
 }
