@@ -82,11 +82,24 @@ class AdminUserServiceImpl implements AdminUserService{
 	}
 
 	@Override
-	public ReturnBasic saveGroup(GroupVo vo) {
+	public ReturnBasic saveGroup(GroupVo group) {
 		ReturnBasic result = new ReturnBasic();
 		
 		try {
-			adminUserDao.saveGroup( vo );
+			adminUserDao.saveGroup( group );
+		} catch (Exception e) {
+			result.setCodeMessage("E", e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	@Override
+	public ReturnBasic deleteGroup(GroupVo group) {
+		ReturnBasic result = new ReturnBasic();
+		
+		try {
+			adminUserDao.deleteGroup( group );
 		} catch (Exception e) {
 			result.setCodeMessage("E", e.getMessage());
 		}

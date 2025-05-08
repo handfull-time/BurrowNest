@@ -21,7 +21,6 @@ import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.ResUserVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -30,6 +29,7 @@ class UserDaoImpl implements UserDao {
 	
 	private final String KeyGroupAdmin = "Admin";
 	private final String KeyGroupUnsel = "Unselected";
+	private final String KeyGroupBasic = "Basic";
 	
 	@Autowired
 	private CommonMapper common;
@@ -42,57 +42,42 @@ class UserDaoImpl implements UserDao {
 	
 	final CacheIntervalMap<String, UserVo> intervalMap = new CacheIntervalMap<>(10L, TimeUnit.MINUTES);
 	
-	@PostConstruct
-	private void construct() {
-		try {
-			
-			if( ! common.existTable("BN_USER_GROUP") ) {
-				log.info("BN_USER_GROUP 생성");
-				userMapper.createUserGroup();
-				common.createUniqueIndex("BN_USER_GROUP_NAME_INDX", "BN_USER_GROUP", "NAME");
-				this.insertAdminGroup();
-				this.insertNoramGroup();
-			}
-
-			if( ! common.existTable("BN_USER") ) {
-				log.info("BN_USER 생성");
-				userMapper.createUser();
-				common.createUniqueIndex("BN_USER_ID_INDX", "BN_USER", "ID");
-			}
-
-			if( ! common.existTable("BN_USER_LOGIN_RECORD") ) {
-				log.info("BN_USER_LOGIN_RECORD 생성");
-				userMapper.createLoginRecord();
-				common.createIndex("BN_USER_LOGIN_RECORD_IP_INDX", "BN_USER_LOGIN_RECORD", "IP");
-				common.createIndex("BN_USER_LOGIN_RECORD_STATUS_INDX", "BN_USER_LOGIN_RECORD", "STATUS");
-				common.createIndex("BN_USER_LOGIN_RECORD_USER_NO_INDX", "BN_USER_LOGIN_RECORD", "USER_NO");
-				common.createIndex("BN_USER_LOGIN_RECORD_REG_DATE_INDX", "BN_USER_LOGIN_RECORD", "REG_DATE");
-			}
-
-			if( ! common.existTable("BN_USER_PW") ) {
-				log.info("BN_USER_PW 생성");
-				userMapper.createUserPw();
-				
-			}
-		} catch (Exception e) {
-			log.error("", e);
+	@Override
+	public int initTable() throws Exception {
+		int result = 0;
+		if( ! common.existTable("BN_USER_GROUP") ) {
+			log.info("BN_USER_GROUP 생성");
+			result += userMapper.createUserGroup();
+			result += common.createUniqueIndex("BN_USER_GROUP_NAME_INDX", "BN_USER_GROUP", "NAME");
+			result += this.insertBasicGroup();
 		}
-	}
 
-	/**
-	 * 미지정 사용자 그룹 추가
-	 * @return
-	 * @throws Exception
-	 */
-	@Transactional(rollbackFor = Exception.class)
-	private int insertNoramGroup() throws Exception {
-		final GroupVo group = new GroupVo();
-		group.setEnabled(true);
-		group.setName( KeyGroupUnsel );
-		group.setRole(EJwtRole.User);
-		group.setNote("처음 회원 가입시 포함될 그룹");
+		if( ! common.existTable("BN_USER") ) {
+			log.info("BN_USER 생성");
+			result += userMapper.createUser();
+			result += common.createUniqueIndex("BN_USER_ID_INDX", "BN_USER", "ID");
+		}
+
+		if( ! common.existTable("BN_USER_PROFILE_IMG") ) {
+			log.info("BN_USER_PROFILE_IMG 생성");
+			result += userMapper.createProfileImg();
+		}
 		
-		return this.userMapper.insertGroup(group);
+		if( ! common.existTable("BN_USER_LOGIN_RECORD") ) {
+			log.info("BN_USER_LOGIN_RECORD 생성");
+			result += userMapper.createLoginRecord();
+			result += common.createIndex("BN_USER_LOGIN_RECORD_IP_INDX", "BN_USER_LOGIN_RECORD", "IP");
+			result += common.createIndex("BN_USER_LOGIN_RECORD_STATUS_INDX", "BN_USER_LOGIN_RECORD", "STATUS");
+			result += common.createIndex("BN_USER_LOGIN_RECORD_USER_NO_INDX", "BN_USER_LOGIN_RECORD", "USER_NO");
+			result += common.createIndex("BN_USER_LOGIN_RECORD_REG_DATE_INDX", "BN_USER_LOGIN_RECORD", "REG_DATE");
+		}
+
+		if( ! common.existTable("BN_USER_PW") ) {
+			log.info("BN_USER_PW 생성");
+			result += userMapper.createUserPw();
+			
+		}
+		return result;
 	}
 
 	/**
@@ -101,14 +86,40 @@ class UserDaoImpl implements UserDao {
 	 * @throws Exception
 	 */
 	@Transactional(rollbackFor = Exception.class)
-	private int insertAdminGroup() throws Exception {
-		final GroupVo group = new GroupVo();
-		group.setEnabled(true);
-		group.setName( KeyGroupAdmin );
-		group.setRole(EJwtRole.Admin);
-		group.setNote("관리자 그룹");
+	private int insertBasicGroup() throws Exception {
+		int result = 0;
 		
-		return this.userMapper.insertGroup(group);
+		{
+			final GroupVo group = new GroupVo();
+			group.setEnabled(true);
+			group.setName( KeyGroupAdmin );
+			group.setRole(EJwtRole.Admin);
+			group.setNote("관리자 그룹");
+			
+			result += this.userMapper.insertGroup(group);
+		}
+		
+		{
+			final GroupVo group = new GroupVo();
+			group.setEnabled(true);
+			group.setName( KeyGroupUnsel );
+			group.setRole(EJwtRole.User);
+			group.setNote("처음 회원 가입시 포함될 그룹");
+			
+			result += this.userMapper.insertGroup(group);
+		}
+		
+		{
+			final GroupVo group = new GroupVo();
+			group.setEnabled(true);
+			group.setName( KeyGroupBasic );
+			group.setRole(EJwtRole.User);
+			group.setNote("첫 파일 로딩시 포함 될 그룹");
+			
+			result += this.userMapper.insertGroup(group);
+		}
+
+		return result;
 	}
 
 	/**
@@ -164,11 +175,12 @@ class UserDaoImpl implements UserDao {
 	@Transactional(rollbackFor = Exception.class)
 	public int addUser(LoginReqVo reqVo, UserVo user, String pw, byte [] profileImg) throws Exception {
 		
-		int res = userMapper.insertUser(user, profileImg);
+		int res = userMapper.insertUser(user);
 		if( res < 1 ) {
 			return res;
 		}
 		
+		res += userMapper.insertUserProfileImg(user.getUserNo(), profileImg);
 		res += this.updateUserPw( user, pw);
 		
 		userMapper.insertLoginRecord( reqVo, user, ELoginResult.Join );
@@ -205,6 +217,12 @@ class UserDaoImpl implements UserDao {
 	}
 	
 	@Override
+	public GroupVo getFileBaiscGroup() {
+		
+		return userMapper.selectGroupByName(this.KeyGroupBasic);
+	}
+	
+	@Override
 	public UserVo getManageUser() {
 		
 		return userMapper.selectUserId(AdminId);
@@ -213,8 +231,9 @@ class UserDaoImpl implements UserDao {
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public int updateUser(UserVo user, byte [] profileImg) throws Exception {
-		
-		return userMapper.updateUser(user, profileImg);
+		int result = userMapper.updateUser(user);
+		result += userMapper.updateUserProfileImg(user.getUserNo(), profileImg);
+		return result;
 	}
 	
 	@Override

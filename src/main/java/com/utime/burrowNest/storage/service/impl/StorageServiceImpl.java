@@ -407,6 +407,13 @@ public class StorageServiceImpl implements StorageService {
     
 	@Override
 	public ReturnBasic saveInitStorage(InitInforReqVo req) {
+		
+		try {
+			this.storageDao.initTable();
+		} catch (Exception e) {
+			log.error("", e);
+			return new ReturnBasic("E", e.getMessage() );
+		}
 
 		final InitFileLoad ifl = new InitFileLoad(req.getWsUserName(), userDao.getManageUser());
 		

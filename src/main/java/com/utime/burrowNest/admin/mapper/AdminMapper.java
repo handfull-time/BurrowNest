@@ -55,6 +55,13 @@ public interface AdminMapper {
 	 */
 	int updateGroup(GroupVo vo);
 
+	/**
+	 * 그룹 삭제
+	 * @param groupNo
+	 * @return
+	 */
+	int deleteGroup(int groupNo);
+
 	
 
 }

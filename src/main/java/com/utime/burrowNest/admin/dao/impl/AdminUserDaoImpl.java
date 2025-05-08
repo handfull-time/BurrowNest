@@ -69,4 +69,9 @@ class AdminUserDaoImpl implements AdminUserDao{
 		return result;
 	}
 
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public int deleteGroup(GroupVo group) throws Exception {
+		return mapper.deleteGroup( group.getGroupNo() );
+	}
 }

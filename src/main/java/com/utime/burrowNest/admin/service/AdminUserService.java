@@ -64,4 +64,11 @@ public interface AdminUserService {
 	 */
 	ReturnBasic saveGroup(GroupVo vo);
 
+	/**
+	 * 그룹 삭제
+	 * @param group
+	 * @return
+	 */
+	ReturnBasic deleteGroup(GroupVo group);
+
 }

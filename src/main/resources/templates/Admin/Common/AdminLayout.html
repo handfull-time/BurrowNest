@@ -18,6 +18,7 @@
     <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
         <h1 class="text-2xl font-bold text-blue-600"><th:block layout:fragment="title">Admin</th:block></h1>
         <nav class="space-x-4">
+			<a th:href="@{/Admin/Group/Group.html}" th:class="${currentURI == '/Admin/Group/Group.html' ? 'text-blue-600 font-bold' : 'text-gray-600 hover:text-blue-600'}">Group</a>
 			<a th:href="@{/Admin/User/User.html}" th:class="${currentURI == '/Admin/User/User.html' ? 'text-blue-600 font-bold' : 'text-gray-600 hover:text-blue-600'}">User</a>
 			<a th:href="@{/Admin/Storage/Storage.html}" th:class="${currentURI == '/Admin/Storage/Storage.html' ? 'text-blue-600 font-bold' : 'text-gray-600 hover:text-blue-600'}">Storage</a>
 			<a th:href="@{/Admin/Statistics/Statistics.html}" th:class="${currentURI == '/Admin/Statistics/Statistics.html' ? 'text-blue-600 font-bold' : 'text-gray-600 hover:text-blue-600'}">Statistics</a>

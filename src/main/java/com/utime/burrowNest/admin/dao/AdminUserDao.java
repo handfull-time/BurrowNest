@@ -56,6 +56,14 @@ public interface AdminUserDao {
 	 * @return
 	 */
 	int saveGroup(GroupVo vo)throws Exception;
+
+	/**
+	 * 그룹 삭제
+	 * @param group
+	 * @return
+	 * @throws Exception
+	 */
+	int deleteGroup(GroupVo group)throws Exception;
 	
 	
 	

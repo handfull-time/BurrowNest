@@ -215,6 +215,11 @@ class AuthServiceImpl implements AuthService {
 	@Override
 	public ReturnBasic procJoinUser( UserReqVo reqVo) {
 		
+		final String id = reqVo.getId().toLowerCase();
+		if( id.indexOf("admin") > -1 ) {
+			return new ReturnBasic("E", "부적합한 id(key: admin)");
+		}
+		
 		return this.procJoinUser( reqVo, this.userDao.getNormalGroup(), false, EJwtRole.User);
 	}
 	
@@ -245,6 +250,14 @@ class AuthServiceImpl implements AuthService {
 	
 	@Override
 	public ReturnBasic saveInitInfor(UserReqVo req) {
+		
+		try {
+			// 최초 회원 관련 테이블 생성
+			this.userDao.initTable();
+		} catch (Exception e) {
+			log.error("", e);
+			return new ReturnBasic("E", e.getMessage());
+		}
 		
 		return this.procJoinUser( req, this.userDao.getAdminGroup(), true, EJwtRole.Admin);
 	}

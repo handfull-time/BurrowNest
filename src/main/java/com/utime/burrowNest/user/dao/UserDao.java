@@ -8,6 +8,13 @@ import com.utime.burrowNest.user.vo.UserVo;
 public interface UserDao {
 	
 	public final String AdminId = "admin";
+	
+	/**
+	 * 사용자 테이블 생성
+	 * @return
+	 * @throws Exception
+	 */
+	int initTable()throws Exception;
 
 	/**
 	 * 회원 로그인
@@ -27,6 +34,13 @@ public interface UserDao {
 	 * @return
 	 */
 	GroupVo getNormalGroup();
+	
+	/**
+	 * 파일 로딩하고 -_-;;;;
+	 * 이건 없어질 것 같군...
+	 * @return
+	 */
+	GroupVo getFileBaiscGroup();
 	
 	/**
 	 * 사용자 추가
@@ -96,6 +110,5 @@ public interface UserDao {
 	 * @return
 	 */
 	byte[] getProfileImg(int userNo);
-
 
 }

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.utime.burrowNest.common.mapper.CommonMapper;
 import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.storage.dao.StorageDao;
 import com.utime.burrowNest.storage.mapper.StorageBasicMapper;
@@ -30,13 +31,105 @@ import lombok.extern.slf4j.Slf4j;
 class StorageDaoImpl implements StorageDao{
 	
 	@Autowired
+	private CommonMapper common;
+	
+	@Autowired
 	private StorageBasicMapper basic;
 	
 	@Autowired
 	private StorageMapper mapper;
 	
 	@Override
+	public int initTable() throws Exception {
+		int result = 0;
+		
+		if( ! common.existTable("BN_DIRECTORY") ) {
+			log.info("BN_DIRECTORY 생성");
+			result += basic.CreateDirectory();
+			result += common.createIndex("BN_DIRECTORY_PARENT_NO_INDX", "BN_DIRECTORY", "PARENT_NO");
+			result += common.createUniqueIndex("BN_DIRECTORY_UID_INDX", "BN_DIRECTORY", "UID");
+			result += common.createIndex("BN_DIRECTORY_NAME_INDX", "BN_DIRECTORY", "NAME");
+		}
+		
+		if( ! common.existTable("BN_DIRECTORY_ACCESS") ) {
+			log.info("BN_DIRECTORY_ACCESS 생성");
+			result += basic.CreateDirectoryAccess();
+		}
+
+		if( ! common.existTable("BN_FILE") ) {
+			log.info("BN_FILE 생성");
+			result += basic.CreateFile();
+			result += common.createIndex("BN_FILE_PARENT_NO_INDX", "BN_FILE", "PARENT_NO");
+			result += common.createUniqueIndex("BN_FILE_UID_INDX", "BN_FILE", "UID");
+			result += common.createIndex("BN_FILE_NAME_INDX", "BN_FILE", "NAME");
+		}
+
+		if( ! common.existTable("BN_FILE_ACCESS") ) {
+			log.info("BN_FILE_ACCESS 생성");
+			result += basic.CreateFileAccess();
+		}
+
+
+		if( ! common.existTable("BN_FILE_THUMBNAIL") ) {
+			log.info("BN_FILE_THUMBNAIL 생성");
+			result += basic.CreateFileThumbnail();
+		}
+
+		if( ! common.existTable("BN_FILE_DOCUMENT") ) {
+			log.info("BN_FILE_DOCUMENT 생성");
+			result += basic.CreateFileDocument();
+			result += common.createIndex("BN_FILE_DOCUMENT_TITLE_INDX", "BN_FILE_DOCUMENT", "TITLE");
+			result += common.createIndex("BN_FILE_DOCUMENT_SUBJECT_INDX", "BN_FILE_DOCUMENT", "SUBJECT");
+			result += common.createIndex("BN_FILE_DOCUMENT_CREATOR_INDX", "BN_FILE_DOCUMENT", "CREATOR");
+			result += common.createIndex("BN_FILE_DOCUMENT_KEYWORDS_INDX", "BN_FILE_DOCUMENT", "KEYWORDS");
+			result += common.createIndex("BN_FILE_DOCUMENT_CREATE_DATE_INDX", "BN_FILE_DOCUMENT", "CREATE_DATE");
+		}
+
+		if( ! common.existTable("BN_FILE_IMAGE") ) {
+			log.info("BN_FILE_IMAGE 생성");
+			result += basic.CreateFileImage();
+			result += common.createIndex("BN_FILE_IMAGE_CAMERA_MODEL_NAME_INDX", "BN_FILE_IMAGE", "CAMERA_MODEL_NAME");
+			result += common.createIndex("BN_FILE_IMAGE_CREATE_DATE_INDX", "BN_FILE_IMAGE", "CREATE_DATE");
+			result += common.createIndex("BN_FILE_IMAGE_GPS_INDX", "BN_FILE_IMAGE", "GPS_LATITUDE,GPS_LONGITUDE");
+		}
+
+		if( ! common.existTable("BN_FILE_VIDEO") ) {
+			log.info("BN_FILE_VIDEO 생성");
+			result += basic.CreateFileVideo();
+			result += common.createIndex("BN_FILE_VIDEO_AUTHOR_INDX", "BN_FILE_VIDEO", "AUTHOR");
+			result += common.createIndex("BN_FILE_VIDEO_CREATE_DATE_INDX", "BN_FILE_VIDEO", "CREATE_DATE");
+			result += common.createIndex("BN_FILE_VIDEO_GPS_INDX", "BN_FILE_VIDEO", "GPS_LATITUDE,GPS_LONGITUDE");
+		}
+
+		if( ! common.existTable("BN_FILE_AUDIO") ) {
+			log.info("BN_FILE_AUDIO 생성");
+			result += basic.CreateFileAudio();
+			result += common.createIndex("BN_FILE_AUDIO_TITLE_INDX", "BN_FILE_AUDIO", "TITLE");
+			result += common.createIndex("BN_FILE_AUDIO_ARTIST_INDX", "BN_FILE_AUDIO", "ARTIST");
+			result += common.createIndex("BN_FILE_AUDIO_ALBUM_INDX", "BN_FILE_AUDIO", "ALBUM");
+			result += common.createIndex("BN_FILE_AUDIO_GENRE_INDX", "BN_FILE_AUDIO", "GENRE");
+		}
+
+		if( ! common.existTable("BN_FILE_ARCHIVE") ) {
+			log.info("BN_FILE_ARCHIVE 생성");
+			result += basic.CreateFileArchive();
+		}
+
+		if( ! common.existTable("BN_FILE_DENIED_EXTENSION") ) {
+			log.info("BN_FILE_DENIED_EXTENSION 생성");
+			result += basic.CreateDeniedFileExtension();
+		}
+
+		return result;
+	}
+	
+	@Override
 	public boolean IsInit() {
+		
+		if( ! common.existTable("BN_DIRECTORY") ) {
+			return false;
+		}
+		
 		return mapper.IsInit();
 	}
 	
@@ -54,12 +147,69 @@ class StorageDaoImpl implements StorageDao{
 
 	@Override
 	public Map<String, EBnFileType> getBnFileType() {
+		int dbRes = 0;
+		
+		if( ! common.existTable("BN_FILE_EXTENSION") ) {
+			log.info("BN_FILE_EXTENSION 생성");
+			dbRes += basic.CreateFileExtension();
+			
+			{
+				dbRes += basic.insertFileExtension( "pdf" , EBnFileType.Document);
+				dbRes += basic.insertFileExtension( "doc" , EBnFileType.Document);
+				dbRes += basic.insertFileExtension( "docx", EBnFileType.Document);
+				dbRes += basic.insertFileExtension( "xls" , EBnFileType.Document);
+				dbRes += basic.insertFileExtension( "xlsx", EBnFileType.Document);
+				dbRes += basic.insertFileExtension( "ppt" , EBnFileType.Document);
+				dbRes += basic.insertFileExtension( "pptx", EBnFileType.Document);
+				dbRes += basic.insertFileExtension( "hwp" , EBnFileType.Document);
+			}
+			{
+				dbRes += basic.insertFileExtension( "jpg" , EBnFileType.Image);
+				dbRes += basic.insertFileExtension( "jpeg", EBnFileType.Image);
+				dbRes += basic.insertFileExtension( "png" , EBnFileType.Image);
+				dbRes += basic.insertFileExtension( "gif" , EBnFileType.Image);
+				dbRes += basic.insertFileExtension( "bmp" , EBnFileType.Image);
+				dbRes += basic.insertFileExtension( "webp", EBnFileType.Image);
+				dbRes += basic.insertFileExtension( "svg" , EBnFileType.Image);
+				dbRes += basic.insertFileExtension( "tiff", EBnFileType.Image);
+				dbRes += basic.insertFileExtension( "ico" , EBnFileType.Image);
+				dbRes += basic.insertFileExtension( "cr2" , EBnFileType.Image);
+			}
+			{
+				dbRes += basic.insertFileExtension( "mp4" , EBnFileType.Video);
+				dbRes += basic.insertFileExtension( "mov" , EBnFileType.Video);
+				dbRes += basic.insertFileExtension( "avi" , EBnFileType.Video);
+				dbRes += basic.insertFileExtension( "mkv" , EBnFileType.Video);
+				dbRes += basic.insertFileExtension( "wmv" , EBnFileType.Video);
+				dbRes += basic.insertFileExtension( "flv" , EBnFileType.Video);
+				dbRes += basic.insertFileExtension( "webm", EBnFileType.Video);
+			}
+			{
+				dbRes += basic.insertFileExtension( "mp3" , EBnFileType.Audio);
+				dbRes += basic.insertFileExtension( "wav" , EBnFileType.Audio);
+				dbRes += basic.insertFileExtension( "flac", EBnFileType.Audio);
+				dbRes += basic.insertFileExtension( "aac" , EBnFileType.Audio);
+				dbRes += basic.insertFileExtension( "ogg" , EBnFileType.Audio);
+				dbRes += basic.insertFileExtension( "m4a" , EBnFileType.Audio);
+			}
+			{
+				dbRes += basic.insertFileExtension( "zip", EBnFileType.Archive);
+				dbRes += basic.insertFileExtension( "rar", EBnFileType.Archive);
+				dbRes += basic.insertFileExtension( "7z" , EBnFileType.Archive);
+				dbRes += basic.insertFileExtension( "tar", EBnFileType.Archive);
+				dbRes += basic.insertFileExtension( "gz" , EBnFileType.Archive);
+				dbRes += basic.insertFileExtension( "jar", EBnFileType.Archive);
+			}
+		}
+		
+		log.info("결과 : " + dbRes);
 		
 		final Map<String, EBnFileType> result = new HashMap<>();
 		final List<BnFileExtension> list = basic.selectFileExtensionAll();
 		for( BnFileExtension item : list ) {
 			result.put(item.getExtension(), item.getFileType());
 		}
+		
 		return result;
 	}
 

@@ -67,14 +67,14 @@
 	<!-- 사용자 그룹 정보 조회 -->
 	<select id="selectUserGroupList" resultType="com.utime.burrowNest.user.vo.GroupVo">
 		SELECT
-			<include refid="com.utime.burrowNest.user.mapper.UserMapper.UserColumn"/>
+			<include refid="com.utime.burrowNest.user.mapper.UserMapper.GroupColumn"/>
 		FROM BN_USER_GROUP GR
 		WHERE 1=1
 			<if test="enabled != null">
-			AND ENABLED = #{enabled}
+			AND GR.ENABLED = #{enabled}
 			</if>
 			<if test="grName != null and grName != '' ">
-			AND NAME LIKE ${grName}
+			AND GR.NAME LIKE '%${grName}%'
 			</if>
 		ORDER BY
         CASE
@@ -98,5 +98,11 @@
 			, MAX_STORAGE_USAGE = #{maxStorageUsage}
 		WHERE NO = #{groupNo}
 	</update>
+	
+	<!-- 그룹 삭제 -->
+	<delete id="deleteGroup" parameterType="integer">
+		DELETE FROM BN_USER_GROUP GR
+		WHERE GR.NO = #{groupNo}
+	</delete>
 	
 </mapper>

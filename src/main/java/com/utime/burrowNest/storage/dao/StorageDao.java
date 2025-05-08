@@ -8,6 +8,13 @@ import com.utime.burrowNest.storage.vo.BnFile;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 
 public interface StorageDao {
+
+	/**
+	 * 초기화 처리
+	 * @return
+	 * @throws Exception
+	 */
+	int initTable()throws Exception;
 	
 	/**
 	 * 관리자 초기화 했는지 여부 
@@ -100,5 +107,7 @@ public interface StorageDao {
 	 * @return
 	 */
 	byte[] getThumbnail(String fid);
+
+	
 
 }

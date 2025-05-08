@@ -47,6 +47,12 @@ public interface UserMapper {
 	int createUser();
 	
 	/**
+	 * 회원 프로필 이미지 생성
+	 * @return
+	 */
+	int createProfileImg();
+	
+	/**
 	 * 비번 
 	 * @return
 	 */
@@ -64,7 +70,15 @@ public interface UserMapper {
 	 * @param user
 	 * @return
 	 */
-	int insertUser(@Param("user") UserVo user, @Param("profileImg") byte [] profileImg);
+	int insertUser(UserVo user);
+	
+	/**
+	 * 사용자 프로필 이미지 추가
+	 * @param userNo
+	 * @param profileImg
+	 * @return
+	 */
+	int insertUserProfileImg(@Param("userNo") int userNo, @Param("profileImg") byte [] profileImg); 
 	
 	/**
 	 * 로그인 기록 추가.
@@ -125,7 +139,16 @@ public interface UserMapper {
 	 * @param user
 	 * @return
 	 */
-	int updateUser( @Param("user") UserVo user, @Param("profileImg") byte [] profileImg )throws Exception ;
+	int updateUser( UserVo user )throws Exception ;
+	
+	/**
+	 * 사용자 이미지 갱신
+	 * @param userNo
+	 * @param profileImg
+	 * @return
+	 * @throws Exception
+	 */
+	int updateUserProfileImg( @Param("userNo") int userNo, @Param("profileImg") byte [] profileImg )throws Exception ;
 
 	/**
 	 * PW 성공 여부 횟수 업데이트

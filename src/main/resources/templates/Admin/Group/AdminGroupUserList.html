@@ -1,7 +1,7 @@
 <!-- 회원 목록 -->
 <div xmlns:th="http://www.thymeleaf.org">
 <div class="bg-white shadow p-6 rounded-md">
-    <h2 class="text-xl font-bold text-gray-700 mb-4">회원 목록</h2>
+    <h2 class="text-xl font-bold text-gray-700 mb-4">그룹 목록</h2>
     <table class="w-full border-collapse border border-gray-200">
         <thead>
             <tr class="bg-gray-100">
@@ -14,7 +14,7 @@
         </thead>
         <tbody>
             <tr th:unless="${#lists.isEmpty(groups)}"
-            	th:each="item : ${users}" th:data-user-no="${item.groupNo}">
+            	th:each="item : ${groups}" th:data-group-no="${item.groupNo}">
                 <td class="border p-2 text-center" th:text="${#temporals.format(item.regDate,'yyyy.MM.dd HH:mm')}"></td>
                 <td class="border p-2 text-center" th:text="${#temporals.format(item.updateDate,'yyyy.MM.dd HH:mm')}"></td>
                 <td class="border p-2 id-cell underline cursor-pointer" th:text="${item.name}"></td>
@@ -30,20 +30,9 @@
     document.querySelectorAll('.id-cell').forEach(idCell => {
         idCell.addEventListener('click', function() {
             const row = this.parentNode;
-            const userNo = row.dataset.userNo;
+            const groupNo = row.dataset.groupNo;
             
-            const url = /*[[@{/Admin/Group/GroupItem.layer}]]*/ null;
-            const urlValue = url + '?userNo=' + userNo;
-            
-            const sendValue = {
-			        url: urlValue,
-					method: MethodType.Get,
-			        contentType: ContentsType.Form, // 기본값: JSON
-			        popupId:'Profile',
-			        width: '800px'
-			    };
-            
-            openPopup( sendValue );
+            onGroupDetail( groupNo );
         });
     });
 </script>

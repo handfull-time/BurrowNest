@@ -3,41 +3,40 @@
     layout:decorate="~{Common/LayoutModal}">
     
     <th:block layout:fragment="modalTitle">
-        회원 상세
+        그룹 회원 상세
     </th:block>
 
 	<th:block layout:fragment="modalContent">
-	<form id="updateUserForm" th:object="${item}">
-		<input type="hidden" th:field="*{userNo}">
+	<form id="updateGroupForm" th:object="${item}">
+		<input type="hidden" th:field="*{groupNo}">
         <table class="w-full border-collapse">
 		    <tbody>
 	            <tr>
 	                <td class="w-1/4 font-medium p-2">
-	                	<label for="id">아이디</label>
+	                	<label for="name">이름</label>
 	                </td>
 	                <td class="w-3/4 p-2">
-	                    <input type="text" th:field="*{id}" readonly
-	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400"  
-	                    	th:value="${item.id}" >
+	                    <input type="text" th:field="*{name}" th:readonly="${item.groupNo eq 1 or item.groupNo eq 2 }"
+	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" >
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="nickname">사용여부</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="enabled">사용여부</label></td>
 	                <td class="w-3/4 p-2">
 	                    <div class="flex items-center space-x-4">
 				            <div>
 				                <input type="radio" id="enabledTrue" name="enabled" value="true" class="form-radio h-5 w-5 text-green-500 focus:ring-green-500" th:checked="${item.enabled}">
-				                <label for="yes" class="ml-2 text-gray-700">예</label>
+				                <label for="enabledTrue" class="ml-2 text-gray-700">예</label>
 				            </div>
 				            <div>
 				                <input type="radio" id="enabledFalse" name="enabled" value="false" class="form-radio h-5 w-5 text-red-500 focus:ring-red-500"  th:checked="${! item.enabled}">
-				                <label for="no" class="ml-2 text-gray-700">아니오</label>
+				                <label for="enabledFalse" class="ml-2 text-gray-700">아니오</label>
 				            </div>
 				        </div>
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="nickname">역할</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="role">역할</label></td>
 	                <td class="w-3/4 p-2">
 	                    <select id="role" name="role" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
 	                        <option value="">선택하세요</option>
@@ -50,28 +49,28 @@
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="id">비고</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="note">비고</label></td>
 	                <td class="w-3/4 p-2">
 	                    <input type="text" th:field="*{note}" maxlength="255" 
 	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" >
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="id">하루 업로드 제한</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="dailyUploadLimit">하루 업로드 제한</label></td>
 	                <td class="w-3/4 p-2">
 	                    <input type="number" th:field="*{dailyUploadLimit}"  
 	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" >
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="id">일일 최대 다운로드</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="dailyDownloadLimit">일일 최대 다운로드</label></td>
 	                <td class="w-3/4 p-2">
 	                    <input type="number" th:field="*{dailyDownloadLimit}"  
 	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" >
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="id">저장공간 최대 사용</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="maxStorageUsage">저장공간 최대 사용</label></td>
 	                <td class="w-3/4 p-2">
 	                    <input type="number" th:field="*{maxStorageUsage}"  
 	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" >
@@ -80,12 +79,13 @@
 	        </tbody>
 	    </table>
     </form>
+    
     <!-- 회원 삭제 버튼 -->
-    <div class="flex justify-end mt-4 space-x-2">
+    <div th:if="${item.groupNo > 1}"  class="flex justify-end mt-4 space-x-2">
         <button type="button"
-                onclick="deleteUser(this)"
+                onclick="deleteGroup(this)"
                 class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400">
-            회원 삭제
+            그룹 삭제
         </button>
     </div>
     </th:block>
@@ -96,7 +96,7 @@
 		<script th:inline="javascript">
 		
 		function getUserInfo(){
-			const form = document.getElementById('updateUserForm');
+			const form = document.getElementById('updateGroupForm');
         	const formData = new FormData(form);
         	const jsonData = {};
         	 
@@ -107,15 +107,15 @@
         	return jsonData;
 		}
 		
-		function deleteUser(ele) {
+		function deleteGroup(ele) {
 			
-			showCustomConfirm("정말로 이 회원을 삭제하시겠습니까?", async (isConfirm) => {
+			showCustomConfirm("정말로 이 그룹을 삭제하시겠습니까?", async (isConfirm) => {
             	
             	if( ! isConfirm ){
             		return;
             	}
             	
-               	const url = /*[[@{/Admin/User/DeleteUser.json}]]*/ null;
+               	const url = /*[[@{/Admin/Group/DeleteGroup.json}]]*/ null;
                	
             	const options = {
             			method: 'POST',
@@ -155,7 +155,7 @@
 		 // 데이터 저장
         async function saveData(ele) {
         	
-        	const url = /*[[@{/Admin/User/SaveUser.json}]]*/ null;
+        	const url = /*[[@{/Admin/Group/SaveGroup.json}]]*/ null;
         	const options = {
         			method: 'POST',
         			headers: {

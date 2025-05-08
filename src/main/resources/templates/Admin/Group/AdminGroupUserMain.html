@@ -14,6 +14,7 @@
                 <input type="text" id="searchName" placeholder="그룹 이름 입력"
                        class="border p-2 rounded w-1/3 focus:outline-none focus:ring-2 focus:ring-blue-600">
                 <button type="button" class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" onclick="search()">검색</button>
+                <button type="button" class="bg-green-600 text-white p-2 rounded hover:bg-green-700" onclick="onGroupDetail(0)">추가</button>
             </div>
         </div>
 
@@ -48,6 +49,21 @@
         	
         	doSearchList(urlAddress, options, 'ResultList');
         };
+        
+        function onGroupDetail(groupNo){
+        	const url = /*[[@{/Admin/Group/GroupItem.layer}]]*/ null;
+            const urlValue = url + '?groupNo=' + groupNo;
+            
+            const sendValue = {
+			        url: urlValue,
+					method: MethodType.Get,
+			        contentType: ContentsType.Form, // 기본값: JSON
+			        popupId:'Profile',
+			        width: '800px'
+			    };
+            
+            openPopup( sendValue );
+        }
     </script>
     </th:block>
 

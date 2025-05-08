@@ -56,17 +56,24 @@
 			, GROUP_NO INT NOT NULL <!-- 사용자 그룹 번호 --> 
 			, ID VARCHAR(32) NOT NULL <!-- ID -->
 			, NICK_NAME VARCHAR(128) NOT NULL <!-- 별명 -->
-			, PROFILE_IMG BINARY VARYING(307200) NOT NULL <!-- 아이콘 이미지  -->
 			, ROLE VARCHAR(16) NOT NULL <!-- 권한 -->
 			, NOTE VARCHAR(255) DEFAULT NULL <!-- 비고 -->
 			, AUTH_HINT VARCHAR(64) DEFAULT NULL <!-- 계정 찾기 힌트 (이름 + 질문1 + 질문2 + 질문3: 해쉬) -->
 			, DAILY_UPLOAD_LIMIT BIGINT DEFAULT 0 <!-- 하루 업로드 제한 (byte) -->
 			, DAILY_DOWNLOAD_LIMIT BIGINT DEFAULT 0  <!-- 일일 최대 다운로드 용량 -->
 			, MAX_STORAGE_USAGE BIGINT DEFAULT 0 <!-- 저장공간 최대 사용 용량 -->
-			, FOREIGN KEY(USER_GROUP_NO) REFERENCES BN_USER_GROUP(NO) ON DELETE CASCADE
+			, FOREIGN KEY(GROUP_NO) REFERENCES BN_USER_GROUP(NO)
 		)
 	</insert>
 	
+	<insert id="createProfileImg">
+		CREATE TABLE BN_USER_PROFILE_IMG (
+			USER_NO INT PRIMARY KEY 
+			, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
+			, PROFILE_IMG BINARY VARYING(307200) NOT NULL <!-- 아이콘 이미지  -->
+			, FOREIGN KEY(USER_NO) REFERENCES BN_USER(NO) ON DELETE CASCADE
+		)
+	</insert>
 	
 	<insert id="createUserPw">
 		CREATE TABLE BN_USER_PW (
@@ -84,7 +91,7 @@
 			NO INT PRIMARY KEY AUTO_INCREMENT
 			, REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP <!-- 생성일 -->
 			, IP VARCHAR(32) NOT NULL
-			, USER_AGENT VARCHAR(256) NOT NULL
+			, USER_AGENT VARCHAR(255) NOT NULL
 			, STATUS VARCHAR(32) NOT NULL
 			, REQ_ID VARCHAR(32) NOT NULL <!-- 요청 ID -->
 			, USER_NO INT DEFAULT -1
@@ -92,16 +99,13 @@
 	</insert>
 	
 	<!-- 사용자 추가 -->
-	<insert id="insertUser" parameterType="map" useGeneratedKeys="true" keyProperty="user.userNo" >
+	<insert id="insertUser" parameterType="com.utime.burrowNest.user.vo.UserVo" useGeneratedKeys="true" keyProperty="userNo" >
 		INSERT INTO BN_USER (
 			UPDATE_DATE 
 			, ENABLED
 			, GROUP_NO
 			, ID 
 			, NICK_NAME 
-			<if test="profileImg != null ">
-			, PROFILE_IMG
-			</if>
 			, ROLE
 			, AUTH_HINT
 			, DAILY_UPLOAD_LIMIT 
@@ -109,18 +113,27 @@
 			, MAX_STORAGE_USAGE 
 		) VALUES (
 			CURRENT_TIMESTAMP
-			, #{user.enabled}
-			, #{user.group.groupNo}
-			, #{user.id}
-			, #{user.nickname}
-			<if test="profileImg != null ">
-			, #{profileImg, jdbcType=VARBINARY}
-			</if>
-			, #{user.group.role}
-			, #{user.authHint}
-			, #{user.group.dailyUploadLimit}
-			, #{user.group.dailyDownloadLimit}
-			, #{user.group.maxStorageUsage}
+			, #{enabled}
+			, #{group.groupNo}
+			, #{id}
+			, #{nickname}
+			, #{group.role}
+			, #{authHint}
+			, #{group.dailyUploadLimit}
+			, #{group.dailyDownloadLimit}
+			, #{group.maxStorageUsage}
+		)
+	</insert>
+	
+	<insert id="insertUserProfileImg">
+		INSERT INTO BN_USER_PROFILE_IMG (
+			USER_NO
+			, UPDATE_DATE
+			, PROFILE_IMG
+		)VALUES (
+			#{userNo}
+			, CURRENT_TIMESTAMP
+			, #{profileImg, jdbcType=VARBINARY} 
 		)
 	</insert>
 
@@ -268,14 +281,18 @@
 	</update>
 	
 	<!-- 사용자 정보 갱신 -->
-	<update id="updateUser" parameterType="map" >
+	<update id="updateUser" parameterType="com.utime.burrowNest.user.vo.UserVo" >
 		UPDATE BN_USER SET
 			UPDATE_DATE = CURRENT_TIMESTAMP
-			, NICK_NAME = #{user.nickname}
-			<if test=" profileImg != null "> 
+			, NICK_NAME = #{nickname}
+		WHERE NO = #{userNo}
+	</update>
+	
+	<update id="updateUserProfileImg">
+		UPDATE BN_USER_PROFILE_IMG SET
+			UPDATE_DATE = CURRENT_TIMESTAMP
 			, PROFILE_IMG = #{profileImg, jdbcType=VARBINARY}
-			</if>
-		WHERE NO = #{user.userNo}
+		WHERE USER_NO = #{userNo}
 	</update>
 	
 	<!-- PW 성공 여부 횟수 업데이트 -->
@@ -313,9 +330,9 @@
 	<!-- 사용자 프로필 이미지 -->
 	<select id="selectProfileImg" parameterType="map" resultMap="com.utime.burrowNest.common.mapper.CommonMapper.BinResultVoMap">
 		SELECT
-			UR.PROFILE_IMG AS BIN_DATA
-		FROM BN_USER UR
-		WHERE UR.NO = #{userNo}
+			PROFILE_IMG AS BIN_DATA
+		FROM BN_USER_PROFILE_IMG 
+		WHERE USER_NO = #{userNo}
 	</select>
 	
 </mapper>

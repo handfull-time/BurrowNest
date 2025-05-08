@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.utime.burrowNest.admin.service.AdminUserService;
 import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
 @Controller
@@ -45,17 +46,24 @@ public class AdminGroupUserController {
 	@GetMapping("GroupItem.layer")
     public String getUserProfile(ModelMap model, @RequestParam(name="groupNo") int groupNo) {
 		
-		model.addAttribute("item", userService.getUserFromNo(groupNo));
+		model.addAttribute("item", userService.getGroupByNo(groupNo));
 		model.addAttribute("roles", EJwtRole.values() );
         
 		return "Admin/Group/GroupUserLayer";
     }
 	
 	@ResponseBody
-	@PostMapping("SaveGroupUser.json")
-    public ReturnBasic saveUser( @RequestBody UserVo user) {
+	@PostMapping("SaveGroup.json")
+    public ReturnBasic saveGroup( @RequestBody GroupVo group) {
 		
-		return userService.saveUser( user );
+		return userService.saveGroup( group );
+    }
+	
+	@ResponseBody
+	@PostMapping("DeleteGroup.json")
+    public ReturnBasic deleteGroup( @RequestBody GroupVo group) {
+		
+		return userService.deleteGroup( group );
     }
 }
 
