@@ -23,7 +23,7 @@
 </insert>
 
 <!-- 루트 생성 -->
-<insert id="InsertRootDirectory">
+<insert id="InsertRootDirectory" parameterType="com.utime.burrowNest.user.vo.UserVo">
 	INSERT INTO BN_DIRECTORY (
 		UPDATE_DATE 
 		, ENABLED 
@@ -36,9 +36,9 @@
 		, ABSOLUTE_PATH	
 	) VALUES (
 		CURRENT_TIMESTAMP
-		, true
+		, TRUE
 		, 1
-		, 1
+		, #{userNo}
 		, true
 		, CURRENT_TIMESTAMP
 		, CURRENT_TIMESTAMP

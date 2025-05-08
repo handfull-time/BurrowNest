@@ -21,7 +21,7 @@
 	
 	<!-- 어드민 그룹 -->
 	<insert id="insertGroup" parameterType="com.utime.burrowNest.user.vo.GroupVo" 
-		useGeneratedKeys="true" keyProperty="groupNo" >
+		useGeneratedKeys="true"  keyColumn="NO" keyProperty="groupNo">
 		INSERT INTO BN_USER_GROUP (
 			UPDATE_DATE
 			, ENABLED 
@@ -99,7 +99,8 @@
 	</insert>
 	
 	<!-- 사용자 추가 -->
-	<insert id="insertUser" parameterType="com.utime.burrowNest.user.vo.UserVo" useGeneratedKeys="true" keyProperty="userNo" >
+	<insert id="insertUser" parameterType="com.utime.burrowNest.user.vo.UserVo" 
+		useGeneratedKeys="true" keyProperty="userNo" keyColumn="NO" >
 		INSERT INTO BN_USER (
 			UPDATE_DATE 
 			, ENABLED
@@ -231,7 +232,7 @@
 	</select>
 	
 	<!-- id 조회 -->	
-	<select id="selectUserId" parameterType="map" resultType="com.utime.burrowNest.user.vo.UserVo">
+	<select id="selectUserId" parameterType="map" resultMap="UserVoMap">
 		SELECT 
 			<include refid="UserColumn" /> 
 		FROM BN_USER UR 
@@ -241,7 +242,7 @@
 	</select>
 	
 	<!-- 기본 회원 정보 조회 -->
-	<select id="selectUserIdBasic" parameterType="map" resultType="com.utime.burrowNest.user.vo.UserVo">
+	<select id="selectUserIdBasic" parameterType="map" resultMap="UserVoMap">
 		SELECT 
 			<include refid="UserAllColumn" /> 
 		FROM BN_USER UR

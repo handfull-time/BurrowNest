@@ -14,6 +14,7 @@ import com.utime.burrowNest.storage.dao.StorageDao;
 import com.utime.burrowNest.storage.mapper.StorageBasicMapper;
 import com.utime.burrowNest.storage.mapper.StorageMapper;
 import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
+import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
 import com.utime.burrowNest.storage.vo.BnFileArchive;
@@ -22,7 +23,9 @@ import com.utime.burrowNest.storage.vo.BnFileDocument;
 import com.utime.burrowNest.storage.vo.BnFileExtension;
 import com.utime.burrowNest.storage.vo.BnFileImage;
 import com.utime.burrowNest.storage.vo.BnFileVideo;
+import com.utime.burrowNest.storage.vo.EAccessType;
 import com.utime.burrowNest.storage.vo.EBnFileType;
+import com.utime.burrowNest.user.vo.UserVo;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -135,16 +138,20 @@ class StorageDaoImpl implements StorageDao{
 	
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public BnDirectory InsertRootDirectory() throws Exception {
+	public BnDirectory InsertRootDirectory(UserVo owner, EAccessType at ) throws Exception {
 		
-		if( basic.InsertRootDirectory() < 1 ) {
+		if( basic.InsertRootDirectory(owner) < 1 ) {
 			log.warn("root 생성 실패");
 			throw new Exception("Root 생성 실패");
 		}
 		
-		return mapper.selectBnDirectoryByNo(1L);
+		final BnDirectory result = mapper.selectBnDirectoryByNo(1L);
+		
+		this.insertAccess(owner, result, at);
+		
+		return result;
 	}
-
+	
 	@Override
 	public Map<String, EBnFileType> getBnFileType() {
 		int dbRes = 0;
@@ -215,27 +222,56 @@ class StorageDaoImpl implements StorageDao{
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public int saveDirectory(BnDirectory dir) throws Exception {
+	public int saveDirectory(BnDirectory dir, UserVo owner, EAccessType at ) throws Exception {
 		
 		final int result;
 		if( dir.getNo() < 0L ) {
 			result = mapper.insertBnDirectory(dir);
+			this.insertAccess(owner, dir, at);
 		}else {
 			result = mapper.updateBnDirectory(dir);
+			this.updateAccess(owner, dir, at);
 		}
 		return result;
 	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public int saveFile(BnFile file) throws Exception {
+	public int saveFile(BnFile file, UserVo owner, EAccessType at) throws Exception {
 		
 		final int result;
 		if( file.getNo() < 0L ) {
 			result = mapper.insertBnFile(file);
+			this.insertAccess(owner, file, at);
 		}else {
 			result = mapper.updateBnFile(file);
+			this.updateAccess(owner, file, at);
 		}
+		return result;
+	}
+
+	@Transactional(rollbackFor = Exception.class)
+	private int updateAccess(UserVo owner, AbsPath obj, EAccessType at) throws Exception  {
+		
+		int result;
+		if( obj instanceof BnFile ) {
+			result = mapper.updateFileAccess(obj.getNo(), owner.getGroup().getGroupNo(), at.getBit());
+		}else {
+			result = mapper.updateDirectoryAccess(obj.getNo(), owner.getGroup().getGroupNo(), at.getBit());
+		}
+		
+		return result;
+	}
+
+	@Transactional(rollbackFor = Exception.class)
+	private int insertAccess(UserVo owner, AbsPath obj, EAccessType at) throws Exception  {
+		int result;
+		if( obj instanceof BnFile ) {
+			result = mapper.insertFileAccess(obj.getNo(), owner.getGroup().getGroupNo(), at.getBit());
+		}else {
+			result = mapper.insertDirectoryAccess(obj.getNo(), owner.getGroup().getGroupNo(), at.getBit());
+		}
+		
 		return result;
 	}
 

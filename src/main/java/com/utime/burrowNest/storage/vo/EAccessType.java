@@ -5,9 +5,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public enum EAccessType {
-	READ(0b001),
-    WRITE(0b010),
-    EXECUTE(0b100); // 디렉토리 진입 권한 등
+	NONE(         0b0000), // 권한 없음
+    READ(         0b0001), // 목록 조회 권한
+    WRITE_UPLOAD( 0b0010), // 업로드 권한
+    WRITE_MODIFY( 0b0100), // 수정 권한
+    WRITE_DELETE( 0b1000), // 삭제 권한
+	ALL(          0b1111); // 모든 권한
 
     private final int bit;
 

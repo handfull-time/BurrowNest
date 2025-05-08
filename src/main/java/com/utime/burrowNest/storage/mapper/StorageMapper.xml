@@ -15,7 +15,7 @@
 	
  <!-- Insert: 새 디렉토리 생성 -->
 <insert id="insertBnDirectory" parameterType="com.utime.burrowNest.storage.vo.BnDirectory" 
-	useGeneratedKeys="true" keyProperty="no">
+	useGeneratedKeys="true" keyProperty="no" keyColumn="NO" >
     INSERT INTO BN_DIRECTORY (
     	UPDATE_DATE
     	, ENABLED
@@ -85,30 +85,48 @@
 <insert id="insertDirectoryAccess" parameterType="map">
 	INSERT INTO BN_DIRECTORY_ACCESS (
 		DIR_NO 
-		, USER_NO  
+		, GROUP_NO  
 		, ACCESS_FLAGS 
 	) VALUES (
 		#{dirNo}
-		, #{userNo}
+		, #{groupNo}
 		, #{accType}
 	) 
 </insert>
+
+<!-- Dir 권한 수정하기 -->
+<update id="updateDirectoryAccess" parameterType="map">
+	UPDATE BN_DIRECTORY_ACCESS SET
+		ACCESS_FLAGS = #{accType}
+	WHERE 1=1
+		AND DIR_NO = #{dirNo}
+		AND GROUP_NO = #{groupNo}
+</update>
 
 <!-- 파일 권한 추가하기 -->
 <insert id="insertFileAccess" parameterType="map">
-	INSERT INTO BN_File_ACCESS (
+	INSERT INTO BN_FILE_ACCESS (
 		FILE_NO 
-		, USER_NO  
+		, GROUP_NO  
 		, ACCESS_FLAGS 
 	) VALUES (
 		#{fileNo}
-		, #{userNo}
+		, #{groupNo}
 		, #{accType}
 	) 
 </insert>
 
+<!-- 파일 권한 수정하기 -->
+<update id="updateFileAccess" parameterType="map">
+	UPDATE BN_FILE_ACCESS SET
+		ACCESS_FLAGS = #{accType}
+	WHERE 1=1
+		AND FILE_NO = #{fileNo}
+		AND GROUP_NO = #{groupNo}
+</update>
+
 <!-- 파일 추가 -->
-<insert id="insertBnFile" parameterType="com.utime.burrowNest.storage.vo.BnFile" useGeneratedKeys="true" keyProperty="no" >
+<insert id="insertBnFile" parameterType="com.utime.burrowNest.storage.vo.BnFile" useGeneratedKeys="true" keyProperty="no" keyColumn="NO" >
     INSERT INTO BN_FILE (
     	REG_DATE
     	, UPDATE_DATE
@@ -119,7 +137,9 @@
     	, FILE_TYPE
     	, CREATION
     	, LAST_MODIFIED
+    	<if test="extension != null and extension != '' ">
     	, EXTENSION
+    	</if>
     	, NAME
     ) VALUES (
     	CURRENT_TIMESTAMP
@@ -131,7 +151,9 @@
     	, #{fileType}
     	, #{creation}
     	, #{lastModified}
+    	<if test="extension != null and extension != '' ">
     	, #{extension}
+    	</if>
     	, #{name}
     )
 </insert>
@@ -166,7 +188,9 @@
         , FILE_TYPE = #{fileType}
         , CREATION = #{creation}
         , LAST_MODIFIED = #{lastModified}
+        <if test="extension != null and extension != '' ">
         , EXTENSION = #{extension}
+        </if>
         , NAME = #{name}
     WHERE NO = #{no}
 </update>

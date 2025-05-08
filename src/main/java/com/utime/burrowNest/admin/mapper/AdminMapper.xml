@@ -38,7 +38,7 @@
 	</select>
 	
 	
-	<select id="getUserDetail" parameterType="map" resultType="com.utime.burrowNest.user.vo.UserVo">
+	<select id="getUserDetail" parameterType="map" resultMap="com.utime.burrowNest.user.mapper.UserMapper.UserVoMap">
 		SELECT
 			<include refid="com.utime.burrowNest.user.mapper.UserMapper.UserAllColumn" /> 
 		FROM BN_USER UR

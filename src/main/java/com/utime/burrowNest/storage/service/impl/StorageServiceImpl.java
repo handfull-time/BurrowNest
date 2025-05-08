@@ -22,6 +22,7 @@ import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
+import com.utime.burrowNest.storage.vo.EAccessType;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.storage.vo.MessageDataVo;
 import com.utime.burrowNest.user.dao.UserDao;
@@ -96,11 +97,13 @@ public class StorageServiceImpl implements StorageService {
     	private final File file;
     	private final InitFileLoad ifl;
     	private final BnDirectory parent;
+    	private final EAccessType at;
     	
-    	public LoadFile(File file, InitFileLoad ifl, BnDirectory parent) {
+    	public LoadFile(File file, InitFileLoad ifl, BnDirectory parent, EAccessType at) {
 			this.file = file;
 			this.ifl = ifl;
 			this.parent = parent;
+			this.at = at;
 		}
     	
     	@Override
@@ -132,7 +135,7 @@ public class StorageServiceImpl implements StorageService {
     		bnFile.setFileType(fileType);
     		
     		try {
-				if( storageDao.saveFile(bnFile) < 0 ) {
+				if( storageDao.saveFile(bnFile, ifl.owner, at) < 0 ) {
 					log.warn("파일 저장 실패: " + bnFile);
 					return;
 				}
@@ -183,7 +186,7 @@ public class StorageServiceImpl implements StorageService {
     	}
     }
     
-    private void procLoadDir(File f, InitFileLoad ifl, BnDirectory parent ) {
+    private void procLoadDir(File f, InitFileLoad ifl, BnDirectory parent, EAccessType at ) {
     	
     	final File [] files = f.listFiles();
     	if( files == null || files.length < 1 ) {
@@ -203,6 +206,7 @@ public class StorageServiceImpl implements StorageService {
 
 		final long parentDirNo = parent.getNo();
 		final int ownerUserNo = ifl.owner.getUserNo();
+		final UserVo owner = ifl.owner;
 		
 		for( File file : files ) {
 			if( file.isDirectory() ) {
@@ -215,7 +219,7 @@ public class StorageServiceImpl implements StorageService {
 					childDir.setPublicAccessible(true);
 					childDir.setParentNo( parentDirNo );
 					childDir.setOwnerNo( ownerUserNo );
-					if( storageDao.saveDirectory( childDir ) < 1 ) {
+					if( storageDao.saveDirectory( childDir, owner, at ) < 1 ) {
 						log.warn("Dir 저장 실패: " + childDir);
 					};
 					
@@ -224,10 +228,10 @@ public class StorageServiceImpl implements StorageService {
 					continue;
 				}
 
-				this.procLoadDir( file, ifl, childDir );
+				this.procLoadDir( file, ifl, childDir, at );
 			}else {
 				// 파일 추가.
-				executor.execute( new LoadFile( file, ifl, parent ) );
+				executor.execute( new LoadFile( file, ifl, parent, at ) );
 			}
 		}
     }
@@ -345,9 +349,12 @@ public class StorageServiceImpl implements StorageService {
     		final MessageDataVo message = ifl.message;
     		delay();
     		
+    		final UserVo owner = ifl.owner;
+    		final EAccessType at = EAccessType.NONE;
+    		
     		BnDirectory rootDir;
 			try {
-				rootDir = storageDao.InsertRootDirectory();
+				rootDir = storageDao.InsertRootDirectory(owner, at);
 			} catch (Exception e) {
 				log.error("", e);
 				message.setMessage(e.getMessage());
@@ -372,7 +379,7 @@ public class StorageServiceImpl implements StorageService {
 					parentDir.setPublicAccessible(true);
 					parentDir.setParentNo( parentNo );
 					parentDir.setOwnerNo( ownerUserNo );
-					if( storageDao.saveDirectory( parentDir ) < 1 ) {
+					if( storageDao.saveDirectory( parentDir, owner, at ) < 1 ) {
 						log.warn("Dir 저장 실패: " + parentDir);
 					};
 					
@@ -381,7 +388,7 @@ public class StorageServiceImpl implements StorageService {
 					continue;
 				}
 
-				procLoadDir( file, ifl, parentDir );
+				procLoadDir( file, ifl, parentDir, at );
 			}
 			
 			log.info("FileLoad Complete.");
