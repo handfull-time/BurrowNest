@@ -10,7 +10,8 @@
 			, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
 			, ENABLED BOOLEAN DEFAULT 'N' <!-- 사용 여부 -->
 			, NAME VARCHAR(128) NOT NULL <!-- 이름 -->
-			, ROLE VARCHAR(16) NOT NULL <!-- 권한 -->
+			, ROLE VARCHAR(16) NOT NULL <!-- 사용자 권한 -->
+			, ACCESS_FLAGS TINYINT NOT NULL <!-- 파일 접근 권한 -->
 			, NOTE VARCHAR(255) DEFAULT NULL <!-- 비고 -->
 			, DAILY_UPLOAD_LIMIT BIGINT DEFAULT 0 <!-- 하루 업로드 제한 (byte) -->
 			, DAILY_DOWNLOAD_LIMIT BIGINT DEFAULT 0  <!-- 일일 최대 다운로드 용량 -->
@@ -21,12 +22,13 @@
 	
 	<!-- 어드민 그룹 -->
 	<insert id="insertGroup" parameterType="com.utime.burrowNest.user.vo.GroupVo" 
-		useGeneratedKeys="true"  keyColumn="NO" keyProperty="groupNo">
+		useGeneratedKeys="true"  keyProperty="groupNo">
 		INSERT INTO BN_USER_GROUP (
 			UPDATE_DATE
 			, ENABLED 
 			, NAME 
 			, ROLE
+			, ACCESS_FLAGS
 			<if test="note != null and note != '' "> 
 			, NOTE
 			</if>
@@ -38,6 +40,7 @@
 			, TRUE
 			, #{name}
 			, #{role}
+			, #{accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler}
 			<if test="note != null and note != '' "> 
 			, #{note}
 			</if>
@@ -100,7 +103,7 @@
 	
 	<!-- 사용자 추가 -->
 	<insert id="insertUser" parameterType="com.utime.burrowNest.user.vo.UserVo" 
-		useGeneratedKeys="true" keyProperty="userNo" keyColumn="NO" >
+		useGeneratedKeys="true" keyProperty="userNo" >
 		INSERT INTO BN_USER (
 			UPDATE_DATE 
 			, ENABLED
@@ -164,17 +167,32 @@
 	</insert>
 	
 	<sql id="GroupColumn">
-		GR.NO AS "groupNo"
+		GR.NO
 		, GR.REG_DATE 
 		, GR.UPDATE_DATE 
 		, GR.ENABLED 
 		, GR.NAME 
 		, GR.ROLE 
+		, GR.ACCESS_FLAGS
 		, GR.NOTE 
 		, GR.DAILY_UPLOAD_LIMIT
 		, GR.DAILY_DOWNLOAD_LIMIT
 		, GR.MAX_STORAGE_USAGE
 	</sql>
+	
+	<resultMap id="GroupVoMap" type="com.utime.burrowNest.user.vo.GroupVo">
+		<id column="NO" property="groupNo"/>
+		<result column="REG_DATE" property="regDate"/>
+		<result column="UPDATE_DATE" property="updateDate"/>
+		<result column="ENABLED" property="enabled"/>
+		<result column="NAME" property="name"/>
+		<result column="ROLE" property="role"/>
+		<result column="ACCESS_FLAGS" property="accType" typeHandler="com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler"/>
+		<result column="NOTE" property="note"/>
+		<result column="DAILY_UPLOAD_LIMIT" property="dailyUploadLimit"/>
+		<result column="DAILY_DOWNLOAD_LIMIT" property="dailyDownloadLimit"/>
+		<result column="MAX_STORAGE_USAGE" property="maxStorageUsage"/>
+	</resultMap>
 	
 	<sql id="UserColumn">
 		UR.NO AS USER_NO
@@ -216,7 +234,7 @@
 			select="com.utime.burrowNest.user.mapper.UserMapper.selectGroupByNo" />
 	</resultMap>
 	
-	<select id="selectGroupByNo" resultType="com.utime.burrowNest.user.vo.GroupVo">
+	<select id="selectGroupByNo" resultMap="com.utime.burrowNest.user.mapper.UserMapper.GroupVoMap">
 		SELECT
 			<include refid="GroupColumn" /> 
 		FROM BN_USER_GROUP GR
@@ -224,7 +242,7 @@
 	</select>
 
 	<!-- 사용자 그룹 조회 -->
-	<select id="selectGroupByName" parameterType="map" resultType="com.utime.burrowNest.user.vo.GroupVo">
+	<select id="selectGroupByName" parameterType="map" resultMap="com.utime.burrowNest.user.mapper.UserMapper.GroupVoMap">
 		SELECT
 			<include refid="GroupColumn" />
 		FROM BN_USER_GROUP GR

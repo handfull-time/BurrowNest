@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.utime.burrowNest.admin.service.AdminUserService;
 import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.storage.vo.EAccessType;
 import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -48,6 +49,7 @@ public class AdminGroupUserController {
 		
 		model.addAttribute("item", userService.getGroupByNo(groupNo));
 		model.addAttribute("roles", EJwtRole.values() );
+		model.addAttribute("accTypes", EAccessType.values() );
         
 		return "Admin/Group/GroupUserLayer";
     }

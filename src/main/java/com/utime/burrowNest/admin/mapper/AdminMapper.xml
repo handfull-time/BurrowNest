@@ -65,7 +65,7 @@
 	</delete>
 	
 	<!-- 사용자 그룹 정보 조회 -->
-	<select id="selectUserGroupList" resultType="com.utime.burrowNest.user.vo.GroupVo">
+	<select id="selectUserGroupList" resultMap="com.utime.burrowNest.user.mapper.UserMapper.GroupVoMap">
 		SELECT
 			<include refid="com.utime.burrowNest.user.mapper.UserMapper.GroupColumn"/>
 		FROM BN_USER_GROUP GR
@@ -90,6 +90,7 @@
 			, ENABLED = #{enabled}
 			, NAME = #{name}
 			, ROLE = #{role}
+			, ACCESS_FLAGS = #{accType}
 			<if test="note != null and note != '' "> 
 			, NOTE = #{note}
 			</if>

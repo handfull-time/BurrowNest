@@ -3,6 +3,7 @@ package com.utime.burrowNest.user.vo;
 import java.time.LocalDateTime;
 
 import com.utime.burrowNest.common.vo.EJwtRole;
+import com.utime.burrowNest.storage.vo.EAccessType;
 
 import lombok.Data;
 
@@ -23,6 +24,8 @@ public class GroupVo {
 	String name;
 	/** 권한 */
 	EJwtRole role;
+	/** 저장소 접근 권한 */
+	EAccessType accType;
 	/** 비고 */
 	String note;
 	/** 하루 업로드 제한 byte 단위 */

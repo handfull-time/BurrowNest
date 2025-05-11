@@ -16,16 +16,16 @@ public class BnDirectory extends AbsPath{
     /**
      * Indicates whether this directory is publicly accessible by all users.
      */
-    private boolean publicAccessible;
+    protected boolean publicAccessible;
 
     /**
      * Indicates whether the directory has child directories.
      * True for having children, false otherwise.
      */
-    private boolean hasChild;
+    protected boolean hasChild;
 
     /**
      * The absolute path of the directory in the file system.
      */
-    private String absolutePath;
+    protected String absolutePath;
 }

@@ -62,7 +62,7 @@ public abstract class AbsPath {
      * or
      * The pure name of the directory.
      */
-    private String name;
+    protected String name;
     
-    
+    protected EAccessType accType;
 }

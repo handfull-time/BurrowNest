@@ -1,18 +1,18 @@
-package com.utime.burrowNest.storage.controller;
+package com.utime.burrowNest.root.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.utime.burrowNest.common.vo.EJwtRole;
-import com.utime.burrowNest.storage.service.StorageService;
+import com.utime.burrowNest.root.service.LoadStorageService;
 import com.utime.burrowNest.user.vo.UserVo;
 
 @Controller
 public class RootController {
 	
 	@Autowired
-	private StorageService storageService;
+	private LoadStorageService storageService;
 	
 	/**
 	 * Root 

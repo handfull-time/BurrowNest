@@ -1,4 +1,4 @@
-package com.utime.burrowNest.storage.controller;
+package com.utime.burrowNest.root.controller;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.ReturnBasic;
-import com.utime.burrowNest.storage.service.StorageService;
+import com.utime.burrowNest.root.service.LoadStorageService;
 import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.user.service.AuthService;
 import com.utime.burrowNest.user.vo.InitInforReqVo;
@@ -41,7 +41,7 @@ public class IntroController {
 	private AuthService authService;
 	
 	@Autowired
-	private StorageService storageService;
+	private LoadStorageService storageService;
 	
 	/**
 	 * 인트로 페이지
@@ -130,11 +130,11 @@ public class IntroController {
 				try {
 					// 자식 폴더 존재 여부
 		            try (Stream<Path> children = Files.list(root.toPath())) {
-		            	item.setHasChildren(children.anyMatch(Files::isDirectory));
+		            	item.setHasChild(children.anyMatch(Files::isDirectory));
 		            }
 		            
 		            item.setName( root.toPath().toString() );
-		            item.setPath( root.toPath().toString() );
+		            item.setAbsolutePath( root.toPath().toString() );
 		            
 		            result.add(item);
 				} catch (IOException e) {
@@ -160,12 +160,12 @@ public class IntroController {
 	                    hasChildren = children.anyMatch(Files::isDirectory);
 	                } catch (IOException ignored) {}
 
-	                return new DirectoryDto(
-	                    p.getFileName().toString(),
-	                    dir.relativize(p).toString(),
-	                    hasChildren,
-	                    false
-	                );
+	                final DirectoryDto dirDto = new DirectoryDto();
+	                dirDto.setName( p.getFileName().toString() );
+	                dirDto.setAbsolutePath( dir.relativize(p).toString() );
+	                dirDto.setHasChild(hasChildren);
+	                
+	                return dirDto;
 	            })
 	            .collect(Collectors.toList());
 	    } catch (IOException e) {

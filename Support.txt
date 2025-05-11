@@ -761,3 +761,152 @@ def process_cr2(file_no, path: Path):
 
 
 
+
+두 코드 모두 **브라우저 주소창(URL)을 변경하지만 페이지를 새로고침하지 않는 점은 동일**합니다.
+하지만 **기록(history)에 저장되는 방식**이 다릅니다:
+
+---
+
+### ✅ `window.history.pushState({}, '', '/new-url')`
+
+* **브라우저 히스토리에 새 항목을 추가**합니다.
+* 즉, 사용자가 뒤로 가기(← Back)를 누르면 **이전 URL로 돌아갈 수 있습니다**.
+* 사용 예:
+
+  * 사용자가 어떤 상태에서 필터/검색 등을 하고 URL을 반영할 때
+
+```js
+history.pushState({}, '', '/search?keyword=apple');
+// 사용자가 이전 페이지로 Back 가능
+```
+
+---
+
+### ✅ `window.history.replaceState({}, '', '/new-url')`
+
+* **히스토리 항목을 덮어씌웁니다.**
+* 즉, **현재 페이지의 URL을 바꾸되, 이전 URL로 돌아갈 수 없습니다.**
+* 사용 예:
+
+  * 초기 상태를 덮어씌우거나, 잘못된 쿼리스트링을 제거하거나, 새로고침시 동일 URL 유지하고 싶을 때
+
+```js
+history.replaceState({}, '', '/clean-url');
+// Back 눌러도 이전 URL로 못 돌아감
+```
+
+---
+
+### 📌 차이 요약
+
+| 항목                | `pushState()` | `replaceState()`  |
+| ----------------- | ------------- | ----------------- |
+| 히스토리 추가 여부        | ✅ 새 항목 추가     | ❌ 기존 항목 덮어쓰기      |
+| 뒤로 가기(Back) 가능 여부 | ✅ 가능          | ❌ 불가능             |
+| 사용 목적 예시          | 사용자 동작 기록 유지  | 초기 상태 수정, 쿼리 제거 등 |
+
+---
+
+### ✨ 실전 팁
+
+```js
+// 검색창 입력 시마다 주소를 갱신하지만 기록은 남기지 않게 하려면:
+history.replaceState({}, '', '/search?term=apple');
+
+// 페이지 이동 시에는 기록을 남겨야 하므로:
+history.pushState({}, '', '/page2');
+```
+
+더 필요한 시나리오가 있으면 알려주세요.
+
+
+
+
+
+
+
+
+
+맞습니다. 사용자마다 여러 개의 최상위 디렉토리를 가질 수 있고, 그것들은 반드시 `BN_DIRECTORY.NO = 1`일 필요는 없습니다.
+
+---
+
+### ✅ 사용자 중심의 "최상위 디렉토리" 조회 정의
+
+**최상위 디렉토리** =
+
+* `PARENT_NO`는 존재하지만,
+* 그 `PARENT_NO`가 사용자가 접근 가능한 디렉토리 중 **상위에 없음**
+  또는
+* `PARENT_NO = 0` 혹은 가상의 루트(미정의 루트)
+
+**하지만 실용적으로는 다음 조건을 만족하면 "사용자 기준의 최상위 디렉토리"로 간주할 수 있습니다:**
+
+---
+
+### ✅ 사용자 접근 가능한 디렉토리 중 `PARENT_NO`가 없는(루트) 디렉토리
+
+```sql
+SELECT d.*
+FROM BN_DIRECTORY d
+LEFT JOIN BN_DIRECTORY_ACCESS da 
+    ON d.NO = da.DIR_NO AND da.USER_NO = :userNo
+WHERE d.PARENT_NO = 0 -- 혹은 NULL, 설계에 따라 조정
+  AND (
+    d.PUBLIC_ACCESSIBLE = TRUE
+    OR d.OWNER_NO = :userNo
+    OR BITAND(da.ACCESS_FLAGS, :readBitFlag) != 0
+  )
+  AND d.ENABLED = TRUE;
+```
+
+> `PARENT_NO = 0`이 사용자 정의 루트 디렉토리라고 가정합니다.
+> 만약 실제 최상위 디렉토리는 다른 디렉토리에도 부모로 지정되지 않은 디렉토리라면, 하단의 **2차 방식**이 더 적합합니다.
+
+---
+
+### ✅ 대안: "부모가 없는" 사용자 접근 가능 디렉토리 구하기
+
+```sql
+SELECT d.*
+FROM BN_DIRECTORY d
+LEFT JOIN BN_DIRECTORY_ACCESS da 
+    ON d.NO = da.DIR_NO AND da.USER_NO = :userNo
+LEFT JOIN BN_DIRECTORY parent 
+    ON d.PARENT_NO = parent.NO
+WHERE (
+    d.PUBLIC_ACCESSIBLE = TRUE
+    OR d.OWNER_NO = :userNo
+    OR BITAND(da.ACCESS_FLAGS, :readBitFlag) != 0
+)
+AND d.ENABLED = TRUE
+AND (
+    d.PARENT_NO = 0 OR parent.NO IS NULL -- 상위 디렉토리가 없거나,
+    OR NOT EXISTS (
+        SELECT 1
+        FROM BN_DIRECTORY d2
+        WHERE d2.NO = d.PARENT_NO
+    )
+);
+```
+
+---
+
+### 🔍 상황별 고려
+
+| 조건                               | 설명                           |
+| -------------------------------- | ---------------------------- |
+| `d.PARENT_NO = 0`                | 최상위 디렉토리를 명시적으로 지정했을 경우      |
+| `parent.NO IS NULL`              | 상위 디렉토리 자체가 존재하지 않거나 삭제됨     |
+| `NOT EXISTS (SELECT 1 FROM ...)` | 상위 디렉토리가 현재 디렉토리 집합에 포함되지 않음 |
+
+---
+
+### 💡 Spring JDBC or JPA 사용 시 주의
+
+* `BITAND()`는 SQL에 직접 넣어야 하며, JPA 함수로는 따로 제공되지 않음.
+* `@Query`로 native 쿼리 작성하는 방식 추천
+
+---
+
+혹시 “소유자 기준으로 최상위 디렉토리”만 보고 싶다면 조건 조정 가능합니다. 추가로 하위 디렉토리까지 lazy-load 로 가져오길 원하시나요?

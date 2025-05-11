@@ -13,6 +13,7 @@ import com.utime.burrowNest.common.util.CacheIntervalMap;
 import com.utime.burrowNest.common.util.Sha256;
 import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.common.vo.EJwtRole;
+import com.utime.burrowNest.storage.vo.EAccessType;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.mapper.UserMapper;
 import com.utime.burrowNest.user.vo.ELoginResult;
@@ -94,6 +95,7 @@ class UserDaoImpl implements UserDao {
 			group.setEnabled(true);
 			group.setName( KeyGroupAdmin );
 			group.setRole(EJwtRole.Admin);
+			group.setAccType(EAccessType.None);
 			group.setNote("관리자 그룹");
 			
 			result += this.userMapper.insertGroup(group);
@@ -104,6 +106,7 @@ class UserDaoImpl implements UserDao {
 			group.setEnabled(true);
 			group.setName( KeyGroupUnsel );
 			group.setRole(EJwtRole.User);
+			group.setAccType(EAccessType.None);
 			group.setNote("처음 회원 가입시 포함될 그룹");
 			
 			result += this.userMapper.insertGroup(group);
@@ -114,6 +117,7 @@ class UserDaoImpl implements UserDao {
 			group.setEnabled(true);
 			group.setName( KeyGroupBasic );
 			group.setRole(EJwtRole.User);
+			group.setAccType(EAccessType.None);
 			group.setNote("첫 파일 로딩시 포함 될 그룹");
 			
 			result += this.userMapper.insertGroup(group);

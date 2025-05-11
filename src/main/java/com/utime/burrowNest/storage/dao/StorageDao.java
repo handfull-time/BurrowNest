@@ -5,7 +5,6 @@ import java.util.Map;
 import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
-import com.utime.burrowNest.storage.vo.EAccessType;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -27,11 +26,10 @@ public interface StorageDao {
 	/**
 	 * 최초 Root dir 생성
 	 * @param owner
-	 * @param at
 	 * @return
 	 * @throws Exception
 	 */
-	BnDirectory InsertRootDirectory(UserVo owner, EAccessType at ) throws Exception;
+	BnDirectory InsertRootDirectory(UserVo owner ) throws Exception;
 	
 	/**
 	 * 확장자 별 파일 종류
@@ -42,17 +40,19 @@ public interface StorageDao {
 	/**
 	 * Dir 저장
 	 * @param dir
+	 * @param owner
 	 * @return
 	 */
-	int saveDirectory(BnDirectory dir, UserVo owner, EAccessType at ) throws Exception;
+	int saveDirectory(BnDirectory dir, UserVo owner ) throws Exception;
 	
 	/**
 	 * File 저장
 	 * @param file
+	 * @param owner
 	 * @return
 	 * @throws Exception
 	 */
-	int saveFile(BnFile file, UserVo owner, EAccessType at) throws Exception;
+	int saveFile(BnFile file, UserVo owner) throws Exception;
 	
 	/**
 	 * 파일 확장 저장

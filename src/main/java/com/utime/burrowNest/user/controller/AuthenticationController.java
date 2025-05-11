@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.BurrowDefine;
 import com.utime.burrowNest.common.vo.ReturnBasic;
-import com.utime.burrowNest.storage.service.StorageService;
+import com.utime.burrowNest.root.service.LoadStorageService;
 import com.utime.burrowNest.user.service.AuthService;
 import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.ResUserVo;
@@ -36,7 +36,7 @@ public class AuthenticationController {
 	private AuthService authService;
 	
 	@Autowired
-	private StorageService storageService;
+	private LoadStorageService storageService;
 	
 	/**
 	 * 메타 처리

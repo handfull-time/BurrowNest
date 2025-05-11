@@ -52,7 +52,7 @@
 	            <tr>
 	                <td class="w-1/4 font-medium p-2"><label for="group.groupNo">소속 그룹</label></td>
 	                <td class="w-3/4 p-2">
-	                    <select th:field="*{group.groupNo}" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+	                    <select id="group.groupNo" name="group.groupNo" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
 	                        <option value="">선택하세요</option>
 						    <option th:each="group : ${groups}" 
 						            th:value="${group.groupNo}" 

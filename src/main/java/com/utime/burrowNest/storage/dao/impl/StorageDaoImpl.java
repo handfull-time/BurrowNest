@@ -23,10 +23,10 @@ import com.utime.burrowNest.storage.vo.BnFileDocument;
 import com.utime.burrowNest.storage.vo.BnFileExtension;
 import com.utime.burrowNest.storage.vo.BnFileImage;
 import com.utime.burrowNest.storage.vo.BnFileVideo;
-import com.utime.burrowNest.storage.vo.EAccessType;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.user.vo.UserVo;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -41,6 +41,74 @@ class StorageDaoImpl implements StorageDao{
 	
 	@Autowired
 	private StorageMapper mapper;
+	
+	@PostConstruct
+	private void postCunstruct() {
+		if( common.existTable("BN_FILE_EXTENSION") ) {
+			return;
+		}
+		
+		int dbRes = 0;
+		
+		log.info("BN_FILE_EXTENSION 생성");
+		dbRes += basic.CreateFileExtension();
+		
+		{
+			dbRes += basic.insertFileExtension( "pdf",  EBnFileType.Document);
+			dbRes += basic.insertFileExtension( "doc",  EBnFileType.Document);
+			dbRes += basic.insertFileExtension( "docx", EBnFileType.Document);
+			dbRes += basic.insertFileExtension( "xls",  EBnFileType.Document);
+			dbRes += basic.insertFileExtension( "xlsx", EBnFileType.Document);
+			dbRes += basic.insertFileExtension( "ppt",  EBnFileType.Document);
+			dbRes += basic.insertFileExtension( "pptx", EBnFileType.Document);
+			dbRes += basic.insertFileExtension( "hwp",  EBnFileType.Document);
+			dbRes += basic.insertFileExtension( "txt",  EBnFileType.Document);
+			dbRes += basic.insertFileExtension( "md",   EBnFileType.Document);
+			dbRes += basic.insertFileExtension( "csv",  EBnFileType.Document);
+		}
+		{
+			dbRes += basic.insertFileExtension( "jpg",  EBnFileType.Image);
+			dbRes += basic.insertFileExtension( "jpeg", EBnFileType.Image);
+			dbRes += basic.insertFileExtension( "png",  EBnFileType.Image);
+			dbRes += basic.insertFileExtension( "gif",  EBnFileType.Image);
+			dbRes += basic.insertFileExtension( "bmp",  EBnFileType.Image);
+			dbRes += basic.insertFileExtension( "webp", EBnFileType.Image);
+			dbRes += basic.insertFileExtension( "svg",  EBnFileType.Image);
+			dbRes += basic.insertFileExtension( "tiff", EBnFileType.Image);
+			dbRes += basic.insertFileExtension( "ico",  EBnFileType.Image);
+			dbRes += basic.insertFileExtension( "cr2",  EBnFileType.Image);
+			dbRes += basic.insertFileExtension( "nef",  EBnFileType.Image);
+			dbRes += basic.insertFileExtension( "raw",  EBnFileType.Image);
+		}
+		{
+			dbRes += basic.insertFileExtension( "mp4",  EBnFileType.Video);
+			dbRes += basic.insertFileExtension( "mov",  EBnFileType.Video);
+			dbRes += basic.insertFileExtension( "avi",  EBnFileType.Video);
+			dbRes += basic.insertFileExtension( "mkv",  EBnFileType.Video);
+			dbRes += basic.insertFileExtension( "wmv",  EBnFileType.Video);
+			dbRes += basic.insertFileExtension( "flv",  EBnFileType.Video);
+			dbRes += basic.insertFileExtension( "webm", EBnFileType.Video);
+		}
+		{
+			dbRes += basic.insertFileExtension( "mp3",  EBnFileType.Audio);
+			dbRes += basic.insertFileExtension( "wav",  EBnFileType.Audio);
+			dbRes += basic.insertFileExtension( "flac", EBnFileType.Audio);
+			dbRes += basic.insertFileExtension( "aac",  EBnFileType.Audio);
+			dbRes += basic.insertFileExtension( "ogg",  EBnFileType.Audio);
+			dbRes += basic.insertFileExtension( "m4a",  EBnFileType.Audio);
+		}
+		{
+			dbRes += basic.insertFileExtension( "zip", EBnFileType.Archive);
+			dbRes += basic.insertFileExtension( "rar", EBnFileType.Archive);
+			dbRes += basic.insertFileExtension( "7z",  EBnFileType.Archive);
+			dbRes += basic.insertFileExtension( "tar", EBnFileType.Archive);
+			dbRes += basic.insertFileExtension( "gz",  EBnFileType.Archive);
+			dbRes += basic.insertFileExtension( "jar", EBnFileType.Archive);
+		}
+		
+		log.info("결과 : " + dbRes);
+		
+	}
 	
 	@Override
 	public int initTable() throws Exception {
@@ -138,7 +206,7 @@ class StorageDaoImpl implements StorageDao{
 	
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public BnDirectory InsertRootDirectory(UserVo owner, EAccessType at ) throws Exception {
+	public BnDirectory InsertRootDirectory(UserVo owner ) throws Exception {
 		
 		if( basic.InsertRootDirectory(owner) < 1 ) {
 			log.warn("root 생성 실패");
@@ -147,69 +215,14 @@ class StorageDaoImpl implements StorageDao{
 		
 		final BnDirectory result = mapper.selectBnDirectoryByNo(1L);
 		
-		this.insertAccess(owner, result, at);
+		this.insertAccess(owner, result);
 		
 		return result;
 	}
 	
 	@Override
 	public Map<String, EBnFileType> getBnFileType() {
-		int dbRes = 0;
 		
-		if( ! common.existTable("BN_FILE_EXTENSION") ) {
-			log.info("BN_FILE_EXTENSION 생성");
-			dbRes += basic.CreateFileExtension();
-			
-			{
-				dbRes += basic.insertFileExtension( "pdf" , EBnFileType.Document);
-				dbRes += basic.insertFileExtension( "doc" , EBnFileType.Document);
-				dbRes += basic.insertFileExtension( "docx", EBnFileType.Document);
-				dbRes += basic.insertFileExtension( "xls" , EBnFileType.Document);
-				dbRes += basic.insertFileExtension( "xlsx", EBnFileType.Document);
-				dbRes += basic.insertFileExtension( "ppt" , EBnFileType.Document);
-				dbRes += basic.insertFileExtension( "pptx", EBnFileType.Document);
-				dbRes += basic.insertFileExtension( "hwp" , EBnFileType.Document);
-			}
-			{
-				dbRes += basic.insertFileExtension( "jpg" , EBnFileType.Image);
-				dbRes += basic.insertFileExtension( "jpeg", EBnFileType.Image);
-				dbRes += basic.insertFileExtension( "png" , EBnFileType.Image);
-				dbRes += basic.insertFileExtension( "gif" , EBnFileType.Image);
-				dbRes += basic.insertFileExtension( "bmp" , EBnFileType.Image);
-				dbRes += basic.insertFileExtension( "webp", EBnFileType.Image);
-				dbRes += basic.insertFileExtension( "svg" , EBnFileType.Image);
-				dbRes += basic.insertFileExtension( "tiff", EBnFileType.Image);
-				dbRes += basic.insertFileExtension( "ico" , EBnFileType.Image);
-				dbRes += basic.insertFileExtension( "cr2" , EBnFileType.Image);
-			}
-			{
-				dbRes += basic.insertFileExtension( "mp4" , EBnFileType.Video);
-				dbRes += basic.insertFileExtension( "mov" , EBnFileType.Video);
-				dbRes += basic.insertFileExtension( "avi" , EBnFileType.Video);
-				dbRes += basic.insertFileExtension( "mkv" , EBnFileType.Video);
-				dbRes += basic.insertFileExtension( "wmv" , EBnFileType.Video);
-				dbRes += basic.insertFileExtension( "flv" , EBnFileType.Video);
-				dbRes += basic.insertFileExtension( "webm", EBnFileType.Video);
-			}
-			{
-				dbRes += basic.insertFileExtension( "mp3" , EBnFileType.Audio);
-				dbRes += basic.insertFileExtension( "wav" , EBnFileType.Audio);
-				dbRes += basic.insertFileExtension( "flac", EBnFileType.Audio);
-				dbRes += basic.insertFileExtension( "aac" , EBnFileType.Audio);
-				dbRes += basic.insertFileExtension( "ogg" , EBnFileType.Audio);
-				dbRes += basic.insertFileExtension( "m4a" , EBnFileType.Audio);
-			}
-			{
-				dbRes += basic.insertFileExtension( "zip", EBnFileType.Archive);
-				dbRes += basic.insertFileExtension( "rar", EBnFileType.Archive);
-				dbRes += basic.insertFileExtension( "7z" , EBnFileType.Archive);
-				dbRes += basic.insertFileExtension( "tar", EBnFileType.Archive);
-				dbRes += basic.insertFileExtension( "gz" , EBnFileType.Archive);
-				dbRes += basic.insertFileExtension( "jar", EBnFileType.Archive);
-			}
-		}
-		
-		log.info("결과 : " + dbRes);
 		
 		final Map<String, EBnFileType> result = new HashMap<>();
 		final List<BnFileExtension> list = basic.selectFileExtensionAll();
@@ -222,54 +235,55 @@ class StorageDaoImpl implements StorageDao{
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public int saveDirectory(BnDirectory dir, UserVo owner, EAccessType at ) throws Exception {
+	public int saveDirectory(BnDirectory dir, UserVo owner ) throws Exception {
 		
 		final int result;
 		if( dir.getNo() < 0L ) {
 			result = mapper.insertBnDirectory(dir);
-			this.insertAccess(owner, dir, at);
+			this.insertAccess(owner, dir);
 		}else {
 			result = mapper.updateBnDirectory(dir);
-			this.updateAccess(owner, dir, at);
+			this.updateAccess(owner, dir);
 		}
 		return result;
 	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public int saveFile(BnFile file, UserVo owner, EAccessType at) throws Exception {
+	public int saveFile(BnFile file, UserVo owner) throws Exception {
 		
 		final int result;
 		if( file.getNo() < 0L ) {
 			result = mapper.insertBnFile(file);
-			this.insertAccess(owner, file, at);
+			this.insertAccess(owner, file);
 		}else {
 			result = mapper.updateBnFile(file);
-			this.updateAccess(owner, file, at);
+			this.updateAccess(owner, file);
 		}
 		return result;
 	}
 
 	@Transactional(rollbackFor = Exception.class)
-	private int updateAccess(UserVo owner, AbsPath obj, EAccessType at) throws Exception  {
+	private int updateAccess(UserVo owner, AbsPath obj) throws Exception  {
 		
 		int result;
 		if( obj instanceof BnFile ) {
-			result = mapper.updateFileAccess(obj.getNo(), owner.getGroup().getGroupNo(), at.getBit());
+			result = mapper.updateFileAccess(obj.getNo(), owner.getGroup().getGroupNo(), owner.getGroup().getAccType().getBit());
 		}else {
-			result = mapper.updateDirectoryAccess(obj.getNo(), owner.getGroup().getGroupNo(), at.getBit());
+			result = mapper.updateDirectoryAccess(obj.getNo(), owner.getGroup().getGroupNo(), owner.getGroup().getAccType().getBit());
 		}
 		
 		return result;
 	}
 
 	@Transactional(rollbackFor = Exception.class)
-	private int insertAccess(UserVo owner, AbsPath obj, EAccessType at) throws Exception  {
+	private int insertAccess(UserVo owner, AbsPath obj) throws Exception  {
+		
 		int result;
 		if( obj instanceof BnFile ) {
-			result = mapper.insertFileAccess(obj.getNo(), owner.getGroup().getGroupNo(), at.getBit());
+			result = mapper.insertFileAccess(obj.getNo(), owner.getGroup().getGroupNo(), owner.getGroup().getAccType().getBit());
 		}else {
-			result = mapper.insertDirectoryAccess(obj.getNo(), owner.getGroup().getGroupNo(), at.getBit());
+			result = mapper.insertDirectoryAccess(obj.getNo(), owner.getGroup().getGroupNo(), owner.getGroup().getAccType().getBit());
 		}
 		
 		return result;

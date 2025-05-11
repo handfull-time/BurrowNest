@@ -17,27 +17,27 @@ public class BnFile extends AbsPath {
     /**
      * The size of the file in bytes.
      */
-    private long fileLength;
+    protected long fileLength;
 
     /**
      * The type of the file, as defined in the {@link EBnFileType} enumeration.
      */
-    private EBnFileType fileType;
+    protected EBnFileType fileType;
 
     /**
      * The full name of the file, including its extension.
      * For example, "document.txt" or "photo.jpeg".
      */
-    private String fullName;
+    protected String fullName;
 
     /**
      * The file extension (e.g., ".txt", ".jpg").
      */
-    private String extension;
+    protected String extension;
 
     /**
      * extends file information
      */
-    private AbsBnFileInfo info;
+    protected AbsBnFileInfo info;
 
 }

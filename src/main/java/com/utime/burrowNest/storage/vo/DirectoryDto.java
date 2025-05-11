@@ -8,52 +8,33 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class DirectoryDto {
-    private String name;
-    private String path;
-    private boolean hasChildren;
-    private boolean selected;
+public class DirectoryDto extends BnDirectory {
+
+	private boolean selected;
     
     List<DirectoryDto> subDirectories = new ArrayList<>();
     
     public DirectoryDto() {
-    	this(null, null, false, false);
+    	this(null);
     }
     
-    public DirectoryDto(String name, String path, boolean hasChildren, boolean selected){
-    	this.name = name;
-    	this.path = path;
-    	this.hasChildren = hasChildren;
-    	this.selected = selected;
+    public DirectoryDto(BnDirectory dir){
+    	if( dir != null ) {
+    		this.creation = dir.creation;
+    		this.lastModified = dir.lastModified;
+    		this.regDate = dir.regDate;
+    		this.updateDate = dir.updateDate;
+    		this.enabled = dir.enabled;
+    		this.name = dir.name;
+    		this.no = dir.no;
+    		this.ownerNo = dir.ownerNo;
+    		this.parentNo = dir.parentNo;
+    		this.uid = dir.uid;
+    		this.publicAccessible = dir.publicAccessible;
+    		this.hasChild = dir.hasChild;
+    		this.absolutePath = dir.absolutePath;
+    	}
+    	this.selected = false;
     }
-
-	@Override
-	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("DirectoryDto [");
-		if (name != null) {
-			builder.append("name=");
-			builder.append(name);
-			builder.append(", ");
-		}
-		if (path != null) {
-			builder.append("path=");
-			builder.append(path);
-			builder.append(", ");
-		}
-		builder.append("hasChildren=");
-		builder.append(hasChildren);
-		builder.append(", selected=");
-		builder.append(selected);
-		builder.append(", ");
-		if (subDirectories != null) {
-			builder.append("\nsubDirectories=");
-			builder.append(subDirectories);
-		}
-		builder.append("]\n");
-		return builder.toString();
-	}
-    
-    
 }
 
