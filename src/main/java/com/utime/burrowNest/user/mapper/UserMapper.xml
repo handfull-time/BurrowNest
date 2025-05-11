@@ -180,6 +180,14 @@
 		, GR.MAX_STORAGE_USAGE
 	</sql>
 	
+	<sql id="GroupAllColumn">
+		<include refid="com.utime.burrowNest.user.mapper.UserMapper.GroupColumn"/>
+		, GR.NOTE 
+		, GR.DAILY_UPLOAD_LIMIT
+		, GR.DAILY_DOWNLOAD_LIMIT
+		, GR.MAX_STORAGE_USAGE
+	</sql>
+
 	<resultMap id="GroupVoMap" type="com.utime.burrowNest.user.vo.GroupVo">
 		<id column="NO" property="groupNo"/>
 		<result column="REG_DATE" property="regDate"/>
@@ -236,7 +244,7 @@
 	
 	<select id="selectGroupByNo" resultMap="com.utime.burrowNest.user.mapper.UserMapper.GroupVoMap">
 		SELECT
-			<include refid="GroupColumn" /> 
+			<include refid="GroupAllColumn" /> 
 		FROM BN_USER_GROUP GR
 		WHERE GR.NO = #{groupNo}
 	</select>
@@ -244,7 +252,7 @@
 	<!-- 사용자 그룹 조회 -->
 	<select id="selectGroupByName" parameterType="map" resultMap="com.utime.burrowNest.user.mapper.UserMapper.GroupVoMap">
 		SELECT
-			<include refid="GroupColumn" />
+			<include refid="GroupAllColumn" />
 		FROM BN_USER_GROUP GR
 		WHERE GR.NAME = #{name}
 	</select>

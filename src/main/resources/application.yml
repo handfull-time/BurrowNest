@@ -12,7 +12,7 @@ spring:
     url: jdbc:log4jdbc:h2:file:./data/burrownest.h2;AUTO_SERVER=TRUE
     driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
     username: BurrowDbAgent
-    password: 91-3f48#84
+    password: qwer
     dbcp2:
       validation-query: SELECT 1
     hikari:

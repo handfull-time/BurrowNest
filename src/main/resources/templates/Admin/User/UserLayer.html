@@ -56,7 +56,7 @@
 	                        <option value="">선택하세요</option>
 						    <option th:each="group : ${groups}" 
 						            th:value="${group.groupNo}" 
-						            th:text="${group.name}"
+						            th:text="|${group.name} - ${group.accType}|"
 						            th:selected="${item.group.groupNo eq group.groupNo}">
 						    </option>
 	                    </select>

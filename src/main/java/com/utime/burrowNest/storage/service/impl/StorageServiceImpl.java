@@ -52,7 +52,36 @@ public class StorageServiceImpl implements StorageService {
 		final DirectoryDto result = null;
 		
 //		storageDao.get
-		
+		/*
+	SELECT 
+		DR.NO 
+		, DR.REG_DATE 
+		, DR.UPDATE_DATE 
+		, DR.UID 
+		, DR.PARENT_NO	
+		, DR.OWNER_NO 
+		, DR.HAS_CHILD	
+		, DR.CREATION 
+		, DR.LAST_MODIFIED 
+		, DR.NAME CHARACTER 
+		, DR.ABSOLUTE_PATH	
+		, DA.ACCESS_FLAGS
+	FROM BN_DIRECTORY DR
+	INNER JOIN BN_DIRECTORY_ACCESS DA
+	    ON DR.NO = DA.DIR_NO
+	INNER JOIN BN_USER_GROUP GR
+	    ON GR.NO = DA.GROUP_NO
+	WHERE 1=1
+	    AND GR.NO = 1
+	    AND BITAND( DA.ACCESS_FLAGS, 1) = 1
+		AND DR.ENABLED = TRUE
+		AND GR.ENABLED = TRUE
+	ORDER BY GR.NO
+
+	-- SELECT * FROM BN_USER_GROUP;
+
+	-- SELECT * FROM BN_DIRECTORY_ACCESS ;
+		*/
 		return result;
 	}
 
