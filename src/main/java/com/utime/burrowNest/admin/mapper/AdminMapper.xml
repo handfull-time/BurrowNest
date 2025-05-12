@@ -50,6 +50,7 @@
 		UPDATE BN_USER SET
 			UPDATE_DATE = CURRENT_TIMESTAMP
 			, ENABLED = #{enabled}
+			, GROUP_NO = #{group.groupNo}
 			, ROLE = #{role}
 			, NOTE = <choose> <when test="note != null and note != '' ">#{note}</when> <otherwise>NULL</otherwise> </choose>
 			, DAILY_UPLOAD_LIMIT = #{dailyUploadLimit} 

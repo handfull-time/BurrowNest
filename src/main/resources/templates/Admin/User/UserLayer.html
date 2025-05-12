@@ -109,15 +109,7 @@
 		<script th:inline="javascript">
 		
 		function getUserInfo(){
-			const form = document.getElementById('updateUserForm');
-        	const formData = new FormData(form);
-        	const jsonData = {};
-        	 
-        	formData.forEach((value, key) => {
-        		jsonData[key] = value;
-			});
-        	
-        	return jsonData;
+        	return getFormObject('updateUserForm');
 		}
 		
 		function deleteUser(ele) {

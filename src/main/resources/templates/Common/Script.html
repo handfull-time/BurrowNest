@@ -149,4 +149,43 @@ function buttonStatus( btnId, status ){
 		btn.classList.add("bg-gray-500", "text-black", "hover:bg-gray-600");
 	}
 }
+
+function getFormObject(formId) {
+
+    const form = document.getElementById(formId);
+    
+    const formData = new FormData(form);
+    
+    const result = {};
+    formData.forEach((value, key) => {
+		
+		const keys = key.split('.'); // Split key into array of keys
+        let obj = result;
+
+        for (let i = 0; i < keys.length; i++) {
+            const k = keys[i];
+
+            if (i === keys.length - 1) {
+                // If it's the last key, set the value
+                if (Array.isArray(obj[k])) {
+                    obj[k].push(value);
+                } else if (obj[k] !== undefined) {
+                    obj[k] = [obj[k], value];
+                } else {
+                    obj[k] = value;
+                }
+            } else {
+                // If it's not the last key, ensure the nested object exists
+                if (!obj[k]) {
+                    obj[k] = {};
+                }
+                obj = obj[k];
+            }
+        }
+    });
+    
+    console.log( JSON.stringify(result, null, 4 ) );
+    
+    return result;
+}
 </script>

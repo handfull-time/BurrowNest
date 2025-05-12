@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Tailwind 우클릭 메뉴</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="h-screen bg-gray-100">
+
+  <!-- 커스텀 우클릭 메뉴 -->
+  <ul id="contextMenu" class="absolute hidden bg-white border border-gray-300 shadow-lg rounded-md w-56 text-sm z-50">
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="alert('열기')">
+      <span class="mr-2">📂</span> 열기
+    </li>
+    <hr class="my-1 border-gray-200">
+
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="alert('잘라내기')">
+      <span class="mr-2">✂️</span> 잘라내기
+    </li>
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="alert('복사')">
+      <span class="mr-2">📄</span> 복사
+    </li>
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-not-allowed" onclick="alert('붙여넣기')">
+      <span class="mr-2">📋</span> 붙여넣기
+    </li>
+
+    <hr class="my-1 border-gray-200">
+
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="alert('속성')">
+      <span class="mr-2">⚙️</span> 속성
+    </li>
+  </ul>
+
+  <script>
+    const contextMenu = document.getElementById("contextMenu");
+
+    document.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      contextMenu.style.top = `${e.clientY}px`;
+      contextMenu.style.left = `${e.clientX}px`;
+      contextMenu.classList.remove("hidden");
+    });
+
+    document.addEventListener("click", () => {
+      contextMenu.classList.add("hidden");
+    });
+  </script>
+</body>
+</html>

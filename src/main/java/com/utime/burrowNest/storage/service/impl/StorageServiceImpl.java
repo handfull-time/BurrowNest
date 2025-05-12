@@ -81,6 +81,29 @@ public class StorageServiceImpl implements StorageService {
 	-- SELECT * FROM BN_USER_GROUP;
 
 	-- SELECT * FROM BN_DIRECTORY_ACCESS ;
+	
+	
+	<select id="selectTopGroup1Nodes" resultType="int">
+  <![CDATA[
+    WITH RECURSIVE data_tree AS (
+        SELECT no, parent_no
+        FROM data
+        WHERE `group` = 1
+
+        UNION ALL
+
+        SELECT d.no, d.parent_no
+        FROM data d
+        INNER JOIN data_tree dt ON dt.parent_no = d.no
+    )
+    SELECT DISTINCT no
+    FROM data_tree
+    WHERE no = parent_no
+  ]]>
+</select>
+
+	
+	
 		*/
 		return result;
 	}

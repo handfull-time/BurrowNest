@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Drag & Drop 파일 업로드 with 썸네일</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6">
+
+  <!-- 드롭 영역 -->
+  <div id="dropZone"
+       class="w-full max-w-xl h-60 border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center text-gray-600 text-center bg-white mb-4 relative">
+    <span id="dropText">파일(이미지/기타)을 드래그 하세요</span>
+  </div>
+
+  <!-- 미리보기 컨테이너 -->
+  <div id="previewContainer" class="grid grid-cols-3 gap-4 w-full max-w-xl"></div>
+  
+  <div class="bg-gray-50 p-6 font-sans">
+		<div class="max-w-xl mx-auto bg-white shadow-lg rounded-xl p-6 space-y-4">
+		
+		<div id="progressView" class="hidden">
+			<div id="message" class="text-gray-700 text-center text-base font-medium">메시지</div>
+		
+			<div class="relative w-full h-6 bg-gray-200 rounded-full overflow-hidden">
+				<div id="progressBar" class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-300 ease-in-out" style="width: 0%;"></div>
+			</div>
+		
+			<div class="flex justify-between text-sm text-gray-600">
+				<span id="progressText">0 / 0</span>
+				<span id="progressPercent">0%</span>
+			</div>
+		</div>
+	  </div>
+	</div>
+	
+	<!-- 전체 진행 상태바 -->
+	<div id="totalProgressView" class="hidden mt-4">
+	  <div class="text-gray-700 text-center text-sm font-medium">전체 업로드 진행</div>
+	  <div class="relative w-full h-4 bg-gray-300 rounded-full overflow-hidden">
+		<div id="totalProgressBar" class="absolute top-0 left-0 h-full bg-indigo-500 transition-all duration-300 ease-in-out" style="width: 0%;"></div>
+	  </div>
+	  <div class="flex justify-between text-xs text-gray-600 mt-1">
+		<span id="totalProgressText">0 / 0</span>
+		<span id="totalProgressPercent">0%</span>
+	  </div>
+	</div>
+
+
+  <script>
+    const dropZone = document.getElementById("dropZone");
+    const dropText = document.getElementById("dropText");
+    const previewContainer = document.getElementById("previewContainer");
+
+    // 공통 이벤트 제거
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, e => e.preventDefault());
+    });
+
+    dropZone.addEventListener('dragover', () => {
+      dropZone.classList.add("border-blue-500", "bg-blue-50");
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove("border-blue-500", "bg-blue-50");
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      dropZone.classList.remove("border-blue-500", "bg-blue-50");
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length === 0) return;
+
+      dropText.classList.add("hidden");
+
+      files.forEach(file => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "relative flex flex-col items-center";
+
+        const fileName = document.createElement("div");
+        fileName.textContent = file.name;
+        fileName.className = "text-xs text-gray-600 mt-1 truncate w-full text-center";
+
+        const btn = document.createElement("button");
+        btn.innerText = "❌";
+        btn.className = "absolute top-1 right-1 bg-white bg-opacity-80 text-sm rounded-full px-2 hover:bg-red-100";
+        btn.onclick = () => wrapper.remove();
+
+        if (file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            const img = document.createElement("img");
+            img.src = event.target.result;
+            img.className = "w-full h-32 object-cover rounded shadow";
+            wrapper.appendChild(img);
+            wrapper.appendChild(fileName);
+            wrapper.appendChild(btn);
+            previewContainer.appendChild(wrapper);
+          };
+          reader.readAsDataURL(file);
+        } else {
+          // 비이미지 파일: 기본 아이콘
+          const icon = document.createElement("div");
+          icon.textContent = "📄";
+          icon.className = "w-full h-32 flex items-center justify-center text-5xl bg-gray-200 rounded shadow";
+          wrapper.appendChild(icon);
+          wrapper.appendChild(fileName);
+          wrapper.appendChild(btn);
+          previewContainer.appendChild(wrapper);
+        }
+      });
+    });
+  </script>
+  
+<script>
+
+	let totalBytes = 0;
+
+	// ... drop 이벤트 안에 추가
+	fileList = [];
+	await collectFiles(e.dataTransfer.items);
+
+	// 총 용량 계산
+	totalBytes = fileList.reduce((sum, f) => sum + f.size, 0);
+
+	// UI 초기화
+	document.getElementById("totalProgressView").classList.remove("hidden");
+	document.getElementById("totalProgressBar").style.width = "0%";
+	document.getElementById("totalProgressText").textContent = "0 / " + formatBytes(totalBytes);
+	document.getElementById("totalProgressPercent").textContent = "0%";
+
+
+  const progressView = document.getElementById("progressView");
+  const message = document.getElementById("message");
+  const progressBar = document.getElementById("progressBar");
+  const progressText = document.getElementById("progressText");
+  const progressPercent = document.getElementById("progressPercent");
+
+  let fileList = [];
+
+  dropZone.addEventListener('drop', async (e) => {
+    dropZone.classList.remove("border-blue-500", "bg-blue-50");
+    e.preventDefault();
+
+    fileList = [];
+    await collectFiles(e.dataTransfer.items); // 폴더 포함한 파일 수집
+
+    if (fileList.length === 0) {
+      alert("업로드할 파일이 없습니다.");
+      return;
+    }
+
+    await uploadFiles(fileList);
+  });
+
+  // 폴더 및 파일 재귀 수집
+  async function collectFiles(items) {
+    const promises = [];
+    for (const item of items) {
+      const entry = item.webkitGetAsEntry?.();
+      if (entry) {
+        promises.push(traverseEntry(entry));
+      } else {
+        const file = item.getAsFile?.();
+        if (file) fileList.push(file);
+      }
+    }
+    await Promise.all(promises);
+  }
+
+  async function traverseEntry(entry, path = "") {
+    return new Promise((resolve) => {
+      if (entry.isFile) {
+        entry.file(file => {
+          file.relativePath = path + file.name;
+          fileList.push(file);
+          resolve();
+        });
+      } else if (entry.isDirectory) {
+        const reader = entry.createReader();
+        reader.readEntries(async entries => {
+          for (const e of entries) {
+            await traverseEntry(e, path + entry.name + "/");
+          }
+          resolve();
+        });
+      }
+    });
+  }
+
+  async function uploadFiles(files) {
+    const formData = new FormData();
+    files.forEach(file => {
+      // 폴더 내 경로 보존 (server에서 처리 가능해야 함)
+      const name = file.relativePath || file.name;
+      formData.append("files", file, name);
+    });
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/File/Upload.json");
+
+    xhr.upload.onprogress = (event) => {
+	  if (event.lengthComputable) {
+		const loaded = event.loaded;
+		const percent = Math.round((loaded / totalBytes) * 100);
+
+		// 개별 진행 UI
+		progressBar.style.width = percent + "%";
+		progressText.textContent = `${formatBytes(loaded)} / ${formatBytes(totalBytes)}`;
+		progressPercent.textContent = percent + "%";
+
+		// 전체 진행 UI
+		document.getElementById("totalProgressBar").style.width = percent + "%";
+		document.getElementById("totalProgressText").textContent = `${formatBytes(loaded)} / ${formatBytes(totalBytes)}`;
+		document.getElementById("totalProgressPercent").textContent = percent + "%";
+	  }
+	};
+
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        message.textContent = "업로드 완료!";
+        progressBar.classList.replace("bg-blue-500", "bg-green-500");
+      } else {
+        message.textContent = "업로드 실패!";
+        progressBar.classList.replace("bg-blue-500", "bg-red-500");
+      }
+    };
+
+    xhr.onerror = () => {
+      message.textContent = "업로드 중 오류 발생!";
+      progressBar.classList.replace("bg-blue-500", "bg-red-500");
+    };
+
+    xhr.send(formData);
+  }
+
+  function formatBytes(bytes) {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  }
+</script>
+
+</body>
+</html>
