@@ -59,11 +59,23 @@ class AdminUserDaoImpl implements AdminUserDao{
 	@Transactional(rollbackFor = Exception.class)
 	public int saveGroup(GroupVo vo) throws Exception {
 
-		final int result;
+		int result;
 		if( vo.getGroupNo() < 1 ) {
 			result = userMapper.insertGroup(vo);
+			if( result > 0 ) {
+				result += mapper.insertDirectoryAccessGroup( vo.getGroupNo(), vo.getAccType().getBit() );
+				result += mapper.insertFileAccessGroup( vo.getGroupNo(), vo.getAccType().getBit() );
+			}
 		}else {
+			final GroupVo dbGroup = userMapper.selectGroupByNo(vo.getGroupNo()); 
+			final boolean isSame = dbGroup.getAccType() == vo.getAccType();
+			
 			result = mapper.updateGroup(vo);
+			
+			if( ! isSame && result > 0 ) {
+				result += mapper.updateDirectoryAccessGroup( vo.getGroupNo(), vo.getAccType().getBit() );
+				result += mapper.updateFileAccessGroup( vo.getGroupNo(), vo.getAccType().getBit() );
+			}
 		}
 		
 		return result;

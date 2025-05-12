@@ -62,6 +62,38 @@ public interface AdminMapper {
 	 */
 	int deleteGroup(int groupNo);
 
+	/**
+	 * Directory Access 그룹 추가
+	 * @param groupNo
+	 * @param accType
+	 * @return
+	 */
+	int insertDirectoryAccessGroup(@Param("groupNo") int groupNo, @Param("accType") int accType);
+
+	/**
+	 * File Access 그룹 추가
+	 * @param groupNo
+	 * @param accType
+	 * @return
+	 */
+	int insertFileAccessGroup(@Param("groupNo") int groupNo, @Param("accType") int accType);
+
+	/**
+	 * Directory Access 그룹 수정
+	 * @param groupNo
+	 * @param accType
+	 * @return
+	 */
+	int updateDirectoryAccessGroup(@Param("groupNo") int groupNo, @Param("accType") int accType);
+
+	/**
+	 * File Access 그룹 수정
+	 * @param groupNo
+	 * @param accType
+	 * @return
+	 */
+	int updateFileAccessGroup(@Param("groupNo") int groupNo, @Param("accType") int accType);
+
 	
 
 }

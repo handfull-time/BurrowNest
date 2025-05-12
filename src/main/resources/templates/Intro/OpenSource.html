@@ -1,0 +1,42 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="content">
+    <div class="text-center space-y-6">
+    	<h1 class="text-4xl font-bold text-blue-600">🐇 BurrowNest</h1>
+    	<p class="text-lg text-gray-700 font-medium">사용된 오픈소스 목록</p>
+    	
+    	<div class="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
+		    <ul class="list-disc pl-5 space-y-2">
+		        <li><strong>Spring Boot</strong> (spring-boot-starter-web, jdbc, security, thymeleaf 등)</li>
+		        <li><strong>Thymeleaf Layout Dialect</strong></li>
+		        <li><strong>MyBatis Spring Boot Starter</strong></li>
+		        <li><strong>JJWT</strong> (JSON Web Token 라이브러리)</li>
+		        <li><strong>Project Lombok</strong></li>
+		        <li><strong>H2 Database</strong></li>
+		        <li><strong>Log4j2</strong></li>
+		        <li><strong>Log4jdbc</strong></li>
+		        <li><strong>Metadata Extractor</strong></li>
+		        <li><strong>MP4Parser</strong></li>
+		        <li><strong>Commons Codec</strong></li>
+		        <li><strong>Apache POI</strong> (Excel 및 문서 처리 라이브러리)</li>
+		        <li><strong>Apache PDFBox</strong></li>
+		        <li><strong>Thumbnailator</strong></li>
+		        <li><strong>Python</strong></li>
+		        <li><strong>FFmpeg</strong></li>
+		        <li><strong>ExifTool</strong></li>
+		    </ul>
+		</div>
+    	
+    	<div class="flex justify-between pt-6">
+    		<button type="button"
+    			class="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 transition"
+    			onclick="prevPage('PageStorageLib', 'PagePasswd')">
+    			이전
+    		</button>
+    		
+    		<button type="button"
+    			class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition"
+    			onclick="nextPage('PageStorageLib', 'PageStorageSelect')">
+    			다음
+    		</button>
+    	</div>
+    </div>
+</div>

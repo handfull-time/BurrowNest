@@ -108,16 +108,8 @@
 					
 		<script th:inline="javascript">
 		
-		function getUserInfo(){
-			const form = document.getElementById('updateGroupForm');
-        	const formData = new FormData(form);
-        	const jsonData = {};
-        	 
-        	formData.forEach((value, key) => {
-        		jsonData[key] = value;
-			});
-        	
-        	return jsonData;
+		function getGroupInfo(){
+			return getFormObject('updateGroupForm');
 		}
 		
 		function deleteGroup(ele) {
@@ -135,7 +127,7 @@
             			headers: {
             				'Content-Type': 'application/json',
             			},
-            			body: JSON.stringify( getUserInfo() ),
+            			body: JSON.stringify( getGroupInfo() ),
             	    };
             	
             	const response = await apiRequest(url, options);
@@ -174,7 +166,7 @@
         			headers: {
         				'Content-Type': 'application/json',
         			},
-        			body: JSON.stringify( getUserInfo() ),
+        			body: JSON.stringify( getGroupInfo() ),
         	    };
         	
         	const response = await apiRequest(url, options);

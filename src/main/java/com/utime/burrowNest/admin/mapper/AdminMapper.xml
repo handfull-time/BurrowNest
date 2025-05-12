@@ -107,4 +107,44 @@
 		WHERE GR.NO = #{groupNo}
 	</delete>
 	
+	<!-- Directory Access 그룹 추가 -->
+	<insert id="insertDirectoryAccessGroup" parameterType="map">
+		INSERT INTO BN_DIRECTORY_ACCESS ( 
+			DIR_NO
+			, GROUP_NO
+			, ACCESS_FLAGS
+		) SELECT 
+			DIR_NO
+			, #{groupNo} 
+			, #{accType}
+		FROM BN_DIRECTORY_ACCESS WHERE GROUP_NO = 1;
+	</insert>
+
+	<!-- File Access 그룹 추가 -->
+	<insert id="insertFileAccessGroup" parameterType="map">
+		INSERT INTO BN_FILE_ACCESS ( 
+			FILE_NO
+			, GROUP_NO
+			, ACCESS_FLAGS
+		) SELECT 
+			FILE_NO
+			, #{groupNo} 
+			, #{accType}
+		FROM BN_FILE_ACCESS WHERE GROUP_NO = 1;
+	</insert>
+
+	<!-- Directory Access 그룹 수정 -->
+	<update id="updateDirectoryAccessGroup" parameterType="map">
+		UPDATE BN_DIRECTORY_ACCESS SET
+			ACCESS_FLAGS = #{accType}
+		WHERE GROUP_NO = #{groupNo} 
+	</update>
+
+	<!-- File Access 그룹 수정 -->
+	<update id="updateFileAccessGroup" parameterType="map">
+		UPDATE BN_FILE_ACCESS SET
+			ACCESS_FLAGS = #{accType}
+		WHERE GROUP_NO = #{groupNo}
+	</update>
+	
 </mapper>
