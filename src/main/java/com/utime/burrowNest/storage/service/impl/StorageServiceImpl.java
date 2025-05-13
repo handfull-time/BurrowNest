@@ -168,8 +168,8 @@ WHERE PARENT_NO IS NULL;  -- 최상위 노드만 선택
 	}
 
 	@Override
-	public DirectoryDto getDirectory(UserVo user, String path) {
-		final DirectoryDto result = null;
+	public DirectoryDto getDirectory(UserVo user, String guid) {
+		final DirectoryDto result = this.storageDao.getDirectory(user, guid);
 		
 		return result;
 	}

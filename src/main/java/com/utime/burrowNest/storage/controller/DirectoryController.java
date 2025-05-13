@@ -45,19 +45,19 @@ public class DirectoryController {
     }
 	
 	@GetMapping("Path.html")
-    public String path(ModelMap model, UserVo user, @RequestParam String path) throws IOException {
+    public String path(ModelMap model, UserVo user, @RequestParam String guid) throws IOException {
 		
 		DirectoryDto dir;
-		if( BurrowUtils.isEmpty(path) ) {
+		if( BurrowUtils.isEmpty(guid) ) {
 			dir = storageService.getRootDirectory(user);
 		}else {
-			dir = storageService.getDirectory(user, path);
+			dir = storageService.getDirectory(user, guid);
 		}
 		
 		model.addAttribute("directoryTree", dir);
 	    // 선택한 path의 파일 목록
         model.addAttribute("files", storageService.getFiles(user, dir) );
-        model.addAttribute("path", path );
+        model.addAttribute("path", storageService.getPath(user, guid) );
 		
 //		final DirectoryDto rootTree = buildDirectoryTreeLimited("F:\\WorkData\\Burrow", path);
 //

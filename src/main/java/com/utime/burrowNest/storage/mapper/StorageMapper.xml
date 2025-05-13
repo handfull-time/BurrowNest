@@ -2,6 +2,38 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.utime.burrowNest.storage.mapper.StorageMapper">
 
+<sql id="BnDirectoryColumn">
+	DR.NO
+   	, DR.REG_DATE
+   	, DR.UPDATE_DATE
+   	, DR.ENABLED
+   	, DR.UID
+   	, DR.PUBLIC_ACCESSIBLE
+   	, DR.PARENT_NO
+   	, DR.OWNER_NO
+   	, DR.HAS_CHILD
+   	, DR.CREATION
+	, DR.LAST_MODIFIED 
+	, DR.NAME
+	, DR.ABSOLUTE_PATH
+</sql>
+
+<sql id="BnFileColumn">
+	FL.NO
+   	, FL.REG_DATE
+   	, FL.UPDATE_DATE
+   	, FL.ENABLED
+   	, FL.UID
+   	, FL.PARENT_NO
+   	, FL.OWNER_NO
+   	, FL.FILE_LENGTH
+   	, FL.FILE_TYPE
+   	, FL.CREATION
+   	, FL.LAST_MODIFIED
+   	, FL.EXTENSION
+   	, FL.NAME
+</sql>
+
 <!-- 초기화 했는지 여부 -->
 <select id="IsInit" resultType="boolean">
 	SELECT 
@@ -58,22 +90,12 @@
 <!-- Select: 특정 디렉토리 검색 -->
 <select id="selectBnDirectoryByNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnDirectory">
     SELECT 
-    	NO
-    	, REG_DATE
-    	, UPDATE_DATE
-    	, ENABLED
-    	, UID
-    	, PUBLIC_ACCESSIBLE
-    	, PARENT_NO
-    	, OWNER_NO
-    	, HAS_CHILD
-    	, CREATION
-		, LAST_MODIFIED 
-		, NAME
-		, ABSOLUTE_PATH
-    FROM BN_DIRECTORY
-    WHERE NO = #{dirNo}
+    	<include refid="BnDirectoryColumn" /> 
+    FROM BN_DIRECTORY DR
+    WHERE DR.NO = #{dirNo}
 </select>
+
+
 
 <!-- Delete: 특정 디렉토리 삭제 -->
 <delete id="deleteBnDirectoryByNo" parameterType="long">
@@ -161,21 +183,9 @@
 <!-- SELECT -->
 <select id="selectBnFileByNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFile">
     SELECT 
-    	NO
-    	, REG_DATE
-    	, UPDATE_DATE
-    	, ENABLED
-    	, UID
-    	, PARENT_NO
-    	, OWNER_NO
-    	, FILE_LENGTH
-    	, FILE_TYPE
-    	, CREATION
-    	, LAST_MODIFIED
-    	, EXTENSION
-    	, NAME
-    FROM BN_FILE
-    WHERE NO = #{fileNo}
+    	<include refid="BnFileColumn" /> 
+    FROM BN_FILE FL
+    WHERE FL.NO = #{fileNo}
 </select>
 
 
@@ -652,6 +662,10 @@
     FROM BN_FILE_THUMBNAIL THM
     	INNER JOIN BN_FILE F ON THM.FILE_NO = F.NO 
     WHERE F.UID = #{fid}
+</select>
+
+<!-- 하위 Dir 조회 -->
+<select id="selectBnSubDirectory" parameterType="map" resultType="com.utime.burrowNest.storage.vo.BnDirectory">
 </select>
 
 

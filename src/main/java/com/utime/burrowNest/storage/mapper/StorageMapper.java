@@ -1,5 +1,7 @@
 package com.utime.burrowNest.storage.mapper;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -11,6 +13,8 @@ import com.utime.burrowNest.storage.vo.BnFileAudio;
 import com.utime.burrowNest.storage.vo.BnFileDocument;
 import com.utime.burrowNest.storage.vo.BnFileImage;
 import com.utime.burrowNest.storage.vo.BnFileVideo;
+import com.utime.burrowNest.storage.vo.DirectoryDto;
+import com.utime.burrowNest.user.vo.UserVo;
 
 @Mapper
 public interface StorageMapper {
@@ -41,6 +45,14 @@ public interface StorageMapper {
 	 * @return
 	 */
 	BnDirectory selectBnDirectoryByNo( @Param("dirNo") long dirNo );
+	
+	/**
+	 * dir 조회
+	 * @param user
+	 * @param guid
+	 * @return
+	 */
+	BnDirectory selectBnDirectoryByGuid(@Param("user") UserVo user, @Param("guid") String guid);
 	
 	/**
 	 * 삭제
@@ -247,6 +259,16 @@ public interface StorageMapper {
 	 * @return
 	 */
 	BinResultVo selectThumbnail( @Param("fileId") String fid );
+
+	/**
+	 * 하위 Dir 조회
+	 * @param user
+	 * @param parentNo
+	 * @return
+	 */
+	List<BnDirectory> selectBnSubDirectory(@Param("user") UserVo user, @Param("parentNo") long parentNo);
+
+
 
 }
 

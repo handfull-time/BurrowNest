@@ -23,6 +23,7 @@ import com.utime.burrowNest.storage.vo.BnFileDocument;
 import com.utime.burrowNest.storage.vo.BnFileExtension;
 import com.utime.burrowNest.storage.vo.BnFileImage;
 import com.utime.burrowNest.storage.vo.BnFileVideo;
+import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -381,6 +382,22 @@ class StorageDaoImpl implements StorageDao{
 	@Override
 	public BnDirectory getDirectory(long dirNo) {
 		return mapper.selectBnDirectoryByNo(dirNo);
+	}
+	
+	@Override
+	public DirectoryDto getDirectory(UserVo user, String guid) {
+		DirectoryDto result = null;
+		
+		final BnDirectory directory = mapper.selectBnDirectoryByGuid(user, guid);
+		if( directory == null ) {
+			return result;
+		}
+		
+		result = new DirectoryDto(directory);
+		
+		result.setSubDirectories( mapper.selectBnSubDirectory(user, result.getNo() ));
+		
+		return result;
 	}
 
 	@Override

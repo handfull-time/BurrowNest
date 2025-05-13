@@ -28,10 +28,10 @@ public interface StorageService {
 	/**
 	 * dir 정보 조회
 	 * @param user
-	 * @param path
+	 * @param guid
 	 * @return
 	 */
-	DirectoryDto getDirectory(UserVo user, String path);
+	DirectoryDto getDirectory(UserVo user, String guid);
 
 	/**
 	 * dir의 파일 목록
@@ -40,6 +40,14 @@ public interface StorageService {
 	 * @return
 	 */
 	List<BnFile> getFiles(UserVo user, BnDirectory dir);
+
+	/**
+	 * Path 목록
+	 * @param user
+	 * @param guid
+	 * @return
+	 */
+	List<String> getPath(UserVo user, String guid);
 
 	
 

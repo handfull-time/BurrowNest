@@ -12,7 +12,7 @@ public class DirectoryDto extends BnDirectory {
 
 	private boolean selected;
     
-    List<DirectoryDto> subDirectories = new ArrayList<>();
+    List<BnDirectory> subDirectories = new ArrayList<>();
     
     public DirectoryDto() {
     	this(null);

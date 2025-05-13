@@ -5,6 +5,7 @@ import java.util.Map;
 import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
+import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -92,6 +93,14 @@ public interface StorageDao {
 	BnDirectory getDirectory( long dirNo );
 	
 	/**
+	 * directory 정보 조회
+	 * @param user
+	 * @param guid
+	 * @return
+	 */
+	DirectoryDto getDirectory(UserVo user, String guid);
+	
+	/**
 	 *  정보 조회
 	 * @param fileNo
 	 * @return
@@ -111,6 +120,8 @@ public interface StorageDao {
 	 * @return
 	 */
 	byte[] getThumbnail(String fid);
+
+	
 
 	
 
