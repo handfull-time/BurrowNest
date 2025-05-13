@@ -5,6 +5,7 @@ import java.util.Map;
 import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
+import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -111,6 +112,13 @@ public interface StorageDao {
 	 * @return
 	 */
 	byte[] getThumbnail(String fid);
+
+	/**
+	 * 루트 Dir 조회. todo... List로 리턴해야 하지 않을까... 싶네...
+	 * @param user
+	 * @return
+	 */
+	DirectoryDto getRootDirectory(UserVo user);
 
 	
 

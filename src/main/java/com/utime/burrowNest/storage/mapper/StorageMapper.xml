@@ -654,5 +654,19 @@
     WHERE F.UID = #{fid}
 </select>
 
+<!-- 루트 directory 조회 -->
+<select id="selectRootDirectory" parameterType="com.utime.burrowNest.user.vo.UserVo" resultType="com.utime.burrowNest.storage.vo.BnDirectory" >
+	SELECT
+		DR.NO
+		, DR.PARENT_NO
+	FROM BN_DIRECTORY DR
+		INNER JOIN BN_DIRECTORY_ACCESS DA 
+			ON DR.NO = DA.DIR_NO
+	WHERE 1=1
+		AND DR.ENABLED = TRUE 
+		AND DA.GROUP_NO = #{group.groupNo}
+	ORDER BY PARENT_NO ASC
+	LIMIT 1 OFFSET 0;
+</select>
 
 </mapper>

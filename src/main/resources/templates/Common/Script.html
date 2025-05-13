@@ -150,6 +150,7 @@ function buttonStatus( btnId, status ){
 	}
 }
 
+/*
 function getFormObject(formId) {
 
     const form = document.getElementById(formId);
@@ -188,4 +189,65 @@ function getFormObject(formId) {
     
     return result;
 }
+*/
+
+function getFormObject(formId) {
+    const form = document.getElementById(formId);
+    if (!form) {
+    	throw new Error(`Form with ID "${formId}" not found.`);
+    }
+
+    const result = {};
+    const elements = Array.from(form.elements);
+
+    for (const el of elements) {
+        if (!el.name || el.disabled) continue;
+
+        const { name, type, value, checked, tagName } = el;
+        const isCheckbox = type === 'checkbox';
+        const isRadio = type === 'radio';
+
+        if (isCheckbox) {
+            if (checked) _setDeepValue(result, name, value, true);
+        } else if (isRadio) {
+            if (checked) _setDeepValue(result, name, value);
+        } else if (tagName === 'SELECT' && el.multiple) {
+            const selectedValues = Array.from(el.selectedOptions).map(opt => opt.value);
+            _setDeepValue(result, name, selectedValues, true);
+        } else {
+            _setDeepValue(result, name, value);
+        }
+    }
+
+    console.log(JSON.stringify(result, null, 4));
+    return result;
+
+    // 👇 내부 유틸 함수
+    function _setDeepValue(obj, path, value, forceArray = false) {
+        const keys = path.split('.');
+        let current = obj;
+
+        keys.forEach((key, index) => {
+            const isLast = index === keys.length - 1;
+
+            if (isLast) {
+                if (key in current) {
+                    if (!Array.isArray(current[key])) {
+                        current[key] = [current[key]];
+                    }
+                    current[key].push(value);
+                } else {
+                    current[key] = forceArray ? [value] : value;
+                }
+            } else {
+                if (!(key in current) || typeof current[key] !== 'object') {
+                    current[key] = {};
+                }
+                current = current[key];
+            }
+        });
+    }
+}
+
+
 </script>

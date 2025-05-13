@@ -49,7 +49,7 @@ public class StorageServiceImpl implements StorageService {
 
 	@Override
 	public DirectoryDto getRootDirectory(UserVo user) {
-		final DirectoryDto result = null;
+		final DirectoryDto result = storageDao.getRootDirectory(user);
 		
 //		storageDao.get
 		/*
@@ -104,6 +104,7 @@ public class StorageServiceImpl implements StorageService {
 
 
 
+H2 DB이다.
 BN_DIRECTORY, BN_DIRECTORY_ACCESS 를 이용해 아래 쿼리를 실행했더니 오류가 난다.
 
 	CREATE TABLE BN_DIRECTORY (
@@ -126,43 +127,33 @@ BN_DIRECTORY, BN_DIRECTORY_ACCESS 를 이용해 아래 쿼리를 실행했더니
 
 BN_DIRECTORY는 PARENT_NO를 이용해 TREE NODE 구조를 갖고 있다.
 그래서 이 쿼리의 목적은 GROUP_NO = 4의 최 상위 노드 번호 NO를 구하는 것이다.
-
-WITH RECURSIVE data_tree AS (
-        SELECT DR.NO, DR.PARENT_NO
-        FROM BN_DIRECTORY DR INNER JOIN BN_DIRECTORY_ACCESS DA ON DR.NO = DA.DIR_NO
-        WHERE 1=1
-            AND DR.ENABLED = TRUE
-           AND DA.GROUP_NO = 4
-
-        UNION ALL
-
-        SELECT d.no, d.parent_no
-        FROM BN_DIRECTORY d
-        INNER JOIN data_tree dt ON dt.parent_no = d.no
-    )
-    SELECT DISTINCT no
-    FROM data_tree
-    WHERE no = parent_no
 	
 	
-	
-	
-	WITH RECURSIVE DATA_TREE AS (
-    SELECT DR.NO, DR.PARENT_NO
-    FROM BN_DIRECTORY DR 
+WITH RECURSIVE DATA_TREE(NO, PARENT_NO, LEVEL) AS (
+    -- 시작: GROUP_NO = 4인 노드들
+    SELECT DR.NO, DR.PARENT_NO, 1 AS LEVEL
+    FROM BN_DIRECTORY DR
     INNER JOIN BN_DIRECTORY_ACCESS DA ON DR.NO = DA.DIR_NO
     WHERE DR.ENABLED = TRUE AND DA.GROUP_NO = 4
-    
+
     UNION ALL
 
-    SELECT D.NO, D.PARENT_NO
+    -- 부모 방향으로 계속 올라가기
+    SELECT D.NO, D.PARENT_NO, LEVEL + 1
     FROM BN_DIRECTORY D
-    INNER JOIN DATA_TREE DT ON DT.PARENT_NO = D.NO
-    WHERE D.PARENT_NO IS NOT NULL  -- 종료 조건 추가
+    INNER JOIN DATA_TREE DT ON D.NO = DT.PARENT_NO
+    WHERE LEVEL < 20
 )
 SELECT DISTINCT NO
 FROM DATA_TREE
-WHERE PARENT_NO IS NULL;  -- 최상위 노드만 선택
+-- WHERE PARENT_NO IS NULL;
+
+
+
+LIMIT 5 OFFSET 0 ;
+OFFSET 0: 1번째 row부터 시작
+LIMIT 5: 5개 row 조회
+
 		*/
 		return result;
 	}

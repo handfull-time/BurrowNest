@@ -23,6 +23,7 @@ import com.utime.burrowNest.storage.vo.BnFileDocument;
 import com.utime.burrowNest.storage.vo.BnFileExtension;
 import com.utime.burrowNest.storage.vo.BnFileImage;
 import com.utime.burrowNest.storage.vo.BnFileVideo;
+import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -406,10 +407,20 @@ class StorageDaoImpl implements StorageDao{
 	
 	@Override
 	public byte[] getThumbnail(String fid) {
-		BinResultVo result = mapper.selectThumbnail(fid);
+		final BinResultVo result = mapper.selectThumbnail(fid);
 		
 		return result.getBinary();
 	}
 
+	@Override
+	public DirectoryDto getRootDirectory(UserVo user) {
+		final DirectoryDto result = mapper.selectRootDirectory( user );
+		
+		if( result == null ) {
+			return result;
+		}
+		
+		return result;
+	}
 	
 }

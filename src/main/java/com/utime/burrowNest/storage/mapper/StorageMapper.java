@@ -11,6 +11,8 @@ import com.utime.burrowNest.storage.vo.BnFileAudio;
 import com.utime.burrowNest.storage.vo.BnFileDocument;
 import com.utime.burrowNest.storage.vo.BnFileImage;
 import com.utime.burrowNest.storage.vo.BnFileVideo;
+import com.utime.burrowNest.storage.vo.DirectoryDto;
+import com.utime.burrowNest.user.vo.UserVo;
 
 @Mapper
 public interface StorageMapper {
@@ -247,6 +249,13 @@ public interface StorageMapper {
 	 * @return
 	 */
 	BinResultVo selectThumbnail( @Param("fileId") String fid );
+
+	/**
+	 * 루트 directory 조회
+	 * @param user
+	 * @return
+	 */
+	DirectoryDto selectRootDirectory(UserVo user);
 
 }
 
