@@ -1,5 +1,7 @@
 package com.utime.burrowNest.storage.mapper;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -43,6 +45,14 @@ public interface StorageMapper {
 	 * @return
 	 */
 	BnDirectory selectBnDirectoryByNo( @Param("dirNo") long dirNo );
+	
+	/**
+	 * dir 조회
+	 * @param user
+	 * @param guid
+	 * @return
+	 */
+	BnDirectory selectBnDirectoryByGuid(@Param("user") UserVo user, @Param("guid") String guid);
 	
 	/**
 	 * 삭제
@@ -256,6 +266,14 @@ public interface StorageMapper {
 	 * @return
 	 */
 	DirectoryDto selectRootDirectory(UserVo user);
+	
+	/*
+	 * 하위 Dir 조회
+	 * @param user
+	 * @param parentNo
+	 * @return
+	 */
+	List<BnDirectory> selectBnSubDirectory(@Param("user") UserVo user, @Param("parentNo") long parentNo);
 
 }
 

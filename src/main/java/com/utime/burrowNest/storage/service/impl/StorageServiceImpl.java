@@ -159,14 +159,20 @@ LIMIT 5: 5개 row 조회
 	}
 
 	@Override
-	public DirectoryDto getDirectory(UserVo user, String path) {
-		final DirectoryDto result = null;
+	public DirectoryDto getDirectory(UserVo user, String guid) {
+		final DirectoryDto result = this.storageDao.getDirectory(user, guid);
 		
 		return result;
 	}
 
 	@Override
 	public List<BnFile> getFiles(UserVo user, BnDirectory dir) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<String> getPath(UserVo user, String guid) {
 		// TODO Auto-generated method stub
 		return null;
 	}

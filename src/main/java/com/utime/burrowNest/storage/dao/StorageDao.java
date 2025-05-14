@@ -93,6 +93,14 @@ public interface StorageDao {
 	BnDirectory getDirectory( long dirNo );
 	
 	/**
+	 * directory 정보 조회
+	 * @param user
+	 * @param guid
+	 * @return
+	 */
+	DirectoryDto getDirectory(UserVo user, String guid);
+	
+	/**
 	 *  정보 조회
 	 * @param fileNo
 	 * @return
@@ -119,6 +127,8 @@ public interface StorageDao {
 	 * @return
 	 */
 	DirectoryDto getRootDirectory(UserVo user);
+
+	
 
 	
 

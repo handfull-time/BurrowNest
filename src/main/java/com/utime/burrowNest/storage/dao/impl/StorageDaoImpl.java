@@ -383,6 +383,22 @@ class StorageDaoImpl implements StorageDao{
 	public BnDirectory getDirectory(long dirNo) {
 		return mapper.selectBnDirectoryByNo(dirNo);
 	}
+	
+	@Override
+	public DirectoryDto getDirectory(UserVo user, String guid) {
+		DirectoryDto result = null;
+		
+		final BnDirectory directory = mapper.selectBnDirectoryByGuid(user, guid);
+		if( directory == null ) {
+			return result;
+		}
+		
+		result = new DirectoryDto(directory);
+		
+		result.setSubDirectories( mapper.selectBnSubDirectory(user, result.getNo() ));
+		
+		return result;
+	}
 
 	@Override
 	public BnFile getFile(long fileNo) {
