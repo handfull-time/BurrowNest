@@ -34,6 +34,34 @@
    	, FL.NAME
 </sql>
 
+<resultMap id="AbsPathMap" type="com.utime.burrowNest.storage.vo.AbsPath">
+	<id column="NO" property="no"/>
+	<result column="REG_DATE" property="regDate"/>
+	<result column="UPDATE_DATE" property="updateDate"/>
+	<result column="ENABLED" property="enabled"/>
+	<result column="UID" property="uid"/>
+	<result column="PARENT_NO" property="parentNo"/>
+	<result column="OWNER_NO" property="ownerNo"/>
+	<result column="CREATION" property="creation"/>
+	<result column="LAST_MODIFIED" property="lastModified"/>
+	<result column="NAME" property="name"/>
+	<result column="ACCESS_FLAGS" property="accType" typeHandler="com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler"/>
+</resultMap>
+
+<resultMap id="BnDirectoryMap" type="com.utime.burrowNest.storage.vo.BnDirectory"
+	extends="com.utime.burrowNest.storage.mapper.StorageMapper.AbsPathMap">
+	<result column="PUBLIC_ACCESSIBLE" property="publicAccessible"/>
+	<result column="HAS_CHILD" property="hasChild"/>
+	<result column="ABSOLUTE_PATH" property="absolutePath"/>
+</resultMap>
+
+<resultMap id="BnFileMap" type="com.utime.burrowNest.storage.vo.BnFile"
+	extends="com.utime.burrowNest.storage.mapper.StorageMapper.AbsPathMap">
+	<result column="FILE_LENGTH" property="fileLength"/>
+	<result column="FILE_TYPE" property="fileType"/>
+	<result column="EXTENSION" property="extension"/>
+</resultMap>
+
 <!-- 초기화 했는지 여부 -->
 <select id="IsInit" resultType="boolean">
 	SELECT 
@@ -46,7 +74,7 @@
 </select>
 	
  <!-- Insert: 새 디렉토리 생성 -->
-<insert id="insertBnDirectory" parameterType="com.utime.burrowNest.storage.vo.BnDirectory" 
+<insert id="insertDirectory" parameterType="com.utime.burrowNest.storage.vo.BnDirectory" 
 	useGeneratedKeys="true" keyProperty="no" keyColumn="NO" >
     INSERT INTO BN_DIRECTORY (
     	UPDATE_DATE
@@ -74,7 +102,7 @@
 </insert>
 
 <!-- Update: 디렉토리 정보 수정 -->
-<update id="updateBnDirectory" parameterType="com.utime.burrowNest.storage.vo.BnDirectory">
+<update id="updateDirectory" parameterType="com.utime.burrowNest.storage.vo.BnDirectory">
     UPDATE BN_DIRECTORY
     SET UPDATE_DATE = CURRENT_TIMESTAMP
     	, ENABLED = #{enabled}
@@ -88,7 +116,7 @@
 </update>
 
 <!-- Select: 특정 디렉토리 검색 -->
-<select id="selectBnDirectoryByNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnDirectory">
+<select id="selectDirectoryByNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnDirectory">
     SELECT 
     	<include refid="BnDirectoryColumn" /> 
     FROM BN_DIRECTORY DR
@@ -98,7 +126,7 @@
 
 
 <!-- Delete: 특정 디렉토리 삭제 -->
-<delete id="deleteBnDirectoryByNo" parameterType="long">
+<delete id="deleteDirectoryByNo" parameterType="long">
     DELETE FROM BN_DIRECTORY
     WHERE NO = #{dirNo}
 </delete>
@@ -148,7 +176,7 @@
 </update>
 
 <!-- 파일 추가 -->
-<insert id="insertBnFile" parameterType="com.utime.burrowNest.storage.vo.BnFile" useGeneratedKeys="true" keyProperty="no" keyColumn="NO" >
+<insert id="insertFile" parameterType="com.utime.burrowNest.storage.vo.BnFile" useGeneratedKeys="true" keyProperty="no" keyColumn="NO" >
     INSERT INTO BN_FILE (
     	REG_DATE
     	, UPDATE_DATE
@@ -181,7 +209,7 @@
 </insert>
 
 <!-- SELECT -->
-<select id="selectBnFileByNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFile">
+<select id="selectFileByNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFile">
     SELECT 
     	<include refid="BnFileColumn" /> 
     FROM BN_FILE FL
@@ -190,7 +218,7 @@
 
 
 <!-- UPDATE -->
-<update id="updateBnFile" parameterType="com.utime.burrowNest.storage.vo.BnFile">
+<update id="updateFile" parameterType="com.utime.burrowNest.storage.vo.BnFile">
     UPDATE BN_FILE
     SET UPDATE_DATE = CURRENT_TIMESTAMP
         , ENABLED = #{enabled}
@@ -206,7 +234,7 @@
 </update>
 
 <!-- DELETE -->
-<delete id="deleteBnFileByNo" parameterType="long">
+<delete id="deleteFileByNo" parameterType="long">
     DELETE FROM BN_FILE
     WHERE NO = #{fileNo}
 </delete>
@@ -223,7 +251,7 @@
 </select>
 
 <!-- INSERT -->
-<insert id="insertBnFileDocument" parameterType="com.utime.burrowNest.storage.vo.BnFileDocument">
+<insert id="insertFileDocument" parameterType="com.utime.burrowNest.storage.vo.BnFileDocument">
     INSERT INTO BN_FILE_DOCUMENT (
     	FILE_NO
     	, UPDATE_DATE
@@ -254,7 +282,7 @@
 </insert>
 
 <!-- SELECT -->
-<select id="selectBnFileDocumentByFileNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFileDocument">
+<select id="selectFileDocumentByFileNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFileDocument">
     SELECT 
     	FILE_NO 
     	, UPDATE_DATE
@@ -273,7 +301,7 @@
 </select>
 
 <!-- UPDATE -->
-<update id="updateBnFileDocument" parameterType="com.utime.burrowNest.storage.vo.BnFileDocument">
+<update id="updateFileDocument" parameterType="com.utime.burrowNest.storage.vo.BnFileDocument">
     UPDATE BN_FILE_DOCUMENT
     SET UPDATE_DATE = CURRENT_TIMESTAMP
     	, TITLE = <choose> <when test="title != null and title != '' ">#{title}</when> <otherwise>NULL</otherwise> </choose>
@@ -289,7 +317,7 @@
     WHERE FILE_NO = #{fileNo}
 </update>
 
-<insert id="insertBnFileImage" parameterType="com.utime.burrowNest.storage.vo.BnFileImage">
+<insert id="insertFileImage" parameterType="com.utime.burrowNest.storage.vo.BnFileImage">
     INSERT INTO BN_FILE_IMAGE (
         FILE_NO
         , UPDATE_DATE
@@ -333,7 +361,7 @@
     )
 </insert>
 
-<update id="updateBnFileImage" parameterType="com.utime.burrowNest.storage.vo.BnFileImage">
+<update id="updateFileImage" parameterType="com.utime.burrowNest.storage.vo.BnFileImage">
     UPDATE BN_FILE_IMAGE
     SET UPDATE_DATE = CURRENT_TIMESTAMP
         , MAKE = <choose> <when test="make != null and make != '' ">#{make}</when> <otherwise>NULL</otherwise> </choose>
@@ -356,7 +384,7 @@
     WHERE FILE_NO = #{fileNo}
 </update>
 
-<select id="selectBnFileImageByFileNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFileImage">
+<select id="selectFileImageByFileNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFileImage">
     SELECT 
     	FILE_NO
     	, UPDATE_DATE
@@ -381,7 +409,7 @@
     WHERE FILE_NO = #{fileNo}
 </select>
 
-<insert id="insertBnFileVideo" parameterType="com.utime.burrowNest.storage.vo.BnFileVideo">
+<insert id="insertFileVideo" parameterType="com.utime.burrowNest.storage.vo.BnFileVideo">
     INSERT INTO BN_FILE_VIDEO (
         FILE_NO
         , UPDATE_DATE
@@ -433,7 +461,7 @@
     )
 </insert>
 
-<update id="updateBnFileVideo" parameterType="com.utime.burrowNest.storage.vo.BnFileVideo">
+<update id="updateFileVideo" parameterType="com.utime.burrowNest.storage.vo.BnFileVideo">
     UPDATE BN_FILE_VIDEO
     SET UPDATE_DATE = CURRENT_TIMESTAMP
         , MIME_TYPE = <choose> <when test="mimeType != null and mimeType != '' ">#{mimeType}</when> <otherwise>NULL</otherwise> </choose>
@@ -461,7 +489,7 @@
         FILE_NO = #{fileNo}
 </update>
 
-<select id="selectBnFileVideoByFileNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFileVideo">
+<select id="selectFileVideoByFileNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFileVideo">
     SELECT 
         FILE_NO
         , UPDATE_DATE
@@ -493,7 +521,7 @@
 </select>
 
 <!-- INSERT -->
-<insert id="insertBnFileAudio" parameterType="com.utime.burrowNest.storage.vo.BnFileAudio">
+<insert id="insertFileAudio" parameterType="com.utime.burrowNest.storage.vo.BnFileAudio">
     INSERT INTO BN_FILE_AUDIO (
         FILE_NO
         , UPDATE_DATE
@@ -534,7 +562,7 @@
 </insert>
 
 <!-- UPDATE -->
-<update id="updateBnFileAudio" parameterType="com.utime.burrowNest.storage.vo.BnFileAudio">
+<update id="updateFileAudio" parameterType="com.utime.burrowNest.storage.vo.BnFileAudio">
     UPDATE BN_FILE_AUDIO
     SET UPDATE_DATE = CURRENT_TIMESTAMP
         , MIME_TYPE = <choose> <when test="mimeType != null and mimeType != '' ">#{mimeType}</when> <otherwise>NULL</otherwise> </choose>
@@ -556,7 +584,7 @@
 </update>
 
 <!-- SELECT -->
-<select id="selectBnFileAudioByFileNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFileAudio">
+<select id="selectFileAudioByFileNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFileAudio">
     SELECT
         FILE_NO
         , UPDATE_DATE
@@ -580,7 +608,7 @@
 </select>
 
 <!-- INSERT -->
-<insert id="insertBnFileArchive" parameterType="com.utime.burrowNest.storage.vo.BnFileArchive">
+<insert id="insertFileArchive" parameterType="com.utime.burrowNest.storage.vo.BnFileArchive">
     INSERT INTO BN_FILE_ARCHIVE (
         FILE_NO
         , UPDATE_DATE
@@ -605,7 +633,7 @@
 </insert>
 
 <!-- SELECT -->
-<select id="selectBnFileArchiveByFileNo" resultType="com.utime.burrowNest.storage.vo.BnFileArchive" parameterType="long">
+<select id="selectFileArchiveByFileNo" resultType="com.utime.burrowNest.storage.vo.BnFileArchive" parameterType="long">
     SELECT
         FILE_NO
         , UPDATE_DATE
@@ -621,7 +649,7 @@
 </select>
 
 <!-- UPDATE -->
-<update id="updateBnFileArchive" parameterType="com.utime.burrowNest.storage.vo.BnFileArchive">
+<update id="updateFileArchive" parameterType="com.utime.burrowNest.storage.vo.BnFileArchive">
     UPDATE BN_FILE_ARCHIVE
     SET UPDATE_DATE = CURRENT_TIMESTAMP,
         , ARCHIVE_FORMAT = #{archiveFormat, typeHandler=com.utime.burrowNest.storage.typehandler.EArchiveTypeTypeHandler},
@@ -665,22 +693,55 @@
 </select>
 
 <!-- 루트 directory 조회 -->
-<select id="selectRootDirectory" parameterType="com.utime.burrowNest.user.vo.UserVo" resultType="com.utime.burrowNest.storage.vo.BnDirectory" >
-	SELECT
-		DR.NO
-		, DR.PARENT_NO
+<select id="selectRootDirectory" parameterType="com.utime.burrowNest.user.vo.UserVo" resultMap="BnDirectoryMap">
+	SELECT 
+		<include refid="BnDirectoryColumn" />
+		, DA.ACCESS_FLAGS
 	FROM BN_DIRECTORY DR
-		INNER JOIN BN_DIRECTORY_ACCESS DA 
-			ON DR.NO = DA.DIR_NO
-	WHERE 1=1
-		AND DR.ENABLED = TRUE 
-		AND DA.GROUP_NO = #{group.groupNo}
-	ORDER BY PARENT_NO ASC
-	LIMIT 1 OFFSET 0;
+	    INNER JOIN BN_DIRECTORY_ACCESS DA ON DR.NO = DA.DIR_NO
+    WHERE 1=1
+    	AND DA.GROUP_NO = #{group.groupNo}
+    	<if test="group.role.name() != 'Admin' ">
+    	AND DR.ENABLED = TRUE 
+    	AND BITAND( DA.ACCESS_FLAGS, #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler} ) = #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler}
+    	</if>
+	ORDER BY DR.PARENT_NO ASC
+	LIMIT 1 OFFSET 0
 </select>
 
+<!-- dir 조회 -->
+<select id="selectDirectoryByGuid" parameterType="map" resultMap="BnDirectoryMap">
+	SELECT 
+		<include refid="BnDirectoryColumn" />
+		, DA.ACCESS_FLAGS
+	FROM BN_DIRECTORY DR
+	    INNER JOIN BN_DIRECTORY_ACCESS DA ON DR.NO = DA.DIR_NO
+    WHERE 1=1
+    	AND DR.ENABLED = TRUE 
+    	AND DA.GROUP_NO = #{group.groupNo}
+    	AND DR.GUID = #{guid}
+    	<if test="group.role.name() != 'Admin' ">
+    	AND BITAND( DA.ACCESS_FLAGS, #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler} ) = #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler}
+    	</if>
+    ORDER BY DR.NAME
+</select>
+
+
 <!-- 하위 Dir 조회 -->
-<select id="selectBnSubDirectory" parameterType="map" resultType="com.utime.burrowNest.storage.vo.BnDirectory">
+<select id="selectChildDirectory" parameterType="map" resultMap="BnDirectoryMap">
+	SELECT 
+		<include refid="BnDirectoryColumn" />
+		, DA.ACCESS_FLAGS
+	FROM BN_DIRECTORY DR
+	    INNER JOIN BN_DIRECTORY_ACCESS DA ON DR.NO = DA.DIR_NO
+    WHERE 1=1
+    	AND DR.ENABLED = TRUE 
+    	AND DA.GROUP_NO = #{group.groupNo}
+    	AND DR.PARENT_NO = #{parentNo}
+    	<if test="group.role.name() != 'Admin' ">
+    	AND BITAND( DA.ACCESS_FLAGS, #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler} ) = #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler}
+    	</if>
+    ORDER BY DR.NAME	
 </select>
 
 </mapper>

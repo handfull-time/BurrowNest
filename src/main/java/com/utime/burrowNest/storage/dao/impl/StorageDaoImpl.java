@@ -214,7 +214,7 @@ class StorageDaoImpl implements StorageDao{
 			throw new Exception("Root 생성 실패");
 		}
 		
-		final BnDirectory result = mapper.selectBnDirectoryByNo(1L);
+		final BnDirectory result = mapper.selectDirectoryByNo(1L);
 		
 		this.insertAccess(owner, result);
 		
@@ -240,10 +240,10 @@ class StorageDaoImpl implements StorageDao{
 		
 		final int result;
 		if( dir.getNo() < 0L ) {
-			result = mapper.insertBnDirectory(dir);
+			result = mapper.insertDirectory(dir);
 			this.insertAccess(owner, dir);
 		}else {
-			result = mapper.updateBnDirectory(dir);
+			result = mapper.updateDirectory(dir);
 			this.updateAccess(owner, dir);
 		}
 		return result;
@@ -255,10 +255,10 @@ class StorageDaoImpl implements StorageDao{
 		
 		final int result;
 		if( file.getNo() < 0L ) {
-			result = mapper.insertBnFile(file);
+			result = mapper.insertFile(file);
 			this.insertAccess(owner, file);
 		}else {
-			result = mapper.updateBnFile(file);
+			result = mapper.updateFile(file);
 			this.updateAccess(owner, file);
 		}
 		return result;
@@ -309,41 +309,41 @@ class StorageDaoImpl implements StorageDao{
 		case Basic: result = 0; break;
 		case Document: {
 			if( mapper.existFileInfo( "BN_FILE_DOCUMENT", file.getNo() ) ) {
-				result = mapper.updateBnFileDocument((BnFileDocument)fileInfo);
+				result = mapper.updateFileDocument((BnFileDocument)fileInfo);
 			}else {
-				result = mapper.insertBnFileDocument((BnFileDocument)fileInfo);
+				result = mapper.insertFileDocument((BnFileDocument)fileInfo);
 			}
 			break;
 		}
 		case Image: { 
 			if( mapper.existFileInfo( "BN_FILE_IMAGE", file.getNo() ) ) {
-				result = mapper.updateBnFileImage((BnFileImage)fileInfo);
+				result = mapper.updateFileImage((BnFileImage)fileInfo);
 			}else {
-				result = mapper.insertBnFileImage((BnFileImage)fileInfo);
+				result = mapper.insertFileImage((BnFileImage)fileInfo);
 			}
 			break;
 		}
 		case Video:{
 			if( mapper.existFileInfo( "BN_FILE_VIDEO", file.getNo() ) ) {
-				result = mapper.updateBnFileVideo((BnFileVideo)fileInfo);
+				result = mapper.updateFileVideo((BnFileVideo)fileInfo);
 			}else {
-				result = mapper.insertBnFileVideo((BnFileVideo)fileInfo);
+				result = mapper.insertFileVideo((BnFileVideo)fileInfo);
 			}
 			break;
 		} 
 		case Audio:{
 			if( mapper.existFileInfo( "BN_FILE_AUDIO", file.getNo() ) ) {
-				result = mapper.updateBnFileAudio((BnFileAudio)fileInfo);
+				result = mapper.updateFileAudio((BnFileAudio)fileInfo);
 			}else {
-				result = mapper.insertBnFileAudio((BnFileAudio)fileInfo);
+				result = mapper.insertFileAudio((BnFileAudio)fileInfo);
 			}
 			break;
 		} 
 		case Archive:{
 			if( mapper.existFileInfo( "BN_FILE_ARCHIVE", file.getNo() ) ) {
-				result = mapper.updateBnFileArchive((BnFileArchive)fileInfo);
+				result = mapper.updateFileArchive((BnFileArchive)fileInfo);
 			}else {
-				result = mapper.insertBnFileArchive((BnFileArchive)fileInfo);
+				result = mapper.insertFileArchive((BnFileArchive)fileInfo);
 			}
 			break;
 		} 
@@ -369,40 +369,41 @@ class StorageDaoImpl implements StorageDao{
 	@Transactional(rollbackFor = Exception.class)
 	public int deleteDirectory(BnDirectory dir) throws Exception {
 		
-		return mapper.deleteBnDirectoryByNo(dir.getNo());
+		return mapper.deleteDirectoryByNo(dir.getNo());
 	}
 	
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public int deleteFile(BnFile file) throws Exception {
 		
-		return mapper.deleteBnFileByNo(file.getNo());
+		return mapper.deleteFileByNo(file.getNo());
 	}
 
 	@Override
 	public BnDirectory getDirectory(long dirNo) {
-		return mapper.selectBnDirectoryByNo(dirNo);
+		return mapper.selectDirectoryByNo(dirNo);
 	}
 	
 	@Override
 	public DirectoryDto getDirectory(UserVo user, String guid) {
 		DirectoryDto result = null;
 		
-		final BnDirectory directory = mapper.selectBnDirectoryByGuid(user, guid);
+		final BnDirectory directory = mapper.selectDirectoryByGuid(user.getGroup(), guid);
 		if( directory == null ) {
 			return result;
 		}
 		
 		result = new DirectoryDto(directory);
 		
-		result.setSubDirectories( mapper.selectBnSubDirectory(user, result.getNo() ));
+		result.setChildDirectories( mapper.selectChildDirectory(user.getGroup(), result.getNo() ));
+		result.setSelected(true);
 		
 		return result;
 	}
 
 	@Override
 	public BnFile getFile(long fileNo) {
-		return mapper.selectBnFileByNo(fileNo);
+		return mapper.selectFileByNo(fileNo);
 	}
 
 	@Override
@@ -411,11 +412,11 @@ class StorageDaoImpl implements StorageDao{
 		
 		switch( file.getFileType() ) {
 		case Basic: result = null; break;
-		case Document: result = mapper.selectBnFileDocumentByFileNo(file.getNo()); break;
-		case Image: result = mapper.selectBnFileImageByFileNo(file.getNo()); break;
-		case Video: result = mapper.selectBnFileVideoByFileNo(file.getNo()); break;
-		case Audio: result = mapper.selectBnFileAudioByFileNo(file.getNo()); break;
-		case Archive: result = mapper.selectBnFileArchiveByFileNo(file.getNo()); break;
+		case Document: result = mapper.selectFileDocumentByFileNo(file.getNo()); break;
+		case Image: result = mapper.selectFileImageByFileNo(file.getNo()); break;
+		case Video: result = mapper.selectFileVideoByFileNo(file.getNo()); break;
+		case Audio: result = mapper.selectFileAudioByFileNo(file.getNo()); break;
+		case Archive: result = mapper.selectFileArchiveByFileNo(file.getNo()); break;
 		}
 
 		return result;
@@ -430,11 +431,16 @@ class StorageDaoImpl implements StorageDao{
 
 	@Override
 	public DirectoryDto getRootDirectory(UserVo user) {
-		final DirectoryDto result = mapper.selectRootDirectory( user );
+		final BnDirectory directory = mapper.selectRootDirectory( user );
 		
-		if( result == null ) {
-			return result;
+		if( directory == null ) {
+			return null;
 		}
+		
+		final DirectoryDto result = new DirectoryDto(directory);
+		
+		result.setChildDirectories( mapper.selectChildDirectory(user.getGroup(), directory.getNo() ));
+		result.setSelected(true);
 		
 		return result;
 	}

@@ -13,7 +13,7 @@ import com.utime.burrowNest.storage.vo.BnFileAudio;
 import com.utime.burrowNest.storage.vo.BnFileDocument;
 import com.utime.burrowNest.storage.vo.BnFileImage;
 import com.utime.burrowNest.storage.vo.BnFileVideo;
-import com.utime.burrowNest.storage.vo.DirectoryDto;
+import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
 @Mapper
@@ -30,21 +30,21 @@ public interface StorageMapper {
 	 * @param dir
 	 * @return
 	 */
-	int insertBnDirectory( BnDirectory dir );
+	int insertDirectory( BnDirectory dir );
 	
 	/**
 	 * dir 수정
 	 * @param dir
 	 * @return
 	 */
-	int updateBnDirectory( BnDirectory dir );
+	int updateDirectory( BnDirectory dir );
 	
 	/**
 	 * dir 조회
 	 * @param dirNo
 	 * @return
 	 */
-	BnDirectory selectBnDirectoryByNo( @Param("dirNo") long dirNo );
+	BnDirectory selectDirectoryByNo( @Param("dirNo") long dirNo );
 	
 	/**
 	 * dir 조회
@@ -52,42 +52,52 @@ public interface StorageMapper {
 	 * @param guid
 	 * @return
 	 */
-	BnDirectory selectBnDirectoryByGuid(@Param("user") UserVo user, @Param("guid") String guid);
+	BnDirectory selectDirectoryByGuid(@Param("group") GroupVo group, @Param("guid") String guid);
+	
+	
+	/*
+	 * 하위 Dir 조회
+	 * @param user
+	 * @param parentNo
+	 * @return
+	 */
+	List<BnDirectory> selectChildDirectory(@Param("group") GroupVo group, @Param("parentNo") long parentNo);
+
 	
 	/**
 	 * 삭제
 	 * @param dirNo
 	 * @return
 	 */
-	int deleteBnDirectoryByNo( @Param("dirNo") long dirNo );
+	int deleteDirectoryByNo( @Param("dirNo") long dirNo );
 	
 	/**
 	 * 파일 추가.
 	 * @param file
 	 * @return
 	 */
-	int insertBnFile( BnFile file );
+	int insertFile( BnFile file );
 	
 	/**
 	 * 파일 조회
 	 * @param fileNo
 	 * @return
 	 */
-	BnFile selectBnFileByNo( @Param("fileNo") long fileNo );
+	BnFile selectFileByNo( @Param("fileNo") long fileNo );
 	
 	/**
 	 * 파일 수정
 	 * @param file
 	 * @return
 	 */
-	int updateBnFile( BnFile file );
+	int updateFile( BnFile file );
 	
 	/**
 	 * 파일 삭제
 	 * @param fileNo
 	 * @return
 	 */
-	int deleteBnFileByNo( @Param("fileNo") long fileNo );
+	int deleteFileByNo( @Param("fileNo") long fileNo );
 	
 	/**
 	 * Dir 권한 추가하기
@@ -138,104 +148,104 @@ public interface StorageMapper {
 	 * @param document
 	 * @return
 	 */
-	int insertBnFileDocument( BnFileDocument document );
+	int insertFileDocument( BnFileDocument document );
 	
 	/**
 	 * file doc 조회
 	 * @param fileNo
 	 * @return
 	 */
-	BnFileDocument selectBnFileDocumentByFileNo( @Param("fileNo") long fileNo );
+	BnFileDocument selectFileDocumentByFileNo( @Param("fileNo") long fileNo );
 	
 	/**
 	 * 파일 doc 수정
 	 * @param document
 	 * @return
 	 */
-	int updateBnFileDocument( BnFileDocument document );
+	int updateFileDocument( BnFileDocument document );
 	
 	/**
 	 * 파일 이미지 추가
 	 * @param image
 	 * @return
 	 */
-	int insertBnFileImage( BnFileImage image );
+	int insertFileImage( BnFileImage image );
 	
 	/**
 	 * 파일 이미지 조회
 	 * @param fileNo
 	 * @return
 	 */
-	BnFileImage selectBnFileImageByFileNo( @Param("fileNo") long fileNo );
+	BnFileImage selectFileImageByFileNo( @Param("fileNo") long fileNo );
 	
 	/**
 	 * 파일 이미지 수정
 	 * @param image
 	 * @return
 	 */
-	int updateBnFileImage( BnFileImage image );
+	int updateFileImage( BnFileImage image );
 	
 	/**
 	 * 파일 비디오 추가
 	 * @param video
 	 * @return
 	 */
-	int insertBnFileVideo( BnFileVideo video );
+	int insertFileVideo( BnFileVideo video );
 	
 	/**
 	 * 파일 비디오 조회
 	 * @param fileNo
 	 * @return
 	 */
-	BnFileVideo selectBnFileVideoByFileNo( @Param("fileNo") long fileNo );
+	BnFileVideo selectFileVideoByFileNo( @Param("fileNo") long fileNo );
 	
 	/**
 	 * 파일 비디오 수정
 	 * @param video
 	 * @return
 	 */
-	int updateBnFileVideo( BnFileVideo video );
+	int updateFileVideo( BnFileVideo video );
 	
 	/**
 	 * 오디오 파일 추가
 	 * @param audio
 	 * @return
 	 */
-	int insertBnFileAudio( BnFileAudio audio );
+	int insertFileAudio( BnFileAudio audio );
 	
 	/**
 	 * 오디오 파일 조회
 	 * @param fileNo
 	 * @return
 	 */
-	BnFileAudio selectBnFileAudioByFileNo( @Param("fileNo") long fileNo );
+	BnFileAudio selectFileAudioByFileNo( @Param("fileNo") long fileNo );
 	/**
 	 * 오디오 파일 수정
 	 * @param audio
 	 * @return
 	 */
-	int updateBnFileAudio( BnFileAudio audio );
+	int updateFileAudio( BnFileAudio audio );
 	
 	/**
 	 * 압축 파일 추가
 	 * @param archive
 	 * @return
 	 */
-	int insertBnFileArchive( BnFileArchive archive );
+	int insertFileArchive( BnFileArchive archive );
 	
 	/**
 	 * 압축 파일 조회
 	 * @param fileNo
 	 * @return
 	 */
-	BnFileArchive selectBnFileArchiveByFileNo( @Param("fileNo") long fileNo );
+	BnFileArchive selectFileArchiveByFileNo( @Param("fileNo") long fileNo );
 	
 	/**
 	 * 압축 파일 수정
 	 * @param archive
 	 * @return
 	 */
-	int updateBnFileArchive( BnFileArchive archive );
+	int updateFileArchive( BnFileArchive archive );
 	
 	/**
 	 * 섬네일 추가
@@ -265,15 +275,7 @@ public interface StorageMapper {
 	 * @param user
 	 * @return
 	 */
-	DirectoryDto selectRootDirectory(UserVo user);
-	
-	/*
-	 * 하위 Dir 조회
-	 * @param user
-	 * @param parentNo
-	 * @return
-	 */
-	List<BnDirectory> selectBnSubDirectory(@Param("user") UserVo user, @Param("parentNo") long parentNo);
+	BnDirectory selectRootDirectory(UserVo user);
 
 }
 
