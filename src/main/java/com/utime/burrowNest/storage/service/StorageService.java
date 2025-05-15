@@ -44,10 +44,10 @@ public interface StorageService {
 	/**
 	 * Path 목록
 	 * @param user
-	 * @param guid
+	 * @param dir
 	 * @return
 	 */
-	List<String> getPath(UserVo user, String guid);
+	List<String> getPaths(UserVo user, BnDirectory dir);
 
 	
 

@@ -131,17 +131,27 @@ BN_DIRECTORY는 PARENT_NO를 이용해 TREE NODE 구조를 갖고 있다.
 	
 WITH RECURSIVE DATA_TREE(NO, PARENT_NO, LEVEL) AS (
     -- 시작: GROUP_NO = 4인 노드들
-    SELECT DR.NO, DR.PARENT_NO, 1 AS LEVEL
+    SELECT 
+    	DR.NO
+    	, DR.PARENT_NO
+    	, 1 AS LEVEL
     FROM BN_DIRECTORY DR
-    INNER JOIN BN_DIRECTORY_ACCESS DA ON DR.NO = DA.DIR_NO
-    WHERE DR.ENABLED = TRUE AND DA.GROUP_NO = 4
+    	INNER JOIN BN_DIRECTORY_ACCESS DA 
+    		ON DR.NO = DA.DIR_NO
+    WHERE 1=1
+    	AND DR.ENABLED = TRUE 
+    	AND DA.GROUP_NO = 4
 
     UNION ALL
 
     -- 부모 방향으로 계속 올라가기
-    SELECT D.NO, D.PARENT_NO, LEVEL + 1
+    SELECT 
+    	D.NO
+    	, D.PARENT_NO
+    	, LEVEL + 1
     FROM BN_DIRECTORY D
-    INNER JOIN DATA_TREE DT ON D.NO = DT.PARENT_NO
+    	INNER JOIN DATA_TREE DT 
+    		ON D.NO = DT.PARENT_NO
     WHERE LEVEL < 20
 )
 SELECT DISTINCT NO
@@ -153,6 +163,53 @@ FROM DATA_TREE
 LIMIT 5 OFFSET 0 ;
 OFFSET 0: 1번째 row부터 시작
 LIMIT 5: 5개 row 조회
+
+
+WITH RECURSIVE DATA_TREE(NO, PARENT_NO, NAME LEVEL) AS (
+    -- 시작: GROUP_NO = 4인 노드들
+    SELECT 
+    	DR.NO
+    	, DR.PARENT_NO
+    	, DR.NAME
+    	, 1 AS LEVEL
+    FROM BN_DIRECTORY DR
+    	INNER JOIN BN_DIRECTORY_ACCESS DA 
+    		ON DR.NO = DA.DIR_NO
+    WHERE 1=1
+    	AND DR.ENABLED = TRUE 
+    	AND DA.GROUP_NO = 4
+
+    UNION ALL
+
+    -- 부모 방향으로 계속 올라가기
+    SELECT 
+    	D.NO
+    	, D.PARENT_NO
+    	, D.NAME
+    	, LEVEL + 1
+    FROM BN_DIRECTORY D
+    	INNER JOIN DATA_TREE DT 
+    		ON D.NO = DT.PARENT_NO
+    WHERE LEVEL < 20
+)
+SELECT DISTINCT NAME
+FROM DATA_TREE
+-- WHERE PARENT_NO IS NULL;
+
+
+WITH RECURSIVE DATA_PATH AS (
+	SELECT 
+		D.NO, D.PARENT_NO, D.NAME 
+	FROM BN_DIRECTORY D
+	
+	UNION ALL
+	
+	SELECT 
+		DR.NO, DR.PARENT_NO, DR.NAME 
+	FROM BN_DIRECTORY DR 
+		INNER JOIN DATA_PATH DP ON DR.PARENT_NO = DP.NO 
+	
+) SELECT * FROM DATA_PATHS
 
 		*/
 		return result;
@@ -167,13 +224,13 @@ LIMIT 5: 5개 row 조회
 
 	@Override
 	public List<BnFile> getFiles(UserVo user, BnDirectory dir) {
-		// TODO Auto-generated method stub
-		return null;
+		final List<BnFile> result = this.storageDao.getFiles(user, dir);
+		return result;
 	}
 
 	@Override
-	public List<String> getPath(UserVo user, String guid) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<String> getPaths(UserVo user, BnDirectory dir) {
+		final List<String> result = this.storageDao.getPaths(user, dir);
+		return result;
 	}
 }

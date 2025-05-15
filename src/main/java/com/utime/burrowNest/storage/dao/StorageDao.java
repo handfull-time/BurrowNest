@@ -1,5 +1,6 @@
 package com.utime.burrowNest.storage.dao;
 
+import java.util.List;
 import java.util.Map;
 
 import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
@@ -128,7 +129,21 @@ public interface StorageDao {
 	 */
 	DirectoryDto getRootDirectory(UserVo user);
 
-	
+	/**
+	 * dir의 파일 목록
+	 * @param user
+	 * @param dir
+	 * @return
+	 */
+	List<BnFile> getFiles(UserVo user, BnDirectory dir);
+
+	/**
+	 * Path 목록
+	 * @param user
+	 * @param dir
+	 * @return
+	 */
+	List<String> getPaths(UserVo user, BnDirectory dir);
 
 	
 

@@ -39,13 +39,13 @@ public class DirectoryController {
 	 * @return
 	 */
 	@GetMapping(path = { "/", "Index.html" })
-    public String noneAuthMetaPage(ModelMap model, UserVo user) throws IOException{
+    public String noneAuthMetaPage(ModelMap model, UserVo user) throws Exception{
 		
 		return this.path(model, user, null);
     }
 	
 	@GetMapping("Path.html")
-    public String path(ModelMap model, UserVo user, @RequestParam String guid) throws IOException {
+    public String path(ModelMap model, UserVo user, @RequestParam String guid) throws Exception {
 		
 		DirectoryDto dir;
 		if( BurrowUtils.isEmpty(guid) ) {
@@ -54,10 +54,14 @@ public class DirectoryController {
 			dir = storageService.getDirectory(user, guid);
 		}
 		
+		if( dir == null ) {
+			throw new Exception("폴더 없음.");
+		}
+		
 		model.addAttribute("directoryTree", dir);
 	    // 선택한 path의 파일 목록
         model.addAttribute("files", storageService.getFiles(user, dir) );
-        model.addAttribute("path", storageService.getPath(user, guid) );
+        model.addAttribute("paths", storageService.getPaths(user, dir) );
 		
 //		final DirectoryDto rootTree = buildDirectoryTreeLimited("F:\\WorkData\\Burrow", path);
 //

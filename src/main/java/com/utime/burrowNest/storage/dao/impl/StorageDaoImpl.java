@@ -445,4 +445,15 @@ class StorageDaoImpl implements StorageDao{
 		return result;
 	}
 	
+	@Override
+	public List<BnFile> getFiles(UserVo user, BnDirectory dir) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	public List<String> getPaths(UserVo user, BnDirectory dir) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

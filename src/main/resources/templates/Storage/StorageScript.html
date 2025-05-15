@@ -1,0 +1,64 @@
+<script xmlns:th="http://www.thymeleaf.org" th:fragment="script" th:inline="javascript" >
+
+class Person {
+	  // 생성자: 객체가 생성될 때 호출됨
+	  constructor(name, age) {
+	    this.name = name;   // 내부 변수 (속성)
+	    this.age = age;
+	  }
+
+	  // 메서드 정의 (함수)
+	  greet() {
+	    console.log(`안녕하세요, 저는 ${this.name}이고, ${this.age}살입니다.`);
+	  }
+
+	  birthday() {
+	    this.age += 1;
+	    console.log(`${this.name}의 새 나이는 ${this.age}살입니다.`);
+	  }
+	}
+
+
+const person1 = new Person('김하', 25);  // 클래스 인스턴스 생성
+person1.greet();      // → 안녕하세요, 저는 김하이고, 25살입니다.
+person1.birthday();   // → 김하의 새 나이는 26살입니다.
+
+
+class Account {
+	  // 🔒 프라이빗 필드
+	  #balance = 0;
+
+	  constructor(owner) {
+	    this.owner = owner;
+	  }
+
+	  deposit(amount) {
+	    if (amount > 0) {
+	      this.#balance += amount;
+	      console.log(`${amount}원이 입금되었습니다.`);
+	    }
+	  }
+
+	  withdraw(amount) {
+	    if (amount > this.#balance) {
+	      console.log("잔액이 부족합니다.");
+	    } else {
+	      this.#balance -= amount;
+	      console.log(`${amount}원이 출금되었습니다.`);
+	    }
+	  }
+
+	  getBalance() {
+	    return this.#balance;
+	  }
+	}
+const acc = new Account('김하');
+acc.deposit(1000);        // → 1000원이 입금되었습니다.
+acc.withdraw(500);        // → 500원이 출금되었습니다.
+console.log(acc.getBalance());  // → 500
+
+// ❌ 직접 접근 불가 (에러 발생)
+// console.log(acc.#balance);  // → SyntaxError: Private field '#balance' must be declared in an enclosing class
+
+
+</script>
