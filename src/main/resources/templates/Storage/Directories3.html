@@ -155,6 +155,9 @@
 
           document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
           label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+          
+          const event = new CustomEvent("treeItemClick", { detail: node });
+      	  document.dispatchEvent(event);
         });
       } else {
         chevron.classList.add("opacity-0");
@@ -167,11 +170,18 @@
           e.stopPropagation();
           document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
           label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+          
+          const event = new CustomEvent("treeItemClick", { detail: node });
+      	  document.dispatchEvent(event);
         });
       }
 
       return li;
     }
+    
+    document.addEventListener("treeItemClick", (e) => {
+    	console.log("선택된 객체:", e.detail);  // 클릭된 노드 객체 출력
+    });
 
     function renderTree(container, data) {
       const ul = document.createElement('ul');

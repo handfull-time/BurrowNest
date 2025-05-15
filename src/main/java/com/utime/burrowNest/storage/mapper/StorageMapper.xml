@@ -703,7 +703,7 @@
     	AND DA.GROUP_NO = #{group.groupNo}
     	<if test="group.role.name() != 'Admin' ">
     	AND DR.ENABLED = TRUE 
-    	AND BITAND( DA.ACCESS_FLAGS, #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler} ) = ${@com.utime.burrowNest.storage.vo.EAccessType@Read.getBit()}
+    	AND BITAND( #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler}, DA.ACCESS_FLAGS ) = ${@com.utime.burrowNest.storage.vo.EAccessType@Read.getBit()}
     	</if>
 	ORDER BY DR.PARENT_NO ASC
 	LIMIT 1 OFFSET 0
@@ -721,7 +721,7 @@
     	AND DA.GROUP_NO = #{group.groupNo}
     	AND DR.GUID = #{guid}
     	<if test="group.role.name() != 'Admin' ">
-    	AND BITAND( DA.ACCESS_FLAGS, #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler} ) = ${@com.utime.burrowNest.storage.vo.EAccessType@Read.getBit()}
+    	AND BITAND( #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler}, DA.ACCESS_FLAGS ) = ${@com.utime.burrowNest.storage.vo.EAccessType@Read.getBit()}
     	</if>
     ORDER BY DR.NAME
 </select>
