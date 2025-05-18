@@ -385,10 +385,10 @@ class StorageDaoImpl implements StorageDao{
 	}
 	
 	@Override
-	public DirectoryDto getDirectory(UserVo user, String guid) {
+	public DirectoryDto getDirectory(UserVo user, String uid) {
 		DirectoryDto result = null;
 		
-		final BnDirectory directory = mapper.selectDirectoryByGuid(user.getGroup(), guid);
+		final BnDirectory directory = mapper.selectDirectoryByGuid(user.getGroup(), uid);
 		if( directory == null ) {
 			return result;
 		}

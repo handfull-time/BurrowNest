@@ -38,8 +38,12 @@
             const row = this.parentNode;
             const userNo = row.dataset.userNo;
             
+            const params = new URLSearchParams({
+        		userNo: userNo || ''
+        	});
+            
             const url = /*[[@{/Admin/User/Profile.layer}]]*/ null;
-            const urlValue = url + '?userNo=' + userNo;
+            const urlValue = url + '?' + params.toString();
             
             const sendValue = {
 			        url: urlValue,

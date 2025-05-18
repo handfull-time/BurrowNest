@@ -28,10 +28,10 @@ public interface StorageService {
 	/**
 	 * dir 정보 조회
 	 * @param user
-	 * @param guid
+	 * @param uid
 	 * @return
 	 */
-	DirectoryDto getDirectory(UserVo user, String guid);
+	DirectoryDto getDirectory(UserVo user, String uid);
 
 	/**
 	 * dir의 파일 목록

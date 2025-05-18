@@ -197,7 +197,7 @@ FROM DATA_TREE
 -- WHERE PARENT_NO IS NULL;
 
 
-WITH RECURSIVE DATA_PATH AS (
+WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 	SELECT 
 		D.NO, D.PARENT_NO, D.NAME 
 	FROM BN_DIRECTORY D
@@ -209,15 +209,15 @@ WITH RECURSIVE DATA_PATH AS (
 	FROM BN_DIRECTORY DR 
 		INNER JOIN DATA_PATH DP ON DR.PARENT_NO = DP.NO 
 	
-) SELECT * FROM DATA_PATHS
+) SELECT * FROM DATA_PATH
 
 		*/
 		return result;
 	}
 
 	@Override
-	public DirectoryDto getDirectory(UserVo user, String guid) {
-		final DirectoryDto result = this.storageDao.getDirectory(user, guid);
+	public DirectoryDto getDirectory(UserVo user, String uid) {
+		final DirectoryDto result = this.storageDao.getDirectory(user, uid);
 		
 		return result;
 	}

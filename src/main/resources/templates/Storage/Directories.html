@@ -1,136 +1,155 @@
-<div th:fragment="directories" xmlns:th="http://www.thymeleaf.org" class="p-2 text-sm bg-white text-black select-none">
-  <ul id="directoryTree" class="space-y-1">
-    <li th:replace="~{this :: directoryNode(dir=${directoryTree})}"></li>
-  </ul>
-
-  <!-- 템플릿은 자바스크립트에서만 사용 -->
-  <template id="dirItemTemplate">
-    <li>
-      <div class="flex items-center gap-1">
-        <button class="toggle-btn text-blue-600" data-path="" data-loaded="false">[+]</button>
-        <span class="grow text-black cursor-pointer" data-path="">폴더명</span>
-      </div>
-      <ul class="pl-4 hidden" data-children-for=""></ul>
-    </li>
-  </template>
-</div>
-
-<li xmlns:th="http://www.thymeleaf.org"  th:fragment="directoryNode(dir)">
-  <div class="flex items-center gap-1">
-    <button th:if="${dir.hasChildren}" class="toggle-btn text-blue-600" th:attr="data-path=${dir.path}" data-loaded="false">[+]</button>
-    <span class="grow text-black cursor-pointer"
-          th:attr="data-path=${dir.path}"
-          th:classappend="${dir.selected} ? ' bg-blue-100' : ''"
-          th:text="${dir.name}">폴더명</span>
-  </div>
+<div 
+	xmlns:th="http://www.thymeleaf.org" 
+	th:fragment="directories" 
+	class="p-2 text-sm bg-white text-black select-none">
   
-  <th:block th:if="${dir.subDirectories != null and !dir.subDirectories.isEmpty()}">
-  	<th:block th:each="sub : ${dir.subDirectories}">
-	  	<ul class="pl-4" th:data-children-for="${sub.path}" >
-	    	<li th:replace="~{this :: directoryNode(dir=${sub})}"></li>
-	  	</ul>
-  	</th:block> 
-  </th:block>
-  <th:block th:unless="${dir.subDirectories == null or dir.subDirectories.isEmpty()}">
-  	<ul class="pl-4 hidden" data-children-for="" ></ul>
-  </th:block>
-</li>
+<div id="tree-root" class="max-w-xl mx-auto bg-white shadow rounded-lg p-4 font-mono text-sm" role="tree"></div>
 
-<script xmlns:th="http://www.thymeleaf.org" th:fragment="script" th:inline="javascript">
 
-async function innerLoad(template, toggleBtn, container, parentPath){
-	try {
-		let urlAddress = /*[[@{/Dir/List.json}]]*/ null;
-		urlAddress += '?path=' + encodeURIComponent(parentPath);
-		
-		console.info('urlAddress', urlAddress);
-		
-		const response = await fetch(`${urlAddress}`, {
-			 method: "GET",
-			 credentials: "include"
-		});
-		const list = await response.json();
-		
-		list.forEach(item => {
-			const clone = template.content.cloneNode(true);
-			const btn = clone.querySelector('.toggle-btn');
-			const label = clone.querySelector('span[data-path]');
-			const ul = clone.querySelector('ul');
-			
-			const fullPath = `${parentPath.replace(/\/$/, "")}/${item.name}`;
-			
-			// 라벨 설정
-			label.textContent = item.name;
-			label.dataset.path = fullPath;
-			
-			// 버튼 설정
-			if (item.hasChildren) {
-				btn.dataset.path = fullPath;
-				btn.dataset.loaded = "false";
-				btn.textContent = "[+]";
-			} else {
-				btn.remove();
-			}
+<script th:inline="javascript">
+const treeData = /*[[${directoryTree}]]*/ null;
 
-			// 하위 디렉토리 컨테이너 설정
-			if (ul) {
-				ul.dataset.childrenFor = fullPath;
-				ul.classList.remove("hidden"); // 또는 기본은 hidden 유지
-			}
-			
-			container.appendChild(clone);
-		});
-		
-		toggleBtn.dataset.loaded = "true";
-	} catch (err) {
-		console.error("디렉토리 로딩 실패:", err);
-	}
-}
+const closedFolder = `
+    <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v1H2V6z"/>
+    <path d="M2 9h16v5a2 2 0 01-2 2H4a2 2 0 01-2-2V9z"/>
+  `;
+  const openFolder = `
+    <path d="M3 4a2 2 0 012-2h4l2 2h6a2 2 0 012 2v1H3V4z"/>
+    <path d="M2 8h17l-1.5 6.5a2 2 0 01-2 1.5H5a2 2 0 01-2-2V8z"/>
+  `;
 
-document.addEventListener("DOMContentLoaded", () => {
-	const treeRoot = document.getElementById("directoryTree");
-	const template = document.getElementById("dirItemTemplate");
+  function createTreeNode(node, parentOpened = false) {
+	  
+	  if( typeof node.isCreated === "undefined") {
+		  node.isCreated = true;
+	  }
+
+	  const li = document.createElement('li');
+	  li.className = "mb-1";
+	  li.setAttribute("role", "treeitem");
 	
-	treeRoot.addEventListener("click", async (e) => {
-		const toggleBtn = e.target.closest(".toggle-btn");
-		if (toggleBtn) {
-			const parentPath = toggleBtn.dataset.path;
-			const li = toggleBtn.closest("li");
-			let container = li.querySelector(`ul[data-children-for="${parentPath}"]`);
+	  const row = document.createElement('div');
+	  row.className = "flex items-center space-x-1 cursor-pointer group";
+	  row.dataset.node = "";
+	  
+	  const chevron = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+	  chevron.setAttribute("viewBox", "0 0 24 24");
+	  chevron.setAttribute("fill", "none");
+	  chevron.setAttribute("stroke", "currentColor");
+	  chevron.setAttribute("class", "w-4 h-4 text-gray-500 transition-transform");
+	  chevron.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />`;
+	
+	  const folderIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+	  folderIcon.setAttribute("viewBox", "0 0 20 20");
+	  folderIcon.setAttribute("fill", "currentColor");
+	  folderIcon.setAttribute("class", "w-5 h-5 text-yellow-500 folder-icon");
+	  folderIcon.innerHTML = closedFolder;
+	  folderIcon.setAttribute("aria-expanded", "false");
+	
+	  const label = document.createElement("span");
+	  label.textContent = node.name;
+	  label.className = "folder-label";
+	
+	  row.appendChild(chevron);
+	  row.appendChild(folderIcon);
+	  row.appendChild(label);
+	  li.appendChild(row);
+	
+	  let isOpen = false;
+	
+	  if (node.childDirectories && node.childDirectories.length > 0) {
+		  
+	      const ul = document.createElement('ul');
+	      ul.className = "ml-6 mt-1 space-y-1 hidden";
+	      ul.dataset.childDirectories = "";
+	      
+	      node.childDirectories.forEach(child => {
+	        const childNode = createTreeNode(child);
+	        if (childNode.dataset.containsSelected === "true") {
+	            isOpen = true;
+	        }
+	        ul.appendChild(childNode);
+	      });
+	      
+	      if (isOpen || node.selected || parentOpened) {
+	          row.classList.add("open");
+	          ul.classList.remove("hidden");
+	          chevron.classList.add("rotate-90");
+	          folderIcon.innerHTML = openFolder;
+	          folderIcon.setAttribute("aria-expanded", "true");
+	          if (node.selected) {
+	              label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+	          }
+	          li.dataset.containsSelected = "true";
+	      }
+	      
+	      li.appendChild(ul);
+	      
+	      row.addEventListener("click", (e) => {
+	          e.stopPropagation();
+	          
+	          row.classList.toggle("open");
+	          ul.classList.toggle("hidden");
+	          chevron.classList.toggle("rotate-90");
+	          folderIcon.innerHTML = row.classList.contains("open") ? openFolder : closedFolder;
+	          folderIcon.setAttribute("aria-expanded", row.classList.contains("open"));
+	          
+	          document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
+	          label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+	          
+	          const event = new CustomEvent("treeItemClick", { detail: node });
+	  	      document.dispatchEvent(event);
+	      });
+	  } else {
+	      chevron.classList.add("opacity-0");
+	      if (node.selected) {
+	          label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+	          li.dataset.containsSelected = "true";
+	      }
+	      
+	      row.addEventListener("click", (e) => {
+	          e.stopPropagation();
+	          document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
+	          label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+	          
+	          const event = new CustomEvent("treeItemClick", { detail: node });
+	  	      document.dispatchEvent(event);
+	      });
+	  }
+	
+	  return li;
+  }
+  
+  document.addEventListener("treeItemClick", (e) => {
+	  const dir = e.detail;
+	  
+	  if( typeof dir.isCreated !== "undefined") {
+		  // 생성 된 데이터다.
+		  
+	  }
+  });
 
-			// 없으면 새로 생성
-			if (!container) {
-				container = document.createElement("ul");
-				container.classList.add("pl-4");
-				container.dataset.childrenFor = parentPath;
-				li.appendChild(container);
-			}
-			
-			// 펼치기/접기 토글
-			if (toggleBtn.textContent === "[+]") {
-				toggleBtn.textContent = "[-]";
-				
-				if (! (toggleBtn.dataset.loaded === "true")) {
-					await innerLoad(template, toggleBtn, container, parentPath );
-				}
-			} else {
-				container.classList.add("hidden");
-				toggleBtn.textContent = "[+]";
-			}
-			
-			return;
-		}
-		
-		// 폴더 이름 클릭 시
-		const label = e.target.closest("span[data-path]");
-		if (label) {
-			const clickedPath = label.dataset.path;
-			console.log("Clicked folder:", clickedPath);
-			
-			// ✅ 선택된 경로로 이동
-			const baseUrl = /*[[@{/Dir/Path.html}]]*/ null;
-			window.location.href = `${baseUrl}?path=${encodeURIComponent(clickedPath)}`;
-		}
-	});
-});
+  function renderTree(container, data) {
+	  
+	  const params = new URLSearchParams({
+		  uid: data.uid || ''
+	  });
+      
+	  const url = /*[[@{/Dir/Index.html}]]*/ null;
+      const urlValue = url + '?' + params.toString();
+      
+      // 이건 사용 기록 덮어쓰기
+	  window.history.replaceState(null, null, urlValue);
+      
+      // 이건 사용 기록 추가하기.
+	  //window.history.pushState(null, null, urlValue);
+
+	  const ul = document.createElement('ul');
+	  ul.className = "space-y-1";
+	  ul.appendChild( createTreeNode(data) );
+	  container.appendChild(ul);
+  }
+
+  renderTree(document.getElementById("tree-root"), treeData);
 </script>
+</div>

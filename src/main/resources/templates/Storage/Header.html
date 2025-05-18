@@ -34,7 +34,9 @@
     </button>
     <div id="userMenuDropdown" class="absolute right-0 mt-2 z-50 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-44">
       <ul class="py-2 text-sm text-gray-700" aria-labelledby="userMenuButton">
-        <li th:if="${ user.role eq T(com.utime.burrowNest.common.vo.EJwtRole).Admin }">
+        <!-- <li th:if="${ user.role == T(com.utime.burrowNest.common.vo.EJwtRole).Admin }"> -->
+        <li th:if="${ user.role == T(com.utime.burrowNest.common.vo.EJwtRole).Admin.name() }">
+        
           <button id="adminBtn" class="block px-4 py-2 hover:bg-gray-100 w-full text-left" 
           	th:onclick="|window.location.href='@{/Admin/User/User.html}'|">Admin</button>
         <li>

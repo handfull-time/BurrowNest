@@ -45,13 +45,13 @@ public class DirectoryController {
     }
 	
 	@GetMapping("Path.html")
-    public String path(ModelMap model, UserVo user, @RequestParam String guid) throws Exception {
+    public String path(ModelMap model, UserVo user, @RequestParam("uid") String uid) throws Exception {
 		
 		DirectoryDto dir;
-		if( BurrowUtils.isEmpty(guid) ) {
+		if( BurrowUtils.isEmpty(uid) ) {
 			dir = storageService.getRootDirectory(user);
 		}else {
-			dir = storageService.getDirectory(user, guid);
+			dir = storageService.getDirectory(user, uid);
 		}
 		
 		if( dir == null ) {

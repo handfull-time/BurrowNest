@@ -719,7 +719,7 @@
     WHERE 1=1
     	AND DR.ENABLED = TRUE 
     	AND DA.GROUP_NO = #{group.groupNo}
-    	AND DR.GUID = #{guid}
+    	AND DR.UID = #{uid}
     	<if test="group.role.name() != 'Admin' ">
     	AND BITAND( #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler}, DA.ACCESS_FLAGS ) = ${@com.utime.burrowNest.storage.vo.EAccessType@Read.getBit()}
     	</if>
@@ -735,6 +735,7 @@
 	FROM BN_DIRECTORY DR
 	    INNER JOIN BN_DIRECTORY_ACCESS DA ON DR.NO = DA.DIR_NO
     WHERE 1=1
+    	AND DR.NO != #{parentNo}
     	AND DR.ENABLED = TRUE 
     	AND DA.GROUP_NO = #{group.groupNo}
     	AND DR.PARENT_NO = #{parentNo}

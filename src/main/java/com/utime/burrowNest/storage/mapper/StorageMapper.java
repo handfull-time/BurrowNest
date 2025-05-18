@@ -49,10 +49,10 @@ public interface StorageMapper {
 	/**
 	 * dir 조회
 	 * @param user
-	 * @param guid
+	 * @param uid
 	 * @return
 	 */
-	BnDirectory selectDirectoryByGuid(@Param("group") GroupVo group, @Param("guid") String guid);
+	BnDirectory selectDirectoryByGuid(@Param("group") GroupVo group, @Param("uid") String uid);
 	
 	
 	/*
