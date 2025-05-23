@@ -16,6 +16,7 @@
 	, DR.LAST_MODIFIED 
 	, DR.NAME
 	, DR.ABSOLUTE_PATH
+	, FALSE AS IS_FILE
 </sql>
 
 <sql id="BnFileColumn">
@@ -32,6 +33,7 @@
    	, FL.LAST_MODIFIED
    	, FL.EXTENSION
    	, FL.NAME
+   	, TRUE AS IS_FILE
 </sql>
 
 <resultMap id="AbsPathMap" type="com.utime.burrowNest.storage.vo.AbsPath">
@@ -45,6 +47,7 @@
 	<result column="CREATION" property="creation"/>
 	<result column="LAST_MODIFIED" property="lastModified"/>
 	<result column="NAME" property="name"/>
+	<result column="IS_FILE" property="isFile"/>
 	<result column="ACCESS_FLAGS" property="accType" typeHandler="com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler"/>
 </resultMap>
 
@@ -53,6 +56,11 @@
 	<result column="PUBLIC_ACCESSIBLE" property="publicAccessible"/>
 	<result column="HAS_CHILD" property="hasChild"/>
 	<result column="ABSOLUTE_PATH" property="absolutePath"/>
+	<association 
+			column="{dirNo=PARENT_NO}" 
+			property="parentUid" 
+			javaType="string"
+			select="com.utime.burrowNest.user.mapper.UserMapper.selectDirectoryUidByNo" />
 </resultMap>
 
 <resultMap id="BnFileMap" type="com.utime.burrowNest.storage.vo.BnFile"
@@ -61,6 +69,10 @@
 	<result column="FILE_TYPE" property="fileType"/>
 	<result column="EXTENSION" property="extension"/>
 </resultMap>
+
+<select id="selectDirectoryUidByNo" resultType="String">
+	SELECT UID FROM BN_DIRECTORY NO = #{dirNo}
+</select>
 
 <!-- 초기화 했는지 여부 -->
 <select id="IsInit" resultType="boolean">
@@ -176,7 +188,9 @@
 </update>
 
 <!-- 파일 추가 -->
-<insert id="insertFile" parameterType="com.utime.burrowNest.storage.vo.BnFile" useGeneratedKeys="true" keyProperty="no" keyColumn="NO" >
+<insert id="insertFile" 
+	parameterType="com.utime.burrowNest.storage.vo.BnFile" 
+	useGeneratedKeys="true" keyProperty="no" keyColumn="NO" >	
     INSERT INTO BN_FILE (
     	REG_DATE
     	, UPDATE_DATE
@@ -698,16 +712,14 @@
 		<include refid="BnDirectoryColumn" />
 		, DA.ACCESS_FLAGS
 	FROM BN_DIRECTORY DR
-	    INNER JOIN BN_DIRECTORY_ACCESS DA ON DR.NO = DA.DIR_NO
+	    INNER JOIN BN_ROOT_DIRECTORY RD
+	    	ON DR.NO = RD.DIR_NO
+	    INNER JOIN BN_DIRECTORY_ACCESS DA 
+	    	ON DR.NO = DA.DIR_NO
     WHERE 1=1
-    	AND DA.GROUP_NO = #{group.groupNo}
-    	<if test="group.role.name() != 'Admin' ">
-    	AND DR.ENABLED = TRUE 
-    	AND BITAND( #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler}, DA.ACCESS_FLAGS ) = ${@com.utime.burrowNest.storage.vo.EAccessType@Read.getBit()}
-    	</if>
-	ORDER BY DR.PARENT_NO ASC
-	LIMIT 1 OFFSET 0
+    	AND RD.GROUP_NO = #{group.groupNo}
 </select>
+<!-- LIMIT 1 OFFSET 0 -->
 
 <!-- dir 조회 -->
 <select id="selectDirectoryByGuid" parameterType="map" resultMap="BnDirectoryMap">
@@ -726,9 +738,24 @@
     ORDER BY DR.NAME
 </select>
 
+<!-- directory 속한 파일 -->
+<select id="selectFiles" parameterType="map" resultMap="BnFileMap">
+	SELECT
+		<include refid="BnFileColumn"/>
+	FROM BN_FILE FL
+	    INNER JOIN BN_FILE_ACCESS FA ON FL.NO = FL.FILE_NO
+    WHERE 1=1
+    	AND FA.GROUP_NO = #{group.groupNo}
+    	AND FL.PARENT_NO = #{dirNo}
+    	<if test="group.role.name() != 'Admin' ">
+    	AND FL.ENABLED = TRUE 
+    	AND BITAND( FA.ACCESS_FLAGS, #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler} ) = ${@com.utime.burrowNest.storage.vo.EAccessType@Read.getBit()}
+    	</if>
+    ORDER BY FL.NAME	
+</select>
 
-<!-- 하위 Dir 조회 -->
-<select id="selectChildDirectory" parameterType="map" resultMap="BnDirectoryMap">
+<!-- dir의 Directory 목록 -->
+<select id="selectDirectories" parameterType="map" resultMap="BnDirectoryMap">
 	SELECT 
 		<include refid="BnDirectoryColumn" />
 		, DA.ACCESS_FLAGS
@@ -736,13 +763,28 @@
 	    INNER JOIN BN_DIRECTORY_ACCESS DA ON DR.NO = DA.DIR_NO
     WHERE 1=1
     	AND DR.NO != #{parentNo}
-    	AND DR.ENABLED = TRUE 
     	AND DA.GROUP_NO = #{group.groupNo}
     	AND DR.PARENT_NO = #{parentNo}
     	<if test="group.role.name() != 'Admin' ">
+    	AND DR.ENABLED = TRUE 
     	AND BITAND( DA.ACCESS_FLAGS, #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler} ) = ${@com.utime.burrowNest.storage.vo.EAccessType@Read.getBit()}
     	</if>
     ORDER BY DR.NAME	
-</select>
+</select> 
+
+<!-- 루트 directory 추가 -->
+<insert id="insertRootDirecotry" parameterType="map">
+	INSERT INTO BN_ROOT_DIRECTORY (
+		, UPDATE_DATE 
+		, ENABLED 
+		, DIR_NO	
+		, GROUP_NO 
+	) VALUES (
+		CURRENT_TIMESTAMP
+		, #{dir.enabled}
+		, #{dir.no}
+		, #{group.no}
+	)
+</insert>
 
 </mapper>

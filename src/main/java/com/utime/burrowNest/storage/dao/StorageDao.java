@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
+import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
 import com.utime.burrowNest.storage.vo.DirectoryDto;
@@ -99,7 +100,7 @@ public interface StorageDao {
 	 * @param uid
 	 * @return
 	 */
-	DirectoryDto getDirectory(UserVo user, String uid);
+	BnDirectory getDirectory(UserVo user, String uid);
 	
 	/**
 	 *  정보 조회
@@ -127,7 +128,8 @@ public interface StorageDao {
 	 * @param user
 	 * @return
 	 */
-	DirectoryDto getRootDirectory(UserVo user);
+//	DirectoryDto getRootDirectory(UserVo user);
+	BnDirectory getRootDirectory(UserVo user);
 
 	/**
 	 * dir의 파일 목록
@@ -138,13 +140,28 @@ public interface StorageDao {
 	List<BnFile> getFiles(UserVo user, BnDirectory dir);
 
 	/**
+	 * dir의 Directory 목록 
+	 * @param user
+	 * @param dir
+	 * @return
+	 */
+	List<BnDirectory> getDirectories(UserVo user, BnDirectory dir);
+
+	/**
 	 * Path 목록
 	 * @param user
 	 * @param dir
 	 * @return
 	 */
 	List<String> getPaths(UserVo user, BnDirectory dir);
-
 	
+	/**
+	 * 부모 directory 조회
+	 * @param user
+	 * @param uid
+	 * @return
+	 */
+	BnDirectory getParentDirectory(UserVo user, String uid);
+
 
 }

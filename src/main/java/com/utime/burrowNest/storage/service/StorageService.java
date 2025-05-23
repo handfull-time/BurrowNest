@@ -2,11 +2,8 @@ package com.utime.burrowNest.storage.service;
 
 import java.util.List;
 
-import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
-import com.utime.burrowNest.storage.vo.BnFile;
-import com.utime.burrowNest.storage.vo.DirectoryDto;
-import com.utime.burrowNest.user.vo.InitInforReqVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
 public interface StorageService {
@@ -23,7 +20,7 @@ public interface StorageService {
 	 * @param user
 	 * @return
 	 */
-	DirectoryDto getRootDirectory(UserVo user);
+	BnDirectory getRootDirectory(UserVo user);
 
 	/**
 	 * dir 정보 조회
@@ -31,15 +28,7 @@ public interface StorageService {
 	 * @param uid
 	 * @return
 	 */
-	DirectoryDto getDirectory(UserVo user, String uid);
-
-	/**
-	 * dir의 파일 목록
-	 * @param user
-	 * @param dir
-	 * @return
-	 */
-	List<BnFile> getFiles(UserVo user, BnDirectory dir);
+	BnDirectory getDirectory(UserVo user, String uid);
 
 	/**
 	 * Path 목록
@@ -48,6 +37,22 @@ public interface StorageService {
 	 * @return
 	 */
 	List<String> getPaths(UserVo user, BnDirectory dir);
+	
+	/**
+	 * 부모 directory 조회
+	 * @param user
+	 * @param uid
+	 * @return
+	 */
+	BnDirectory getParentDirectory(UserVo user, String uid);
+
+	/**
+	 * 파일 목록 조회
+	 * @param user
+	 * @param uid
+	 * @return
+	 */
+	List<AbsPath> getFiles(UserVo user, String uid);
 
 	
 

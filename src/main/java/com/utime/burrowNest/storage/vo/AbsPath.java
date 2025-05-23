@@ -43,9 +43,19 @@ public abstract class AbsPath {
     protected long parentNo;
     
     /**
+     * 부모 uid
+     */
+    protected String parentUid;
+    
+    /**
      * The owner of the directory(file)
      */
     protected int ownerNo;
+    
+    /**
+     * 파일 여부. true: 파일이다. false: directory이다.
+     */
+    protected boolean isFile;
 
    /**
      * The date and time when the folder or file was created.

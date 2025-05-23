@@ -1,64 +1,140 @@
 <script xmlns:th="http://www.thymeleaf.org" th:fragment="script" th:inline="javascript" >
 
-class Person {
-	  // 생성자: 객체가 생성될 때 호출됨
-	  constructor(name, age) {
-	    this.name = name;   // 내부 변수 (속성)
-	    this.age = age;
-	  }
+class Storage {
+	
+	#SessionStorageKeyCopyCut = "SessionStorageCopyCut";
+	#SessionStorageKeyCopyCutType = "SessionStorageCopyCutType";
 
-	  // 메서드 정의 (함수)
-	  greet() {
-	    console.log(`안녕하세요, 저는 ${this.name}이고, ${this.age}살입니다.`);
-	  }
+	// 생성자. 최초 로딩 될 때 노드 정보
+    constructor(originNode) {
+    	this.#currentNode = originNode;
+    	this.#currentNode.selected = true;
 
-	  birthday() {
-	    this.age += 1;
-	    console.log(`${this.name}의 새 나이는 ${this.age}살입니다.`);
-	  }
+        this.tree = null;
+        this.uidMap = new Map();
+
+        this.initialize(this.#currentNode.uid);
+    }
+
+	// 초기 작업
+    async initialize(uid) {
+        this.tree = await this.#buildCompleteTree(uid);
+        this.#buildUidMap(this.tree);
+    }
+	
+    // 부모 데이터를 가져오는 비동기 함수
+    async #getParent(uid) {
+        try {
+            const response = await fetch('/Dir/Parent.json', {
+                method: "POST",
+                body: JSON.stringify({ uid: uid }),
+                headers: { "Content-Type": "application/json" }
+            });
+
+            if (!response.ok) throw new Error("서버 응답 오류");
+
+            const json = await response.json();
+            return json || null;
+        } catch (error) {
+            console.error("Error:", error);
+            return null;
+        }
+    }
+
+    // UID를 기반으로 부모 데이터를 점진적으로 로딩하여 트리 완성
+    async #buildCompleteTree(uid) {
+        let currentNode = await this.#getParent(uid); // 수정된 호출 방식
+        if (!currentNode) return null;
+
+        while (true) {
+            const parentNode = await this.#getParent(currentNode.parentUid);
+            if (!parentNode) break;
+
+            parentNode.children = [currentNode];
+            currentNode = parentNode;
+        }
+
+        return currentNode;
+    }
+
+    // UID 기반 빠른 검색을 위한 맵 생성
+    #buildUidMap(tree) {
+        if (!tree) return;
+
+        this.uidMap.set(tree.uid, tree);
+
+        if (tree.children) {
+            for (const child of tree.children) {
+                this.#buildUidMap(child);
+            }
+        }
+    }
+    
+    // uid 관련 노드 찾기
+    #findNodeByUidFast(uid) {
+        return uidMap.get(uid) || null;
+    }
+
+    
+    // 붙여넣기 할 데이터의 유무 판단. true:있다.
+    #hasClipboardData() {
+        return sessionStorage.getItem(this.#SessionStorageKeyCopyCut) != null;
+    }
+    
+    getCurrentDirectory(){
+    	return this.#currentNode;
+    }
+	
+    setCurrentDirectory(uid){
+    	this.#currentNode.selected = false;
+    	this.#currentNode = this.#findNodeByUidFast( uid );
+    	this.#currentNode.selected = true;
+    }
+
+    // directory 선택
+	doDirectoryClick( node ){
+		console.info( 'setDirectoryClick', node );
+		this.#currentNode.selected = false;
+		this.#currentNode = this.#findNodeByUidFast( node.uid );
+		this.#currentNode.selected = true;
+	}
+	
+	fileCopy( node ){
+		console.info( 'fileCopy', node );
+		sessionStorage.setItem(this.#SessionStorageKeyCopyCut, JSON.stringify(node) );
+		sessionStorage.setItem(this.#SessionStorageKeyCopyCutType, 'cp');
+	}
+	
+	fileCut( node ){
+		console.info( 'fileCut', node );
+		sessionStorage.setItem(this.#SessionStorageKeyCopyCut, JSON.stringify(node) );
+		sessionStorage.setItem(this.#SessionStorageKeyCopyCutType, 'mv');
+	}
+	
+	directoryCopy( node ){
+		console.info( 'directoryCopy', node );
+		sessionStorage.setItem(this.#SessionStorageKeyCopyCut, JSON.stringify(node) );
+		sessionStorage.setItem(this.#SessionStorageKeyCopyCutType, 'cp');
+	}
+	
+	directoryCut( node ){
+		console.info( 'directoryCut', node );
+		sessionStorage.setItem(this.#SessionStorageKeyCopyCut, JSON.stringify(node) );
+		sessionStorage.setItem(this.#SessionStorageKeyCopyCutType, 'mv');
 	}
 
-
-const person1 = new Person('김하', 25);  // 클래스 인스턴스 생성
-person1.greet();      // → 안녕하세요, 저는 김하이고, 25살입니다.
-person1.birthday();   // → 김하의 새 나이는 26살입니다.
-
-
-class Account {
-	  // 🔒 프라이빗 필드
-	  #balance = 0;
-
-	  constructor(owner) {
-	    this.owner = owner;
-	  }
-
-	  deposit(amount) {
-	    if (amount > 0) {
-	      this.#balance += amount;
-	      console.log(`${amount}원이 입금되었습니다.`);
-	    }
-	  }
-
-	  withdraw(amount) {
-	    if (amount > this.#balance) {
-	      console.log("잔액이 부족합니다.");
-	    } else {
-	      this.#balance -= amount;
-	      console.log(`${amount}원이 출금되었습니다.`);
-	    }
-	  }
-
-	  getBalance() {
-	    return this.#balance;
-	  }
+	paste(){
+		const objString = sessionStorage.getItem(this.#SessionStorageKeyCopyCut);
+		if( ! objString ){
+			return;
+		}
+		
+		const sourceNode = JSON.parse( objString );
+		
+		console.info( 'source', sourceNode, 'target', this.#currentNode);		
 	}
-const acc = new Account('김하');
-acc.deposit(1000);        // → 1000원이 입금되었습니다.
-acc.withdraw(500);        // → 500원이 출금되었습니다.
-console.log(acc.getBalance());  // → 500
-
-// ❌ 직접 접근 불가 (에러 발생)
-// console.log(acc.#balance);  // → SyntaxError: Private field '#balance' must be declared in an enclosing class
-
+	
+	
+}
 
 </script>

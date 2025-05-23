@@ -125,8 +125,15 @@ const closedFolder = `
 	  
 	  if( typeof dir.isCreated !== "undefined") {
 		  // 생성 된 데이터다.
-		  
+		  return;
 	  }
+	  
+	  const url = /*[[@{/Dir/Path.html}]]*/ null;
+	  const params = new URLSearchParams({
+		  uid: dir.uid || ''
+	  });
+	  
+	  window.location.href = url + '?' + params.toString();
   });
 
   function renderTree(container, data) {
@@ -135,7 +142,7 @@ const closedFolder = `
 		  uid: data.uid || ''
 	  });
       
-	  const url = /*[[@{/Dir/Index.html}]]*/ null;
+	  const url = /*[[@{/Dir/Path.html}]]*/ null;
       const urlValue = url + '?' + params.toString();
       
       // 이건 사용 기록 덮어쓰기

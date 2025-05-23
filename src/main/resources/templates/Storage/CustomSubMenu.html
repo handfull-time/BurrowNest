@@ -9,41 +9,82 @@
 
   <!-- 커스텀 우클릭 메뉴 -->
   <ul id="contextMenu" class="absolute hidden bg-white border border-gray-300 shadow-lg rounded-md w-56 text-sm z-50">
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="alert('열기')">
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="handleOpen()">
       <span class="mr-2">📂</span> 열기
     </li>
     <hr class="my-1 border-gray-200">
 
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="alert('잘라내기')">
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="handleCut()">
       <span class="mr-2">✂️</span> 잘라내기
     </li>
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="alert('복사')">
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="handleCopy()">
       <span class="mr-2">📄</span> 복사
     </li>
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-not-allowed" onclick="alert('붙여넣기')">
-      <span class="mr-2">📋</span> 붙여넣기
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 text-gray-400 cursor-not-allowed"
+    	data-action="paste" onclick="handlePaste()">
+    	<span class="mr-2">📋</span> 붙여넣기
     </li>
 
     <hr class="my-1 border-gray-200">
 
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="alert('속성')">
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="handleDetail()">
       <span class="mr-2">⚙️</span> 속성
     </li>
   </ul>
 
   <script>
-    const contextMenu = document.getElementById("contextMenu");
+  
+  function handleOpen() {
+	  if (!contextTargetNode) return;
+	  storageInstance.doDirectoryClick(contextTargetNode);
+	}
 
-    document.addEventListener("contextmenu", (e) => {
-      e.preventDefault();
-      contextMenu.style.top = `${e.clientY}px`;
-      contextMenu.style.left = `${e.clientX}px`;
-      contextMenu.classList.remove("hidden");
-    });
+	function handleCut() {
+	  if (!contextTargetNode) return;
+	  storageInstance.directoryCut(contextTargetNode);
+	}
 
-    document.addEventListener("click", () => {
-      contextMenu.classList.add("hidden");
-    });
-  </script>
+	function handleCopy() {
+	  if (!contextTargetNode) return;
+	  storageInstance.directoryCopy(contextTargetNode);
+	}
+
+	function handlePaste() {
+	  storageInstance.paste();
+	}
+	
+	function handleDetail() {
+		storageInstance.paste();
+	}
+	
+const contextMenu = document.getElementById("contextMenu");
+
+
+document.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+
+  const nodeElem = e.target.closest("[data-node]");
+  if (!nodeElem) return;
+
+  contextTargetNode = JSON.parse(nodeElem.dataset.node);
+
+  // 붙여넣기 활성화/비활성화 설정
+  const canPaste = storageInstance?.hasClipboardData?.() ?? false;
+
+  const pasteItem = contextMenu.querySelector('[data-action="paste"]');
+  if (canPaste) {
+    pasteItem.classList.remove("text-gray-400", "cursor-not-allowed");
+    pasteItem.classList.add("cursor-pointer");
+  } else {
+    pasteItem.classList.add("text-gray-400", "cursor-not-allowed");
+    pasteItem.classList.remove("cursor-pointer");
+  }
+
+  contextMenu.style.top = `${e.clientY}px`;
+  contextMenu.style.left = `${e.clientX}px`;
+  contextMenu.classList.remove("hidden");
+});
+</script>
+
 </body>
 </html>

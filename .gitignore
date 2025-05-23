@@ -18,3 +18,17 @@ buildNumber.properties
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+# Eclipse / STS
+.settings/
+
+# VSCode
+.vscode/
+
+# Build output
+/target/
+/bin/
+/build/
+
+# OS
+.DS_Store
+Thumbs.db

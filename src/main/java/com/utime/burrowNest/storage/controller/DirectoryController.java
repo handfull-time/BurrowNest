@@ -1,15 +1,6 @@
 package com.utime.burrowNest.storage.controller;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -17,13 +8,11 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.storage.service.StorageService;
+import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
-import com.utime.burrowNest.storage.vo.DirectoryDto;
-import com.utime.burrowNest.storage.vo.FileDto;
 import com.utime.burrowNest.user.vo.UserVo;
 
 @Controller
@@ -47,7 +36,8 @@ public class DirectoryController {
 	@GetMapping("Path.html")
     public String path(ModelMap model, UserVo user, @RequestParam("uid") String uid) throws Exception {
 		
-		DirectoryDto dir;
+		BnDirectory dir;
+//		DirectoryDto dir;
 		if( BurrowUtils.isEmpty(uid) ) {
 			dir = storageService.getRootDirectory(user);
 		}else {
@@ -59,9 +49,9 @@ public class DirectoryController {
 		}
 		
 		model.addAttribute("directoryTree", dir);
-	    // 선택한 path의 파일 목록
-        model.addAttribute("files", storageService.getFiles(user, dir) );
-        model.addAttribute("paths", storageService.getPaths(user, dir) );
+//	    // 선택한 path의 파일 목록
+//        model.addAttribute("files", storageService.getFiles(user, dir) );
+//        model.addAttribute("paths", storageService.getPaths(user, dir) );
 		
 //		final DirectoryDto rootTree = buildDirectoryTreeLimited("F:\\WorkData\\Burrow", path);
 //
@@ -74,6 +64,29 @@ public class DirectoryController {
 	    return "Storage/StorageMain";
 	}
 	
+	@GetMapping("Parent.json")
+    public BnDirectory getParent(UserVo user, @RequestParam("uid") String uid) throws Exception {
+		
+		final BnDirectory result = storageService.getParentDirectory(user, uid);
+		
+		if( result == null ) {
+			throw new Exception("폴더 없음.");
+		}
+	    
+	    return result;
+	}
+	
+	@GetMapping("Files.json")
+    public List<AbsPath> getFiles(UserVo user, @RequestParam("uid") String uid) throws Exception {
+		
+		final List<AbsPath> result = storageService.getFiles(user, uid);
+		
+		if( result == null ) {
+			throw new Exception("폴더 없음.");
+		}
+	    
+	    return result;
+	}
 /*
 	public DirectoryDto buildDirectoryTreeLimited(String root, String currentPath) throws IOException {
 		final Path basePath = Paths.get(root).normalize();

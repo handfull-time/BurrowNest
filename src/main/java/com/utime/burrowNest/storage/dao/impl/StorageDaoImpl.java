@@ -23,7 +23,6 @@ import com.utime.burrowNest.storage.vo.BnFileDocument;
 import com.utime.burrowNest.storage.vo.BnFileExtension;
 import com.utime.burrowNest.storage.vo.BnFileImage;
 import com.utime.burrowNest.storage.vo.BnFileVideo;
-import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -127,7 +126,12 @@ class StorageDaoImpl implements StorageDao{
 			log.info("BN_DIRECTORY_ACCESS 생성");
 			result += basic.CreateDirectoryAccess();
 		}
-
+		
+		if( ! common.existTable("BN_ROOT_DIRECTORY") ) {
+			log.info("BN_ROOT_DIRECTORY 생성");
+			result += basic.CreateRootDirectory();
+		}
+		
 		if( ! common.existTable("BN_FILE") ) {
 			log.info("BN_FILE 생성");
 			result += basic.CreateFile();
@@ -215,6 +219,8 @@ class StorageDaoImpl implements StorageDao{
 		}
 		
 		final BnDirectory result = mapper.selectDirectoryByNo(1L);
+		
+		mapper.insertRootDirecotry( owner.getGroup(), result );
 		
 		this.insertAccess(owner, result);
 		
@@ -385,19 +391,8 @@ class StorageDaoImpl implements StorageDao{
 	}
 	
 	@Override
-	public DirectoryDto getDirectory(UserVo user, String uid) {
-		DirectoryDto result = null;
-		
-		final BnDirectory directory = mapper.selectDirectoryByGuid(user.getGroup(), uid);
-		if( directory == null ) {
-			return result;
-		}
-		
-		result = new DirectoryDto(directory);
-		
-		result.setChildDirectories( mapper.selectChildDirectory(user.getGroup(), result.getNo() ));
-		result.setSelected(true);
-		
+	public BnDirectory getDirectory(UserVo user, String uid) {
+		final BnDirectory result = mapper.selectDirectoryByGuid(user.getGroup(), uid);
 		return result;
 	}
 
@@ -429,26 +424,38 @@ class StorageDaoImpl implements StorageDao{
 		return result.getBinary();
 	}
 
+//	@Override
+//	public DirectoryDto getRootDirectory(UserVo user) {
+//		final BnDirectory directory = mapper.selectRootDirectory( user );
+//		
+//		if( directory == null ) {
+//			return null;
+//		}
+//		
+//		final DirectoryDto result = new DirectoryDto(directory);
+//		
+//		result.setChildDirectories( mapper.selectChildDirectory(user.getGroup(), directory.getNo() ));
+//		result.setSelected(true);
+//		
+//		return result;
+//	}
+	
 	@Override
-	public DirectoryDto getRootDirectory(UserVo user) {
+	public BnDirectory getRootDirectory(UserVo user) {
 		final BnDirectory directory = mapper.selectRootDirectory( user );
 		
-		if( directory == null ) {
-			return null;
-		}
-		
-		final DirectoryDto result = new DirectoryDto(directory);
-		
-		result.setChildDirectories( mapper.selectChildDirectory(user.getGroup(), directory.getNo() ));
-		result.setSelected(true);
-		
-		return result;
+		return directory;
+	}
+
+	@Override
+	public List<BnFile> getFiles(UserVo user, BnDirectory dir) {
+		return mapper.selectFiles(user.getGroup(), dir.getNo());
 	}
 	
 	@Override
-	public List<BnFile> getFiles(UserVo user, BnDirectory dir) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<BnDirectory> getDirectories(UserVo user, BnDirectory dir) {
+		
+		return mapper.selectDirectories(user.getGroup(), dir.getNo());
 	}
 	
 	@Override
@@ -456,4 +463,11 @@ class StorageDaoImpl implements StorageDao{
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	@Override
+	public BnDirectory getParentDirectory(UserVo user, String uid) {
+		
+		return null;
+	}
+
 }

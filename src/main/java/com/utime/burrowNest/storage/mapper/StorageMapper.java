@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.utime.burrowNest.common.vo.BinResultVo;
+import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
 import com.utime.burrowNest.storage.vo.BnFileArchive;
@@ -53,16 +54,6 @@ public interface StorageMapper {
 	 * @return
 	 */
 	BnDirectory selectDirectoryByGuid(@Param("group") GroupVo group, @Param("uid") String uid);
-	
-	
-	/*
-	 * 하위 Dir 조회
-	 * @param user
-	 * @param parentNo
-	 * @return
-	 */
-	List<BnDirectory> selectChildDirectory(@Param("group") GroupVo group, @Param("parentNo") long parentNo);
-
 	
 	/**
 	 * 삭제
@@ -276,6 +267,31 @@ public interface StorageMapper {
 	 * @return
 	 */
 	BnDirectory selectRootDirectory(UserVo user);
+
+	/**
+	 * directory 속한 파일 및 폴더 목록
+	 * @param group
+	 * @param no
+	 * @return
+	 */
+	List<BnFile> selectFiles(@Param("group") GroupVo group, @Param("dirNo") long no);
+	
+	/**
+	 * dir의 Directory 목록 
+	 * @param user
+	 * @param dir
+	 * @return
+	 */
+	List<BnDirectory> selectDirectories(@Param("group") GroupVo group, @Param("dirNo") long no);
+
+
+	/**
+	 * 루트 directory 추가
+	 * @param group
+	 * @param result
+	 * @return
+	 */
+	int insertRootDirecotry(@Param("group") GroupVo group, @Param("dir") BnDirectory result);
 
 }
 

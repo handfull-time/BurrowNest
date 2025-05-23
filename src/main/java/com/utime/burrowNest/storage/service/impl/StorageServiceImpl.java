@@ -1,5 +1,6 @@
 package com.utime.burrowNest.storage.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -9,11 +10,12 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.storage.dao.StorageDao;
 import com.utime.burrowNest.storage.service.StorageService;
+import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
-import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.vo.UserVo;
@@ -48,8 +50,8 @@ public class StorageServiceImpl implements StorageService {
 	}
 
 	@Override
-	public DirectoryDto getRootDirectory(UserVo user) {
-		final DirectoryDto result = storageDao.getRootDirectory(user);
+	public BnDirectory getRootDirectory(UserVo user) {
+		final BnDirectory result = storageDao.getRootDirectory(user);
 		
 //		storageDao.get
 		/*
@@ -216,21 +218,42 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 	}
 
 	@Override
-	public DirectoryDto getDirectory(UserVo user, String uid) {
-		final DirectoryDto result = this.storageDao.getDirectory(user, uid);
+	public BnDirectory getDirectory(UserVo user, String uid) {
+		final BnDirectory result = this.storageDao.getDirectory(user, uid);
 		
-		return result;
-	}
-
-	@Override
-	public List<BnFile> getFiles(UserVo user, BnDirectory dir) {
-		final List<BnFile> result = this.storageDao.getFiles(user, dir);
 		return result;
 	}
 
 	@Override
 	public List<String> getPaths(UserVo user, BnDirectory dir) {
 		final List<String> result = this.storageDao.getPaths(user, dir);
+		return result;
+	}
+	
+	@Override
+	public BnDirectory getParentDirectory(UserVo user, String uid) {
+		final BnDirectory result = this.storageDao.getParentDirectory(user, uid);
+		
+		return result;
+	}
+
+	@Override
+	public List<AbsPath> getFiles(UserVo user, String uid) {
+		final List<AbsPath> result = new ArrayList<>();
+		
+		final BnDirectory dir = this.storageDao.getDirectory(user, uid);
+		if( dir == null ) {
+			return result;
+		}
+		
+		final List<BnDirectory> directories = this.storageDao.getDirectories(user, dir);
+		if( BurrowUtils.isNotEmpty(directories) )
+			result.addAll( directories );
+
+		final List<BnFile> files = this.storageDao.getFiles(user, dir);
+		if( BurrowUtils.isNotEmpty(files) )
+			result.addAll( files );
+		
 		return result;
 	}
 }

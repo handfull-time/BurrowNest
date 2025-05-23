@@ -8,6 +8,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
+@Deprecated
 public class DirectoryDto extends BnDirectory {
 
 	private boolean selected;
