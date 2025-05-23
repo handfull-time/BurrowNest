@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-BurrowNestApplication<BurrowNest>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.utime.burrowNest.BurrowNestApplication",
+            "projectName": "BurrowNest",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
