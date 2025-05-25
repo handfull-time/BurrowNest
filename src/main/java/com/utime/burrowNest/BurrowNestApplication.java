@@ -15,6 +15,10 @@ public class BurrowNestApplication {
 	public static void main(String[] args) throws InterruptedException, IOException {
 		
 		SpringApplication.run(BurrowNestApplication.class, args);
+
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("프로그램이 종료됩니다. ");
+        }));
 	}
 
 }

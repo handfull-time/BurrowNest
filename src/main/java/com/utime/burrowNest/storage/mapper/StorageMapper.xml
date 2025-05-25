@@ -775,7 +775,7 @@
 <!-- 루트 directory 추가 -->
 <insert id="insertRootDirecotry" parameterType="map">
 	INSERT INTO BN_ROOT_DIRECTORY (
-		, UPDATE_DATE 
+		UPDATE_DATE 
 		, ENABLED 
 		, DIR_NO	
 		, GROUP_NO 
@@ -783,7 +783,7 @@
 		CURRENT_TIMESTAMP
 		, #{dir.enabled}
 		, #{dir.no}
-		, #{group.no}
+		, #{group.groupNo}
 	)
 </insert>
 

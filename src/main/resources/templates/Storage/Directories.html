@@ -7,7 +7,6 @@
 
 
 <script th:inline="javascript">
-const treeData = /*[[${directoryTree}]]*/ null;
 
 const closedFolder = `
     <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v1H2V6z"/>
@@ -136,8 +135,8 @@ const closedFolder = `
 	  window.location.href = url + '?' + params.toString();
   });
 
-  function renderTree(container, data) {
-	  
+
+  document.addEventListener('DOMContentLoaded', function() {
 	  const params = new URLSearchParams({
 		  uid: data.uid || ''
 	  });
@@ -151,12 +150,13 @@ const closedFolder = `
       // 이건 사용 기록 추가하기.
 	  //window.history.pushState(null, null, urlValue);
 
+	  storage
+
 	  const ul = document.createElement('ul');
 	  ul.className = "space-y-1";
 	  ul.appendChild( createTreeNode(data) );
-	  container.appendChild(ul);
-  }
+	  ocument.getElementById("tree-root").appendChild(ul);
+  });
 
-  renderTree(document.getElementById("tree-root"), treeData);
 </script>
 </div>

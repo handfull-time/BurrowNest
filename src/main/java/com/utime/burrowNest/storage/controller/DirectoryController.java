@@ -48,7 +48,7 @@ public class DirectoryController {
 			throw new Exception("폴더 없음.");
 		}
 		
-		model.addAttribute("directoryTree", dir);
+		model.addAttribute("directory", dir);
 //	    // 선택한 path의 파일 목록
 //        model.addAttribute("files", storageService.getFiles(user, dir) );
 //        model.addAttribute("paths", storageService.getPaths(user, dir) );
