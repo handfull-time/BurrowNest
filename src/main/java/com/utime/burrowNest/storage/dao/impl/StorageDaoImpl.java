@@ -127,11 +127,6 @@ class StorageDaoImpl implements StorageDao{
 			result += basic.CreateDirectoryAccess();
 		}
 		
-		if( ! common.existTable("BN_ROOT_DIRECTORY") ) {
-			log.info("BN_ROOT_DIRECTORY 생성");
-			result += basic.CreateRootDirectory();
-		}
-		
 		if( ! common.existTable("BN_FILE") ) {
 			log.info("BN_FILE 생성");
 			result += basic.CreateFile();
@@ -219,8 +214,6 @@ class StorageDaoImpl implements StorageDao{
 		}
 		
 		final BnDirectory result = mapper.selectDirectoryByNo(1L);
-		
-		mapper.insertRootDirecotry( owner.getGroup(), result );
 		
 		this.insertAccess(owner, result);
 		

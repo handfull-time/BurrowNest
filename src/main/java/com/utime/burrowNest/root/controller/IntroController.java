@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.root.service.LoadStorageService;
+import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.user.service.AuthService;
 import com.utime.burrowNest.user.vo.InitInforReqVo;
@@ -109,7 +110,7 @@ public class IntroController {
 	 */
 	@ResponseBody
 	@GetMapping("PathList.json")
-    public List<DirectoryDto> list(@RequestParam String path) {
+    public List<BnDirectory> list(@RequestParam String path) {
         
 		if( storageService.IsInit() ) {
 			// 이미 초기화 했다면 무효
@@ -119,14 +120,14 @@ public class IntroController {
 		if( "root".equals( path ) ){
 			final File [] roots = File.listRoots();
 			
-			List<DirectoryDto> result = new ArrayList<>();
+			List<BnDirectory> result = new ArrayList<>();
 			for( File root : roots ) {
 				log.info(root.toPath().toString());
 				
 				if( root.getPath().contains("Y:") )
 					continue;
 				
-				final DirectoryDto item = new DirectoryDto();
+				final BnDirectory item = new BnDirectory();
 				try {
 					// 자식 폴더 존재 여부
 		            try (Stream<Path> children = Files.list(root.toPath())) {
@@ -160,7 +161,7 @@ public class IntroController {
 	                    hasChildren = children.anyMatch(Files::isDirectory);
 	                } catch (IOException ignored) {}
 
-	                final DirectoryDto dirDto = new DirectoryDto();
+	                final BnDirectory dirDto = new BnDirectory();
 	                dirDto.setName( p.getFileName().toString() );
 	                dirDto.setAbsolutePath( dir.relativize(p).toString() );
 	                dirDto.setHasChild(hasChildren);

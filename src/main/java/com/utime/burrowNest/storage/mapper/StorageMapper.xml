@@ -165,6 +165,16 @@
 		AND GROUP_NO = #{groupNo}
 </update>
 
+<!-- 전체 엑세스 목록 -->
+<select id="selectBnDirectoryAccess" resultType="com.utime.burrowNest.storage.mapper.BnPathAccess">
+	SELECT
+		DIR_NO AS "no"
+		, GROUP_NO AS "groupNo"
+		, ACCESS_FLAGS AS "accessFlags"
+	FROM BN_DIRECTORY_ACCESS
+	ORDER BY 1
+</select>
+
 <!-- 파일 권한 추가하기 -->
 <insert id="insertFileAccess" parameterType="map">
 	INSERT INTO BN_FILE_ACCESS (
@@ -771,20 +781,5 @@
     	</if>
     ORDER BY DR.NAME	
 </select> 
-
-<!-- 루트 directory 추가 -->
-<insert id="insertRootDirecotry" parameterType="map">
-	INSERT INTO BN_ROOT_DIRECTORY (
-		UPDATE_DATE 
-		, ENABLED 
-		, DIR_NO	
-		, GROUP_NO 
-	) VALUES (
-		CURRENT_TIMESTAMP
-		, #{dir.enabled}
-		, #{dir.no}
-		, #{group.groupNo}
-	)
-</insert>
 
 </mapper>
