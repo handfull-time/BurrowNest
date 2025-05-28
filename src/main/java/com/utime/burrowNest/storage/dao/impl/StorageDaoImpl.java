@@ -460,8 +460,7 @@ class StorageDaoImpl implements StorageDao{
 	
 	@Override
 	public List<String> getPaths(UserVo user, BnDirectory dir) {
-		// TODO Auto-generated method stub
-		return null;
+		return mapper.selectPaths(user.getGroup(), dir.getNo());
 	}
 	
 	@Override

@@ -787,4 +787,27 @@
 	)
 </insert>
 
+<!-- Directory의 경로 목록 조회 -->
+<select id="selectPaths" parameterType="map" resultType="String">
+	WITH RECURSIVE PATH_TO_ROOT(NO, PARENT_NO, NAME, LEVEL) AS (
+	    SELECT 
+	    	NO, PARENT_NO, NAME, 0 AS LEVEL
+	    FROM BN_DIRECTORY
+	    WHERE NO = #{dirNo}
+	
+	    UNION ALL
+	
+	    SELECT 
+	    	D.NO, D.PARENT_NO, D.NAME, LEVEL + 1
+	    FROM BN_DIRECTORY D
+	    	JOIN PATH_TO_ROOT P 
+	    		ON D.NO = P.PARENT_NO
+	    WHERE D.NO != P.NO 
+	)
+	SELECT 
+		NAME
+	FROM PATH_TO_ROOT
+	ORDER BY LEVEL DESC
+</select>
+
 </mapper>

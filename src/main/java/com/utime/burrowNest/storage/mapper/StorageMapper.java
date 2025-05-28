@@ -6,7 +6,6 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.utime.burrowNest.common.vo.BinResultVo;
-import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
 import com.utime.burrowNest.storage.vo.BnFileArchive;
@@ -293,9 +292,61 @@ public interface StorageMapper {
 	 */
 	int insertRootDirecotry(@Param("group") GroupVo group, @Param("dir") BnDirectory result);
 
+	/**
+	 * Directory의 경로 목록 조회
+	 * @param group
+	 * @param no
+	 * @return
+	 */
+	List<String> selectPaths(@Param("group") GroupVo group, @Param("dirNo") long no);
+
 }
 
 /*
+
+
+루트 DIR 조회
+SELECT *
+FROM BN_DIRECTORY
+WHERE NO IN (
+    SELECT DISTINCT a.DIR_NO
+    FROM BN_DIRECTORY_ACCESS a
+    WHERE a.GROUP_NO = 1
+    AND NOT EXISTS (
+        SELECT 1 
+        FROM BN_DIRECTORY_ACCESS b 
+        WHERE b.GROUP_NO = 1
+        AND b.DIR_NO = (SELECT PARENT_NO FROM BN_DIRECTORY WHERE NO = a.DIR_NO)
+    )
+);
+
+
+
+WITH RECURSIVE ParentChain(NO, PARENT_NO) AS (
+    SELECT 
+		NO, PARENT_NO
+    FROM BN_DIRECTORY
+    WHERE NO = 22
+    UNION ALL
+    SELECT d.NO, d.PARENT_NO
+    FROM BN_DIRECTORY d
+    INNER JOIN ParentChain pc ON d.NO = pc.PARENT_NO
+    WHERE d.NO != pc.PARENT_NO
+)
+SELECT CASE 
+        WHEN NOT EXISTS (
+            SELECT 1
+            FROM ParentChain pc
+				LEFT JOIN BN_DIRECTORY_ACCESS ba 
+					ON pc.NO = ba.DIR_NO AND ba.GROUP_NO = 1
+            WHERE ba.DIR_NO IS NULL
+        ) 
+        THEN '접근 가능'
+        ELSE '접근 불가능'
+    END AS 접근_여부;
+    
+
+ 
  좋습니다! 현재 구조는 매우 깔끔하고 확장 가능한 권한 모델을 잘 설계하셨습니다.  
 말씀하신 것처럼 "A 사용자만 접근 가능한 폴더", "B 사용자만 접근 가능한 폴더",  
 "하위 디렉토리에 접근 가능한지 여부", "public/private 구분" 등 다양한 시나리오를 처리할 수 있습니다.
