@@ -16,7 +16,7 @@ import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
-import com.utime.burrowNest.storage.vo.BnPathAccess;
+import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.vo.UserVo;
@@ -37,7 +37,7 @@ public class StorageServiceImpl implements StorageService {
 	
 	private Map<String, EBnFileType> mapFileType;
 	
-	private DirecotryManager dirManager = null;
+	private final DirecotryManager dirManager;
 	
 	/**
 	 * ApplicationReadyEvent
@@ -45,41 +45,19 @@ public class StorageServiceImpl implements StorageService {
 	@EventListener(ApplicationReadyEvent.class)
 	protected void handleApplicationReadyEvent() {
 		this.mapFileType = storageDao.getBnFileType();
-		
-		this.initDirManager();
 	}
 	
-	private void initDirManager() {
-		
-		if( ! this.storageDao.IsInit() ) {
-			return;
-		}
-		
-		if( this.dirManager != null ) {
-			this.dirManager.clearAllData();
-		}
-		
-		final List<BnDirectory> directorylist = storageDao.getAllDirectory();
-		final List<BnPathAccess> accessList = storageDao.getAllDirectoryAccess();
-		
-		this.dirManager = new DirecotryManager(directorylist, accessList);
-	}
-
 	@Override
 	public byte[] getThumbnail(String fid) {
 		return storageDao.getThumbnail( fid );
 	}
 
 	@Override
-	public BnDirectory getRootDirectory(UserVo user) {
+	public List<DirectoryDto> getRootDirectory(UserVo user) {
 		
-		if( this.dirManager == null ) {
-			this.initDirManager();
-		}
+		return dirManager.getAccessibleDirectoriesForGroup(user.getGroup().getGroupNo());
 		
-		
-		
-		final BnDirectory result = storageDao.getRootDirectory(user);
+//		final BnDirectory result = storageDao.getRootDirectory(user);
 		
 //		storageDao.get
 		/*
@@ -242,12 +220,12 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 ) SELECT * FROM DATA_PATH
 
 		*/
-		return result;
 	}
 
 	@Override
-	public BnDirectory getDirectory(UserVo user, String uid) {
-		final BnDirectory result = this.storageDao.getDirectory(user, uid);
+	public DirectoryDto getDirectory(UserVo user, String uid) {
+		DirectoryDto result = dirManager.getDirectoryForGroup(user.getGroup().getGroupNo(), uid);
+//		final BnDirectory result = this.storageDao.getDirectory(user, uid);
 		
 		return result;
 	}

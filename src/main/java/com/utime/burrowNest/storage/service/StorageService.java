@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
+import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.user.vo.UserVo;
 
 public interface StorageService {
@@ -20,7 +21,7 @@ public interface StorageService {
 	 * @param user
 	 * @return
 	 */
-	BnDirectory getRootDirectory(UserVo user);
+	List<DirectoryDto> getRootDirectory(UserVo user);
 
 	/**
 	 * dir 정보 조회
@@ -28,7 +29,7 @@ public interface StorageService {
 	 * @param uid
 	 * @return
 	 */
-	BnDirectory getDirectory(UserVo user, String uid);
+	DirectoryDto getDirectory(UserVo user, String uid);
 
 	/**
 	 * Path 목록

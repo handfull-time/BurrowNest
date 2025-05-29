@@ -19,6 +19,7 @@ import com.utime.burrowNest.common.util.CommandUtil;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.root.service.LoadStorageService;
 import com.utime.burrowNest.storage.dao.StorageDao;
+import com.utime.burrowNest.storage.service.impl.DirecotryManager;
 import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
@@ -45,6 +46,8 @@ public class LoadStorageServiceImpl implements LoadStorageService {
 	private final UserDao userDao;
 
 	private final StorageDao storageDao;
+	
+	private final DirecotryManager dirManager;
 	
 	private void delay() {
 		try {Thread.sleep(200);} catch (InterruptedException e) {e.printStackTrace();}
@@ -404,6 +407,8 @@ public class LoadStorageServiceImpl implements LoadStorageService {
 			message.setDone(finished);
 			
 			messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
+			
+			dirManager.initDirManager();
 		}
 	}
     

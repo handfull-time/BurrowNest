@@ -13,6 +13,7 @@ import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
+import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.user.vo.UserVo;
 
 @Controller
@@ -36,12 +37,12 @@ public class DirectoryController {
 	@GetMapping("Path.html")
     public String path(ModelMap model, UserVo user, @RequestParam("uid") String uid) throws Exception {
 		
-		BnDirectory dir;
+		List<DirectoryDto> dirList;
 //		DirectoryDto dir;
 		if( BurrowUtils.isEmpty(uid) ) {
-			dir = storageService.getRootDirectory(user);
+			dirList = storageService.getRootDirectory(user);
 		}else {
-			dir = storageService.getDirectory(user, uid);
+			dirList = storageService.getDirectory(user, uid);
 		}
 		
 		if( dir == null ) {

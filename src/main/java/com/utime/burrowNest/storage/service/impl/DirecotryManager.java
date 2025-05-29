@@ -8,19 +8,53 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
+import com.utime.burrowNest.storage.dao.StorageDao;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnPathAccess;
 import com.utime.burrowNest.storage.vo.DirectoryDto;
 
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
 public class DirecotryManager {
+	
+	private final StorageDao storageDao;
 
 	final Map<Long, DirectoryDto> mapDirNoBnDirectory = new HashMap<>();
 	final Map<String, DirectoryDto> mapUidBnDirectory = new HashMap<>();
 	final Map<Long, BnPathAccess> mapDirNoPathAccess = new HashMap<>();
 	final Map<Integer, Set<Long>> groupDirectoryAccess = new HashMap<>();
-	final DirectoryDto root;
+	DirectoryDto root;
 	
-	public DirecotryManager(List<BnDirectory> directorylist, List<BnPathAccess> accessList) {
+	/**
+	 * ApplicationReadyEvent
+	 */
+	@EventListener(ApplicationReadyEvent.class)
+	protected void handleApplicationReadyEvent() {
+		
+		this.initDirManager();
+	}
+	
+	public void initDirManager() {
+		
+		if( ! this.storageDao.IsInit() ) {
+			return;
+		}
+		
+		this.clearAllData();
+		
+		final List<BnDirectory> directorylist = storageDao.getAllDirectory();
+		final List<BnPathAccess> accessList = storageDao.getAllDirectoryAccess();
+		
+		this.loadDirecotryManager(directorylist, accessList);
+	}
+	
+	private void loadDirecotryManager(List<BnDirectory> directorylist, List<BnPathAccess> accessList) {
 		
 		final Map< Long, List<DirectoryDto> > mapListDirectory = new HashMap<>();
 		final BnDirectory rootDir = directorylist.remove(0);
@@ -123,6 +157,19 @@ public class DirecotryManager {
 	    // 현재 디렉터리를 검사
 	    DirectoryDto dir = mapDirNoBnDirectory.get(dirNo);
 	    if (dir != null && accessibleDirs.contains(dirNo)) {
+	        return dir;
+	    }
+
+	    // 부모 디렉터리를 재귀적으로 검사
+	    return this.findAccessibleParent(dir, accessibleDirs);
+	}
+	
+	public DirectoryDto getDirectoryForGroup(int groupNo, String uid) {
+		final Set<Long> accessibleDirs = groupDirectoryAccess.getOrDefault(groupNo, Collections.emptySet());
+
+	    // 현재 디렉터리를 검사
+	    DirectoryDto dir = mapUidBnDirectory.get(uid);
+	    if (dir != null && accessibleDirs.contains(dir.getOwner().getNo())) {
 	        return dir;
 	    }
 
