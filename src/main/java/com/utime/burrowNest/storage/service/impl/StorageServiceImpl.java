@@ -72,6 +72,13 @@ public class StorageServiceImpl implements StorageService {
 
 	@Override
 	public BnDirectory getRootDirectory(UserVo user) {
+		
+		if( this.dirManager == null ) {
+			this.initDirManager();
+		}
+		
+		
+		
 		final BnDirectory result = storageDao.getRootDirectory(user);
 		
 //		storageDao.get
