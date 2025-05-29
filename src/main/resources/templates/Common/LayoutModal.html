@@ -19,12 +19,7 @@
 
         <!-- 하단 버튼 -->
         <div class="modal-footer p-4 flex justify-end space-x-2">
-            <button id="saveButton" onclick="saveData(this)" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition">
-                저장
-            </button>
-            <button onclick="closePopup(this)" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition">
-                취소
-            </button>
+        	<th:block layout:fragment="modalButton"/>
         </div>
     </div>
     

@@ -94,15 +94,23 @@
 	    </table>
     </form>
     <!-- 회원 삭제 버튼 -->
-    <div class="flex justify-end mt-4 space-x-2">
-        <button type="button"
-                onclick="deleteUser(this)"
-                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400">
-            회원 삭제
-        </button>
-    </div>
+<!--     <div class="flex justify-end mt-4 space-x-2">
+    </div> -->
     </th:block>
     
+    <th:block layout:fragment="modalButton">
+        <button type="button"
+                onclick="deleteUser(this)"
+                class="bg-red-500 text-white px-4 py-2 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 transition">
+            회원 삭제
+        </button>
+    	<button id="saveButton" onclick="saveData(this)" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition">
+            저장
+        </button>
+        <button onclick="closePopup(this)" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition">
+            취소
+        </button>
+    </th:block>
     
 	<th:block layout:fragment="modalScript">
 					

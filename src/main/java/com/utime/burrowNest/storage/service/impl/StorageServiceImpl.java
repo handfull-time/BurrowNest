@@ -16,6 +16,7 @@ import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
+import com.utime.burrowNest.storage.vo.BnPathAccess;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.vo.UserVo;
@@ -36,12 +37,32 @@ public class StorageServiceImpl implements StorageService {
 	
 	private Map<String, EBnFileType> mapFileType;
 	
+	private DirecotryManager dirManager = null;
+	
 	/**
 	 * ApplicationReadyEvent
 	 */
 	@EventListener(ApplicationReadyEvent.class)
 	protected void handleApplicationReadyEvent() {
 		this.mapFileType = storageDao.getBnFileType();
+		
+		this.initDirManager();
+	}
+	
+	private void initDirManager() {
+		
+		if( ! this.storageDao.IsInit() ) {
+			return;
+		}
+		
+		if( this.dirManager != null ) {
+			this.dirManager.clearAllData();
+		}
+		
+		final List<BnDirectory> directorylist = storageDao.getAllDirectory();
+		final List<BnPathAccess> accessList = storageDao.getAllDirectoryAccess();
+		
+		this.dirManager = new DirecotryManager(directorylist, accessList);
 	}
 
 	@Override

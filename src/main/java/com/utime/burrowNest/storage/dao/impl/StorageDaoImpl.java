@@ -23,6 +23,7 @@ import com.utime.burrowNest.storage.vo.BnFileDocument;
 import com.utime.burrowNest.storage.vo.BnFileExtension;
 import com.utime.burrowNest.storage.vo.BnFileImage;
 import com.utime.burrowNest.storage.vo.BnFileVideo;
+import com.utime.burrowNest.storage.vo.BnPathAccess;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -127,11 +128,6 @@ class StorageDaoImpl implements StorageDao{
 			result += basic.CreateDirectoryAccess();
 		}
 		
-		if( ! common.existTable("BN_ROOT_DIRECTORY") ) {
-			log.info("BN_ROOT_DIRECTORY 생성");
-			result += basic.CreateRootDirectory();
-		}
-		
 		if( ! common.existTable("BN_FILE") ) {
 			log.info("BN_FILE 생성");
 			result += basic.CreateFile();
@@ -219,8 +215,6 @@ class StorageDaoImpl implements StorageDao{
 		}
 		
 		final BnDirectory result = mapper.selectDirectoryByNo(1L);
-		
-		mapper.insertRootDirecotry( owner.getGroup(), result );
 		
 		this.insertAccess(owner, result);
 		
@@ -467,6 +461,18 @@ class StorageDaoImpl implements StorageDao{
 	public BnDirectory getParentDirectory(UserVo user, String uid) {
 		
 		return null;
+	}
+	
+	@Override
+	public List<BnDirectory> getAllDirectory() {
+		
+		return mapper.selectAllDirectory();
+	}
+	
+	@Override
+	public List<BnPathAccess> getAllDirectoryAccess() {
+		
+		return mapper.selectBnDirectoryAccess();
 	}
 
 }

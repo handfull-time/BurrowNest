@@ -1,0 +1,228 @@
+package com.utime.burrowNest.storage.service.impl;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import com.utime.burrowNest.storage.vo.BnDirectory;
+import com.utime.burrowNest.storage.vo.BnPathAccess;
+import com.utime.burrowNest.storage.vo.DirectoryDto;
+
+public class DirecotryManager {
+
+	final Map<Long, DirectoryDto> mapDirNoBnDirectory = new HashMap<>();
+	final Map<String, DirectoryDto> mapUidBnDirectory = new HashMap<>();
+	final Map<Long, BnPathAccess> mapDirNoPathAccess = new HashMap<>();
+	final Map<Integer, Set<Long>> groupDirectoryAccess = new HashMap<>();
+	final DirectoryDto root;
+	
+	public DirecotryManager(List<BnDirectory> directorylist, List<BnPathAccess> accessList) {
+		
+		final Map< Long, List<DirectoryDto> > mapListDirectory = new HashMap<>();
+		final BnDirectory rootDir = directorylist.remove(0);
+		
+		this.root = new DirectoryDto( rootDir );
+		
+		this.init(directorylist, accessList, mapListDirectory);
+		
+		final Long rootNo = 1L;
+		
+		List<DirectoryDto> child = mapListDirectory.remove(rootNo);
+		this.root.getChild().addAll(child);
+		
+		for( DirectoryDto sub : this.root.getChild() ) {
+			this.procChild( sub, mapListDirectory);
+		}
+		
+	}
+	
+	private void procChild( DirectoryDto dir, final Map< Long, List<DirectoryDto> > mapListDirectory ) {
+		for( DirectoryDto item : dir.getChild() ) {
+			final List<DirectoryDto> child = mapListDirectory.remove( item.getOwner().getNo() );
+			
+			if( child == null || child.isEmpty() ) {
+				continue;
+			}
+			
+			item.getChild().addAll(child);
+			
+			for( DirectoryDto sub : item.getChild() ) {
+				this.procChild( sub, mapListDirectory);
+			}
+		}
+	}
+	
+	private void init(List<BnDirectory> directorylist, List<BnPathAccess> accessList, Map< Long, List<DirectoryDto> > mapListDirectory) {
+		
+		if( directorylist.size() < 1 )
+			return;
+		
+		for( BnPathAccess item : accessList) {
+			mapDirNoPathAccess.put(item.getNo(), item);
+			
+			groupDirectoryAccess.computeIfAbsent(item.getGroupNo(), k -> new HashSet<>()).add(item.getNo());
+		}
+		
+		for( BnDirectory item : directorylist ) {
+			final Long dirNo = item.getNo();
+			final DirectoryDto dto = new DirectoryDto(item);
+			
+			this.mapDirNoBnDirectory.put(dirNo, dto);
+			this.mapUidBnDirectory.put(item.getUid(), dto);
+			
+			final Long parentNo = item.getParentNo();
+            mapListDirectory.computeIfAbsent(parentNo, k -> new ArrayList<>()).add(dto);
+			
+//			final List<DirectoryDto> child;
+//			final Long parentNo = item.getParentNo();
+//			
+//			if( mapListDirectory.containsKey(parentNo) ) {
+//				child = mapListDirectory.get(parentNo);
+//			}else {
+//				child = new ArrayList<>();
+//				mapListDirectory.put(parentNo, child);
+//			}
+//			
+//			child.add(dto);
+		}
+	}
+	
+	public void clearAllData() {
+	    mapDirNoBnDirectory.clear();
+	    mapUidBnDirectory.clear();
+	    mapDirNoPathAccess.clear();
+
+	    for (Set<Long> dirSet : groupDirectoryAccess.values()) {
+	        dirSet.clear();
+	    }
+	    
+	    groupDirectoryAccess.clear();
+	}
+	
+	public List<DirectoryDto> getAccessibleDirectoriesForGroup(int groupNo) {
+	    final Set<Long> accessibleDirs = groupDirectoryAccess.getOrDefault(groupNo, Collections.emptySet());
+	    final List<DirectoryDto> result = new ArrayList<>();
+	    
+	    for (Long dirNo : accessibleDirs) {
+	        DirectoryDto dir = mapDirNoBnDirectory.get(dirNo);
+	        if (dir != null) {
+	            result.add(dir);
+	        }
+	    }
+	    
+	    return result;
+	}
+	
+	public DirectoryDto getDirectoryForGroup(int groupNo, long dirNo) {
+		final Set<Long> accessibleDirs = groupDirectoryAccess.getOrDefault(groupNo, Collections.emptySet());
+
+	    // 현재 디렉터리를 검사
+	    DirectoryDto dir = mapDirNoBnDirectory.get(dirNo);
+	    if (dir != null && accessibleDirs.contains(dirNo)) {
+	        return dir;
+	    }
+
+	    // 부모 디렉터리를 재귀적으로 검사
+	    return this.findAccessibleParent(dir, accessibleDirs);
+	}
+
+	private DirectoryDto findAccessibleParent(DirectoryDto dir, Set<Long> accessibleDirs) {
+	    if (dir == null) {
+	        return null;
+	    }
+
+	    Long parentNo = dir.getOwner().getParentNo();
+	    if (accessibleDirs.contains(parentNo)) {
+	        return dir; // 부모 디렉터리가 접근 가능한 경우 현재 디렉터리를 반환
+	    }
+
+	    // 부모 디렉터리를 재귀적으로 확인
+	    DirectoryDto parentDir = mapDirNoBnDirectory.get(parentNo);
+	    return this.findAccessibleParent(parentDir, accessibleDirs);
+	}
+
+	/** 새로운 디렉터리를 추가 */
+    public void addDirectory(BnDirectory newDir) {
+        DirectoryDto newDto = new DirectoryDto(newDir);
+        mapDirNoBnDirectory.put(newDir.getNo(), newDto);
+        mapUidBnDirectory.put(newDir.getUid(), newDto);
+
+        DirectoryDto parentDto = mapDirNoBnDirectory.get(newDir.getParentNo());
+        if (parentDto != null) {
+            parentDto.getChild().add(newDto);
+            parentDto.getOwner().setHasChild(true); // 부모 디렉터리에 자식이 있다고 표시
+        }
+    }
+
+    /** 기존 디렉터리 정보 수정 */
+    public boolean updateDirectory(BnDirectory updatedDir) {
+        DirectoryDto existingDto = mapDirNoBnDirectory.get(updatedDir.getNo());
+        if (existingDto == null) return false; // 존재하지 않는 디렉터리는 수정 불가
+
+        existingDto.getOwner().setName(updatedDir.getName());
+        existingDto.getOwner().setPublicAccessible(updatedDir.isPublicAccessible());
+        existingDto.getOwner().setLastModified(updatedDir.getLastModified());
+        existingDto.getOwner().setAbsolutePath(updatedDir.getAbsolutePath());
+        return true;
+    }
+
+    /** 디렉터리 삭제 */
+//    public boolean removeDirectory(Long dirNo) {
+//        DirectoryDto targetDto = mapDirNoBnDirectory.get(dirNo);
+//        if (targetDto == null) return false; // 존재하지 않는 디렉터리는 삭제 불가
+//
+//        // 부모에서 자식 목록에서 제거
+//        DirectoryDto parentDto = mapDirNoBnDirectory.get(targetDto.getOwner().getParentNo());
+//        if (parentDto != null) {
+//            parentDto.getChild().remove(targetDto);
+//            if (parentDto.getChild().isEmpty()) parentDto.getOwner().setHasChild(false); // 부모가 자식이 없으면 표시 변경
+//        }
+//
+//        // 내부 맵에서 삭제
+//        mapDirNoBnDirectory.remove(dirNo);
+//        mapUidBnDirectory.remove(targetDto.getOwner().getUid());
+//
+//        return true;
+//    }
+//    
+    public boolean removeDirectory(Long dirNo) {
+        DirectoryDto targetDto = mapDirNoBnDirectory.get(dirNo);
+        if (targetDto == null) return false; // 존재하지 않는 디렉터리는 삭제 불가
+
+        // 먼저 모든 자식 디렉터리를 삭제 (재귀 호출)
+        for (DirectoryDto child : new ArrayList<>(targetDto.getChild())) { // 복사하여 안전하게 반복
+            removeDirectory(child.getOwner().getNo());
+        }
+
+        // 부모에서 자식 목록에서 제거
+        DirectoryDto parentDto = mapDirNoBnDirectory.get(targetDto.getOwner().getParentNo());
+        if (parentDto != null) {
+            parentDto.getChild().remove(targetDto);
+            if (parentDto.getChild().isEmpty()) parentDto.getOwner().setHasChild(false); // 부모가 자식이 없으면 표시 변경
+        }
+
+        // 내부 맵에서 삭제
+        mapDirNoBnDirectory.remove(dirNo);
+        mapUidBnDirectory.remove(targetDto.getOwner().getUid());
+
+        return true;
+    }
+
+    public List<String> getPaths(long dirNo) {
+        List<String> paths = new ArrayList<>();
+        DirectoryDto current = mapDirNoBnDirectory.get(dirNo);
+
+        while (current != null) {
+            paths.add(current.getOwner().getName());
+            current = mapDirNoBnDirectory.get(current.getOwner().getParentNo());
+        }
+
+        Collections.reverse(paths); // 부모부터 정렬
+        return paths;
+    }
+
+}

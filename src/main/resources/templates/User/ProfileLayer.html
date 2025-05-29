@@ -36,6 +36,15 @@
     </form>
     </th:block>
     
+    <th:block layout:fragment="modalButton">
+    	<button id="saveButton" onclick="saveData(this)" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition">
+            저장
+        </button>
+        <button onclick="closePopup(this)" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition">
+            취소
+        </button>
+    </th:block>
+    
     
     <th:block layout:fragment="modalScript">
     

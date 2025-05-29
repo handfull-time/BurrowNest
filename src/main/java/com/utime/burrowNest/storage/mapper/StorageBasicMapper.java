@@ -32,12 +32,6 @@ public interface StorageBasicMapper {
 	int CreateDirectoryAccess();
 	
 	/**
-	 * 루트 dir 생성
-	 * @return
-	 */
-	int CreateRootDirectory();
-	
-	/**
 	 * 파일 테이블 생성 
 	 * @return
 	 */

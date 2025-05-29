@@ -7,6 +7,7 @@ import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
 import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
+import com.utime.burrowNest.storage.vo.BnPathAccess;
 import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.user.vo.UserVo;
@@ -162,6 +163,14 @@ public interface StorageDao {
 	 * @return
 	 */
 	BnDirectory getParentDirectory(UserVo user, String uid);
+
+	/**
+	 * 디랙터리 전체 조회
+	 * @return
+	 */
+	List<BnDirectory> getAllDirectory();
+
+	List<BnPathAccess> getAllDirectoryAccess();
 
 
 }

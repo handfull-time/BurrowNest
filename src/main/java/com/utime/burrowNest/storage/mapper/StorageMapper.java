@@ -13,6 +13,7 @@ import com.utime.burrowNest.storage.vo.BnFileAudio;
 import com.utime.burrowNest.storage.vo.BnFileDocument;
 import com.utime.burrowNest.storage.vo.BnFileImage;
 import com.utime.burrowNest.storage.vo.BnFileVideo;
+import com.utime.burrowNest.storage.vo.BnPathAccess;
 import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -38,7 +39,12 @@ public interface StorageMapper {
 	 * @return
 	 */
 	int updateDirectory( BnDirectory dir );
-	
+
+	/**
+	 * 전체 목록 조회
+	 * @return
+	 */
+	List<BnDirectory> selectAllDirectory();
 	/**
 	 * dir 조회
 	 * @param dirNo
@@ -106,6 +112,12 @@ public interface StorageMapper {
 	 * @return
 	 */
 	int updateDirectoryAccess(@Param("dirNo") long dirNo, @Param("groupNo") int groupNo, @Param("accType") int accType);
+	
+	/**
+	 * 전체 엑세스 목록
+	 * @return
+	 */
+	List<BnPathAccess> selectBnDirectoryAccess();
 
 	/**
 	 * 파일 권한 추가하기
@@ -282,15 +294,6 @@ public interface StorageMapper {
 	 * @return
 	 */
 	List<BnDirectory> selectDirectories(@Param("group") GroupVo group, @Param("dirNo") long no);
-
-
-	/**
-	 * 루트 directory 추가
-	 * @param group
-	 * @param result
-	 * @return
-	 */
-	int insertRootDirecotry(@Param("group") GroupVo group, @Param("dir") BnDirectory result);
 
 	/**
 	 * Directory의 경로 목록 조회

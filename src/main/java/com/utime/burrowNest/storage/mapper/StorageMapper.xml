@@ -56,11 +56,13 @@
 	<result column="PUBLIC_ACCESSIBLE" property="publicAccessible"/>
 	<result column="HAS_CHILD" property="hasChild"/>
 	<result column="ABSOLUTE_PATH" property="absolutePath"/>
+	<result column="PARENT_UID" property="parentUid"/>
+<!-- 	
 	<association 
 			column="{dirNo=PARENT_NO}" 
 			property="parentUid" 
 			javaType="string"
-			select="com.utime.burrowNest.user.mapper.UserMapper.selectDirectoryUidByNo" />
+			select="com.utime.burrowNest.user.mapper.UserMapper.selectDirectoryUidByNo" /> -->
 </resultMap>
 
 <resultMap id="BnFileMap" type="com.utime.burrowNest.storage.vo.BnFile"
@@ -127,11 +129,24 @@
     WHERE NO = #{no}
 </update>
 
+<!-- 전체 목록 조회 -->
+<select id="selectAllDirectory" resultMap="BnDirectoryMap">
+	SELECT 
+    	<include refid="BnDirectoryColumn" />
+    	, P.UID AS PARENT_UID
+    FROM BN_DIRECTORY DR
+    	INNER JOIN BN_DIRECTORY P ON DR.PARENT_NO = P.NO
+    WHERE DR.ENABLED = TRUE
+    ORDER BY NO
+</select>
+
 <!-- Select: 특정 디렉토리 검색 -->
-<select id="selectDirectoryByNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnDirectory">
+<select id="selectDirectoryByNo" parameterType="long" resultMap="BnDirectoryMap">
     SELECT 
     	<include refid="BnDirectoryColumn" /> 
+    	, P.UID AS PARENT_UID
     FROM BN_DIRECTORY DR
+    	INNER JOIN BN_DIRECTORY P ON DR.PARENT_NO = P.NO
     WHERE DR.NO = #{dirNo}
 </select>
 
@@ -164,6 +179,16 @@
 		AND DIR_NO = #{dirNo}
 		AND GROUP_NO = #{groupNo}
 </update>
+
+<!-- 전체 엑세스 목록 -->
+<select id="selectBnDirectoryAccess" resultType="com.utime.burrowNest.storage.vo.BnPathAccess">
+	SELECT
+		DIR_NO AS "no"
+		, GROUP_NO AS "groupNo"
+		, ACCESS_FLAGS AS "accessFlags"
+	FROM BN_DIRECTORY_ACCESS
+	ORDER BY 1
+</select>
 
 <!-- 파일 권한 추가하기 -->
 <insert id="insertFileAccess" parameterType="map">
@@ -771,21 +796,6 @@
     	</if>
     ORDER BY DR.NAME	
 </select> 
-
-<!-- 루트 directory 추가 -->
-<insert id="insertRootDirecotry" parameterType="map">
-	INSERT INTO BN_ROOT_DIRECTORY (
-		UPDATE_DATE 
-		, ENABLED 
-		, DIR_NO	
-		, GROUP_NO 
-	) VALUES (
-		CURRENT_TIMESTAMP
-		, #{dir.enabled}
-		, #{dir.no}
-		, #{group.groupNo}
-	)
-</insert>
 
 <!-- Directory의 경로 목록 조회 -->
 <select id="selectPaths" parameterType="map" resultType="String">
