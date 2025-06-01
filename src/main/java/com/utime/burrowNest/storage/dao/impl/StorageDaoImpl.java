@@ -63,6 +63,9 @@ class StorageDaoImpl implements StorageDao{
 			dbRes += basic.insertFileExtension( "ppt",  EBnFileType.Document);
 			dbRes += basic.insertFileExtension( "pptx", EBnFileType.Document);
 			dbRes += basic.insertFileExtension( "hwp",  EBnFileType.Document);
+			dbRes += basic.insertFileExtension( "hwpx",  EBnFileType.Document);
+			dbRes += basic.insertFileExtension( "hwt",  EBnFileType.Document);
+			dbRes += basic.insertFileExtension( "hwpml",  EBnFileType.Document);
 			dbRes += basic.insertFileExtension( "txt",  EBnFileType.Document);
 			dbRes += basic.insertFileExtension( "md",   EBnFileType.Document);
 			dbRes += basic.insertFileExtension( "csv",  EBnFileType.Document);
@@ -216,14 +219,11 @@ class StorageDaoImpl implements StorageDao{
 		
 		final BnDirectory result = mapper.selectDirectoryByNo(1L);
 		
-		this.insertAccess(owner, result);
-		
 		return result;
 	}
 	
 	@Override
 	public Map<String, EBnFileType> getBnFileType() {
-		
 		
 		final Map<String, EBnFileType> result = new HashMap<>();
 		final List<BnFileExtension> list = basic.selectFileExtensionAll();
@@ -241,10 +241,8 @@ class StorageDaoImpl implements StorageDao{
 		final int result;
 		if( dir.getNo() < 0L ) {
 			result = mapper.insertDirectory(dir);
-			this.insertAccess(owner, dir);
 		}else {
 			result = mapper.updateDirectory(dir);
-			this.updateAccess(owner, dir);
 		}
 		return result;
 	}
@@ -256,10 +254,8 @@ class StorageDaoImpl implements StorageDao{
 		final int result;
 		if( file.getNo() < 0L ) {
 			result = mapper.insertFile(file);
-			this.insertAccess(owner, file);
 		}else {
 			result = mapper.updateFile(file);
-			this.updateAccess(owner, file);
 		}
 		return result;
 	}
