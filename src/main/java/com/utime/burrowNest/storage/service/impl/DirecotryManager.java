@@ -19,6 +19,7 @@ import com.utime.burrowNest.storage.vo.DirectoryDto;
 
 import lombok.RequiredArgsConstructor;
 
+// 사용자 별로 select 정보를 갖고 있어야 할 듯.
 @Component
 @RequiredArgsConstructor
 public class DirecotryManager {
@@ -110,18 +111,6 @@ public class DirecotryManager {
 			
 			final Long parentNo = item.getParentNo();
             mapListDirectory.computeIfAbsent(parentNo, k -> new ArrayList<>()).add(dto);
-			
-//			final List<DirectoryDto> child;
-//			final Long parentNo = item.getParentNo();
-//			
-//			if( mapListDirectory.containsKey(parentNo) ) {
-//				child = mapListDirectory.get(parentNo);
-//			}else {
-//				child = new ArrayList<>();
-//				mapListDirectory.put(parentNo, child);
-//			}
-//			
-//			child.add(dto);
 		}
 	}
 	

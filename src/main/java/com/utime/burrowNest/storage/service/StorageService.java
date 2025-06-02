@@ -17,19 +17,12 @@ public interface StorageService {
 	byte [] getThumbnail(String fid);
 
 	/**
-	 * Root dir 정보 조회
-	 * @param user
-	 * @return
-	 */
-	List<DirectoryDto> getRootDirectory(UserVo user);
-
-	/**
 	 * dir 정보 조회
 	 * @param user
 	 * @param uid
 	 * @return
 	 */
-	DirectoryDto getDirectory(UserVo user, String uid);
+	List<DirectoryDto> getDirectory(UserVo user, String uid);
 
 	/**
 	 * Path 목록

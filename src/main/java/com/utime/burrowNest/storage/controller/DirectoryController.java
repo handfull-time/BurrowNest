@@ -37,19 +37,13 @@ public class DirectoryController {
 	@GetMapping("Path.html")
     public String path(ModelMap model, UserVo user, @RequestParam("uid") String uid) throws Exception {
 		
-		List<DirectoryDto> dirList;
-//		DirectoryDto dir;
-		if( BurrowUtils.isEmpty(uid) ) {
-			dirList = storageService.getRootDirectory(user);
-		}else {
-			dirList = storageService.getDirectory(user, uid);
-		}
+		final List<DirectoryDto> dirList = storageService.getDirectory(user, uid);
 		
-		if( dir == null ) {
+		if( BurrowUtils.isEmpty(dirList) ) {
 			throw new Exception("폴더 없음.");
 		}
 		
-		model.addAttribute("directory", dir);
+		model.addAttribute("directories", dirList);
 //	    // 선택한 path의 파일 목록
 //        model.addAttribute("files", storageService.getFiles(user, dir) );
 //        model.addAttribute("paths", storageService.getPaths(user, dir) );
