@@ -1,8 +1,9 @@
 package com.utime.burrowNest.storage.vo;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
+
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
  * Represents a directory entity with various properties such as name, creation date,
@@ -10,7 +11,6 @@ import lombok.ToString;
  */
 @Setter
 @Getter
-@ToString( callSuper = true )
 public class BnDirectory extends AbsPath{
     
     /**
@@ -28,4 +28,9 @@ public class BnDirectory extends AbsPath{
      * The absolute path of the directory in the file system.
      */
     protected String absolutePath;
+    
+    @Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
+	}
 }

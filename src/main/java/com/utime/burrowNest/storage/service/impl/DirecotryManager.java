@@ -59,35 +59,27 @@ public class DirecotryManager {
 		
 		final Map< Long, List<DirectoryDto> > mapListDirectory = new HashMap<>();
 		final BnDirectory rootDir = directorylist.remove(0);
+//		final BnDirectory rootDir = directorylist.get(0);
 		
 		this.root = new DirectoryDto( rootDir );
+		this.mapDirNoBnDirectory.put(rootDir.getNo(), this.root);
+		this.mapUidBnDirectory.put(rootDir.getUid(), this.root);
 		
 		this.init(directorylist, accessList, mapListDirectory);
 		
-		final Long rootNo = 1L;
-		
-		List<DirectoryDto> child = mapListDirectory.remove(rootNo);
-		this.root.getChild().addAll(child);
-		
-		for( DirectoryDto sub : this.root.getChild() ) {
-			this.procChild( sub, mapListDirectory);
-		}
-		
+		this.procChild( this.root, mapListDirectory);
 	}
 	
 	private void procChild( DirectoryDto dir, final Map< Long, List<DirectoryDto> > mapListDirectory ) {
-		for( DirectoryDto item : dir.getChild() ) {
-			final List<DirectoryDto> child = mapListDirectory.remove( item.getOwner().getNo() );
-			
-			if( child == null || child.isEmpty() ) {
-				continue;
-			}
-			
-			item.getChild().addAll(child);
-			
-			for( DirectoryDto sub : item.getChild() ) {
-				this.procChild( sub, mapListDirectory);
-			}
+		
+		final List<DirectoryDto> child = mapListDirectory.remove( dir.getOwner().getNo() );
+		if( child == null || child.isEmpty() )
+			return;
+		
+		dir.getChild().addAll(child);
+		
+		for( DirectoryDto sub : dir.getChild() ) {
+			this.procChild( sub, mapListDirectory);
 		}
 	}
 	

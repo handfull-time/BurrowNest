@@ -2,9 +2,10 @@ package com.utime.burrowNest.storage.vo;
 
 import java.time.LocalDateTime;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
+
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
  * Represents a video file with metadata such as duration, resolution, frame rate,
@@ -12,7 +13,6 @@ import lombok.ToString;
  */
 @Getter
 @Setter
-@ToString(callSuper = true)
 public class BnFileDocument extends AbsBnFileInfo {
 
 	/**
@@ -74,5 +74,10 @@ public class BnFileDocument extends AbsBnFileInfo {
 	 * 문서나 작성자와 관련된 회사 정보
 	 */
 	private String company;
+	
+	@Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
+	}
 
 }

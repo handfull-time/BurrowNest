@@ -30,7 +30,6 @@ class UserDaoImpl implements UserDao {
 	
 	private final String KeyGroupAdmin = "Admin";
 	private final String KeyGroupUnsel = "Unselected";
-	private final String KeyGroupBasic = "Basic";
 	
 	@Autowired
 	private CommonMapper common;
@@ -112,17 +111,6 @@ class UserDaoImpl implements UserDao {
 			result += this.userMapper.insertGroup(group);
 		}
 		
-		{
-			final GroupVo group = new GroupVo();
-			group.setEnabled(true);
-			group.setName( KeyGroupBasic );
-			group.setRole(EJwtRole.User);
-			group.setAccType(EAccessType.None);
-			group.setNote("첫 파일 로딩시 포함 될 그룹");
-			
-			result += this.userMapper.insertGroup(group);
-		}
-
 		return result;
 	}
 
@@ -218,12 +206,6 @@ class UserDaoImpl implements UserDao {
 	public GroupVo getNormalGroup() {
 		
 		return userMapper.selectGroupByName(this.KeyGroupUnsel);
-	}
-	
-	@Override
-	public GroupVo getFileBaiscGroup() {
-		
-		return userMapper.selectGroupByName(this.KeyGroupBasic);
 	}
 	
 	@Override

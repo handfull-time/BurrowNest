@@ -8,8 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.utime.burrowNest.storage.service.impl.DirecotryManager;
 import com.utime.burrowNest.storage.vo.DirectoryDto;
 
@@ -21,8 +19,6 @@ import lombok.RequiredArgsConstructor;
 public class TestController {
 
     final DirecotryManager direcotryManager;
-
-    final static ObjectWriter objMapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
 
     @GetMapping("Root.json")
     public List<DirectoryDto> getRoot() throws JsonProcessingException{

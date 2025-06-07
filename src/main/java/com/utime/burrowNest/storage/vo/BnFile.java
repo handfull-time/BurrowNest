@@ -1,8 +1,9 @@
 package com.utime.burrowNest.storage.vo;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
+
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
  * Represents a basic file entity in the system. This class encapsulates common properties
@@ -11,7 +12,6 @@ import lombok.ToString;
  */
 @Setter
 @Getter
-@ToString(callSuper = true)
 public class BnFile extends AbsPath {
  
     /**
@@ -39,5 +39,10 @@ public class BnFile extends AbsPath {
      * extends file information
      */
     protected AbsBnFileInfo info;
+    
+    @Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
+	}
 
 }

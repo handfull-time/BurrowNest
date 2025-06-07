@@ -9,6 +9,9 @@ import java.time.format.DateTimeFormatter;
 import org.springframework.http.MediaType;
 import org.springframework.util.StreamUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -225,5 +228,28 @@ public class BurrowUtils {
         }
 
         return null;
+    }
+    
+    
+    private final static ObjectWriter objMapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
+
+    /**
+     * json 형태 출력
+     * @param obj
+     * @return
+     */
+    public static String toJson( Object obj ) {
+    	
+    	if( obj == null ) {
+    		return "Is null.";
+    	}
+    	
+		try {
+			return obj.getClass().getSimpleName() + ": " + objMapper.writeValueAsString(obj) + "\n";
+		} catch (Exception e) {
+			log.error("", e);
+			return "{}";
+		}
+
     }
 }

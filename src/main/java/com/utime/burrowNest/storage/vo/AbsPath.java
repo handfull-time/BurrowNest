@@ -2,6 +2,8 @@ package com.utime.burrowNest.storage.vo;
 
 import java.sql.Timestamp;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -75,4 +77,9 @@ public abstract class AbsPath {
     protected String name;
     
     protected EAccessType accType;
+    
+    @Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
+	}
 }

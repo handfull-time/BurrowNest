@@ -2,16 +2,16 @@ package com.utime.burrowNest.user.vo;
 
 import java.util.List;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
+
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
  * 관리자 가입 요청 값
  */
 @Getter
 @Setter
-@ToString(callSuper = true)
 public class InitInforReqVo extends UserReqVo{
 	
 	/**
@@ -24,5 +24,8 @@ public class InitInforReqVo extends UserReqVo{
 	 */
 	private String wsUserName;
 	
-	
+	@Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
+	}
 }

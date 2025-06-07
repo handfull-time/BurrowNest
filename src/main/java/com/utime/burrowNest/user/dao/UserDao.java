@@ -36,13 +36,6 @@ public interface UserDao {
 	GroupVo getNormalGroup();
 	
 	/**
-	 * 파일 로딩하고 -_-;;;;
-	 * 이건 없어질 것 같군...
-	 * @return
-	 */
-	GroupVo getFileBaiscGroup();
-	
-	/**
 	 * 사용자 추가
 	 * @param reqVo
 	 * @param user

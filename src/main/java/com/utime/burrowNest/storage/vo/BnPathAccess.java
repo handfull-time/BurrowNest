@@ -1,8 +1,12 @@
 package com.utime.burrowNest.storage.vo;
 
-import lombok.Data;
+import com.utime.burrowNest.common.util.BurrowUtils;
 
-@Data
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
 public class BnPathAccess {
 	/** 고유 번호 */
 	long no;
@@ -10,4 +14,9 @@ public class BnPathAccess {
 	int groupNo;
 	/** 엑세스 권한 */
 	int accessFlags;
+	
+	@Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
+	}
 }

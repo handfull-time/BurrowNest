@@ -39,8 +39,6 @@ public class LoadStorageServiceImpl implements LoadStorageService {
 	
 	private final SimpMessagingTemplate messagingTemplate;
 	
-	final static ObjectWriter objMapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
-	
 	private final ExecutorService executor = Executors.newWorkStealingPool();
 	
 	private final UserDao userDao;

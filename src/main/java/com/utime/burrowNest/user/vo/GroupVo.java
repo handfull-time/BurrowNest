@@ -2,15 +2,18 @@ package com.utime.burrowNest.user.vo;
 
 import java.time.LocalDateTime;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.storage.vo.EAccessType;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 사용자 정보
  */
-@Data
+@Setter
+@Getter
 public class GroupVo {
 	/** 회원 번호 */
 	int groupNo;
@@ -34,4 +37,9 @@ public class GroupVo {
 	long dailyDownloadLimit;
 	/** 저장공간 최대 사용 용량전체 저장소 제한 (사용자별 quota 등) */
 	long maxStorageUsage;
+	
+	@Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
+	}
 }

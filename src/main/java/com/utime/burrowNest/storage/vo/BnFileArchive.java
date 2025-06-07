@@ -1,5 +1,7 @@
 package com.utime.burrowNest.storage.vo;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -10,7 +12,6 @@ import lombok.ToString;
  */
 @Getter
 @Setter
-@ToString(callSuper = true)
 public class BnFileArchive extends AbsBnFileInfo {
 	/**
      * The format of the archive (ZIP, RAR, 7Z, etc).
@@ -45,6 +46,11 @@ public class BnFileArchive extends AbsBnFileInfo {
     /**
      * Optional comment string embedded in the archive.
      */
-    private String comment;    
+    private String comment;
+    
+    @Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
+	}
 }
 

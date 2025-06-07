@@ -9,13 +9,21 @@
         <div class="modal-header bg-gray-700 text-white text-center p-3 cursor-move"
              onmousedown="startDrag(event, this)">
             <span class="font-bold"><th:block layout:fragment="modalTitle"/></span>
-            <button onclick="closePopup(this)" class="absolute top-2 right-2 text-white hover:text-gray-300 text-xl">×</button>
+            <button onclick="closePopup(this)" class="absolute top-2 right-2 text-white hover:text-gray-300 text-xl">❌</button>
         </div>
 
         <!-- 내용 영역 -->
-        <div class="modal-content p-4">
-            <th:block layout:fragment="modalContent"/>
-        </div> 
+<!--         <div th:class="'modal-content p-4 overflow-y-auto max-h-' + ${maxHeight}">
+		    <th:block layout:fragment="modalContent"/>
+		</div> 
+		
+		<div class="modal-content p-4 overflow-y-auto" th:classappend="'max-h-' + ${maxHeight}">
+		    <th:block layout:fragment="modalContent"/>
+		</div> -->
+		
+		<div class="modal-content p-4 overflow-y-auto" th:classappend="'max-h-' + (${maxHeight} ?: '96')">
+		    <th:block layout:fragment="modalContent"/>
+		</div>
 
         <!-- 하단 버튼 -->
         <div class="modal-footer p-4 flex justify-end space-x-2">

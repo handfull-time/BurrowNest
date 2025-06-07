@@ -3,6 +3,8 @@ package com.utime.burrowNest.storage.vo;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,5 +26,10 @@ public class DirectoryDto {
    		this.owner = dir;
     	this.selected = false;
     }
+    
+	@Override
+	public String toString() {
+		return BurrowUtils.toJson(this.owner) + "ChildSize:" + child.size() + "\n";
+	}
 }
 
