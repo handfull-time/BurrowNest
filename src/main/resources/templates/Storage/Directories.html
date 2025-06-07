@@ -137,6 +137,8 @@ const closedFolder = `
 
 
   document.addEventListener('DOMContentLoaded', function() {
+	console.info( "여기가 시작이다." );
+
 	  const params = new URLSearchParams({
 		  uid: data.uid || ''
 	  });
@@ -150,11 +152,11 @@ const closedFolder = `
       // 이건 사용 기록 추가하기.
 	  //window.history.pushState(null, null, urlValue);
 
-	  storage
+	  const directories = /*[[${directories}]]*/ null;
 
 	  const ul = document.createElement('ul');
 	  ul.className = "space-y-1";
-	  ul.appendChild( createTreeNode(data) );
+	  ul.appendChild( createTreeNode(directories) );
 	  ocument.getElementById("tree-root").appendChild(ul);
   });
 

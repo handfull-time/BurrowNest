@@ -23,6 +23,7 @@ public class WhiteAddressList {
 			, "/error/"
 			, "/Intro/"
 			, "/DbConsoleH2/"
+			, "/Test/"
 			, "/BackEvent/"
 		};
 	

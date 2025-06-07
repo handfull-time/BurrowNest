@@ -95,7 +95,7 @@ class UserDaoImpl implements UserDao {
 			group.setEnabled(true);
 			group.setName( KeyGroupAdmin );
 			group.setRole(EJwtRole.Admin);
-			group.setAccType(EAccessType.None);
+			group.setAccType(EAccessType.All);
 			group.setNote("관리자 그룹");
 			
 			result += this.userMapper.insertGroup(group);

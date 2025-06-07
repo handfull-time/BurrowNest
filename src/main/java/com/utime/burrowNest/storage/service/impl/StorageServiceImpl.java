@@ -225,16 +225,17 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 	@Override
 	public List<DirectoryDto> getDirectory(UserVo user, String uid) {
 		
+		final List<DirectoryDto> result =  dirManager.getAccessibleDirectoriesForGroup(user.getGroup().getGroupNo());
 		if( BurrowUtils.isEmpty(uid) ) {
 			log.info("루트 호출");
-			return dirManager.getAccessibleDirectoriesForGroup(user.getGroup().getGroupNo());
+		}else{
+			final DirectoryDto dir = dirManager.getDirectoryForGroup(user.getGroup().getGroupNo(), uid);
+			if( dir != null ) {
+				dir.setSelected(true);
+			}
 		}
 		
-		// uid 데이터 선택 된 것을 처리 하고 리턴하기.
-		//DirectoryDto result = dirManager.getDirectoryForGroup(user.getGroup().getGroupNo(), uid);
-//		final BnDirectory result = this.storageDao.getDirectory(user, uid);
-		
-		return null;
+		return result;
 	}
 
 	@Override

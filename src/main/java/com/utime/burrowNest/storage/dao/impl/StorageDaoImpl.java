@@ -218,6 +218,8 @@ class StorageDaoImpl implements StorageDao{
 		}
 		
 		final BnDirectory result = mapper.selectDirectoryByNo(1L);
+
+		this.insertAccess(owner, result);
 		
 		return result;
 	}
