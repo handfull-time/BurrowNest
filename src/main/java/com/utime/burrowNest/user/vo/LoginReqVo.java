@@ -1,6 +1,5 @@
 package com.utime.burrowNest.user.vo;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.utime.burrowNest.common.util.BurrowUtils;
 
 import lombok.Getter;
@@ -21,7 +20,6 @@ public class LoginReqVo extends ReqUniqueVo{
 	/**
 	 * 암호
 	 */
-	@JsonIgnore
 	private String pw;
 	
 	/**

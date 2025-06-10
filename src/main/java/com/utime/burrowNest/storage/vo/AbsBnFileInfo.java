@@ -1,6 +1,6 @@
 package com.utime.burrowNest.storage.vo;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 /**
  * Abstract class representing common file information shared across different file types.
@@ -15,7 +15,7 @@ public abstract class AbsBnFileInfo {
     /**
      * The date and time when the file was last updated or modified.
      */
-    protected Timestamp updateDate;
+    protected LocalDateTime updateDate;
 
 	public long getFileNo() {
 		return fileNo;
@@ -25,11 +25,11 @@ public abstract class AbsBnFileInfo {
 		this.fileNo = fileNo;
 	}
 
-	public Timestamp getUpdateDate() {
+	public LocalDateTime getUpdateDate() {
 		return updateDate;
 	}
 
-	public void setUpdateDate(Timestamp updateDate) {
+	public void setUpdateDate(LocalDateTime updateDate) {
 		this.updateDate = updateDate;
 	}
     

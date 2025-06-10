@@ -19,9 +19,9 @@ const closedFolder = `
 
   function createTreeNode(node, parentOpened = false) {
 	  
-	  if( typeof node.isCreated === "undefined") {
-		  node.isCreated = true;
-	  }
+//	  if( typeof node.isCreated === "undefined") {
+//		  node.isCreated = true;
+//	  }
 
 	  const li = document.createElement('li');
 	  li.className = "mb-1";
@@ -46,7 +46,7 @@ const closedFolder = `
 	  folderIcon.setAttribute("aria-expanded", "false");
 	
 	  const label = document.createElement("span");
-	  label.textContent = node.name;
+	  label.textContent = node.owner.name;
 	  label.className = "folder-label";
 	
 	  row.appendChild(chevron);
@@ -56,13 +56,13 @@ const closedFolder = `
 	
 	  let isOpen = false;
 	
-	  if (node.childDirectories && node.childDirectories.length > 0) {
+	  if (node.child && node.child.length > 0) {
 		  
 	      const ul = document.createElement('ul');
 	      ul.className = "ml-6 mt-1 space-y-1 hidden";
 	      ul.dataset.childDirectories = "";
 	      
-	      node.childDirectories.forEach(child => {
+	      node.child.forEach(child => {
 	        const childNode = createTreeNode(child);
 	        if (childNode.dataset.containsSelected === "true") {
 	            isOpen = true;
@@ -121,23 +121,24 @@ const closedFolder = `
   
   document.addEventListener("treeItemClick", (e) => {
 	  const dir = e.detail;
+	  console.info( 'selected', dir );
 	  
-	  if( typeof dir.isCreated !== "undefined") {
+	  /* if( typeof dir.isCreated !== "undefined") {
 		  // 생성 된 데이터다.
 		  return;
-	  }
+	  } */
 	  
-	  const url = /*[[@{/Dir/Path.html}]]*/ null;
-	  const params = new URLSearchParams({
-		  uid: dir.uid || ''
-	  });
+	  //const url = /*[[@{/Dir/Path.html}]]*/ null;
+	  //const params = new URLSearchParams({
+		//  uid: dir.uid || ''
+	  //});
 	  
-	  window.location.href = url + '?' + params.toString();
+	  //window.location.href = url + '?' + params.toString();
   });
 
 
   document.addEventListener('DOMContentLoaded', function() {
-	console.info( "여기가 시작이다." );
+	  console.info( "여기가 시작이다." );
 
 	  const params = new URLSearchParams({
 		  uid: data.uid || ''

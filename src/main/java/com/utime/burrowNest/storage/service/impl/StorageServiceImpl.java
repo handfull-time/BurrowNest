@@ -29,8 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class StorageServiceImpl implements StorageService {
 	
-	final static ObjectWriter objMapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
-	
 	private final UserDao userDao;
 
 	private final StorageDao storageDao;

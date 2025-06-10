@@ -22,6 +22,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.util.LimitStringBuilder;
 import com.utime.burrowNest.user.vo.UserVo;
@@ -43,8 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 class LoggingAspect {
 
-	final static ObjectWriter objMapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
-	
 	private final String KEY_USER_AGENT = HttpHeaders.USER_AGENT;
 
 	private final String line1 = "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
@@ -71,6 +70,14 @@ class LoggingAspect {
 	private final String FilterKey = "org.springframework.validation";
 	
 	public static final String lineSepretor = System.lineSeparator();
+	
+	private final ObjectWriter objWirter;
+
+	public LoggingAspect() {
+    	final ObjectMapper objMapper = new ObjectMapper();
+    	objMapper.registerModule(new JavaTimeModule()); // Java 8 날짜/시간 타입 지원 추가
+    	objWirter = objMapper.writerWithDefaultPrettyPrinter();
+	}
 
 	public static void printClassHierarchy(Object obj) {
         Class<?> currentClass = obj.getClass();
@@ -163,7 +170,7 @@ class LoggingAspect {
         if (methodObj.isAnnotationPresent(ResponseBody.class) || methodObj.getDeclaringClass().isAnnotationPresent(RestController.class)) {
 			paramStrBuffer.append(ValueFront);
 			try {
-				paramStrBuffer.append( objMapper.writeValueAsString(proceed) ).append(lineSepretor);
+				paramStrBuffer.append( objWirter.writeValueAsString(proceed) ).append(lineSepretor);
 			} catch (Exception e) {
 				paramStrBuffer.append( "Json Convert Error : " + e.getMessage() ).append(lineSepretor);
 				paramStrBuffer.append( proceed ).append(lineSepretor);
@@ -194,7 +201,7 @@ class LoggingAspect {
         } else {
             // 기타 응답
         	try {
-				paramStrBuffer.append( objMapper.writeValueAsString(proceed) ).append(lineSepretor);
+				paramStrBuffer.append( objWirter.writeValueAsString(proceed) ).append(lineSepretor);
 			} catch (Exception e) {
 				paramStrBuffer.append( "Json Convert Error : " + e.getMessage() ).append(lineSepretor);
 				paramStrBuffer.append( proceed ).append(lineSepretor);

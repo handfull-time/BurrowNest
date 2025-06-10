@@ -16,7 +16,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.sql.Timestamp;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
@@ -580,8 +579,8 @@ App Version                     : 16.0300
         try {
         	final BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
 
-            result.setCreation( new Timestamp(attrs.creationTime().toMillis()) );
-            result.setLastModified( new Timestamp(attrs.lastModifiedTime().toMillis()) );
+            result.setCreation( BurrowUtils.convertToLocalDateTime(attrs.creationTime()) );
+            result.setLastModified( BurrowUtils.convertToLocalDateTime(attrs.lastModifiedTime()) );
 
         } catch (Exception e) {
         	log.error("dir 오류", e);
@@ -605,8 +604,8 @@ App Version                     : 16.0300
 	        // 기본 정보
 	        final Path path = file.toPath();
 	        final BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
-            result.setCreation( new Timestamp(attrs.creationTime().toMillis()) );
-            result.setLastModified( new Timestamp(attrs.lastModifiedTime().toMillis()) );
+            result.setCreation( BurrowUtils.convertToLocalDateTime(attrs.creationTime()) );
+            result.setLastModified( BurrowUtils.convertToLocalDateTime(attrs.lastModifiedTime()) );
 
 	        // 이름 및 확장자
             final String fullName = file.getName();

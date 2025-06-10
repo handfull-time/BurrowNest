@@ -1,6 +1,6 @@
 package com.utime.burrowNest.storage.vo;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
 
@@ -19,12 +19,12 @@ public abstract class AbsPath {
     /**
      * The registration date of the directory(file).
      */
-    protected Timestamp regDate;
+    protected LocalDateTime regDate;
 
     /**
      * The last update date of the directory(file).
      */
-    protected Timestamp updateDate;
+    protected LocalDateTime updateDate;
 
     /**
      * Indicates whether the directory(file) is enabled or not. 
@@ -62,12 +62,12 @@ public abstract class AbsPath {
    /**
      * The date and time when the folder or file was created.
      */
-    protected Timestamp creation;
+    protected LocalDateTime creation;
 
     /**
      * The date and time when the folder or file was last modified.
      */
-    protected Timestamp lastModified;
+    protected LocalDateTime lastModified;
     
     /**
      * The name of the file excluding its extension.
