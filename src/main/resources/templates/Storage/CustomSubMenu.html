@@ -1,90 +1,100 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <title>Tailwind 우클릭 메뉴</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="h-screen bg-gray-100">
+<div 
+	xmlns:th="http://www.thymeleaf.org" 
+	th:fragment="customMenu"> 
 
-  <!-- 커스텀 우클릭 메뉴 -->
+   <!-- 커스텀 우클릭 메뉴 -->
   <ul id="contextMenu" class="absolute hidden bg-white border border-gray-300 shadow-lg rounded-md w-56 text-sm z-50">
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="handleOpen()">
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="open">
       <span class="mr-2">📂</span> 열기
     </li>
     <hr class="my-1 border-gray-200">
 
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="handleCut()">
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="cut">
       <span class="mr-2">✂️</span> 잘라내기
     </li>
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="handleCopy()">
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="copy">
       <span class="mr-2">📄</span> 복사
     </li>
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 text-gray-400 cursor-not-allowed"
-    	data-action="paste" onclick="handlePaste()">
-    	<span class="mr-2">📋</span> 붙여넣기
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 text-gray-400 cursor-not-allowed" data-action="paste">
+      <span class="mr-2">📋</span> 붙여넣기
+    </li>
+
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="rename">
+      <span class="mr-2">📄</span> 이름변경
     </li>
 
     <hr class="my-1 border-gray-200">
 
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="handleDetail()">
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="detail">
       <span class="mr-2">⚙️</span> 속성
     </li>
   </ul>
 
   <script>
   
-  function handleOpen() {
-	  if (!contextTargetNode) return;
-	  storageInstance.doDirectoryClick(contextTargetNode);
-	}
-
-	function handleCut() {
-	  if (!contextTargetNode) return;
-	  storageInstance.directoryCut(contextTargetNode);
-	}
-
-	function handleCopy() {
-	  if (!contextTargetNode) return;
-	  storageInstance.directoryCopy(contextTargetNode);
-	}
-
-	function handlePaste() {
-	  storageInstance.paste();
-	}
-	
-	function handleDetail() {
-		storageInstance.paste();
-	}
-	
-const contextMenu = document.getElementById("contextMenu");
+  console.info( 'contextMenu' );
+  const contextMenu = document.getElementById("contextMenu");
 
 
-document.addEventListener("contextmenu", (e) => {
-  e.preventDefault();
+//우클릭 메뉴 표시
+  document.addEventListener("contextmenu", function (e) {
+    const targetRow = e.target.closest("[data-node]");
+    if (!targetRow) return contextMenu.classList.add("hidden");
 
-  const nodeElem = e.target.closest("[data-node]");
-  if (!nodeElem) return;
+    e.preventDefault();
+    const rect = targetRow.getBoundingClientRect();
 
-  contextTargetNode = JSON.parse(nodeElem.dataset.node);
+    storage.selectDirectory(targetRow._nodeData);
+    contextMenu.style.top = `${e.clientY}px`;
+    contextMenu.style.left = `${e.clientX}px`;
+    contextMenu.classList.remove("hidden");
+  });
+  
+//우클릭 메뉴 이벤트 처리 예시
+  document.getElementById("contextMenu").addEventListener("click", async (e) => {
+    const action = e.target.closest("[data-action]")?.dataset?.action;
+    if (!action) return;
 
-  // 붙여넣기 활성화/비활성화 설정
-  const canPaste = storageInstance?.hasClipboardData?.() ?? false;
+    const current = storage.getSelectedDirectory();
+    if (!current) return;
 
-  const pasteItem = contextMenu.querySelector('[data-action="paste"]');
-  if (canPaste) {
-    pasteItem.classList.remove("text-gray-400", "cursor-not-allowed");
-    pasteItem.classList.add("cursor-pointer");
-  } else {
-    pasteItem.classList.add("text-gray-400", "cursor-not-allowed");
-    pasteItem.classList.remove("cursor-pointer");
-  }
-
-  contextMenu.style.top = `${e.clientY}px`;
-  contextMenu.style.left = `${e.clientX}px`;
-  contextMenu.classList.remove("hidden");
-});
-</script>
-
-</body>
-</html>
+    switch (action) {
+      case "copy": storage.copyDirectory(); break;
+      case "cut": storage.cutDirectory(); break;
+      case "paste":
+        if (storage.isClipboardAvailable()) {
+          await storage.pasteDirectory(current.owner.uid);
+          alert("붙여넣기 완료!");
+          storage.clearClipboard();
+        }
+        break;
+      case "rename":
+        const newName = prompt("새 이름을 입력하세요:", current.owner.name);
+        if (newName) alert(`이름을 '${newName}' 으로 바꿔야 합니다 (API 필요)`);
+        break;
+      case "detail":
+        alert(JSON.stringify(current.owner, null, 2));
+        break;
+      case "open":
+        alert("열기 기능은 사용자 정의에 따라 구현");
+        break;
+    }
+    updatePasteButton();
+  });
+  
+	function contextMenuHide(){
+		if (!contextMenu.classList.contains("hidden")) {
+			contextMenu.classList.add("hidden");
+		}
+  	}
+  
+  	document.addEventListener("click", (e) => {
+	  	e.preventDefault();
+		const isInsideMenu = e.target.closest("#contextMenu");
+		if (!isInsideMenu) {
+				contextMenuHide();
+		}
+    });
+  
+ 	</script>
+</div>

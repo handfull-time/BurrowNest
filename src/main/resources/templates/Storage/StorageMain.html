@@ -38,7 +38,6 @@
     <!-- Optional: Add a simple resizable script -->
     <th:script th:replace="~{Common/Script :: script}"/>
     <script th:inline="javascript">
-        const storage = new BnStorage(/*[[${directory}]]*/ null);
         const resizable = document.getElementById('resizable-left');
         
         let isResizing = false;

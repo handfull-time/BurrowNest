@@ -3,162 +3,179 @@
 	th:fragment="directories" 
 	class="p-2 text-sm bg-white text-black select-none">
   
-<div id="tree-root" class="max-w-xl mx-auto bg-white shadow rounded-lg p-4 font-mono text-sm" role="tree"></div>
+<div id="tree" class="max-w-xl mx-auto bg-white shadow rounded-lg p-4 font-mono text-sm" role="tree"></div>
 
+<div>
+    <button id="openBtn" class="px-3 py-1 bg-blue-500 text-white rounded">열기</button>
+    <button id="copyBtn" class="px-3 py-1 bg-blue-500 text-white rounded">복사</button>
+    <button id="cutBtn" class="px-3 py-1 bg-yellow-500 text-white rounded">잘라내기</button>
+    <button id="pasteBtn" class="px-3 py-1 bg-green-500 text-white rounded" disabled>붙여넣기</button>
+    <button id="renameBtn" class="px-3 py-1 bg-blue-500 text-white rounded">이름변경</button>
+    <button id="detailBtn" class="px-3 py-1 bg-blue-500 text-white rounded">속성</button>
+</div>
 
+<th:script th:replace="~{Storage/StorageScript :: script}"/>
+<th:div th:replace="~{Storage/CustomSubMenu :: customMenu}"/>
 <script th:inline="javascript">
 
-const closedFolder = `
-    <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v1H2V6z"/>
-    <path d="M2 9h16v5a2 2 0 01-2 2H4a2 2 0 01-2-2V9z"/>
-  `;
-  const openFolder = `
-    <path d="M3 4a2 2 0 012-2h4l2 2h6a2 2 0 012 2v1H3V4z"/>
-    <path d="M2 8h17l-1.5 6.5a2 2 0 01-2 1.5H5a2 2 0 01-2-2V8z"/>
-  `;
+	const closedFolder = `
+	  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v1H2V6z"/>
+	  <path d="M2 9h16v5a2 2 0 01-2 2H4a2 2 0 01-2-2V9z"/>
+	`;
+	const openFolder = `
+	  <path d="M3 4a2 2 0 012-2h4l2 2h6a2 2 0 012 2v1H3V4z"/>
+	  <path d="M2 8h17l-1.5 6.5a2 2 0 01-2 1.5H5a2 2 0 01-2-2V8z"/>
+	`;
 
-  function createTreeNode(node, parentOpened = false) {
-	  
-//	  if( typeof node.isCreated === "undefined") {
-//		  node.isCreated = true;
-//	  }
+	function createTree(directories, container, onSelect) {
+	  const rootUl = document.createElement("ul");
+	  rootUl.setAttribute("role", "tree");
+	  directories.forEach(dir => {
+	    rootUl.appendChild(createTreeNode(dir, false, onSelect));
+	  });
+	  container.innerHTML = '';
+	  container.appendChild(rootUl);
+	}
 
+	function createTreeNode(node, parentOpened = false, onSelect = () => {}) {
 	  const li = document.createElement('li');
 	  li.className = "mb-1";
 	  li.setAttribute("role", "treeitem");
-	
+
 	  const row = document.createElement('div');
 	  row.className = "flex items-center space-x-1 cursor-pointer group";
-	  row.dataset.node = "";
-	  
+	  row.dataset.node = true;
+	  row._nodeData = node;
+
 	  const chevron = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 	  chevron.setAttribute("viewBox", "0 0 24 24");
-	  chevron.setAttribute("fill", "none");
-	  chevron.setAttribute("stroke", "currentColor");
 	  chevron.setAttribute("class", "w-4 h-4 text-gray-500 transition-transform");
 	  chevron.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />`;
-	
+
 	  const folderIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 	  folderIcon.setAttribute("viewBox", "0 0 20 20");
 	  folderIcon.setAttribute("fill", "currentColor");
-	  folderIcon.setAttribute("class", "w-5 h-5 text-yellow-500 folder-icon");
+	  folderIcon.setAttribute("class", "w-5 h-5 text-yellow-500");
 	  folderIcon.innerHTML = closedFolder;
-	  folderIcon.setAttribute("aria-expanded", "false");
-	
+
 	  const label = document.createElement("span");
 	  label.textContent = node.owner.name;
 	  label.className = "folder-label";
-	
+
 	  row.appendChild(chevron);
 	  row.appendChild(folderIcon);
 	  row.appendChild(label);
 	  li.appendChild(row);
-	
+
 	  let isOpen = false;
-	
+
 	  if (node.child && node.child.length > 0) {
-		  
-	      const ul = document.createElement('ul');
-	      ul.className = "ml-6 mt-1 space-y-1 hidden";
-	      ul.dataset.childDirectories = "";
-	      
-	      node.child.forEach(child => {
-	        const childNode = createTreeNode(child);
-	        if (childNode.dataset.containsSelected === "true") {
-	            isOpen = true;
-	        }
-	        ul.appendChild(childNode);
-	      });
-	      
-	      if (isOpen || node.selected || parentOpened) {
-	          row.classList.add("open");
-	          ul.classList.remove("hidden");
-	          chevron.classList.add("rotate-90");
-	          folderIcon.innerHTML = openFolder;
-	          folderIcon.setAttribute("aria-expanded", "true");
-	          if (node.selected) {
-	              label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
-	          }
-	          li.dataset.containsSelected = "true";
-	      }
-	      
-	      li.appendChild(ul);
-	      
-	      row.addEventListener("click", (e) => {
-	          e.stopPropagation();
-	          
-	          row.classList.toggle("open");
-	          ul.classList.toggle("hidden");
-	          chevron.classList.toggle("rotate-90");
-	          folderIcon.innerHTML = row.classList.contains("open") ? openFolder : closedFolder;
-	          folderIcon.setAttribute("aria-expanded", row.classList.contains("open"));
-	          
-	          document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
-	          label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
-	          
-	          const event = new CustomEvent("treeItemClick", { detail: node });
-	  	      document.dispatchEvent(event);
-	      });
+	    const ul = document.createElement('ul');
+	    ul.className = "ml-6 mt-1 space-y-1 hidden";
+
+	    node.child.forEach(child => {
+	      const childNode = createTreeNode(child, false, onSelect);
+	      if (childNode.dataset.containsSelected === "true") isOpen = true;
+	      ul.appendChild(childNode);
+	    });
+
+	    if (isOpen || node.selected || parentOpened) {
+	      row.classList.add("open");
+	      ul.classList.remove("hidden");
+	      chevron.classList.add("rotate-90");
+	      folderIcon.innerHTML = openFolder;
+	      li.dataset.containsSelected = "true";
+	      label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+	    }
+
+	    row.addEventListener("click", (e) => {
+	      e.stopPropagation();
+	      row.classList.toggle("open");
+	      ul.classList.toggle("hidden");
+	      chevron.classList.toggle("rotate-90");
+	      folderIcon.innerHTML = row.classList.contains("open") ? openFolder : closedFolder;
+	      document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
+	      label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+	      onSelect(node);
+	    });
+
+	    li.appendChild(ul);
 	  } else {
-	      chevron.classList.add("opacity-0");
-	      if (node.selected) {
-	          label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
-	          li.dataset.containsSelected = "true";
-	      }
-	      
-	      row.addEventListener("click", (e) => {
-	          e.stopPropagation();
-	          document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
-	          label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
-	          
-	          const event = new CustomEvent("treeItemClick", { detail: node });
-	  	      document.dispatchEvent(event);
-	      });
+	    chevron.classList.add("opacity-0");
+	    row.addEventListener("click", (e) => {
+	      e.stopPropagation();
+	      document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
+	      label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+	      onSelect(node);
+	    });
 	  }
-	
+
 	  return li;
-  }
-  
-  document.addEventListener("treeItemClick", (e) => {
-	  const dir = e.detail;
-	  console.info( 'selected', dir );
-	  
-	  /* if( typeof dir.isCreated !== "undefined") {
-		  // 생성 된 데이터다.
-		  return;
-	  } */
-	  
-	  //const url = /*[[@{/Dir/Path.html}]]*/ null;
-	  //const params = new URLSearchParams({
-		//  uid: dir.uid || ''
-	  //});
-	  
-	  //window.location.href = url + '?' + params.toString();
-  });
+	}
 
+    const storage = new BnStorage();
 
-  document.addEventListener('DOMContentLoaded', function() {
-	  console.info( "여기가 시작이다." );
+    function updatePasteButton() {
+        const pasteBtn = document.getElementById("pasteBtn");
+        const pasteLi = document.querySelector("#contextMenu [data-action='paste']");
+        const available = storage.isClipboardAvailable();
 
-	  const params = new URLSearchParams({
-		  uid: data.uid || ''
-	  });
+        pasteBtn.disabled = !available;
+        pasteLi.classList.toggle("text-gray-400", !available);
+        pasteLi.classList.toggle("cursor-not-allowed", !available);
+        pasteLi.classList.toggle("cursor-pointer", available);
+    }
+
+    // 이벤트 연결
+    document.getElementById("copyBtn").addEventListener("click", () => {
+      storage.copyDirectory();
+      updatePasteButton();
+    });
+
+    document.getElementById("cutBtn").addEventListener("click", () => {
+      storage.cutDirectory();
+      updatePasteButton();
+    });
+
+    document.getElementById("pasteBtn").addEventListener("click", async () => {
+      const current = storage.getSelectedDirectory();
+      if (!current) return alert("선택된 디렉토리가 없습니다.");
+      await storage.pasteDirectory(current.owner.uid);
+      alert("붙여넣기 완료!");
+      storage.clearClipboard();
+      updatePasteButton();
+    });
+
+	document.addEventListener('DOMContentLoaded', function() {
+		console.info( "여기가 시작이다." );
+		
+		const directories = /*[[${directories}]]*/ null;
+		
+		// 디렉토리 트리 렌더링
+		createTree(directories, document.getElementById("tree"), (selected) => {
+			storage.selectDirectory(selected);
+			updatePasteButton();
+		});
+
+//	  const params = new URLSearchParams({
+//		  uid: data.uid || ''
+//	  });
       
-	  const url = /*[[@{/Dir/Path.html}]]*/ null;
-      const urlValue = url + '?' + params.toString();
+//	  const url = /*[[@{/Dir/Path.html}]]*/ null;
+//      const urlValue = url + '?' + params.toString();
       
-      // 이건 사용 기록 덮어쓰기
-	  window.history.replaceState(null, null, urlValue);
+//      // 이건 사용 기록 덮어쓰기
+//	  window.history.replaceState(null, null, urlValue);
       
       // 이건 사용 기록 추가하기.
 	  //window.history.pushState(null, null, urlValue);
 
-	  const directories = /*[[${directories}]]*/ null;
+	  //const directories = /*[[${directories}]]*/ null;
 
-	  const ul = document.createElement('ul');
-	  ul.className = "space-y-1";
-	  ul.appendChild( createTreeNode(directories) );
-	  ocument.getElementById("tree-root").appendChild(ul);
+//	  const ul = document.createElement('ul');
+//	  ul.className = "space-y-1";
+//	  ul.appendChild( createTreeNode(directories) );
+//	  ocument.getElementById("tree-root").appendChild(ul);
   });
 
 </script>
