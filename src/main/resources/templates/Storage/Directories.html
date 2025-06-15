@@ -145,7 +145,7 @@
 
     function updatePasteButton() {
         const pasteBtn = document.getElementById("pasteBtn");
-        const pasteLi = document.querySelector("#contextMenu [data-action='paste']");
+        const pasteLi = document.querySelector("#contextMenuFolder [data-action='paste']");
         const available = storage.isClipboardAvailable();
 
         pasteBtn.disabled = !available;

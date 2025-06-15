@@ -768,15 +768,15 @@
 	SELECT
 		<include refid="BnFileColumn"/>
 	FROM BN_FILE FL
-	    INNER JOIN BN_FILE_ACCESS FA ON FL.NO = FL.FILE_NO
     WHERE 1=1
-    	AND FA.GROUP_NO = #{group.groupNo}
     	AND FL.PARENT_NO = #{dirNo}
-    	<if test="group.role.name() != 'Admin' ">
+<!--
+     	<if test="group.role.name() != 'Admin' ">
     	AND FL.ENABLED = TRUE 
     	AND BITAND( FA.ACCESS_FLAGS, #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler} ) = ${@com.utime.burrowNest.storage.vo.EAccessType@Read.getBit()}
     	</if>
-    ORDER BY FL.NAME	
+ -->
+     ORDER BY FL.NAME	
 </select>
 
 <!-- dir의 Directory 목록 -->

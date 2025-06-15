@@ -47,7 +47,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Controller
-@RequestMapping("File")
+@RequestMapping("Files")
 public class FileController {
 	
 	StorageService storageService;

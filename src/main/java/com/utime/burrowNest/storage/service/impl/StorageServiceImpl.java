@@ -251,18 +251,23 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 
 	@Override
 	public List<AbsPath> getFiles(UserVo user, String uid) {
+		
+		final int groupNo = user.getGroup().getGroupNo();
 		final List<AbsPath> result = new ArrayList<>();
 		
-		final BnDirectory dir = this.storageDao.getDirectory(user, uid);
+		final DirectoryDto dir = dirManager.getDirectoryForGroup(groupNo, uid); //this.storageDao.getDirectory(user, uid);
 		if( dir == null ) {
 			return result;
 		}
 		
-		final List<BnDirectory> directories = this.storageDao.getDirectories(user, dir);
-		if( BurrowUtils.isNotEmpty(directories) )
-			result.addAll( directories );
+		List<DirectoryDto> directories = dirManager.getAccessibleChildren(groupNo, uid);
+		if( BurrowUtils.isNotEmpty(directories) ) {
+			for( DirectoryDto dto : directories ) {
+				result.add(dto.getOwner());
+			}
+		}
 
-		final List<BnFile> files = this.storageDao.getFiles(user, dir);
+		final List<BnFile> files = this.storageDao.getFiles(user, dir.getOwner());
 		if( BurrowUtils.isNotEmpty(files) )
 			result.addAll( files );
 		

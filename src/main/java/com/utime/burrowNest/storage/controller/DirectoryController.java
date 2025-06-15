@@ -8,6 +8,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.storage.service.StorageService;
@@ -15,6 +16,8 @@ import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.user.vo.UserVo;
+
+import io.jsonwebtoken.lang.Collections;
 
 @Controller
 @RequestMapping("Dir")
@@ -59,6 +62,7 @@ public class DirectoryController {
 	    return "Storage/StorageMain";
 	}
 	
+	@ResponseBody
 	@GetMapping("Parent.json")
     public BnDirectory getParent(UserVo user, @RequestParam("uid") String uid) throws Exception {
 		
@@ -71,13 +75,14 @@ public class DirectoryController {
 	    return result;
 	}
 	
+	@ResponseBody
 	@GetMapping("Files.json")
     public List<AbsPath> getFiles(UserVo user, @RequestParam("uid") String uid) throws Exception {
 		
 		final List<AbsPath> result = storageService.getFiles(user, uid);
 		
 		if( result == null ) {
-			throw new Exception("폴더 없음.");
+			return Collections.emptyList();
 		}
 	    
 	    return result;

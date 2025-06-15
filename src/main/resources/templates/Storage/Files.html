@@ -16,68 +16,188 @@
 </div>
 
 <script th:inline="javascript">
-  const fileGrid = document.getElementById('fileGrid');
-  let selectedItems = new Set();
 
-  // 파일 리스트 가져오기
-  async function loadFileList(uid) {
+let currentView = 'icon'; // 'icon' or 'detail'
+
+document.getElementById('detailViewBtn').addEventListener('click', () => {
+  currentView = 'detail';
+  renderFileList(lastFetchedList);
+});
+
+document.getElementById('iconViewBtn').addEventListener('click', () => {
+  currentView = 'icon';
+  renderFileList(lastFetchedList);
+});
+
+
+	
+	let selectedItems = new Set();
+	
+	// 파일 리스트 가져오기
+	async function loadFileList(uid) {
+		
+		console.info('loadFileList', uid );
+		
+		const url = /*[[@{/Dir/Files.json}]]*/ null;
+		
+		const params = new URLSearchParams({
+			uid: uid || ''
+		});
+		
+		const fileListUrl = url + '?' + params.toString();
+		
+		try {
+			const res = await fetch(fileListUrl);
+			const list = await res.json(); 
+			console.info( list );
+			
+			renderFileList(list);
+		} catch (err) {
+			console.error("파일 목록 불러오기 실패:", err);
+		}
+	}
+
+	function renderFileList2(list) {
+		
+		const THUMBNAIL_URL = /*[[@{/Files/Thumbnail}]]*/ "/Files/Thumbnail";
+		
+		const fileGrid = document.getElementById('fileGrid');
+		
+	    fileGrid.innerHTML = '';
+	    for (const item of list) {
+	      const isFile = item.isFile === true;
+
+	      const div = document.createElement('div');
+	      div.className = 'file-item flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer';
+	      div.dataset.uid = item.uid;
+
+	      // 항목 UI 구성
+	      let innerHTML = `
+	        <div class="w-16 h-16 bg-gray-100 rounded overflow-hidden">
+	      `;
+
+	      if (!isFile) {
+	        // 폴더
+	        innerHTML += `
+	          <div class="flex items-center justify-center h-full text-gray-500">
+	            <i class="fa-solid fa-folder fa-xl"></i>
+	          </div>
+	        `;
+	      } else {
+	        // 파일
+	        if (item.fileType === 'Image') {
+	          innerHTML += `
+	        	  <img src="${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}"
+	        	     class="w-full h-full object-cover"
+	        	     loading="lazy" />
+	          `;
+	        } else {
+	          innerHTML += `
+	            <div class="flex items-center justify-center h-full text-gray-400">
+	              <i class="fa-solid fa-file fa-lg"></i>
+	            </div>
+	          `;
+	        }
+	      }
+
+	      innerHTML += `
+	        </div>
+	        <div class="text-sm text-center mt-2 truncate w-20" title="${isFile ? item.fullName : item.name}">
+	          ${isFile ? item.fullName : item.name}
+	        </div>
+	      `;
+
+	      div.innerHTML = innerHTML;
+	      fileGrid.appendChild(div);
+	    }
+	  }
+	
+	let lastFetchedList = [];
+
+	function renderFileList(list) {
+		
+		const THUMBNAIL_URL = /*[[@{/Files/Thumbnail}]]*/ "/Files/Thumbnail";
+		
+	  lastFetchedList = list;
+	  const fileGrid = document.getElementById('fileGrid');
+	  fileGrid.innerHTML = '';
+
+	  if (currentView === 'icon') {
+	    fileGrid.className = 'grid grid-cols-10 gap-4';
+	  } else {
+	    fileGrid.className = 'flex flex-col divide-y';
+	  }
+
+	  for (const item of list) {
+	    const div = document.createElement('div');
+	    div.className = currentView === 'icon'
+	      ? 'file-item flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer'
+	      : 'file-item flex items-center justify-between px-4 py-2 hover:bg-blue-50 cursor-pointer';
+
+	    div.dataset.uid = item.uid;
+
+	    if (currentView === 'icon') {
+	      div.innerHTML = `
+	        <div class="w-16 h-16 bg-gray-100 rounded overflow-hidden">
+	          ${item.isFile && item.fileType === 'Image' 
+	            ? `<img src="${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}" class="w-full h-full object-cover" loading="lazy"/>`
+	            : `<div class="flex items-center justify-center h-full text-gray-400"><i class="fa-solid ${item.isFile ? 'fa-file' : 'fa-folder'} fa-lg"></i></div>`
+	          }
+	        </div>
+	        <div class="text-sm text-center mt-2 truncate w-20" title="${item.name}">${item.name}</div>
+	      `;
+	    } else {
+	      div.innerHTML = `
+	        <div class="flex items-center gap-3 w-full">
+	          <div class="w-6 text-center">
+	            <i class="fa-solid ${item.isFile ? 'fa-file' : 'fa-folder'}"></i>
+	          </div>
+	          <div class="flex-1 truncate">${item.name}</div>
+	          <div class="text-sm text-gray-400">${item.isFile ? formatFileSize(item.fileLength) : ''}</div>
+	        </div>
+	      `;
+	    }
+
+	    fileGrid.appendChild(div);
+	  }
+	}
+
+
+	  // Ctrl + 클릭 선택
+	  document.getElementById('fileGrid').addEventListener('click', (e) => {
+	    const item = e.target.closest('.file-item');
+	    if (!item) return;
+
+	    const uid = item.dataset.uid;
+
+	    if (e.ctrlKey) {
+	      if (selectedItems.has(uid)) {
+	        selectedItems.delete(uid);
+	        item.classList.remove('bg-blue-200');
+	      } else {
+	        selectedItems.add(uid);
+	        item.classList.add('bg-blue-200');
+	      }
+	    } else {
+	      document.querySelectorAll('.file-item').forEach(el => el.classList.remove('bg-blue-200'));
+	      selectedItems.clear();
+	      selectedItems.add(uid);
+	      item.classList.add('bg-blue-200');
+	    }
+	  });
 	  
-    try {
-      const res = await fetch("/Dir/FileList.json?uid="+ uid);
-      const list = await res.json(); // [{ name, type }, ...]
-      renderFileList(list);
-    } catch (err) {
-      console.error("파일 목록 불러오기 실패:", err);
-    }
-  }
+	  
+	  function formatFileSize(bytes) {
+		  if (bytes < 1024) return bytes + ' B';
+		  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+		  if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+		  return (bytes / 1024 / 1024 / 1024).toFixed(1) + ' GB';
+		}
 
-  function renderFileList(list) {
-    fileGrid.innerHTML = ''; // 초기화
-    for (const item of list) {
-      const div = document.createElement('div');
-      div.className = 'file-item flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer';
-      div.dataset.name = item.name;
-      div.dataset.type = item.type;
-
-      div.innerHTML = `
-        <div class="w-16 h-16 bg-gray-100 rounded overflow-hidden">
-          ${item.type === 'image'
-            ? `<img src="/thumbnail/${encodeURIComponent(item.name)}" class="w-full h-full object-cover" loading="lazy" />`
-            : `<div class="flex items-center justify-center h-full text-gray-400">
-                 <i class="fa-solid fa-file"></i>
-               </div>`
-          }
-        </div>
-        <div class="text-sm text-center mt-2 truncate w-20">${item.name}</div>
-      `;
-      fileGrid.appendChild(div);
-    }
-  }
-
-  // 선택 기능
-  fileGrid.addEventListener('click', (e) => {
-    const item = e.target.closest('.file-item');
-    if (!item) return;
-
-    const name = item.dataset.name;
-
-    if (e.ctrlKey) {
-      if (selectedItems.has(name)) {
-        selectedItems.delete(name);
-        item.classList.remove('bg-blue-200');
-      } else {
-        selectedItems.add(name);
-        item.classList.add('bg-blue-200');
-      }
-    } else {
-      document.querySelectorAll('.file-item').forEach(el => el.classList.remove('bg-blue-200'));
-      selectedItems.clear();
-      selectedItems.add(name);
-      item.classList.add('bg-blue-200');
-    }
-  });
 
 </script>
+
+<!-- <script src="https://kit.fontawesome.com/a2e0b2d4f1.js" crossorigin="anonymous"></script> -->
 
 
 </div>

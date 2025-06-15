@@ -146,18 +146,45 @@ public class DirecotryManager {
 	}
 	
 	public DirectoryDto getDirectoryForGroup(int groupNo, String uid) {
-		final Set<Long> accessibleDirs = groupDirectoryAccess.getOrDefault(groupNo, Collections.emptySet());
+	    final Set<Long> accessibleDirs = groupDirectoryAccess.getOrDefault(groupNo, Collections.emptySet());
 
-	    // 현재 디렉터리를 검사
 	    DirectoryDto dir = mapUidBnDirectory.get(uid);
-	    if (dir != null && accessibleDirs.contains(dir.getOwner().getNo())) {
-	        return dir;
+	    if (dir == null) return null;
+
+	    if (isAccessibleByParentTraversal(dir, accessibleDirs)) {
+	        return dir; // ✅ 접근 가능하면 UID에 해당하는 원래 객체를 리턴
 	    }
 
-	    // 부모 디렉터리를 재귀적으로 검사
-	    return this.findAccessibleParent(dir, accessibleDirs);
+	    return null; // 접근 불가능한 경우 null
 	}
 
+	/**
+	 * 해당 디렉터리 또는 상위 디렉터리 중 접근 가능한 것이 있는지 확인
+	 */
+	private boolean isAccessibleByParentTraversal(DirectoryDto dir, Set<Long> accessibleDirs) {
+	    while (dir != null) {
+	        if (accessibleDirs.contains(dir.getOwner().getNo())) {
+	            return true;
+	        }
+	        dir = mapDirNoBnDirectory.get(dir.getOwner().getParentNo());
+	    }
+	    return false;
+	}
+
+	
+//	public DirectoryDto getDirectoryForGroup(int groupNo, String uid) {
+//		final Set<Long> accessibleDirs = groupDirectoryAccess.getOrDefault(groupNo, Collections.emptySet());
+//
+//	    // 현재 디렉터리를 검사
+//	    DirectoryDto dir = mapUidBnDirectory.get(uid);
+//	    if (dir != null && accessibleDirs.contains(dir.getOwner().getNo())) {
+//	        return dir;
+//	    }
+//
+//	    // 부모 디렉터리를 재귀적으로 검사
+//	    return this.findAccessibleParent(dir, accessibleDirs);
+//	}
+//
 	private DirectoryDto findAccessibleParent(DirectoryDto dir, Set<Long> accessibleDirs) {
 	    if (dir == null) {
 	        return null;
@@ -252,5 +279,29 @@ public class DirecotryManager {
         Collections.reverse(paths); // 부모부터 정렬
         return paths;
     }
+    
+    /**
+     * 자식 목록 조회
+     * @param groupNo
+     * @param parentUid
+     * @return
+     */
+    public List<DirectoryDto> getAccessibleChildren(int groupNo, String parentUid) {
+        DirectoryDto parent = mapUidBnDirectory.get(parentUid);
+        if (parent == null) {
+            return Collections.emptyList();
+        }
+
+        final Set<Long> accessibleDirs = groupDirectoryAccess.getOrDefault(groupNo, Collections.emptySet());
+
+        List<DirectoryDto> result = new ArrayList<>();
+        for (DirectoryDto child : parent.getChild()) {
+            if (accessibleDirs.contains(child.getOwner().getNo())) {
+                result.add(child);
+            }
+        }
+        return result;
+    }
+
 
 }
