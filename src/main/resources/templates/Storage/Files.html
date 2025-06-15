@@ -1,374 +1,83 @@
 <div xmlns:th="http://www.thymeleaf.org" th:fragment="files"
      class="p-2 text-sm bg-white text-black select-none h-full w-full overflow-hidden">
-
-  <!-- 상단 툴바 -->
-  <div class="flex justify-between items-center mb-3">
-    <label class="inline-flex items-center">
-      <input type="checkbox" id="selectAll" class="form-checkbox">
-      <span class="ml-2">전체 선택</span>
-    </label>
-
-    <div class="flex items-center gap-2">
-      <button id="iconViewBtn" class="px-2 py-1 bg-gray-200 rounded">🔳 아이콘 보기</button>
-      <button id="listViewBtn" class="px-2 py-1 bg-blue-500 text-white rounded">📄 리스트 보기</button>
-      <label class="inline-flex items-center">
-        <input type="checkbox" id="toggleDetail" class="form-checkbox">
-        <span class="ml-2">상세 보기</span>
-      </label>
-    </div>
+<div class="w-full h-screen flex flex-col">
+  <!-- 보기 전환 버튼 -->
+  <div class="flex justify-end p-2 gap-2 border-b border-gray-300">
+    <button class="px-3 py-1 border rounded hover:bg-gray-100" id="detailViewBtn">상세보기</button>
+    <button class="px-3 py-1 border rounded hover:bg-gray-100" id="iconViewBtn">큰 아이콘 보기</button>
   </div>
 
-  <!-- 메인 콘텐츠 (파일 목록 + 상세보기 사이드바) -->
-  <div class="flex h-full">
-
-    <!-- 📁 파일 목록 영역 -->
-    <div id="fileArea" class="flex-1 overflow-auto pr-2">
-      
-      <!-- 아이콘 뷰 -->
-      <div id="iconView" class="grid grid-cols-5 gap-4 hidden"></div>
-
-      <!-- 리스트 뷰 -->
-      <table id="listView" class="min-w-full text-left border border-gray-300">
-        <thead class="bg-gray-100 text-base text-center font-semibold">
-          <tr>
-            <th class="px-3 py-2 w-10"></th>
-            <th class="px-3 py-2">파일명</th>
-            <th class="px-3 py-2">유형</th>
-            <th class="px-3 py-2">크기</th>
-            <th class="px-3 py-2">수정일</th>
-          </tr>
-        </thead>
-        <tbody id="listViewBody"></tbody>
-      </table>
+  <!-- 파일/폴더 목록 -->
+  <div class="flex-1 overflow-auto p-4">
+    <div class="grid grid-cols-10 gap-4" id="fileGrid">
+      <!-- 항목이 여기에 렌더링됨 -->
     </div>
-
-    <!-- ℹ️ 상세보기 사이드바 -->
-    <div id="detailsPanel"
-         class="w-[100px] h-full border-l border-gray-200 bg-gray-50 px-2 py-2 hidden flex-shrink-0">
-      <h4 class="font-bold mb-1 text-xs">상세</h4>
-      <div id="detailsContent" class="text-[11px] text-gray-700 leading-tight">
-        선택된 항목 없음
-      </div>
-    </div>
-
   </div>
+</div>
 
-  <!-- 🔽 파일 목록 JavaScript에 주입 -->
-  <script th:inline="javascript">
-    const fileList = /*[[${files}]]*/ [];
+<script th:inline="javascript">
+  const fileGrid = document.getElementById('fileGrid');
+  let selectedItems = new Set();
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const iconView = document.getElementById("iconView");
-      const listView = document.getElementById("listView");
-      const listViewBody = document.getElementById("listViewBody");
-      const iconBtn = document.getElementById("iconViewBtn");
-      const listBtn = document.getElementById("listViewBtn");
-      const detailToggle = document.getElementById("toggleDetail");
-      const detailPanel = document.getElementById("detailsPanel");
-      const detailsContent = document.getElementById("detailsContent");
-      const selectAll = document.getElementById("selectAll");
-
-      const renderListView = () => {
-        listViewBody.innerHTML = "";
-        fileList.forEach((file, i) => {
-          const tr = document.createElement("tr");
-          tr.className = "hover:bg-gray-50 cursor-pointer file-list-item";
-          tr.dataset.index = i;
-
-          tr.innerHTML = `
-            <td class="px-3 py-2"><input type="checkbox" class="file-checkbox" data-index="${i}"/></td>
-            <td class="px-3 py-2">${file.name}</td>
-            <td class="px-3 py-2">${file.directory ? '' : file.contentType}</td>
-            <td class="px-3 py-2">${file.directory ? '' : file.size.toLocaleString() + ' bytes'}</td>
-            <td class="px-3 py-2">${file.lastModified}</td>
-          `;
-          listViewBody.appendChild(tr);
-        });
-      };
-
-      const renderIconView = () => {
-        iconView.innerHTML = "";
-        fileList.forEach((file, i) => {
-          const div = document.createElement("div");
-          div.className = "border p-2 rounded relative cursor-pointer file-icon-item hover:bg-gray-100";
-          div.dataset.index = i;
-          div.innerHTML = `
-            <input type="checkbox" class="absolute top-1 left-1 z-10 file-checkbox" data-index="${i}" />
-            <div class="flex flex-col items-center text-center">
-              <div class="w-16 h-16 bg-gray-100 rounded flex items-center justify-center mb-2">
-                ${file.contentType.startsWith("image/") ?
-                  `<img src="/File/Open?path=${encodeURIComponent(file.name)}" class="w-full h-full object-cover rounded" />` :
-                  `<span class="text-xl">📄</span>`
-                }
-              </div>
-              <span class="truncate w-full">${file.name}</span>
-            </div>
-          `;
-          iconView.appendChild(div);
-        });
-      };
-
-      const updateDetails = (index) => {
-        const file = fileList[index];
-        if (!file) return;
-
-        detailsContent.innerHTML = `
-          <div><strong>파일명:</strong> ${file.name}</div>
-          <div><strong>유형:</strong> ${file.contentType}</div>
-          <div><strong>크기:</strong> ${file.size.toLocaleString()} bytes</div>
-          <div><strong>수정일:</strong> ${file.lastModified}</div>
-        `;
-      };
-
-      iconBtn.addEventListener("click", () => {
-        iconView.classList.remove("hidden");
-        listView.classList.add("hidden");
-        iconBtn.classList.add("bg-blue-500", "text-white");
-        listBtn.classList.remove("bg-blue-500", "text-white");
-      });
-
-      listBtn.addEventListener("click", () => {
-        listView.classList.remove("hidden");
-        iconView.classList.add("hidden");
-        listBtn.classList.add("bg-blue-500", "text-white");
-        iconBtn.classList.remove("bg-blue-500", "text-white");
-      });
-
-      detailToggle.addEventListener("change", () => {
-        detailPanel.classList.toggle("hidden", !detailToggle.checked);
-      });
-
-      selectAll.addEventListener("change", () => {
-        document.querySelectorAll(".file-checkbox").forEach(cb => {
-          cb.checked = selectAll.checked;
-        });
-      });
-
-      // 전체 클릭 핸들링
-      document.addEventListener("click", (e) => {
-        const item = e.target.closest(".file-list-item, .file-icon-item");
-        if (item) {
-          const index = item.dataset.index;
-          updateDetails(index);
-        }
-      });
-
-      // 초기 렌더링
-      renderListView();
-      renderIconView();
-    });
-    
- 	// 더블 클릭: 폴더면 이동
-    document.addEventListener("dblclick", (e) => {
-      const item = e.target.closest(".file-list-item, .file-icon-item");
-      if (!item) return;
-
-      const index = item.dataset.index;
-      const file = fileList[index];
-      if (!file) return;
-
-      const basePath = /*[[${path}]]*/ null;
-
-      if (file.directory) {
-        // 폴더일 경우 경로 이동
-        const url = /*[[@{/Dir/Path.html}]]*/ null;
-        
-        let pathUrl = basePath.endsWith("/") ? basePath : basePath + "/";
-        pathUrl += file.name;
-        
-        // 중복된 슬래시 제거 (예: // -> /)
-        pathUrl = pathUrl.replace(/\/{2,}/g, "/");
-
-        window.location.href =`${url}?path=${encodeURIComponent(pathUrl)}`;
-      }else{
-    	// 📄 파일 → 브라우저에서 열기
-    	const openUrl = /*[[@{/File/Open}]]*/ null;
-    	const fullPath = `${basePath.replace(/\/$/, "")}/${file.name}`.replace(/\/{2,}/g, "/");
-    	window.open(`${openUrl}?path=${encodeURIComponent(fullPath)}`, '_blank');
-      }
-    });
-
-    
-    document.getElementById("downloadBtn").addEventListener("click", () => {
-   	  const checked = Array.from(document.querySelectorAll(".file-checkbox:checked"));
-   	  if (checked.length === 0) {
-   	    alert("다운로드할 항목을 선택하세요.");
-   	    return;
-   	  }
-   	  
-   	  const selectedItems = checked.map(el => fileList[el.dataset.index]);
-   	  const basePath = /*[[${path}]]*/ null;
-
-   	  const hasFolder = selectedItems.some(f => f.directory);
-
-   	  if (hasFolder) {
-   	    // 폴더 포함 → 압축 다운로드
-   	    const paths = selectedItems.map(f => `${basePath}/${f.name}`.replace(/\/{2,}/g, "/"));
-   	    const url = /*[[@{/File/ZipDownload}]]*/ null;
-   	    const fullUrl = `${url}?paths=${encodeURIComponent(JSON.stringify(paths))}`;
-   	    window.location.href = fullUrl;
-   	  } else {
-   	    // 파일만 → 개별 다운로드
-   	    const url = /*[[@{/File/Download}]]*/ null;
-   	    selectedItems.forEach(file => {
-   	      const fullPath = `${basePath}/${file.name}`.replace(/\/{2,}/g, "/");
-   	      const link = document.createElement("a");
-   	      link.href = `${url}?path=${encodeURIComponent(fullPath)}`;
-   	      link.download = file.name;
-   	      document.body.appendChild(link);
-   	      link.click();
-   	      document.body.removeChild(link);
-   	    });
-   	  }
-   	});
-
-    const pasteBtn = document.getElementById("pasteBtn");
-
-    // 세션 스토리지 키
-    const STORAGE_KEY = "burrowClipboard";
-
-    // 선택된 파일 목록 가져오기
-    function getSelectedFiles() {
-      return Array.from(document.querySelectorAll(".file-checkbox:checked"))
-        .map(cb => fileList[cb.dataset.index]);
+  // 파일 리스트 가져오기
+  async function loadFileList(uid) {
+	  
+    try {
+      const res = await fetch("/Dir/FileList.json?uid="+ uid);
+      const list = await res.json(); // [{ name, type }, ...]
+      renderFileList(list);
+    } catch (err) {
+      console.error("파일 목록 불러오기 실패:", err);
     }
+  }
 
-    // 세션에 복사/자르기 정보 저장
-    function storeClipboard(operation, items) {
-      
-      const basePath = /*[[${path}]]*/ null;
-      const payload = {
-        type: operation, // 'copy' or 'cut'
-        path: basePath,
-        items
-      };
-      
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      
-      updatePasteButton();
+  function renderFileList(list) {
+    fileGrid.innerHTML = ''; // 초기화
+    for (const item of list) {
+      const div = document.createElement('div');
+      div.className = 'file-item flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer';
+      div.dataset.name = item.name;
+      div.dataset.type = item.type;
+
+      div.innerHTML = `
+        <div class="w-16 h-16 bg-gray-100 rounded overflow-hidden">
+          ${item.type === 'image'
+            ? `<img src="/thumbnail/${encodeURIComponent(item.name)}" class="w-full h-full object-cover" loading="lazy" />`
+            : `<div class="flex items-center justify-center h-full text-gray-400">
+                 <i class="fa-solid fa-file"></i>
+               </div>`
+          }
+        </div>
+        <div class="text-sm text-center mt-2 truncate w-20">${item.name}</div>
+      `;
+      fileGrid.appendChild(div);
     }
+  }
 
-    // 붙여넣기 버튼 활성화/비활성화
-    function updatePasteButton() {
-      const hasData = sessionStorage.getItem(STORAGE_KEY) !== null;
-      
-      if (hasData) {
-    	  pasteBtn.disabled = false;
-    	  pasteBtn.classList.remove("bg-gray-200", "text-gray-400", "cursor-not-allowed", "hover:bg-gray-200");
-    	  pasteBtn.classList.add("bg-white", "text-black", "cursor-pointer", "hover:bg-gray-100");
-	  } else {
-    	  pasteBtn.disabled = true;
-    	  pasteBtn.classList.add("bg-gray-200", "text-gray-400", "cursor-not-allowed", "hover:bg-gray-200");
-    	  pasteBtn.classList.remove("bg-white", "text-black", "cursor-pointer", "hover:bg-gray-100");
+  // 선택 기능
+  fileGrid.addEventListener('click', (e) => {
+    const item = e.target.closest('.file-item');
+    if (!item) return;
+
+    const name = item.dataset.name;
+
+    if (e.ctrlKey) {
+      if (selectedItems.has(name)) {
+        selectedItems.delete(name);
+        item.classList.remove('bg-blue-200');
+      } else {
+        selectedItems.add(name);
+        item.classList.add('bg-blue-200');
       }
+    } else {
+      document.querySelectorAll('.file-item').forEach(el => el.classList.remove('bg-blue-200'));
+      selectedItems.clear();
+      selectedItems.add(name);
+      item.classList.add('bg-blue-200');
     }
+  });
 
-    // 초기 상태 확인
-    updatePasteButton();
+</script>
 
-    document.getElementById("copyBtn").addEventListener("click", () => {
-      const selected = getSelectedFiles();
-      if (selected.length === 0) {
-        alert("복사할 항목을 선택하세요.");
-        return;
-      }
-      storeClipboard("copy", selected);
-    });
 
-    document.getElementById("cutBtn").addEventListener("click", () => {
-      const selected = getSelectedFiles();
-      if (selected.length === 0) {
-        alert("자르기할 항목을 선택하세요.");
-        return;
-      }
-      storeClipboard("cut", selected);
-    });
-
-    pasteBtn.addEventListener("click", async () => {
-      const data = sessionStorage.getItem(STORAGE_KEY);
-      if (!data) {
-        alert("붙여넣기할 항목이 없습니다.");
-        return;
-      }
-
-      const { type, path: fromPath, items } = JSON.parse(data);
-      const toPath = /*[[${path}]]*/ null;
-
-      try {
-        const res = await fetch(/*[[@{/File/Paste.json}]]*/ null, {
-          method: "POST",
-          credentials: "include", // 쿠키 포함
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ type, fromPath, toPath, items })
-        });
-
-        const result = await res.json();
-        if (result.code === "0") {
-          alert("붙여넣기 완료");
-          sessionStorage.removeItem(STORAGE_KEY);
-          updatePasteButton();
-          location.reload();
-        } else {
-          alert("붙여넣기 실패: " + result.message);
-        }
-      } catch (e) {
-        console.error("붙여넣기 오류", e);
-        alert("붙여넣기 중 오류가 발생했습니다.");
-      }
-    });
-    
-    document.getElementById("deleteBtn").addEventListener("click", async () => {
-
-    	const targets = getSelectedFiles();
-    	  if (targets.length === 0) {
-      	    alert("삭제할 항목을 선택해주세요.");
-      	    return;
-      	  }
-
-    	  let confirmMessage = "";
-    	  if (targets.length === 1) {
-    	    confirmMessage = `'${targets[0].name}' 파일을 삭제하시겠습니까?`;
-    	  } else {
-    	    confirmMessage = `'${targets[0].name}' 외 ${targets.length - 1}개 항목을 삭제하시겠습니까?`;
-    	  }
-
-    	  if (!confirm(confirmMessage)) return;
-    	  
-    	  const path = /*[[${path}]]*/ null;
-    	  
-    	  console.info( JSON.stringify(targets.map(file => ({
-    	      name: file.name,
-    	      isDirectory: file.directory
-    	    })) ));
-    	  
-    	  const url = /*[[@{/File/Delete.json}]]*/ null;
-
-    	  const response = await fetch( url + `?path=${encodeURIComponent(path)}`, {
-    	    method: "POST",
-    	    credentials: "include", // 쿠키 포함
-    	    headers: {
-    	      "Content-Type": "application/json"
-    	    },
-    	    body: JSON.stringify(targets.map(file => ({
-    	      name: file.name,
-    	      isDirectory: file.directory
-    	    })))
-    	  });
-
-    	  if (response.ok) {
-    	    const result = await response.json();
-    	    if (result.code === "0" ) {
-    	      alert("삭제가 완료되었습니다.");
-    	      window.location.reload();
-    	    } else {
-    	      alert("삭제 실패: " + result.message);
-    	    }
-    	  } else {
-    	    alert("서버 요청 실패");
-    	  }
-    	});
-
-  </script>
 </div>

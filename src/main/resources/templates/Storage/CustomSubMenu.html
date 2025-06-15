@@ -3,7 +3,7 @@
 	th:fragment="customMenu"> 
 
    <!-- 커스텀 우클릭 메뉴 -->
-  <ul id="contextMenu" class="absolute hidden bg-white border border-gray-300 shadow-lg rounded-md w-56 text-sm z-50">
+  <ul id="contextMenuFolder" class="absolute hidden bg-white border border-gray-300 shadow-lg rounded-md w-56 text-sm z-50">
     <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="open">
       <span class="mr-2">📂</span> 열기
     </li>
@@ -32,26 +32,24 @@
 
   <script>
   
-  console.info( 'contextMenu' );
-  const contextMenu = document.getElementById("contextMenu");
-
+  const contextMenuFolder = document.getElementById("contextMenuFolder");
 
 //우클릭 메뉴 표시
-  document.addEventListener("contextmenu", function (e) {
+  document.addEventListener("contextMenu", function (e) {
     const targetRow = e.target.closest("[data-node]");
-    if (!targetRow) return contextMenu.classList.add("hidden");
+    if (!targetRow) return contextMenuFolder.classList.add("hidden");
 
     e.preventDefault();
     const rect = targetRow.getBoundingClientRect();
 
     storage.selectDirectory(targetRow._nodeData);
-    contextMenu.style.top = `${e.clientY}px`;
-    contextMenu.style.left = `${e.clientX}px`;
-    contextMenu.classList.remove("hidden");
+    contextMenuFolder.style.top = `${e.clientY}px`;
+    contextMenuFolder.style.left = `${e.clientX}px`;
+    contextMenuFolder.classList.remove("hidden");
   });
   
 //우클릭 메뉴 이벤트 처리 예시
-  document.getElementById("contextMenu").addEventListener("click", async (e) => {
+  document.getElementById("contextMenuFolder").addEventListener("click", async (e) => {
     const action = e.target.closest("[data-action]")?.dataset?.action;
     if (!action) return;
 
@@ -82,17 +80,18 @@
     updatePasteButton();
   });
   
-	function contextMenuHide(){
-		if (!contextMenu.classList.contains("hidden")) {
-			contextMenu.classList.add("hidden");
+	function contextMenuFolderHide(){
+		if (!contextMenuFolder.classList.contains("hidden")) {
+			contextMenuFolder.classList.add("hidden");
 		}
   	}
   
   	document.addEventListener("click", (e) => {
 	  	e.preventDefault();
-		const isInsideMenu = e.target.closest("#contextMenu");
+	  	
+		const isInsideMenu = e.target.closest("#contextMenuFolder");
 		if (!isInsideMenu) {
-				contextMenuHide();
+			contextMenuFolderHide();
 		}
     });
   

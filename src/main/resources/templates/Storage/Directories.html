@@ -22,6 +22,7 @@
 	  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v1H2V6z"/>
 	  <path d="M2 9h16v5a2 2 0 01-2 2H4a2 2 0 01-2-2V9z"/>
 	`;
+	
 	const openFolder = `
 	  <path d="M3 4a2 2 0 012-2h4l2 2h6a2 2 0 012 2v1H3V4z"/>
 	  <path d="M2 8h17l-1.5 6.5a2 2 0 01-2 1.5H5a2 2 0 01-2-2V8z"/>
@@ -173,25 +174,13 @@
       updatePasteButton();
     });
     
-    function updateSelected(nodes, selectedUid) {
-    	nodes.forEach(directory => {
-            if (directory.owner.uid === selectedUid) {
-                directory.selected = true;
-            }
-            if (directory.child && directory.child.length > 0) {
-                updateSelected(directory.child, selectedUid);
-            }
-        });
-    }
-
 	document.addEventListener('DOMContentLoaded', function() {
 		console.info( "여기가 시작이다." );
 		
 		const directories = /*[[${directories}]]*/ null;
 		
 	    // 초기 선택 처리
-	    //const selectedUid = /*[[${selectedUid}]]*/ null;
-	    const selectedUid = '9e9e5a2b-a0fc-42a7-8ab0-137897bb76c9';
+	    const selectedUid = /*[[${selectedUid}]]*/ null;
 	    if( selectedUid !== null ){
 		    const selectedNode = findNodeByUid(directories, selectedUid);
 		    if (selectedNode) {
@@ -200,10 +189,9 @@
 	    }
 	    
 	    const node = findSelectedNode( directories );
-	    console.info( node.owner.name );
-	    
-	    //updateSelected(directories, selectedUid);
-
+	    if( node != null ){
+	    	console.info( 'Selected Node' , node.owner.name );
+	    }
 		
 		// 디렉토리 트리 렌더링
 		createTree(directories, document.getElementById("tree"), (selected) => {
@@ -211,6 +199,7 @@
 			
 			storage.selectDirectory(selected);
 			updatePasteButton();
+			loadFileList( selected.owner.uid );
 		});
 		
 		// uid로 선택된 노드를 찾기

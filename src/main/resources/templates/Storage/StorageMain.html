@@ -25,11 +25,10 @@
 		<div id="resizable-left"
 		     class="w-1/4 min-w-[150px] max-w-[500px] resize-x overflow-auto border-r border-gray-300">
 		  <div th:insert="~{Storage/Directories :: directories}"></div>
-		  <!-- <script th:replace="~{Storage/Directories :: script}"></script> -->
 		</div>
 
         <!-- Files List -->
-        <!-- <div class="flex-1 overflow-auto" th:replace="~{Storage/Files :: files}"></div> -->
+        <div class="flex-1 overflow-auto" th:replace="~{Storage/Files :: files}"></div>
     </div>
 
     <!-- Footer -->
