@@ -15,6 +15,28 @@
   </div>
 </div>
 
+<!-- 아이콘 보기용 템플릿 -->
+<template id="fileItemIconTemplate">
+  <div class="file-item flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer">
+    <div class="thumb w-16 h-16 bg-gray-100 rounded overflow-hidden">
+      <img class="thumb-img w-full h-full object-cover hidden" loading="lazy" />
+      <i class="icon fa-solid fa-file text-gray-400 text-xl flex items-center justify-center h-full"></i>
+    </div>
+    <div class="file-name text-sm text-center mt-2 truncate w-20"></div>
+  </div>
+</template>
+
+<!-- 상세 보기용 템플릿 (table row) -->
+<template id="fileItemDetailTemplate">
+  <tr class="file-item hover:bg-blue-50 cursor-pointer">
+    <td class="w-8 text-center">
+      <i class="icon fa-solid fa-file text-gray-400"></i>
+    </td>
+    <td class="file-name text-left"></td>
+    <td class="file-size text-right text-sm text-gray-500 pr-4"></td>
+  </tr>
+</template>
+
 <script th:inline="javascript">
 
 let currentView = 'icon'; // 'icon' or 'detail'
@@ -57,67 +79,20 @@ document.getElementById('iconViewBtn').addEventListener('click', () => {
 		}
 	}
 
-	function renderFileList2(list) {
-		
-		const THUMBNAIL_URL = /*[[@{/Files/Thumbnail}]]*/ "/Files/Thumbnail";
-		
-		const fileGrid = document.getElementById('fileGrid');
-		
-	    fileGrid.innerHTML = '';
-	    for (const item of list) {
-	      const isFile = item.isFile === true;
-
-	      const div = document.createElement('div');
-	      div.className = 'file-item flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer';
-	      div.dataset.uid = item.uid;
-
-	      // 항목 UI 구성
-	      let innerHTML = `
-	        <div class="w-16 h-16 bg-gray-100 rounded overflow-hidden">
-	      `;
-
-	      if (!isFile) {
-	        // 폴더
-	        innerHTML += `
-	          <div class="flex items-center justify-center h-full text-gray-500">
-	            <i class="fa-solid fa-folder fa-xl"></i>
-	          </div>
-	        `;
-	      } else {
-	        // 파일
-	        if (item.fileType === 'Image') {
-	          innerHTML += `
-	        	  <img src="${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}"
-	        	     class="w-full h-full object-cover"
-	        	     loading="lazy" />
-	          `;
-	        } else {
-	          innerHTML += `
-	            <div class="flex items-center justify-center h-full text-gray-400">
-	              <i class="fa-solid fa-file fa-lg"></i>
-	            </div>
-	          `;
-	        }
-	      }
-
-	      innerHTML += `
-	        </div>
-	        <div class="text-sm text-center mt-2 truncate w-20" title="${isFile ? item.fullName : item.name}">
-	          ${isFile ? item.fullName : item.name}
-	        </div>
-	      `;
-
-	      div.innerHTML = innerHTML;
-	      fileGrid.appendChild(div);
-	    }
-	  }
-	
+	const THUMBNAIL_URL = /*[[@{/Files/Thumbnail}]]*/ '/Files/Thumbnail';
 	let lastFetchedList = [];
 
+	document.getElementById('detailViewBtn').addEventListener('click', () => {
+	  currentView = 'detail';
+	  renderFileList(lastFetchedList);
+	});
+
+	document.getElementById('iconViewBtn').addEventListener('click', () => {
+	  currentView = 'icon';
+	  renderFileList(lastFetchedList);
+	});
+
 	function renderFileList(list) {
-		
-		const THUMBNAIL_URL = /*[[@{/Files/Thumbnail}]]*/ "/Files/Thumbnail";
-		
 	  lastFetchedList = list;
 	  const fileGrid = document.getElementById('fileGrid');
 	  fileGrid.innerHTML = '';
@@ -125,40 +100,51 @@ document.getElementById('iconViewBtn').addEventListener('click', () => {
 	  if (currentView === 'icon') {
 	    fileGrid.className = 'grid grid-cols-10 gap-4';
 	  } else {
-	    fileGrid.className = 'flex flex-col divide-y';
+	    fileGrid.className = '';
+	    const table = document.createElement('table');
+	    table.className = 'table-auto w-full text-sm';
+	    const tbody = document.createElement('tbody');
+	    fileGrid.appendChild(table);
+	    table.appendChild(tbody);
 	  }
 
 	  for (const item of list) {
-	    const div = document.createElement('div');
-	    div.className = currentView === 'icon'
-	      ? 'file-item flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer'
-	      : 'file-item flex items-center justify-between px-4 py-2 hover:bg-blue-50 cursor-pointer';
-
-	    div.dataset.uid = item.uid;
-
 	    if (currentView === 'icon') {
-	      div.innerHTML = `
-	        <div class="w-16 h-16 bg-gray-100 rounded overflow-hidden">
-	          ${item.isFile && item.fileType === 'Image' 
-	            ? `<img src="${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}" class="w-full h-full object-cover" loading="lazy"/>`
-	            : `<div class="flex items-center justify-center h-full text-gray-400"><i class="fa-solid ${item.isFile ? 'fa-file' : 'fa-folder'} fa-lg"></i></div>`
-	          }
-	        </div>
-	        <div class="text-sm text-center mt-2 truncate w-20" title="${item.name}">${item.name}</div>
-	      `;
-	    } else {
-	      div.innerHTML = `
-	        <div class="flex items-center gap-3 w-full">
-	          <div class="w-6 text-center">
-	            <i class="fa-solid ${item.isFile ? 'fa-file' : 'fa-folder'}"></i>
-	          </div>
-	          <div class="flex-1 truncate">${item.name}</div>
-	          <div class="text-sm text-gray-400">${item.isFile ? formatFileSize(item.fileLength) : ''}</div>
-	        </div>
-	      `;
-	    }
+	      const template = document.getElementById('fileItemIconTemplate');
+	      const clone = template.content.cloneNode(true);
+	      const root = clone.querySelector('.file-item');
+	      const img = clone.querySelector('.thumb-img');
+	      const icon = clone.querySelector('.icon');
+	      const nameDiv = clone.querySelector('.file-name');
 
-	    fileGrid.appendChild(div);
+	      root.dataset.uid = item.uid;
+	      nameDiv.textContent = item.name;
+
+	      if (item.isFile && item.fileType === 'Image') {
+	        img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
+	        img.classList.remove('hidden');
+	        icon.remove();
+	      } else {
+	        icon.className = `icon fa-solid ${item.isFile ? 'fa-file' : 'fa-folder'} text-gray-400 text-xl`;
+	      }
+
+	      fileGrid.appendChild(clone);
+	    } else {
+	      const template = document.getElementById('fileItemDetailTemplate');
+	      const clone = template.content.cloneNode(true);
+	      const row = clone.querySelector('.file-item');
+	      const icon = clone.querySelector('.icon');
+	      const nameTd = clone.querySelector('.file-name');
+	      const sizeTd = clone.querySelector('.file-size');
+
+	      row.dataset.uid = item.uid;
+	      nameTd.textContent = item.name;
+	      sizeTd.textContent = item.isFile ? formatFileSize(item.fileLength) : '';
+
+	      icon.className = `icon fa-solid ${item.isFile ? 'fa-file' : 'fa-folder'} text-gray-400`;
+
+	      fileGrid.querySelector('tbody').appendChild(clone);
+	    }
 	  }
 	}
 
