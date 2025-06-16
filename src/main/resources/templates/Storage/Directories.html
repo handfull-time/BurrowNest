@@ -5,6 +5,23 @@
   
 <div id="tree" class="max-w-xl mx-auto bg-white shadow rounded-lg p-4 font-mono text-sm" role="tree"></div>
 
+<template id="treeNodeTemplate">
+  <li class="mb-1" role="treeitem">
+    <div class="flex items-center space-x-1 cursor-pointer group" data-node="true">
+      <svg class="chevron w-4 h-4 text-gray-500 transition-transform"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 5l7 7-7 7"/>
+      </svg>
+      <svg class="folder-icon w-5 h-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+        <!-- 아이콘은 JS에서 open/close 교체 -->
+      </svg>
+      <span class="folder-label"></span>
+    </div>
+  </li>
+</template>
+
+
 <div>
     <button id="openBtn" class="px-3 py-1 bg-blue-500 text-white rounded">열기</button>
     <button id="copyBtn" class="px-3 py-1 bg-blue-500 text-white rounded">복사</button>
@@ -28,118 +45,101 @@
 	  <path d="M2 8h17l-1.5 6.5a2 2 0 01-2 1.5H5a2 2 0 01-2-2V8z"/>
 	`;
 
-	function createTree(directories, container, onSelect) {
+	function createTree(directories, container) {
 	  const rootUl = document.createElement("ul");
 	  rootUl.setAttribute("role", "tree");
 	  directories.forEach(dir => {
-	    rootUl.appendChild(createTreeNode(dir, false, onSelect));
+	    rootUl.appendChild(createTreeNode(dir, false));
 	  });
 	  container.innerHTML = '';
 	  container.appendChild(rootUl);
 	}
+	
+	function createTreeNode(node, parentOpened = false) {
+	  const template = document.getElementById("treeNodeTemplate");
+	  const clone = template.content.cloneNode(true);
+	  const li = clone.querySelector('li');
+	  const row = clone.querySelector('[data-node]');
+	  const chevron = clone.querySelector('.chevron');
+	  const folderIcon = clone.querySelector('.folder-icon');
+	  const label = clone.querySelector('.folder-label');
 
-    // createTreeNode 함수 내부에서 selected 전파 및 open 처리
-    function createTreeNode(node, parentOpened = false, onSelect) {
-      const li = document.createElement('li');
-      li.className = "mb-1";
-      li.setAttribute("role", "treeitem");
+	  row._nodeData = node;
+	  label.textContent = node.owner.name;
 
-      const row = document.createElement('div');
-      row.className = "flex items-center space-x-1 cursor-pointer group";
-      row.setAttribute("data-node", "true");
-      row._nodeData = node;
+	  let isOpen = false;
 
-      const chevron = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      chevron.setAttribute("viewBox", "0 0 24 24");
-      chevron.setAttribute("fill", "none");
-      chevron.setAttribute("stroke", "currentColor");
-      chevron.setAttribute("class", "w-4 h-4 text-gray-500 transition-transform");
-      chevron.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />`;
+	  if (node.child && node.child.length > 0) {
+	    const ul = document.createElement('ul');
+	    ul.className = "ml-6 mt-1 space-y-1 hidden";
+	    ul.dataset.childDirectories = "";
 
-      const folderIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      folderIcon.setAttribute("viewBox", "0 0 20 20");
-      folderIcon.setAttribute("fill", "currentColor");
-      folderIcon.setAttribute("class", "w-5 h-5 text-yellow-500 folder-icon");
-      folderIcon.innerHTML = closedFolder;
-      folderIcon.setAttribute("aria-expanded", "false");
+	    node.child.forEach(child => {
+	      const childNode = createTreeNode(child, false);
+	      if (childNode?.dataset?.containsSelected === "true") {
+	        isOpen = true;
+	      }
+	      ul.appendChild(childNode);
+	    });
 
-      const label = document.createElement("span");
-      label.textContent = node.owner.name;
-      label.className = "folder-label";
+	    if (isOpen || node.selected || parentOpened) {
+	      row.classList.add("open");
+	      ul.classList.remove("hidden");
+	      chevron.classList.add("rotate-90");
+	      folderIcon.innerHTML = openFolder;
+	      folderIcon.setAttribute("aria-expanded", "true");
 
-      row.appendChild(chevron);
-      row.appendChild(folderIcon);
-      row.appendChild(label);
-      li.appendChild(row);
+	      if (node.selected) {
+	        label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+	      }
 
-      let isOpen = false;
+	      li.dataset.containsSelected = "true";
+	    } else {
+	      folderIcon.innerHTML = closedFolder;
+	      folderIcon.setAttribute("aria-expanded", "false");
+	    }
 
-      if (node.child && node.child.length > 0) {
-        const ul = document.createElement('ul');
-        ul.className = "ml-6 mt-1 space-y-1 hidden";
-        ul.dataset.childDirectories = "";
+	    li.appendChild(ul);
 
-        node.child.forEach(child => {
-          const childNode = createTreeNode(child, false, onSelect);
-          if (childNode?.dataset?.containsSelected === "true") {
-            isOpen = true;
-          }
-          ul.appendChild(childNode);
-        });
+	    row.addEventListener("click", (e) => {
+	      e.stopPropagation();
+	      row.classList.toggle("open");
+	      ul.classList.toggle("hidden");
+	      chevron.classList.toggle("rotate-90");
+	      const isNowOpen = row.classList.contains("open");
+	      folderIcon.innerHTML = isNowOpen ? openFolder : closedFolder;
+	      folderIcon.setAttribute("aria-expanded", isNowOpen);
 
-        if (isOpen || node.selected || parentOpened) {
-          row.classList.add("open");
-          ul.classList.remove("hidden");
-          chevron.classList.add("rotate-90");
-          folderIcon.innerHTML = openFolder;
-          folderIcon.setAttribute("aria-expanded", "true");
+	      document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
+	      label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
 
-          if (node.selected) {
-            label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
-          }
+	      if (onSelected) onSelected(node);
+	    });
+	  } else {
+	    chevron.classList.add("opacity-0");
+	    folderIcon.innerHTML = closedFolder;
+	    folderIcon.setAttribute("aria-expanded", "false");
 
-          li.dataset.containsSelected = "true";
-        }
+	    if (node.selected) {
+	      label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+	      li.dataset.containsSelected = "true";
+	    }
 
-        li.appendChild(ul);
+	    row.addEventListener("click", (e) => {
+	      e.stopPropagation();
+	      document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
+	      label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
 
-        row.addEventListener("click", (e) => {
-          e.stopPropagation();
-          row.classList.toggle("open");
-          ul.classList.toggle("hidden");
-          chevron.classList.toggle("rotate-90");
-          folderIcon.innerHTML = row.classList.contains("open") ? openFolder : closedFolder;
-          folderIcon.setAttribute("aria-expanded", row.classList.contains("open"));
+	      if (onSelected) onSelected(node);
+	    });
+	  }
 
-          document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
-          label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+	  if (node.selected && onSelected) {
+	    setTimeout(() => onSelected(node), 0);
+	  }
 
-          if (onSelect) onSelect(node);
-        });
-      } else {
-        chevron.classList.add("opacity-0");
-
-        if (node.selected) {
-          label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
-          li.dataset.containsSelected = "true";
-        }
-
-        row.addEventListener("click", (e) => {
-          e.stopPropagation();
-          document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
-          label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
-
-          if (onSelect) onSelect(node);
-        });
-      }
-      
-      if (node.selected && onSelect) {
-        setTimeout(() => onSelect(node), 0);
-      }
-
-      return li;
-    }
-
+	  return li;
+	}
 
     const storage = new BnStorage();
 
@@ -173,6 +173,14 @@
       storage.clearClipboard();
       updatePasteButton();
     });
+
+    function onSelected( selected ){
+    	console.info( 'selected', selected.owner.name );
+		
+		storage.selectDirectory(selected);
+		updatePasteButton();
+		loadFileList( selected.owner.uid );
+    }
     
 	document.addEventListener('DOMContentLoaded', function() {
 		console.info( "여기가 시작이다." );
@@ -194,13 +202,7 @@
 	    }
 		
 		// 디렉토리 트리 렌더링
-		createTree(directories, document.getElementById("tree"), (selected) => {
-			console.info( 'selected', selected.owner.name );
-			
-			storage.selectDirectory(selected);
-			updatePasteButton();
-			loadFileList( selected.owner.uid );
-		});
+		createTree(directories, document.getElementById("tree"));
 		
 		// uid로 선택된 노드를 찾기
 	    function findNodeByUid(nodes, uid) {

@@ -170,7 +170,7 @@ public class DirecotryManager {
 	    }
 	    return false;
 	}
-
+	
 	
 //	public DirectoryDto getDirectoryForGroup(int groupNo, String uid) {
 //		final Set<Long> accessibleDirs = groupDirectoryAccess.getOrDefault(groupNo, Collections.emptySet());
@@ -287,21 +287,24 @@ public class DirecotryManager {
      * @return
      */
     public List<DirectoryDto> getAccessibleChildren(int groupNo, String parentUid) {
-        DirectoryDto parent = mapUidBnDirectory.get(parentUid);
+        final Set<Long> accessibleDirs = groupDirectoryAccess.getOrDefault(groupNo, Collections.emptySet());
+
+        final DirectoryDto parent = mapUidBnDirectory.get(parentUid);
         if (parent == null) {
             return Collections.emptyList();
         }
 
-        final Set<Long> accessibleDirs = groupDirectoryAccess.getOrDefault(groupNo, Collections.emptySet());
-
-        List<DirectoryDto> result = new ArrayList<>();
-        for (DirectoryDto child : parent.getChild()) {
-            if (accessibleDirs.contains(child.getOwner().getNo())) {
-                result.add(child);
-            }
+        // ✅ 상위 디렉터리를 따라가며 접근 가능한 디렉터리가 있는지 확인
+        if (!isAccessibleByParentTraversal(parent, accessibleDirs)) {
+            return Collections.emptyList();
         }
+
+        final List<DirectoryDto> result = new ArrayList<>();
+        result.addAll(parent.getChild());
+        
         return result;
     }
+
 
 
 }

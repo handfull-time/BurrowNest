@@ -28,13 +28,30 @@
 
 <!-- 상세 보기용 템플릿 (table row) -->
 <template id="fileItemDetailTemplate">
-  <tr class="file-item hover:bg-blue-50 cursor-pointer">
-    <td class="w-8 text-center">
-      <i class="icon fa-solid fa-file text-gray-400"></i>
-    </td>
-    <td class="file-name text-left"></td>
-    <td class="file-size text-right text-sm text-gray-500 pr-4"></td>
+  <tr class="file-item">
+    <td class="border p-2 text-center"><i class="icon fa-solid"></i></td>
+    <td class="border p-2 text-left file-name"></td>
+    <td class="border p-2 text-center file-date"></td>
+    <td class="border p-2 text-center file-type"></td>
+    <td class="border p-2 text-right file-size"></td>
   </tr>
+</template>
+
+<!-- 상세 보기용 템플릿 (table row) -->
+<template id="fileItemDetailTableTemplate">
+	<table class="table-auto w-full border-collapse border border-gray-200 text-sm">
+        <thead>
+            <tr class="bg-gray-100">
+                <th class="border p-2 text-center"></th>
+                <th class="border p-2 text-center">이름</th>
+                <th class="border p-2 text-center">수정날짜</th>
+                <th class="border p-2 text-center">유형</th>
+                <th class="border p-2 text-center">크기</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
 </template>
 
 <script th:inline="javascript">
@@ -92,65 +109,81 @@ document.getElementById('iconViewBtn').addEventListener('click', () => {
 	  renderFileList(lastFetchedList);
 	});
 
+	
 	function renderFileList(list) {
-	  lastFetchedList = list;
-	  const fileGrid = document.getElementById('fileGrid');
-	  fileGrid.innerHTML = '';
+		lastFetchedList = list;
+		const fileGrid = document.getElementById('fileGrid');
+		fileGrid.innerHTML = '';
+		
+		if (currentView === 'icon') {
+			fileGrid.className = 'grid grid-cols-10 gap-4';
+			
+			for (const item of list) {
+			    const template = document.getElementById('fileItemIconTemplate');
+			    const clone = template.content.cloneNode(true);
+			    const root = clone.querySelector('.file-item');
+			    const img = clone.querySelector('.thumb-img');
+			    const icon = clone.querySelector('.icon');
+			    const nameDiv = clone.querySelector('.file-name');
+			
+			    root.dataset.uid = item.uid;
+			    nameDiv.textContent = item.name;
+			
+			    if (item.isFile && item.fileType === 'Image') {
+			        img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
+			        img.loading = 'lazy';
+			        img.classList.remove('hidden');
+			        icon.remove();
+				} else {
+			        icon.textContent = item.isFile ? '📄' : '📁';
+			        icon.className = 'icon text-4xl flex items-center justify-center h-16';
+				}
+			
+			    fileGrid.appendChild(clone);
+			}
+		} else {
+			
+			fileGrid.className = '';
 
-	  if (currentView === 'icon') {
-	    fileGrid.className = 'grid grid-cols-10 gap-4';
-	  } else {
-	    fileGrid.className = '';
-	    const table = document.createElement('table');
-	    table.className = 'table-auto w-full text-sm';
-	    const tbody = document.createElement('tbody');
-	    fileGrid.appendChild(table);
-	    table.appendChild(tbody);
-	  }
+		    const tableTemplate = document.getElementById('fileItemDetailTableTemplate');
+		    const tableClone = tableTemplate.content.cloneNode(true);
+		    const table = tableClone.querySelector('table');
+		    const tbody = table.querySelector('tbody');
+		    fileGrid.appendChild(table);
+		    
+		  	for (const item of list) {
+		  		const template = document.getElementById('fileItemDetailTemplate');
+		        const clone = template.content.cloneNode(true);
+		        const row = clone.querySelector('.file-item');
+		        const icon = clone.querySelector('.icon');
+		        const nameTd = clone.querySelector('.file-name');
+		        const dateTd = clone.querySelector('.file-date');
+		        const typeTd = clone.querySelector('.file-type');
+		        const sizeTd = clone.querySelector('.file-size');
 
-	  for (const item of list) {
-	    if (currentView === 'icon') {
-	      const template = document.getElementById('fileItemIconTemplate');
-	      const clone = template.content.cloneNode(true);
-	      const root = clone.querySelector('.file-item');
-	      const img = clone.querySelector('.thumb-img');
-	      const icon = clone.querySelector('.icon');
-	      const nameDiv = clone.querySelector('.file-name');
-
-	      root.dataset.uid = item.uid;
-	      nameDiv.textContent = item.name;
-
-	      if (item.isFile && item.fileType === 'Image') {
-	        img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
-	        img.classList.remove('hidden');
-	        icon.remove();
-	      } else {
-	        icon.className = `icon fa-solid ${item.isFile ? 'fa-file' : 'fa-folder'} text-gray-400 text-xl`;
-	      }
-
-	      fileGrid.appendChild(clone);
-	    } else {
-	      const template = document.getElementById('fileItemDetailTemplate');
-	      const clone = template.content.cloneNode(true);
-	      const row = clone.querySelector('.file-item');
-	      const icon = clone.querySelector('.icon');
-	      const nameTd = clone.querySelector('.file-name');
-	      const sizeTd = clone.querySelector('.file-size');
-
-	      row.dataset.uid = item.uid;
-	      nameTd.textContent = item.name;
-	      sizeTd.textContent = item.isFile ? formatFileSize(item.fileLength) : '';
-
-	      icon.className = `icon fa-solid ${item.isFile ? 'fa-file' : 'fa-folder'} text-gray-400`;
-
-	      fileGrid.querySelector('tbody').appendChild(clone);
-	    }
-	  }
+		        row.dataset.uid = item.uid;
+		        nameTd.textContent = item.name;
+		        dateTd.textContent = '시간작업하자'; //item.lastModified ?? ''; // 필요한 경우 날짜 포맷팅 추가
+		        typeTd.textContent = item.isFile ? item.extension ?? '' : '폴더';
+		        sizeTd.textContent = item.isFile ? formatFileSize(item.fileLength) : '';
+			
+		        if (item.isFile && item.fileType === 'Image') {
+		            img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
+		            img.loading = 'lazy';
+		            img.classList.remove('hidden');
+		            icon.remove();
+			    } else {
+				    icon.textContent = item.isFile ? '📄' : '📁';
+			        icon.className = 'icon';
+			    }
+			
+			    tbody.appendChild(clone);
+			}
+		}
 	}
 
-
-	  // Ctrl + 클릭 선택
-	  document.getElementById('fileGrid').addEventListener('click', (e) => {
+	// Ctrl + 클릭 선택
+	document.getElementById('fileGrid').addEventListener('click', (e) => {
 	    const item = e.target.closest('.file-item');
 	    if (!item) return;
 
@@ -170,15 +203,15 @@ document.getElementById('iconViewBtn').addEventListener('click', () => {
 	      selectedItems.add(uid);
 	      item.classList.add('bg-blue-200');
 	    }
-	  });
+	});
 	  
 	  
-	  function formatFileSize(bytes) {
-		  if (bytes < 1024) return bytes + ' B';
-		  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-		  if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB';
-		  return (bytes / 1024 / 1024 / 1024).toFixed(1) + ' GB';
-		}
+	function formatFileSize(bytes) {
+		if (bytes < 1024) return bytes + ' B';
+		if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+		if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+		return (bytes / 1024 / 1024 / 1024).toFixed(1) + ' GB';
+	}
 
 
 </script>
