@@ -173,13 +173,25 @@
       storage.clearClipboard();
       updatePasteButton();
     });
-
-    function onSelected( selected ){
-    	console.info( 'selected', selected.owner.name );
+    
+    function onSelected( node ){
+    	console.info( 'selected', node.owner.name );
+    	
+    	const uid = node.owner.uid;
+    	
+    	const params = new URLSearchParams({
+    		uid : uid || ''
+    	});
+    	
+    	const url = /*[[@{/Dir/Path.html}]]*/ null;
+    	const urlValue = url + '?' + params.toString();
+    	
+    	// 이건 사용 기록 덮어쓰기
+    	window.history.replaceState(null, null, urlValue);
 		
-		storage.selectDirectory(selected);
+		storage.selectDirectory(node);
 		updatePasteButton();
-		loadFileList( selected.owner.uid );
+		loadFileList( uid );
     }
     
 	document.addEventListener('DOMContentLoaded', function() {
@@ -187,15 +199,23 @@
 		
 		const directories = /*[[${directories}]]*/ null;
 		
-	    // 초기 선택 처리
-	    const selectedUid = /*[[${selectedUid}]]*/ null;
-	    if( selectedUid !== null ){
-		    const selectedNode = findNodeByUid(directories, selectedUid);
-		    if (selectedNode) {
-		      selectedNode.selected = true;
-		    }
+		function _traverseClear(dir) {
+    	    if (dir) {
+    	      	dir.selected = dir.owner.uid ===/*[[${selectedUid}]]*/ null;
+    	      	if( dir.selected ){
+    	      		console.info('dir.selected', dir.owner.uid);
+    	      	}
+    	    }
+    	    
+    	    for (const item of dir.child) {
+    	      	_traverseClear(item);
+    	    }
+    	}
+		
+		for (const item of directories) {
+	      	_traverseClear(item);
 	    }
-	    
+		
 	    const node = findSelectedNode( directories );
 	    if( node != null ){
 	    	console.info( 'Selected Node' , node.owner.name );

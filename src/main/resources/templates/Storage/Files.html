@@ -126,16 +126,18 @@ document.getElementById('iconViewBtn').addEventListener('click', () => {
 			    const icon = clone.querySelector('.icon');
 			    const nameDiv = clone.querySelector('.file-name');
 			
+			    root._nodeItem = item;
 			    root.dataset.uid = item.uid;
-			    nameDiv.textContent = item.name;
+			    
+			    nameDiv.textContent = item.file ? (item.name + '.' + item.extension):item.name;
 			
-			    if (item.isFile && item.fileType === 'Image') {
+			    if (item.file && item.fileType === 'Image') {
 			        img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
 			        img.loading = 'lazy';
 			        img.classList.remove('hidden');
 			        icon.remove();
 				} else {
-			        icon.textContent = item.isFile ? '📄' : '📁';
+			        icon.textContent = item.file ? '📄' : '📁';
 			        icon.className = 'icon text-4xl flex items-center justify-center h-16';
 				}
 			
@@ -161,19 +163,21 @@ document.getElementById('iconViewBtn').addEventListener('click', () => {
 		        const typeTd = clone.querySelector('.file-type');
 		        const sizeTd = clone.querySelector('.file-size');
 
+		        row._nodeItem = item;
 		        row.dataset.uid = item.uid;
-		        nameTd.textContent = item.name;
+		        
+		        nameTd.textContent = item.file ? (item.name + '.' + item.extension):item.name;
 		        dateTd.textContent = '시간작업하자'; //item.lastModified ?? ''; // 필요한 경우 날짜 포맷팅 추가
-		        typeTd.textContent = item.isFile ? item.extension ?? '' : '폴더';
-		        sizeTd.textContent = item.isFile ? formatFileSize(item.fileLength) : '';
+		        typeTd.textContent = item.file ? item.extension ?? '' : '폴더';
+		        sizeTd.textContent = item.file ? formatFileSize(item.fileLength) : '';
 			
-		        if (item.isFile && item.fileType === 'Image') {
+		        if (item.file && item.fileType === 'Image') {
 		            img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
 		            img.loading = 'lazy';
 		            img.classList.remove('hidden');
 		            icon.remove();
 			    } else {
-				    icon.textContent = item.isFile ? '📄' : '📁';
+				    icon.textContent = item.file ? '📄' : '📁';
 			        icon.className = 'icon';
 			    }
 			

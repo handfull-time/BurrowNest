@@ -47,6 +47,7 @@ public class DirectoryController {
 		}
 		
 		model.addAttribute("directories", dirList);
+		model.addAttribute("selectedUid", uid);
 //	    // 선택한 path의 파일 목록
 //        model.addAttribute("files", storageService.getFiles(user, dir) );
 //        model.addAttribute("paths", storageService.getPaths(user, dir) );
