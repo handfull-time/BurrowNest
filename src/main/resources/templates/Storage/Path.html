@@ -2,21 +2,7 @@
     <!-- 현재 경로 -->
     <div class="pl-2 truncate text-gray-700">
     	<!-- 현재 경로 출력 -->
-    	<div class="pl-2 truncate text-gray-700">
-    	<!-- 
-    		<th:block th:with="segments=${path.split('/')}">
-    			<a th:href="@{/Dir/Path.html(path='/')}">/</a>
-    			<th:block th:with="accumPath=''" th:each="segment, stat : ${segments}">
-    				<th:block th:if="${segment != ''}">
-    					<th:block th:with="accumPath=${accumPath + '/' + segment}">
-    						<a th:href="@{/Dir/Path.html(path=${accumPath})}"
-    							th:text="${'/' + segment}">/segment</a>
-    					</th:block>
-    				</th:block>
-    			</th:block>
-    		</th:block>
-    		 -->
-    	</div>
+		<div id="breadcrumb" class="flex items-center space-x-1"></div>
     </div>
 
     <!-- 검색 입력창 -->
@@ -24,4 +10,148 @@
         <input type="text" placeholder="검색" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400" />
         <button class="ml-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">검색</button>
     </div>
+<script>
+function renderBreadcrumbTrail(nodeEl) {
+	
+	function _getParentNodes(nodeEl) {
+		const parents = [];
+		let current = nodeEl.parentElement;
+		while (current && current.id !== 'tree') {
+			const treeItem = current.querySelector('[data-node="true"]');
+			if (treeItem && treeItem._nodeData) {
+				parents.unshift(treeItem._nodeData);
+			}
+			current = current.parentElement?.closest('li');
+		}
+		return parents;
+	} 
+	
+	const breadcrumb = document.getElementById("breadcrumb");
+	breadcrumb.innerHTML = '';
+	
+	const parents = _getParentNodes(nodeEl);
+	
+	parents.forEach((node, idx) => {
+		const container = document.createElement("div");
+	    container.className = "relative inline-block";
+	    
+		const btn = document.createElement("button");
+		btn.textContent = node.owner.name;
+		btn.className = "px-2 py-1 rounded hover:bg-gray-200 transition";
+		btn.dataset.uid = node.owner.uid;
+		btn.onclick = () => {
+			if (typeof onSelected === 'function') {
+				onSelected(node);
+			}
+		};
+		
+		container.appendChild(btn);
+		
+		if (idx < parents.length - 1) {
+		  const sepContainer = document.createElement("span");
+		  sepContainer.className = "relative inline-block";
+
+		  const sep = document.createElement("span");
+		  sep.textContent = "▸";
+		  sep.className = "mx-1 text-gray-400 cursor-pointer";
+
+		  const dropdown = document.createElement("ul");
+		  dropdown.className =
+		    "absolute hidden bg-white border border-gray-300 mt-1 rounded shadow-md text-sm w-40";
+		  dropdown.style.left = "0";
+		  dropdown.style.top = "100%";
+		  dropdown.style.zIndex = "10";
+
+		  if (node.child && node.child.length > 0) {
+		    node.child.forEach((child) => {
+		    	console.info( 'dropdown', child.owner.name );
+		      const li = document.createElement("li");
+		      li.className = "hover:bg-gray-100 px-3 py-1 cursor-pointer";
+		      li.textContent = child.owner.name;
+		      li.addEventListener("click", (e) => {
+		        e.stopPropagation();
+		        clearSelectedExcept(child.owner.uid);
+		        child.selected = true;
+		        if (typeof onSelected === "function") {
+		          onSelected(child);
+		        }
+		        dropdown.classList.add("hidden");
+		      });
+		      dropdown.appendChild(li);
+		    });
+		  }
+
+		  // sep 클릭 시 토글
+		  sep.addEventListener("click", (e) => {
+		    e.stopPropagation();
+		    alert('c');
+		    const isHidden = dropdown.classList.contains("hidden");
+		    document.querySelectorAll("#breadcrumb ul").forEach(ul => ul.classList.add("hidden")); // 다른 드롭다운 닫기
+		    dropdown.classList.toggle("hidden", !isHidden);
+		  });
+
+		  // 외부 클릭 시 닫기
+		  document.addEventListener("click", () => {
+		    dropdown.classList.add("hidden");
+		  });
+
+		  sepContainer.appendChild(sep);
+		  sepContainer.appendChild(dropdown);
+		  container.appendChild(sepContainer);
+		}
+
+
+		
+		breadcrumb.appendChild(container);
+	});
+}
+
+function renderBreadcrumbTrail1(row) {
+	
+	function _getParentNodes(nodeEl) {
+		const parents = [];
+		let current = nodeEl.parentElement;
+		while (current && current.id !== 'tree') {
+			const treeItem = current.querySelector('[data-node="true"]');
+			if (treeItem && treeItem._nodeData) {
+				parents.unshift(treeItem._nodeData);
+			}
+			current = current.parentElement?.closest('li');
+		}
+		return parents;
+	} 
+	
+	  const breadcrumb = document.getElementById("breadcrumb");
+	  breadcrumb.innerHTML = "";
+
+	  const currentNode = row?._nodeData;
+	  if (!currentNode) return;
+
+	  const nodes = _getParentNodes(row);
+	  //nodes.push(currentNode); // 마지막은 현재 노드
+
+	  nodes.forEach((node, idx) => {
+	    const container = document.createElement("div");
+	    container.className = "relative inline-block";
+
+	    const button = document.createElement("button");
+	    button.className = "text-blue-700 hover:underline font-medium px-1";
+	    button.textContent = node.owner.name;
+	    container.appendChild(button);
+
+	    // 화살표 아이콘
+	    if (idx < nodes.length - 1) {
+	      const sep = document.createElement("span");
+	      sep.textContent = "▸";
+	      sep.className = "mx-1 text-gray-400";
+	      container.appendChild(sep);
+	    }
+
+	    
+
+	    breadcrumb.appendChild(container);
+	  });
+	}
+
+</script>
 </div>
