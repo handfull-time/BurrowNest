@@ -34,7 +34,7 @@ function renderBreadcrumbTrail(row) {
 		return parents;
 	} 
 	
-	function _createDropdown(node) {
+	function _createDropdown(node, nextNodeName) {
 		  const template = document.getElementById("DropDownTemplate");
 		  const clone = template.content.cloneNode(true);
 		  const dropdown = clone.querySelector("div.dropdown");
@@ -51,6 +51,11 @@ function renderBreadcrumbTrail(row) {
 		      const btn = document.createElement("button");
 		      btn.className = "block px-4 py-2 hover:bg-gray-100 w-full text-left";
 		      btn.textContent = child.owner.name;
+		      console.info(node.owner.name, child.owner.name, node.owner.name === child.owner.name);
+		      if (nextNodeName === child.owner.name) {
+		          btn.classList.add("font-bold", "text-blue-600");
+		      }
+		      
 		      btn.addEventListener("click", () => {
 		        clearSelectedExcept(child.owner.uid);
 		        child.selected = true;
@@ -73,7 +78,6 @@ function renderBreadcrumbTrail(row) {
 	  if (!currentNode) return;
 
 	  const nodes = _getParentNodes(row);
-	  //nodes.push(currentNode); // 마지막은 현재 노드
 
 	  nodes.forEach((node, idx) => {
 	    const container = document.createElement("div");
@@ -83,6 +87,9 @@ function renderBreadcrumbTrail(row) {
 	    button.className = "text-blue-700 hover:underline font-medium px-1";
 	    button.textContent = node.owner.name;
 	    container.appendChild(button);
+	    
+	 	// 다음 노드 이름 (breadcrumb에서 현재 node 다음 위치)
+	    const nextNodeName = nodes[idx + 1]?.owner?.name;
 
 	    // 화살표 아이콘
 	    if (idx < nodes.length - 1) {
@@ -96,7 +103,7 @@ function renderBreadcrumbTrail(row) {
 	    	  const existing = document.querySelector(".dropdown");
 	    	  if (existing) existing.remove();
 
-	    	  const dropdown = _createDropdown(node);
+	    	  const dropdown = _createDropdown(node, nextNodeName);
 	    	  
 	    	// sep 위치 기준으로 절대 위치 설정
 	    	  const rect = sep.getBoundingClientRect();
