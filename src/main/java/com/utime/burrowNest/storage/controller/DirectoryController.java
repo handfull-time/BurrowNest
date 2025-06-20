@@ -48,17 +48,6 @@ public class DirectoryController {
 		
 		model.addAttribute("directories", dirList);
 		model.addAttribute("selectedUid", uid);
-//	    // 선택한 path의 파일 목록
-//        model.addAttribute("files", storageService.getFiles(user, dir) );
-//        model.addAttribute("paths", storageService.getPaths(user, dir) );
-		
-//		final DirectoryDto rootTree = buildDirectoryTreeLimited("F:\\WorkData\\Burrow", path);
-//
-//	    model.addAttribute("directoryTree", rootTree);
-//	    // 선택한 path의 파일 목록
-//        model.addAttribute("files", this.files(path) );
-//        
-//        model.addAttribute("path", path );
 	    
 	    return "Storage/StorageMain";
 	}

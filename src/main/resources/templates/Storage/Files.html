@@ -1,11 +1,6 @@
 <div xmlns:th="http://www.thymeleaf.org" th:fragment="files"
      class="p-2 text-sm bg-white text-black select-none h-full w-full overflow-hidden">
 <div class="w-full h-screen flex flex-col">
-  <!-- 보기 전환 버튼 -->
-  <div class="flex justify-end p-2 gap-2 border-b border-gray-300">
-    <button class="px-3 py-1 border rounded hover:bg-gray-100" id="detailViewBtn">상세보기</button>
-    <button class="px-3 py-1 border rounded hover:bg-gray-100" id="iconViewBtn">큰 아이콘 보기</button>
-  </div>
 
   <!-- 파일/폴더 목록 -->
   <div class="flex-1 overflow-auto p-4">
@@ -56,21 +51,21 @@
 
 <script th:inline="javascript">
 
-let currentView = 'icon'; // 'icon' or 'detail'
-
-document.getElementById('detailViewBtn').addEventListener('click', () => {
-  currentView = 'detail';
-  renderFileList(lastFetchedList);
-});
-
-document.getElementById('iconViewBtn').addEventListener('click', () => {
-  currentView = 'icon';
-  renderFileList(lastFetchedList);
-});
+	let currentView = 'icon'; // 'icon' or 'detail'
+	
+	document.getElementById('detailViewBtn').addEventListener('click', () => {
+	  currentView = 'detail';
+	  renderFileList(lastFetchedList);
+	});
+	
+	document.getElementById('iconViewBtn').addEventListener('click', () => {
+	  currentView = 'icon';
+	  renderFileList(lastFetchedList);
+	});
 
 
 	
-	let selectedItems = new Set();
+	//let selectedItems = new Set();
 	
 	// 파일 리스트 가져오기
 	async function loadFileList(uid) {
@@ -110,7 +105,7 @@ document.getElementById('iconViewBtn').addEventListener('click', () => {
 	});
 
 	
-	function renderFileList(list) {
+	function renderFileList2(list) {
 		lastFetchedList = list;
 		const fileGrid = document.getElementById('fileGrid');
 		fileGrid.innerHTML = '';
@@ -185,8 +180,144 @@ document.getElementById('iconViewBtn').addEventListener('click', () => {
 			}
 		}
 	}
+	
+	function renderFileList(list) {
+		lastFetchedList = list;
+		const fileGrid = document.getElementById('fileGrid');
+		fileGrid.innerHTML = '';
+		
+		let lastSelectedIndex = null;
+		const selectedUids = new Set();
+		
+		function clearSelection() {
+		  selectedUids.clear();
+		  fileGrid.querySelectorAll('.file-item').forEach(el => el.classList.remove('bg-blue-100'));
+		}
+		
+		function toggleSelection(uid, element) {
+			if (selectedUids.has(uid)) {
+			  selectedUids.delete(uid);
+			  element.classList.remove('bg-blue-100');
+			} else {
+			  selectedUids.add(uid);
+			  element.classList.add('bg-blue-100');
+			}
+		}
+
+		function selectRange(start, end) {
+			clearSelection();
+			const items = Array.from(fileGrid.querySelectorAll('.file-item'));
+			const [from, to] = [start, end].sort((a, b) => a - b);
+			for (let i = from; i <= to; i++) {
+				const el = items[i];
+				const uid = el.dataset.uid;
+				selectedUids.add(uid);
+				el.classList.add('bg-blue-100');
+			}
+		}
+
+		const isIconView = currentView === 'icon';
+		fileGrid.className = isIconView ? 'grid grid-cols-10 gap-4' : '';
+		
+		let table;
+		if (!isIconView) {
+			const tableTemplate = document.getElementById('fileItemDetailTableTemplate');
+			const tableClone = tableTemplate.content.cloneNode(true);
+			table = tableClone.querySelector('table');
+			fileGrid.appendChild(table);
+		}
+	
+		list.forEach((item, index) => {
+			const template = document.getElementById(isIconView ? 'fileItemIconTemplate' : 'fileItemDetailTemplate');
+			const clone = template.content.cloneNode(true);
+			const element = clone.querySelector('.file-item');
+			const icon = clone.querySelector('.icon');
+			const img = clone.querySelector('.thumb-img');
+			
+			element.dataset.uid = item.uid;
+			element.dataset.index = index;
+			
+			if (isIconView) {
+				const nameDiv = clone.querySelector('.file-name');
+				nameDiv.textContent = item.name;
+			} else {
+				const nameTd = clone.querySelector('.file-name');
+				const dateTd = clone.querySelector('.file-date');
+				const typeTd = clone.querySelector('.file-type');
+				const sizeTd = clone.querySelector('.file-size');
+				
+				nameTd.textContent = item.name;
+				dateTd.textContent = item.lastModified ?? '';
+				typeTd.textContent = item.file ? item.extension ?? '' : '폴더';
+				sizeTd.textContent = item.file ? formatFileSize(item.fileLength) : '';
+			}
+			
+			if (item.file && item.fileType === 'Image') {
+				img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
+				img.loading = 'lazy';
+				img.classList.remove('hidden');
+				icon.remove();
+			} else {
+				icon.textContent = item.file ? '📄' : '📁';
+				icon.className = isIconView ? 'icon text-4xl flex items-center justify-center h-16' : 'icon';
+			}
+			
+			(table?.querySelector('tbody') ?? fileGrid).appendChild(clone);
+		});
+		
+		fileGrid.addEventListener('click', (e) => {
+			const itemEl = e.target.closest('.file-item');
+			if (!itemEl) return;
+			
+			const uid = itemEl.dataset.uid;
+			const index = parseInt(itemEl.dataset.index);
+			
+			if (e.shiftKey && lastSelectedIndex != null) {
+			  selectRange(lastSelectedIndex, index);
+			} else if (e.ctrlKey || e.metaKey) {
+			  toggleSelection(uid, itemEl);
+			} else {
+			  clearSelection();
+			  selectedUids.add(uid);
+			  itemEl.classList.add('bg-blue-100');
+			}
+			
+			lastSelectedIndex = index;
+		});
+	}
+
+	function clearSelected(rootNode) {
+		if (!rootNode) return;
+		rootNode.selected = false;
+		
+		if (rootNode.child) {
+			rootNode.child.forEach(clearSelected);
+		}
+	}
+
+	function clearSelectedExcept(uid) {
+		const root = document.getElementById("tree");
+		if (!root) return;
+		
+		function traverse(node) {
+			if (!node._nodeData) return;
+			if (node._nodeData.owner.uid !== uid) {
+				node._nodeData.selected = false;
+			}
+			const children = node.querySelectorAll(':scope > ul > li > div');
+			children.forEach(child => traverse(child));
+		}
+		
+		root.querySelectorAll('[data-node="true"]').forEach(el => {
+			if (el._nodeData?.owner.uid !== uid) {
+				el._nodeData.selected = false;
+			}
+		});
+	}
+
 
 	// Ctrl + 클릭 선택
+	/*
 	document.getElementById('fileGrid').addEventListener('click', (e) => {
 	    const item = e.target.closest('.file-item');
 	    if (!item) return;
@@ -207,7 +338,7 @@ document.getElementById('iconViewBtn').addEventListener('click', () => {
 	      selectedItems.add(uid);
 	      item.classList.add('bg-blue-200');
 	    }
-	});
+	}); */
 	  
 	  
 	function formatFileSize(bytes) {

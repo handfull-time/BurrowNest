@@ -2,21 +2,7 @@
     <!-- 현재 경로 -->
     <div class="pl-2 truncate text-gray-700">
     	<!-- 현재 경로 출력 -->
-    	<div class="pl-2 truncate text-gray-700">
-    	<!-- 
-    		<th:block th:with="segments=${path.split('/')}">
-    			<a th:href="@{/Dir/Path.html(path='/')}">/</a>
-    			<th:block th:with="accumPath=''" th:each="segment, stat : ${segments}">
-    				<th:block th:if="${segment != ''}">
-    					<th:block th:with="accumPath=${accumPath + '/' + segment}">
-    						<a th:href="@{/Dir/Path.html(path=${accumPath})}"
-    							th:text="${'/' + segment}">/segment</a>
-    					</th:block>
-    				</th:block>
-    			</th:block>
-    		</th:block>
-    		 -->
-    	</div>
+		<div id="breadcrumb" class="flex items-center space-x-1"></div>
     </div>
 
     <!-- 검색 입력창 -->
@@ -24,4 +10,120 @@
         <input type="text" placeholder="검색" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400" />
         <button class="ml-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">검색</button>
     </div>
+    
+    <template id="DropDownTemplate">
+	  <div class="dropdown absolute bg-white border border-gray-300 rounded shadow z-50 hidden">
+	    <ul class="py-2 text-sm text-gray-700"></ul>
+	  </div>
+	</template>
+
+
+<script>
+function renderBreadcrumbTrail(row) {
+	
+	function _getParentNodes(nodeEl) {
+		const parents = [];
+		let current = nodeEl.parentElement;
+		while (current && current.id !== 'tree') {
+			const treeItem = current.querySelector('[data-node="true"]');
+			if (treeItem && treeItem._nodeData) {
+				parents.unshift(treeItem._nodeData);
+			}
+			current = current.parentElement?.closest('li');
+		}
+		return parents;
+	} 
+	
+	function _createDropdown(node) {
+		  const template = document.getElementById("DropDownTemplate");
+		  const clone = template.content.cloneNode(true);
+		  const dropdown = clone.querySelector("div.dropdown");
+		  const ul = dropdown.querySelector("ul");
+		  
+		  if (!ul) {
+		    console.warn("Dropdown ul not found");
+		    return null;
+		  }
+
+		  if (node.child) {
+		    node.child.forEach(child => {
+		      const li = document.createElement("li");
+		      const btn = document.createElement("button");
+		      btn.className = "block px-4 py-2 hover:bg-gray-100 w-full text-left";
+		      btn.textContent = child.owner.name;
+		      btn.addEventListener("click", () => {
+		        clearSelectedExcept(child.owner.uid);
+		        child.selected = true;
+	            onSelected(child);
+	            dropdown.remove(); // 닫기
+		      });
+		      li.appendChild(btn);
+		      ul.appendChild(li);
+		    });
+		  }
+
+		  return dropdown;
+		}
+
+	
+	  const breadcrumb = document.getElementById("breadcrumb");
+	  breadcrumb.innerHTML = "";
+
+	  const currentNode = row?._nodeData;
+	  if (!currentNode) return;
+
+	  const nodes = _getParentNodes(row);
+	  //nodes.push(currentNode); // 마지막은 현재 노드
+
+	  nodes.forEach((node, idx) => {
+	    const container = document.createElement("div");
+	    container.className = "relative inline-block";
+
+	    const button = document.createElement("button");
+	    button.className = "text-blue-700 hover:underline font-medium px-1";
+	    button.textContent = node.owner.name;
+	    container.appendChild(button);
+
+	    // 화살표 아이콘
+	    if (idx < nodes.length - 1) {
+	      const sep = document.createElement("span");
+	      sep.textContent = " ▸ ";
+	      sep.className = "mx-1 text-gray-400 cursor-pointer";
+	      sep.addEventListener("click", (e) => {
+	    	  e.stopPropagation();
+
+	    	  // 기존 드롭다운 제거
+	    	  const existing = document.querySelector(".dropdown");
+	    	  if (existing) existing.remove();
+
+	    	  const dropdown = _createDropdown(node);
+	    	  
+	    	// sep 위치 기준으로 절대 위치 설정
+	    	  const rect = sep.getBoundingClientRect();
+	    	  dropdown.style.position = "absolute";
+	    	  dropdown.style.left = `${rect.left}px`;
+	    	  dropdown.style.top = `${rect.bottom}px`;
+
+	    	  // 부모가 relative이므로 container에 append (body 말고!)
+	    	  document.body.appendChild(dropdown);
+	    	  dropdown.classList.remove("hidden");
+
+	    	  // 외부 클릭 시 드롭다운 닫기
+	    	  const closeDropdown = (event) => {
+	    	    if (!dropdown.contains(event.target)) {
+	    	      dropdown.remove();
+	    	      document.removeEventListener("click", closeDropdown);
+	    	    }
+	    	  };
+	    	  document.addEventListener("click", closeDropdown);
+	    	});
+
+	      container.appendChild(sep);
+	    }
+
+	    breadcrumb.appendChild(container);
+	  });
+}
+
+</script>
 </div>

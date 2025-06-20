@@ -113,7 +113,8 @@
 	      document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
 	      label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
 
-	      if (onSelected) onSelected(node);
+		  renderBreadcrumbTrail(row); 
+		  onSelected(node);
 	    });
 	  } else {
 	    chevron.classList.add("opacity-0");
@@ -130,12 +131,16 @@
 	      document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
 	      label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
 
-	      if (onSelected) onSelected(node);
+		  renderBreadcrumbTrail(row); 
+		  onSelected(node);
 	    });
 	  }
 
-	  if (node.selected && onSelected) {
-	    setTimeout(() => onSelected(node), 0);
+	  if (node.selected) {
+		  setTimeout(() => {
+		    renderBreadcrumbTrail(row); 
+		    onSelected(node);
+		  }, 0);
 	  }
 
 	  return li;
