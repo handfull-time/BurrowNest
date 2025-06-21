@@ -103,83 +103,6 @@
 	  currentView = 'icon';
 	  renderFileList(lastFetchedList);
 	});
-
-	
-	function renderFileList2(list) {
-		lastFetchedList = list;
-		const fileGrid = document.getElementById('fileGrid');
-		fileGrid.innerHTML = '';
-		
-		if (currentView === 'icon') {
-			fileGrid.className = 'grid grid-cols-10 gap-4';
-			
-			for (const item of list) {
-			    const template = document.getElementById('fileItemIconTemplate');
-			    const clone = template.content.cloneNode(true);
-			    const root = clone.querySelector('.file-item');
-			    const img = clone.querySelector('.thumb-img');
-			    const icon = clone.querySelector('.icon');
-			    const nameDiv = clone.querySelector('.file-name');
-			
-			    root._nodeItem = item;
-			    root.dataset.uid = item.uid;
-			    
-			    nameDiv.textContent = item.file ? (item.name + '.' + item.extension):item.name;
-			
-			    if (item.file && item.fileType === 'Image') {
-			        img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
-			        img.loading = 'lazy';
-			        img.classList.remove('hidden');
-			        icon.remove();
-				} else {
-			        icon.textContent = item.file ? '📄' : '📁';
-			        icon.className = 'icon text-4xl flex items-center justify-center h-16';
-				}
-			
-			    fileGrid.appendChild(clone);
-			}
-		} else {
-			
-			fileGrid.className = '';
-
-		    const tableTemplate = document.getElementById('fileItemDetailTableTemplate');
-		    const tableClone = tableTemplate.content.cloneNode(true);
-		    const table = tableClone.querySelector('table');
-		    const tbody = table.querySelector('tbody');
-		    fileGrid.appendChild(table);
-		    
-		  	for (const item of list) {
-		  		const template = document.getElementById('fileItemDetailTemplate');
-		        const clone = template.content.cloneNode(true);
-		        const row = clone.querySelector('.file-item');
-		        const icon = clone.querySelector('.icon');
-		        const nameTd = clone.querySelector('.file-name');
-		        const dateTd = clone.querySelector('.file-date');
-		        const typeTd = clone.querySelector('.file-type');
-		        const sizeTd = clone.querySelector('.file-size');
-
-		        row._nodeItem = item;
-		        row.dataset.uid = item.uid;
-		        
-		        nameTd.textContent = item.file ? (item.name + '.' + item.extension):item.name;
-		        dateTd.textContent = '시간작업하자'; //item.lastModified ?? ''; // 필요한 경우 날짜 포맷팅 추가
-		        typeTd.textContent = item.file ? item.extension ?? '' : '폴더';
-		        sizeTd.textContent = item.file ? formatFileSize(item.fileLength) : '';
-			
-		        if (item.file && item.fileType === 'Image') {
-		            img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
-		            img.loading = 'lazy';
-		            img.classList.remove('hidden');
-		            icon.remove();
-			    } else {
-				    icon.textContent = item.file ? '📄' : '📁';
-			        icon.className = 'icon';
-			    }
-			
-			    tbody.appendChild(clone);
-			}
-		}
-	}
 	
 	function renderFileList(list) {
 		lastFetchedList = list;
@@ -283,6 +206,15 @@
 			}
 			
 			lastSelectedIndex = index;
+		});
+		fileGrid.addEventListener('dbclick', (e) => {
+			const itemEl = e.target.closest('.file-item');
+			if (!itemEl) return;
+			
+			const uid = itemEl.dataset.uid;
+			const index = parseInt(itemEl.dataset.index);
+			console.info('Double clicked item:', uid, index);
+			
 		});
 	}
 

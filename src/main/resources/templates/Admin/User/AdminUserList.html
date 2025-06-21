@@ -9,6 +9,7 @@
                 <th class="border p-2 text-center">ID</th>
                 <th class="border p-2 text-center">사용여부</th>
                 <th class="border p-2 text-center">별명</th>
+                <th class="border p-2 text-center">그룹</th>
                 <th class="border p-2 text-center">역할</th>
                 <th class="border p-2 text-center">로그인 횟수</th>
                 <th class="border p-2 text-center">마지막 로그인</th>
@@ -22,6 +23,7 @@
                 <td class="border p-2 id-cell underline cursor-pointer" th:text="${item.id}"></td>
                 <td class="border p-2 text-center" th:text="${item.enabled? '🟢':'🔴'}"></td>
                 <td class="border p-2" th:text="${item.nickname}"></td>
+                <td class="border p-2" th:text="${item.group.name}"></td>
                 <td class="border p-2 text-center" th:text="${item.role}"></td>
                 <td class="border p-2 text-right" th:text="${#numbers.formatDecimal(item.loginCount, 0, 'COMMA', 0, 'POINT')}"></td>
                 <td class="border p-2 text-center" th:text="${#temporals.format(item?.lastLoginTime,'yyyy.MM.dd HH:mm')}"></td>

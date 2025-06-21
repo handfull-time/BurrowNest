@@ -65,6 +65,7 @@
 	  const label = clone.querySelector('.folder-label');
 
 	  row._nodeData = node;
+	  node.row = row;
 	  label.textContent = node.owner.name;
 
 	  let isOpen = false;

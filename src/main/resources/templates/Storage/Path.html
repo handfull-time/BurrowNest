@@ -59,6 +59,7 @@ function renderBreadcrumbTrail(row) {
 		      btn.addEventListener("click", () => {
 		        clearSelectedExcept(child.owner.uid);
 		        child.selected = true;
+				renderBreadcrumbTrail(child.row);
 	            onSelected(child);
 	            dropdown.remove(); // 닫기
 		      });
