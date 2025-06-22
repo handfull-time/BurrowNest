@@ -207,15 +207,29 @@
 			
 			lastSelectedIndex = index;
 		});
-		fileGrid.addEventListener('dbclick', (e) => {
+		
+		fileGrid.addEventListener('dblclick', (e) => {
 			const itemEl = e.target.closest('.file-item');
 			if (!itemEl) return;
-			
+	
 			const uid = itemEl.dataset.uid;
-			const index = parseInt(itemEl.dataset.index);
-			console.info('Double clicked item:', uid, index);
-			
+			const item = lastFetchedList.find(f => f.uid === uid);
+			if (!item) return;
+	
+			if (item.file) {
+			  // 파일일 경우 새창으로 열기
+			  const url = /*[[@{/Files/Open/}]]*/ null;
+			  window.open(`${url}${encodeURIComponent(uid)}`, '_blank');
+			} else {
+			  // 폴더일 경우 onSelected 호출
+			  const folderNode = { owner: item, selected: true }; // node 구조에 맞게 조정
+			  if (typeof onSelected === 'function') {
+			    clearSelectedExcept(uid);
+			    onSelected(folderNode);
+			  }
+			}
 		});
+
 	}
 
 	function clearSelected(rootNode) {

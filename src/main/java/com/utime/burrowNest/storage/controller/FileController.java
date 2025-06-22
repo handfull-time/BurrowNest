@@ -1,6 +1,7 @@
 package com.utime.burrowNest.storage.controller;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,6 +39,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utime.burrowNest.common.util.FileUtils;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.storage.service.StorageService;
+import com.utime.burrowNest.storage.vo.BnFile;
 import com.utime.burrowNest.storage.vo.FileDto;
 import com.utime.burrowNest.storage.vo.PasteItem;
 import com.utime.burrowNest.storage.vo.PasteRequest;
@@ -52,9 +54,16 @@ public class FileController {
 	
 	StorageService storageService;
 	
-	@GetMapping("Open")
-	public ResponseEntity<Resource> openFile(UserVo user, HttpServletRequest request, @RequestParam String path) {
-	    Path file = Paths.get("F:\\WorkData\\Burrow", path);
+	@GetMapping("Open/{uid}")
+	public ResponseEntity<Resource> openFile(UserVo user, HttpServletRequest request, @PathVariable("uid") String uid) {
+
+		uid = URLEncoder.encode(uid, StandardCharsets.UTF_8);
+		final BnFile bnFile = storageService.getFile(user, uid);
+		if( bnFile == null ) {
+			return ResponseEntity.notFound().build();
+		}
+		
+		Path file = new File(bnFile.getFullName()).toPath();
 	    if (!Files.exists(file)) {
 	        return ResponseEntity.notFound().build();
 	    }
@@ -64,8 +73,7 @@ public class FileController {
 	        
 	        if (mimeType != null && (mimeType.startsWith("video/") || mimeType.startsWith("audio/"))) {
 	            // redirect to streaming page
-	            String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
-	            final URI uri = URI.create(request.getContextPath() + "/File/Streaming.html?path=" + encodedPath);
+	            final URI uri = URI.create(request.getContextPath() + "/Files/Streaming/" + uid);
 	            return ResponseEntity.status(HttpStatus.FOUND).location(uri).build();
 	        }
 	        
@@ -88,21 +96,26 @@ public class FileController {
 	    }
 	}
 	
-	@GetMapping("Streaming.html")
-	public String streamPage(Model model, UserVo user, @RequestParam String path) throws IOException {
-	    Path filePath = Paths.get("F:\\WorkData\\Burrow", path).normalize();
-	    
-	    if (!Files.exists(filePath)) {
-	        throw new FileNotFoundException("File not found: " + path);
+	@GetMapping("Streaming/{uid}")
+	public String streamPage(Model model, UserVo user, @PathVariable("uid") String uid) throws IOException {
+		uid = URLEncoder.encode(uid, StandardCharsets.UTF_8);
+		final BnFile bnFile = storageService.getFile(user, uid);
+		if( bnFile == null ) {
+			return "";
+		}
+		
+		Path file = new File(bnFile.getFullName()).toPath();
+	    if (!Files.exists(file)) {
+	        return "";
 	    }
 
-	    String mimeType = Files.probeContentType(filePath);
+	    String mimeType = Files.probeContentType(file);
 	    if (mimeType == null) {
 	        mimeType = "application/octet-stream";
 	    }
 
-	    model.addAttribute("path", path);
-	    model.addAttribute("fileName", filePath.getFileName().toString());
+//	    model.addAttribute("path", path);
+//	    model.addAttribute("fileName", filePath.getFileName().toString());
 	    model.addAttribute("mimeType", mimeType);
 
 	    return "Common/Streaming";

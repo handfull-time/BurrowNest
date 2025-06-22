@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
+import com.utime.burrowNest.storage.vo.BnFile;
 import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -48,6 +49,12 @@ public interface StorageService {
 	 */
 	List<AbsPath> getFiles(UserVo user, String uid);
 
-	
+	/**
+	 * 파일 갖고 오기
+	 * @param user
+	 * @param uid
+	 * @return
+	 */
+	BnFile getFile(UserVo user, String uid);
 
 }
