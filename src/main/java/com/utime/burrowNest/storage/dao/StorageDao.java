@@ -111,6 +111,13 @@ public interface StorageDao {
 	BnFile getFile( long fileNo );
 	
 	/**
+	 * 파일 정보 조회
+	 * @param fileNo
+	 * @return
+	 */
+	BnFile getFile( UserVo user, String uid );
+	
+	/**
 	 * 파일 확장 조회
 	 * @param file
 	 * @return
@@ -119,10 +126,10 @@ public interface StorageDao {
 
 	/**
 	 * 섬네일 조회
-	 * @param fid
+	 * @param uid
 	 * @return
 	 */
-	byte[] getThumbnail(String fid);
+	byte[] getThumbnail(String uid);
 
 	/**
 	 * 루트 Dir 조회. todo... List로 리턴해야 하지 않을까... 싶네...

@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Base64;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -55,6 +56,72 @@ public class FileController {
 	StorageService storageService;
 	
 	@GetMapping("Open/{uid}")
+	public Object openOrPreviewFile(UserVo user, HttpServletRequest request, Model model, @PathVariable("uid") String uid)  {
+	    uid = URLEncoder.encode(uid, StandardCharsets.UTF_8);
+	    final BnFile bnFile = storageService.getFile(user, uid);
+	    if (bnFile == null) {
+	        return ResponseEntity.notFound().build();
+	    }
+
+	    final Path file = new File(bnFile.getFullName()).toPath();
+	    if (!Files.exists(file)) {
+	        return ResponseEntity.notFound().build();
+	    }
+	    
+	    String mimeType;
+		try {
+			mimeType = Files.probeContentType(file);
+		} catch (IOException e) {
+			mimeType = null;
+		}
+	    
+	    switch( bnFile.getFileType() ) {
+	    case Basic:
+	    case Document:
+	    case Archive:{
+	    	
+	        if (mimeType == null) {
+	            mimeType = "application/octet-stream";
+	        }
+	    	
+	        if( mimeType.startsWith("text/") ) {
+	        	model.addAttribute("mimeType", mimeType);
+	        }else {
+	        	try {
+	        		// 그 외 일반 다운로드
+		        	final Resource resource = new InputStreamResource(Files.newInputStream(file));
+		        	final String transName = URLEncoder.encode(file.getFileName().toString(), "utf-8").replaceAll("\\+", "%20");
+
+			        return ResponseEntity.ok()
+			            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + transName + "\"")
+			            .contentType(MediaType.parseMediaType(mimeType))
+			            .body(resource);
+				} catch (IOException e) {
+					return ResponseEntity.internalServerError().build();
+				}
+	        }
+	    	break;
+	    }
+	    case Image:
+	    case Video:
+	    case Audio:{
+	    	break;
+	    }
+	    }
+
+        model.addAttribute("uid", uid);
+        model.addAttribute("fileName", file.getFileName().toString());
+        model.addAttribute("mimeType", mimeType);
+
+        // 배경용 썸네일 base64
+        String base64Thumbnail = Base64.getEncoder().encodeToString( storageService.getThumbnail(uid) );
+        model.addAttribute("base64Thumbnail", base64Thumbnail);
+
+        return "Common/Streaming";
+	}
+
+	
+	//@GetMapping("Open/{uid}")
 	public ResponseEntity<Resource> openFile(UserVo user, HttpServletRequest request, @PathVariable("uid") String uid) {
 
 		uid = URLEncoder.encode(uid, StandardCharsets.UTF_8);
@@ -63,11 +130,11 @@ public class FileController {
 			return ResponseEntity.notFound().build();
 		}
 		
-		Path file = new File(bnFile.getFullName()).toPath();
+		final Path file = new File(bnFile.getFullName()).toPath();
 	    if (!Files.exists(file)) {
 	        return ResponseEntity.notFound().build();
 	    }
-
+	    
 	    try {
 	        String mimeType = Files.probeContentType(file);
 	        
@@ -96,7 +163,7 @@ public class FileController {
 	    }
 	}
 	
-	@GetMapping("Streaming/{uid}")
+	//@GetMapping("Streaming/{uid}")
 	public String streamPage(Model model, UserVo user, @PathVariable("uid") String uid) throws IOException {
 		uid = URLEncoder.encode(uid, StandardCharsets.UTF_8);
 		final BnFile bnFile = storageService.getFile(user, uid);
@@ -114,16 +181,13 @@ public class FileController {
 	        mimeType = "application/octet-stream";
 	    }
 
-//	    model.addAttribute("path", path);
-//	    model.addAttribute("fileName", filePath.getFileName().toString());
 	    model.addAttribute("mimeType", mimeType);
 
 	    return "Common/Streaming";
 	}
 	
 	@GetMapping("Stream")
-	public ResponseEntity<StreamingResponseBody> openStreamingFile(UserVo user, @RequestParam String path,
-	                                                       HttpServletRequest request) throws IOException {
+	public ResponseEntity<StreamingResponseBody> openStreamingFile(HttpServletRequest request, UserVo user, @RequestParam String path ) throws IOException {
 		System.out.println("Stream User : " + user);
 		
 	    Path filePath = Paths.get("F:/WorkData/Burrow", path).normalize();

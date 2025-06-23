@@ -82,6 +82,14 @@ public interface StorageMapper {
 	BnFile selectFileByNo( @Param("fileNo") long fileNo );
 	
 	/**
+	 * 파일 조회
+	 * @param uid
+	 * @return
+	 */
+	BnFile selectFileByUid(@Param("uid") String uid);
+
+	
+	/**
 	 * 파일 수정
 	 * @param file
 	 * @return
@@ -267,10 +275,10 @@ public interface StorageMapper {
 	
 	/**
 	 * 섬네일 조회
-	 * @param fileNo
+	 * @param uid
 	 * @return
 	 */
-	BinResultVo selectThumbnail( @Param("fileId") String fid );
+	BinResultVo selectThumbnail( @Param("fileId") String uid );
 
 	/**
 	 * 루트 directory 조회

@@ -46,8 +46,8 @@ public class StorageServiceImpl implements StorageService {
 	}
 	
 	@Override
-	public byte[] getThumbnail(String fid) {
-		return storageDao.getThumbnail( fid );
+	public byte[] getThumbnail(String uid) {
+		return storageDao.getThumbnail( uid );
 	}
 
 //	@Override
@@ -272,5 +272,13 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 			result.addAll( files );
 		
 		return result;
+	}
+	
+	@Override
+	public BnFile getFile(UserVo user, String uid) {
+		
+		final BnFile file = this.storageDao.getFile( user, uid );
+		
+		return file;
 	}
 }

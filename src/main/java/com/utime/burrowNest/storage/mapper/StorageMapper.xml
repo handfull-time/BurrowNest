@@ -248,13 +248,20 @@
 </insert>
 
 <!-- SELECT -->
-<select id="selectFileByNo" parameterType="long" resultType="com.utime.burrowNest.storage.vo.BnFile">
+<select id="selectFileByNo" parameterType="map" resultType="com.utime.burrowNest.storage.vo.BnFile">
     SELECT 
     	<include refid="BnFileColumn" /> 
     FROM BN_FILE FL
     WHERE FL.NO = #{fileNo}
 </select>
 
+<!-- SELECT -->
+<select id="selectFileByUid" parameterType="map" resultType="com.utime.burrowNest.storage.vo.BnFile">
+    SELECT 
+    	<include refid="BnFileColumn" /> 
+    FROM BN_FILE FL
+    WHERE FL.UID = #{uid}
+</select>
 
 <!-- UPDATE -->
 <update id="updateFile" parameterType="com.utime.burrowNest.storage.vo.BnFile">

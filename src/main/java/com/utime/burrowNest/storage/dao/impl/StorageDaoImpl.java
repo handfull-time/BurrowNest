@@ -390,7 +390,24 @@ class StorageDaoImpl implements StorageDao{
 
 	@Override
 	public BnFile getFile(long fileNo) {
-		return mapper.selectFileByNo(fileNo);
+		final BnFile result = mapper.selectFileByNo(fileNo);
+		
+		if( result != null ) {
+			result.setInfo( this.getFileInfor(result) );
+		}
+		
+		return result;
+	}
+	
+	@Override
+	public BnFile getFile(UserVo user, String uid) {
+		final BnFile result = mapper.selectFileByUid(uid);
+		
+		if( result != null ) {
+			result.setInfo( this.getFileInfor(result) );
+		}
+		
+		return result;
 	}
 
 	@Override
@@ -410,8 +427,8 @@ class StorageDaoImpl implements StorageDao{
 	}
 	
 	@Override
-	public byte[] getThumbnail(String fid) {
-		final BinResultVo result = mapper.selectThumbnail(fid);
+	public byte[] getThumbnail(String uid) {
+		final BinResultVo result = mapper.selectThumbnail(uid);
 		
 		return result.getBinary();
 	}

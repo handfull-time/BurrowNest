@@ -12,10 +12,10 @@ public interface StorageService {
 	
 	/**
 	 * 섬네일 조회
-	 * @param fid
+	 * @param uid
 	 * @return
 	 */
-	byte [] getThumbnail(String fid);
+	byte [] getThumbnail(String uid);
 
 	/**
 	 * dir 정보 조회

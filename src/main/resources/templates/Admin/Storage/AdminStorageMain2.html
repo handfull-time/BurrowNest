@@ -1,0 +1,127 @@
+<div xmlns:th="http://www.thymeleaf.org"
+     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+     layout:decorate="~{Admin/Common/AdminLayout}">
+
+    <th:block layout:fragment="title">그룹 저장소 관리</th:block>
+
+    <th:block layout:fragment="css"></th:block>
+
+    <div layout:fragment="content">
+        <!-- 그룹 선택  -->
+        <div class="bg-white grid grid-cols-5 gap-4">
+		  <!-- 그룹 목록 -->
+		  <div class="col-span-1 border rounded shadow">
+		    <div class="bg-gray-100 font-bold text-center py-2 border-b">그룹명</div>
+		    <ul id="groupList" class="divide-y">
+		      <!-- 그룹 항목 예시 -->
+		      <!-- 동적 생성 -->
+		    </ul>
+		  </div>
+		
+		  <!-- 접근 디렉토리 목록 -->
+		  <div class="col-span-4 border rounded shadow">
+		    <div class="bg-gray-100 font-bold text-center py-2 border-b">접근 Directory</div>
+		    <ul id="directoryList" class="divide-y">
+		      <!-- 디렉토리 항목 예시 -->
+		      <!-- 동적 생성 -->
+		    </ul>
+		  </div>
+		</div>
+		
+		<template id="groupItemTemplate">
+		  <li class="cursor-pointer hover:bg-blue-100 px-4 py-2" data-group-no="">
+		    <span class="group-name"></span>
+		  </li>
+		</template>
+		
+		<template id="directoryItemTemplate">
+		  <li class="flex items-center justify-between px-4 py-2">
+		    <span class="dir-path flex-1 truncate"></span>
+		    <button class="remove-dir ml-2 bg-red-500 hover:bg-red-600 text-white text-sm px-2 py-1 rounded">-</button>
+		  </li>
+		</template>
+		
+		<template id="directoryAddTemplate">
+		  <li class="flex items-center justify-between px-4 py-2">
+		    <input type="text" class="dir-input border px-2 py-1 flex-1 text-sm" placeholder="경로 입력..." />
+		    <button id="GroupDirAdd" class="add-dir ml-2 bg-blue-500 hover:bg-blue-600 text-white text-sm px-2 py-1 rounded">+</button>
+		  </li>
+		</template>
+
+    </div>
+
+    <th:block layout:fragment="script">
+    <script th:inline="javascript">
+    	document.addEventListener("DOMContentLoaded", () => {
+    	  const groupListEl = document.getElementById("groupList");
+    	  const directoryListEl = document.getElementById("directoryList");
+
+    	  const groupTemplate = document.getElementById("groupItemTemplate");
+    	  const dirTemplate = document.getElementById("directoryItemTemplate");
+    	  const addTemplate = document.getElementById("directoryAddTemplate");
+
+    	  const groups = [
+    	    { name: "나의폴더", no: 1 },
+    	    { name: "우리꺼", no: 2 },
+    	    { name: "네트사", no: 3 },
+    	    { name: "사트미", no: 4 }
+    	  ];
+
+    	  const groupDirs = {
+    	    1: ["D:\\Projects"],
+    	    2: ["F:\\Music\\Hans Zimmer", "L:\\Data\\Folder"],
+    	    3: [],
+    	    4: []
+    	  };
+
+    	  let selectedGroupNo = null;
+
+    	  function renderGroupList() {
+    	    groupListEl.innerHTML = "";
+    	    groups.forEach(g => {
+    	      const li = groupTemplate.content.cloneNode(true);
+    	      const item = li.querySelector("li");
+    	      item.dataset.groupNo = g.no;
+    	      item.querySelector(".group-name").textContent = g.name;
+    	      item.addEventListener("click", () => {
+    	        selectedGroupNo = g.no;
+    	        groupListEl.querySelectorAll("li").forEach(el => el.classList.remove("bg-blue-500", "text-white"));
+    	        item.classList.add("bg-blue-500", "text-white");
+    	        renderDirectoryList();
+    	      });
+    	      groupListEl.appendChild(li);
+    	    });
+    	  }
+
+    	  function renderDirectoryList() {
+    	    directoryListEl.innerHTML = "";
+    	    const dirs = groupDirs[selectedGroupNo] || [];
+    	    dirs.forEach((dir, idx) => {
+    	      const li = dirTemplate.content.cloneNode(true);
+    	      li.querySelector(".dir-path").textContent = dir;
+    	      li.querySelector(".remove-dir").addEventListener("click", () => {
+    	        dirs.splice(idx, 1);
+    	        renderDirectoryList();
+    	      });
+    	      directoryListEl.appendChild(li);
+    	    });
+
+    	    const addLi = addTemplate.content.cloneNode(true);
+    	    addLi.querySelector(".add-dir").addEventListener("click", () => {
+    	      const input = addLi.querySelector(".dir-input");
+    	      const path = input.value.trim();
+    	      if (path) {
+    	        groupDirs[selectedGroupNo].push(path);
+    	        renderDirectoryList();
+    	      }
+    	    });
+    	    directoryListEl.appendChild(addLi);
+    	  }
+
+    	  renderGroupList();
+    	});
+    	
+    </script>
+    </th:block>
+
+</div>
