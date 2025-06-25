@@ -281,4 +281,10 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 		
 		return file;
 	}
+	
+	@Override
+	public List<BnDirectory> getGroupStorageList(int groupNo) {
+		
+		return this.storageDao.getRootDirectory( groupNo );
+	}
 }

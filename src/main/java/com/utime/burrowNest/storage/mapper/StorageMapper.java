@@ -285,7 +285,7 @@ public interface StorageMapper {
 	 * @param user
 	 * @return
 	 */
-	BnDirectory selectRootDirectory(UserVo user);
+	List<BnDirectory> selectRootDirectories(@Param("groupNo") int groupNo);
 
 	/**
 	 * directory 속한 파일 및 폴더 목록

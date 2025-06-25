@@ -132,12 +132,11 @@ public interface StorageDao {
 	byte[] getThumbnail(String uid);
 
 	/**
-	 * 루트 Dir 조회. todo... List로 리턴해야 하지 않을까... 싶네...
-	 * @param user
+	 * 루트 Dir 조회.
+	 * @param groupNo
 	 * @return
 	 */
-//	DirectoryDto getRootDirectory(UserVo user);
-	BnDirectory getRootDirectory(UserVo user);
+	List<BnDirectory> getRootDirectory(int groupNo);
 
 	/**
 	 * dir의 파일 목록
@@ -178,6 +177,5 @@ public interface StorageDao {
 	List<BnDirectory> getAllDirectory();
 
 	List<BnPathAccess> getAllDirectoryAccess();
-
-
+	
 }

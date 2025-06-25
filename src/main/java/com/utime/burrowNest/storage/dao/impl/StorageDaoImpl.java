@@ -450,10 +450,10 @@ class StorageDaoImpl implements StorageDao{
 //	}
 	
 	@Override
-	public BnDirectory getRootDirectory(UserVo user) {
-		final BnDirectory directory = mapper.selectRootDirectory( user );
+	public List<BnDirectory> getRootDirectory(int groupNo) {
+		final List<BnDirectory> directories = mapper.selectRootDirectories( groupNo );
 		
-		return directory;
+		return directories;
 	}
 
 	@Override
@@ -489,5 +489,4 @@ class StorageDaoImpl implements StorageDao{
 		
 		return mapper.selectBnDirectoryAccess();
 	}
-
 }

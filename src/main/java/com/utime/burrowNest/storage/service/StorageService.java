@@ -57,4 +57,11 @@ public interface StorageService {
 	 */
 	BnFile getFile(UserVo user, String uid);
 
+	/**
+	 * 
+	 * @param groupNo
+	 * @return
+	 */
+	List<BnDirectory> getGroupStorageList(int groupNo);
+
 }

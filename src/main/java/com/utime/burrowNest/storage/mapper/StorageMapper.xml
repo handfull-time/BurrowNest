@@ -739,7 +739,7 @@
 </select>
 
 <!-- 루트 directory 조회 -->
-<select id="selectRootDirectory" parameterType="com.utime.burrowNest.user.vo.UserVo" resultMap="BnDirectoryMap">
+<select id="selectRootDirectories" parameterType="map" resultMap="BnDirectoryMap">
 	SELECT 
 		<include refid="BnDirectoryColumn" />
 		, DA.ACCESS_FLAGS
@@ -749,7 +749,7 @@
 	    INNER JOIN BN_DIRECTORY_ACCESS DA 
 	    	ON DR.NO = DA.DIR_NO
     WHERE 1=1
-    	AND RD.GROUP_NO = #{group.groupNo}
+    	AND RD.GROUP_NO = #{groupNo}
 </select>
 <!-- LIMIT 1 OFFSET 0 -->
 
