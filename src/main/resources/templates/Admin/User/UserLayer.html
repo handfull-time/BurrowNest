@@ -158,7 +158,7 @@
                     }
                 } else {
                 	console.error('삭제 오류:', response.status);
-                	showCustomAlert( '삭제 오류:', response.status , function(){
+                	showCustomAlert( '삭제 오류:' + response.status , function(){
                 		closePopup(ele);
                 	} );
                 }
@@ -195,7 +195,7 @@
                 }
             } else {
             	console.error('저장 오류:', response.status);
-            	showCustomAlert( '저장 오류:', response.status , function(){
+            	showCustomAlert( '저장 오류:' + response.status , function(){
             		closePopup(ele);
             	} );
             }

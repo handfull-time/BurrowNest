@@ -34,7 +34,9 @@ public class AdminStorageController {
 	public String adminStoragePage(Model model) {
 		
 		final List<GroupVo> groupList = userService.getUserGroupList();
+		// admin
 		groupList.remove(0);
+		// unselected
 		groupList.remove(0);
 		
 		model.addAttribute("groupList", groupList);

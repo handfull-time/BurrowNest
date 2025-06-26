@@ -73,13 +73,13 @@
         
         currentGroupNo = li.dataset.no;
         const address = /*[[@{/Admin/Storage/GroupStorageList.json}]]*/null;
-        const url = `${url}?GroupNo=${currentGroupNo}`;
+        const url = `${address}?GroupNo=${currentGroupNo}`;
         const response = await apiRequest(url, options);
         if (!response.ok) {
             throw new Error(`HTTP 오류 발생: ${response.status} ${response.statusText}`);
         }
         
-        const list = await res.json();
+        const list = await response.json();
 
         renderDirectoryList(list);
     });
@@ -113,6 +113,10 @@
         });
     }
     
+    async function removeDir(){
+    	
+    }
+    
     function renderDirectoryList(dirs) {
     	const dirTemplate = document.getElementById("directoryItemTemplate");
     	const addTemplate = document.getElementById("directoryAddTemplate");
@@ -120,9 +124,12 @@
 	    directoryListEl.innerHTML = "";
 	    dirs.forEach((dir, idx) => {
 	      const li = dirTemplate.content.cloneNode(true);
-	      li.querySelector(".dir-path").textContent = dir;
+	      const dirPath = li.querySelector(".dir-path");
+	      dirPath.textContent = dir.absolutePath;
+	      dirPath.dataset.no = dir.no;
 	      li.querySelector(".remove-dir").addEventListener("click", () => {
-				alert(dir.name + ' - ' + idx + '제거');
+	    	  const message = `[ ${dir.absolutePath} ] 삭제하시겠습니까?`;
+	    	  showCustomConfirm( message, () => handleRemoveDirectory(dir));
 	      });
 	      directoryListEl.appendChild(li);
 	    });
@@ -133,6 +140,29 @@
 	    });
 	    directoryListEl.appendChild(addLi);
 	  }
+    
+    async function handleRemoveDirectory(dir) {
+    	  try {
+    	    const address = /*[[@{/Admin/Storage/RemoveDir.json}]]*/ null;
+    	    const url = `${address}?GroupNo=${currentGroupNo}&DirNo=${dir.no}`;
+
+    	    const options = { method: "POST" }; // 필요 시 옵션 구성
+    	    const response = await apiRequest(url, options);
+
+    	    if (!response.ok) {
+    	      throw new Error(`HTTP 오류 발생: ${response.status} ${response.statusText}`);
+    	    }
+
+    	    const result = await response.json();
+
+    	    // 성공 처리 후 UI 갱신
+    	    alert(`${dir.absolutePath} 제거됨`);
+    	    loadDirectoryList(currentGroupNo); // 필요 시 목록 재로딩 함수 호출
+
+    	  } catch (error) {
+    	    alert(`삭제 실패: ${error.message}`);
+    	  }
+    }
     </script>
     </th:block>
 

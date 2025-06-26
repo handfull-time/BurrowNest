@@ -744,12 +744,10 @@
 		<include refid="BnDirectoryColumn" />
 		, DA.ACCESS_FLAGS
 	FROM BN_DIRECTORY DR
-	    INNER JOIN BN_ROOT_DIRECTORY RD
-	    	ON DR.NO = RD.DIR_NO
 	    INNER JOIN BN_DIRECTORY_ACCESS DA 
 	    	ON DR.NO = DA.DIR_NO
     WHERE 1=1
-    	AND RD.GROUP_NO = #{groupNo}
+    	AND DA.GROUP_NO = #{groupNo}
 </select>
 <!-- LIMIT 1 OFFSET 0 -->
 
