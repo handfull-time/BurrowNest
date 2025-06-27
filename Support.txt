@@ -910,3 +910,14 @@ AND (
 ---
 
 혹시 “소유자 기준으로 최상위 디렉토리”만 보고 싶다면 조건 조정 가능합니다. 추가로 하위 디렉토리까지 lazy-load 로 가져오길 원하시나요?
+
+
+
+const response = await fetch(accountCancelUrl, {
+			     	  method: "POST",
+			     	  credentials: "include",
+			     	  headers: {
+			     		 "Content-Type": "application/x-www-form-urlencoded"
+			     	  },
+			     	 body: new URLSearchParams(sendValue).toString(),
+		     	  });
