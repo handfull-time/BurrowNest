@@ -55,7 +55,7 @@
     const newDirInput = document.getElementById("newDirInput");
     const addDirBtn = document.getElementById("addDirBtn");
 
-    let currentGroupNo = null;
+    let currentGroupNo = /*[[${currentGroupNo}]]*/ 0;
 
     groupListEl.addEventListener("click", async (e) => {
         const li = e.target.closest("li");
@@ -113,10 +113,6 @@
         });
     }
     
-    async function removeDir(){
-    	
-    }
-    
     function renderDirectoryList(dirs) {
     	const dirTemplate = document.getElementById("directoryItemTemplate");
     	const addTemplate = document.getElementById("directoryAddTemplate");
@@ -135,34 +131,59 @@
 	    });
 
 	    const addLi = addTemplate.content.cloneNode(true);
-	    addLi.querySelector(".add-dir").addEventListener("click", () => {
-	    	alert('추가');
-	    });
+	    addLi.querySelector(".add-dir").addEventListener("click", openSelectDir);
 	    directoryListEl.appendChild(addLi);
 	  }
     
-    async function handleRemoveDirectory(dir) {
-    	  try {
-    	    const address = /*[[@{/Admin/Storage/RemoveDir.json}]]*/ null;
-    	    const url = `${address}?GroupNo=${currentGroupNo}&DirNo=${dir.no}`;
+    function openSelectDir(){
+		console.log("openSelectDir click");
 
-    	    const options = { method: "POST" }; // 필요 시 옵션 구성
-    	    const response = await apiRequest(url, options);
-
-    	    if (!response.ok) {
-    	      throw new Error(`HTTP 오류 발생: ${response.status} ${response.statusText}`);
-    	    }
-
-    	    const result = await response.json();
-
-    	    // 성공 처리 후 UI 갱신
-    	    alert(`${dir.absolutePath} 제거됨`);
-    	    loadDirectoryList(currentGroupNo); // 필요 시 목록 재로딩 함수 호출
-
-    	  } catch (error) {
-    	    alert(`삭제 실패: ${error.message}`);
-    	  }
+        const sendValue = {
+		        url: /*[[@{/Intro/Dir.layer}]]*/ null,
+				method: MethodType.Get, 
+				NotCheck:true,
+				popupId:'SelectDir',
+		        width: '600px'
+		    };
+		
+		openPopup(sendValue);
+	}
+    
+    function procNames(names){
+    	console.log(names);
     }
+    
+    async function handleRemoveDirectory(dir) {
+    	
+    	try {
+    	  const address = /*[[@{/Admin/Storage/RemoveDir.json}]]*/ null;
+    	  const url = `${address}?GroupNo=${currentGroupNo}&DirNo=${dir.no}`;
+
+    	  const options = { method: "POST" }; // 필요 시 옵션 구성
+    	  const response = await apiRequest(url, options);
+
+    	  if (!response.ok) {
+    	    throw new Error(`HTTP 오류 발생: ${response.status} ${response.statusText}`);
+    	  }
+
+    	  const result = await response.json();
+
+    	  // 성공 처리 후 UI 갱신
+    	  showCustomAlert(`${dir.absolutePath} 제거됨`, ()=>{
+    	  	// 삭제 성공 시 DOM에서 해당 요소 제거
+      	    const rows = document.querySelectorAll(".dir-path");
+      	    rows.forEach(row => {
+      	      if (row.dataset.no === String(dir.no)) {
+      	        row.closest("li").remove();
+      	      }
+      	    });
+    	  });
+
+    	} catch (error) {
+    	  showCustomAlert(`삭제 실패: ${error.message}`);
+    	}
+    }
+    
     </script>
     </th:block>
 

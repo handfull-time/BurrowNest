@@ -31,7 +31,7 @@ public class AdminStorageController {
 	 * @return
 	 */
 	@GetMapping("Storage.html")
-	public String adminStoragePage(Model model) {
+	public String adminStoragePage(Model model, @RequestParam(name="currentGroupNo", defaultValue = "0") int groupNo) {
 		
 		final List<GroupVo> groupList = userService.getUserGroupList();
 		// admin
@@ -40,6 +40,7 @@ public class AdminStorageController {
 		groupList.remove(0);
 		
 		model.addAttribute("groupList", groupList);
+		model.addAttribute("currentGroupNo", groupNo);
 		
 		return "Admin/Storage/AdminStorageMain";
 	}

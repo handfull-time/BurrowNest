@@ -23,6 +23,9 @@
     
     <script th:inline="javascript">
     	
+	    /**
+	     * 폴더 목록 전달
+	     */
     	function getStorageListValues() {
     	  const spans = document.querySelectorAll('#storageList li span');
     	  return Array.from(spans).map(span => span.textContent.trim());
@@ -40,6 +43,23 @@
 			    };
 			
 			openPopup(sendValue);
+    	}
+    	
+    	/**
+    	 * 팝업창에서 선택한 목록들 화면 처리.
+    	 */
+    	function procNames(names){
+    		
+    		for (let name of names) {
+    		    const list = document.getElementById('storageList');
+    		    const li = document.createElement('li');
+    		    li.className = 'flex justify-between items-center bg-gray-100 p-2 rounded';
+    		    li.innerHTML = `<span>${name}</span><button class="text-red-500 hover:text-red-700" onclick="this.closest('li').remove()">삭제</button>`;
+    		    list.appendChild(li);
+    		}
+    		  
+    		const selectList = getStorageListValues();
+    		buttonStatus( "selectNextBtn", selectList.length > 0);
     	}
     	
     	function goDirScanPage(){
