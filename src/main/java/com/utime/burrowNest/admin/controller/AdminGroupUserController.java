@@ -1,5 +1,7 @@
 package com.utime.burrowNest.admin.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.utime.burrowNest.admin.service.AdminUserService;
 import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.storage.service.StorageService;
+import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.EAccessType;
 import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
@@ -25,8 +29,11 @@ public class AdminGroupUserController {
 	@Autowired
 	private AdminUserService userService;
 	
+	@Autowired
+	private StorageService storageService;
+	
 	/**
-	 * 어드민 관리 페이지
+	 * 그룹 관리 페이지
 	 * @param user
 	 * @return
 	 */
@@ -35,7 +42,12 @@ public class AdminGroupUserController {
 		return "Admin/Group/AdminGroupUserMain";
 	}
 	
-	
+	/**
+	 * 그룹 목록 
+	 * @param model
+	 * @param grName
+	 * @return
+	 */
 	@GetMapping("GroupUserList.layer")
 	public String adminUserList(Model model, @RequestParam(name = "grName", required = false) String grName) {
 		
@@ -44,6 +56,12 @@ public class AdminGroupUserController {
 		return "Admin/Group/AdminGroupUserList";
 	}
 	
+	/**
+	 * 그룹 상세
+	 * @param model
+	 * @param groupNo
+	 * @return
+	 */
 	@GetMapping("GroupItem.layer")
     public String getUserProfile(ModelMap model, @RequestParam(name="groupNo") int groupNo) {
 		
@@ -54,6 +72,11 @@ public class AdminGroupUserController {
 		return "Admin/Group/GroupUserLayer";
     }
 	
+	/**
+	 * 그룹 저장
+	 * @param group
+	 * @return
+	 */
 	@ResponseBody
 	@PostMapping("SaveGroup.json")
     public ReturnBasic saveGroup( @RequestBody GroupVo group) {
@@ -61,11 +84,45 @@ public class AdminGroupUserController {
 		return userService.saveGroup( group );
     }
 	
+	/**
+	 * 그룹 삭제
+	 * @param group
+	 * @return
+	 */
 	@ResponseBody
 	@PostMapping("DeleteGroup.json")
     public ReturnBasic deleteGroup( @RequestBody GroupVo group) {
 		
 		return userService.deleteGroup( group );
     }
+	
+	/**
+	 * 그룹 보유 저장소
+	 * @param model
+	 * @param groupNo
+	 * @return
+	 */
+	@GetMapping("GroupUserStorageList.layer")
+    public String getGroupUserStorageList(ModelMap model, @RequestParam(name="groupNo") int groupNo) {
+		
+		final GroupVo group = userService.getGroupByNo(groupNo);
+		model.addAttribute("group", group);
+		
+		final List<BnDirectory> list = storageService.getGroupStorageList(groupNo);
+		model.addAttribute("list", list);
+        
+		return "Admin/Group/AdminGroupStorageList";
+    }
+	
+	/**
+	 * 그룹 저장소 저장
+	 * @return
+	 */
+	@PostMapping("SaveGroupUserStorageList.json")
+    public ReturnBasic saveGroupUserStorageList(@RequestParam(name="groupNo") int groupNo, @RequestBody List<BnDirectory> list ) {
+		
+		return storageService.setGroupStorageList(groupNo, list);
+    }
+
 }
 

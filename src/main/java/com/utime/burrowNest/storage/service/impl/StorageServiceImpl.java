@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.utime.burrowNest.common.util.BurrowUtils;
+import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.storage.dao.StorageDao;
 import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.storage.vo.AbsPath;
@@ -286,5 +287,11 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 	public List<BnDirectory> getGroupStorageList(int groupNo) {
 		
 		return this.storageDao.getRootDirectory( groupNo );
+	}
+	
+	@Override
+	public ReturnBasic setGroupStorageList(int groupNo, List<BnDirectory> list) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

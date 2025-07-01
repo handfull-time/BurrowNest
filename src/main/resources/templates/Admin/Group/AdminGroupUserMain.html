@@ -20,6 +20,7 @@
 
         <!-- 그룹 목록 -->
         <div id="ResultList"></div>
+        <div id="PathList"></div>
     </div>
 
     <th:block layout:fragment="script">
@@ -30,6 +31,12 @@
         
         
         async function search(){
+        	
+        	const pathList = document.getElementById('PathList');
+
+            if (!pathList) {
+            	pathList.innerHTML = '';
+            }
         	
         	const searchName = document.getElementById('searchName').value;
         	
@@ -63,6 +70,25 @@
 			    };
             
             openPopup( sendValue );
+        }
+        
+        async function onShowPath(groupNo){
+        	const params = new URLSearchParams({
+        		groupNo: groupNo || ''
+        	});
+
+        	const options = {
+        			method: 'GET',
+        			headers: {
+        				'Content-Type': 'application/x-www-form-urlencoded',
+        			},
+        	    };
+        	
+        	const url = /*[[@{/Admin/Group/GroupUserStorageList.layer}]]*/ null;
+        	const urlAddress = url + '?' + params.toString();
+        	
+        	doSearchList(urlAddress, options, 'PathList');
+        	
         }
     </script>
     </th:block>
