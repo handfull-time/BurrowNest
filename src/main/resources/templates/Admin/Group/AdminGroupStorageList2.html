@@ -1,0 +1,245 @@
+<div xmlns:th="http://www.thymeleaf.org">
+
+<div class="bg-white shadow p-6 rounded-md">
+    <h2 class="text-xl font-bold text-gray-700 mb-4">접근 Directory</h2>
+    <table class="w-full border-collapse border border-gray-200">
+        <thead>
+            <tr class="bg-gray-100">
+                <th class="border p-2 text-center">생성일</th>
+                <th class="border p-2 text-center">수정일</th>
+                <th class="border p-2 text-center">이름</th>
+                <th class="border p-2 text-center">사용여부</th>
+                <th class="border p-2 text-center">역할</th>
+                <th class="border p-2 text-center">파일 접근 폴더</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:unless="${#lists.isEmpty(groups)}"
+            	th:each="item : ${groups}" th:data-group-no="${item.groupNo}">
+                <td class="border p-2 text-center" th:text="${#temporals.format(item.regDate,'yyyy.MM.dd HH:mm')}"></td>
+                <td class="border p-2 text-center" th:text="${#temporals.format(item.updateDate,'yyyy.MM.dd HH:mm')}"></td>
+                <td class="border p-2 id-cell underline cursor-pointer" th:text="${item.name}"></td>
+                <td class="border p-2 text-center" th:text="${item.enabled? '🟢':'🔴'}"></td>
+                <td class="border p-2 text-center" th:text="${item.role}"></td>
+                <td class="border p-2 text-center">
+                	<button
+                		type="button"
+                		class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                		th:text="'보기'"
+                		th:onclick="|onShowPath('${item.groupNo}')|">
+                	</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="flex justify-end space-x-4 pt-4">
+	    <button type="button" class="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 transition" onclick="sv()">저장</button>
+	    <button type="button" disabled
+	        id="selectNextBtn" class="bg-gray-500 text-black px-6 py-2 rounded hover:bg-gray-600 transition" onclick="cn()">취소</button>
+	</div>
+</div>
+
+   	<div class="bg-white grid grid-cols-5 gap-4">
+  	
+   		<!-- 접근 디렉토리 목록 -->
+	  	<div class="col-span-4 border rounded shadow">
+		    <div class="bg-gray-100 font-bold text-center py-2 border-b">접근 Directory</div>
+               <ul id="directoryList" class="space-y-1"></ul>
+               <div class="flex mt-2">
+                   <input id="newDirInput" type="text" placeholder="추가할 디렉터리 경로" 
+                          class="border rounded w-full px-2 py-1 mr-2">
+                   <button id="addDirBtn" class="bg-blue-500 text-white px-3 py-1 rounded">+</button>
+               </div>
+		</div>
+   	</div>
+        
+	<template id="directoryItemTemplate">
+	  <li class="flex items-center justify-between px-4 py-2">
+	    <span class="dir-path flex-1 truncate"></span>
+	    <button class="remove-dir ml-2 bg-red-500 hover:bg-red-600 text-white text-sm px-2 py-1 rounded">-</button>
+	  </li>
+	</template>
+	
+	<template id="directoryAddTemplate">
+	  <li class="flex items-center justify-between px-4 py-2">
+	    <input type="text" class="dir-input border px-2 py-1 flex-1 text-sm" placeholder="경로 입력..." />
+	    <button id="GroupDirAdd" class="add-dir ml-2 bg-blue-500 hover:bg-blue-600 text-white text-sm px-2 py-1 rounded">+</button>
+	  </li>
+	</template>
+        
+
+    <script th:inline="javascript">
+    alert('b');
+    document.addEventListener('DOMContentLoaded', () => {
+        alert('a');
+    });
+    
+    const directoryListEl = document.getElementById("directoryList");
+    const newDirInput = document.getElementById("newDirInput");
+    const addDirBtn = document.getElementById("addDirBtn");
+
+    let currentGroupNo = /*[[${currentGroupNo}]]*/ 0;
+
+    groupListEl.addEventListener("click", async (e) => {
+        const li = e.target.closest("li");
+        if (!li) return;
+
+        groupListEl.querySelectorAll("li").forEach(el => el.classList.remove("bg-blue-500", "text-white"));
+        li.classList.add("bg-blue-500", "text-gray");
+
+        const options = {
+    			method: 'GET',
+    			headers: {
+    				'Content-Type': 'application/x-www-form-urlencoded',
+    			},
+    	    };
+        
+        currentGroupNo = li.dataset.no;
+        const address = /*[[@{/Admin/Storage/GroupStorageList.json}]]*/null;
+        const url = `${address}?GroupNo=${currentGroupNo}`;
+        const response = await apiRequest(url, options);
+        if (!response.ok) {
+            throw new Error(`HTTP 오류 발생: ${response.status} ${response.statusText}`);
+        }
+        
+        const list = await response.json();
+
+        renderDirectoryList(list);
+    });
+
+    addDirBtn.addEventListener("click", () => {
+        const name = newDirInput.value.trim();
+        if (!name || !currentGroupNo) return;
+
+        const li = document.createElement("li");
+        li.className = "flex justify-between items-center bg-white border p-2 rounded";
+        li.innerHTML = `<span>${name}</span><button class='text-red-500 hover:text-red-700'>-</button>`;
+        directoryListEl.appendChild(li);
+
+        newDirInput.value = "";
+
+        // TODO: API 저장 연동 필요
+    });
+
+    function renderDirectoryList2(list) {
+        directoryListEl.innerHTML = '';
+        list.forEach(dir => {
+            const li = document.createElement("li");
+            li.className = "flex justify-between items-center bg-white border p-2 rounded";
+            li.innerHTML = `<span>${dir.name}</span><button class='text-red-500 hover:text-red-700'>-</button>`;
+            directoryListEl.appendChild(li);
+
+            li.querySelector("button").addEventListener("click", () => {
+                li.remove();
+                // TODO: API 삭제 연동 필요
+            });
+        });
+    }
+    
+    function renderDirectoryList(dirs) {
+    	const dirTemplate = document.getElementById("directoryItemTemplate");
+    	const addTemplate = document.getElementById("directoryAddTemplate");
+	  
+	    directoryListEl.innerHTML = "";
+	    dirs.forEach((dir, idx) => {
+	      const li = dirTemplate.content.cloneNode(true);
+	      const dirPath = li.querySelector(".dir-path");
+	      dirPath.textContent = dir.absolutePath;
+	      dirPath.dataset.no = dir.no;
+	      li.querySelector(".remove-dir").addEventListener("click", () => {
+	    	  const message = `[ ${dir.absolutePath} ] 삭제하시겠습니까?`;
+	    	  showCustomConfirm( message, () => handleRemoveDirectory(dir));
+	      });
+	      directoryListEl.appendChild(li);
+	    });
+
+	    const addLi = addTemplate.content.cloneNode(true);
+	    addLi.querySelector(".add-dir").addEventListener("click", openSelectDir);
+	    directoryListEl.appendChild(addLi);
+	  }
+    
+    function openSelectDir(){
+		console.log("openSelectDir click");
+
+        const sendValue = {
+		        url: /*[[@{/Intro/Dir.layer}]]*/ null,
+				method: MethodType.Get, 
+				NotCheck:true,
+				popupId:'SelectDir',
+		        width: '600px'
+		    };
+		
+		openPopup(sendValue);
+	}
+    
+    async function procNames(names){
+    	console.log('currentGroupNo', currentGroupNo, 'names', names);
+    	
+    	try {
+      	  const address = /*[[@{/Admin/Storage/AddDir.json}]]*/ null;
+      	  
+      	  const options = { 
+      			method: "POST",
+      			headers: {
+    	            "Content-Type": "application/json"
+    	        },
+    	        body: JSON.stringify( names )
+      		}; 
+      	  const response = await apiRequest(address, options);
+
+      	  if (!response.ok) {
+      	    throw new Error(`HTTP 오류 발생: ${response.status} ${response.statusText}`);
+      	  }
+
+      	  const result = await response.json();
+
+      	  // 성공 처리 후 UI 갱신
+      	  showCustomAlert(`${dir.absolutePath} 제거됨`, ()=>{
+      	  	// 삭제 성공 시 DOM에서 해당 요소 제거
+        	    const rows = document.querySelectorAll(".dir-path");
+        	    rows.forEach(row => {
+        	      if (row.dataset.no === String(dir.no)) {
+        	        row.closest("li").remove();
+        	      }
+        	    });
+      	  });
+
+      	} catch (error) {
+      	  showCustomAlert(`추가 실패: ${error.message}`);
+      	}
+    }
+    
+    async function handleRemoveDirectory(dir) {
+    	
+    	try {
+    	  const address = /*[[@{/Admin/Storage/RemoveDir.json}]]*/ null;
+    	  const url = `${address}?GroupNo=${currentGroupNo}&DirNo=${dir.no}`;
+
+    	  const options = { method: "POST" }; // 필요 시 옵션 구성
+    	  const response = await apiRequest(url, options);
+
+    	  if (!response.ok) {
+    	    throw new Error(`HTTP 오류 발생: ${response.status} ${response.statusText}`);
+    	  }
+
+    	  const result = await response.json();
+
+    	  // 성공 처리 후 UI 갱신
+    	  showCustomAlert(`${dir.absolutePath} 제거됨`, ()=>{
+    	  	// 삭제 성공 시 DOM에서 해당 요소 제거
+      	    const rows = document.querySelectorAll(".dir-path");
+      	    rows.forEach(row => {
+      	      if (row.dataset.no === String(dir.no)) {
+      	        row.closest("li").remove();
+      	      }
+      	    });
+    	  });
+
+    	} catch (error) {
+    	  showCustomAlert(`삭제 실패: ${error.message}`);
+    	}
+    }
+    
+    </script>
+
+</div>
