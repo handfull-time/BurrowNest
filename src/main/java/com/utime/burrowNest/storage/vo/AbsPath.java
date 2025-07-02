@@ -76,6 +76,9 @@ public abstract class AbsPath {
      */
     protected String name;
     
+    /**
+     * File 또는 Directory 접근 권한
+     */
     protected EAccessType accType;
     
     @Override

@@ -1,5 +1,10 @@
 package com.utime.burrowNest.storage.vo;
 
+/**
+ * File 또는 Directory 접근 권한
+ * @author utime
+ *
+ */
 public enum EAccessType {
 //	NONE(         0b0000), //  0 권한 없음
 //    READ(         0b0001), //  1 목록 조회 권한

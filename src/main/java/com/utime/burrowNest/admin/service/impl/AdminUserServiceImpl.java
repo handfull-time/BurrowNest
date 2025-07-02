@@ -10,6 +10,7 @@ import com.utime.burrowNest.admin.service.AdminUserService;
 import com.utime.burrowNest.admin.vo.ManageUserVo;
 import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -83,7 +84,7 @@ class AdminUserServiceImpl implements AdminUserService{
 
 	@Override
 	public ReturnBasic saveGroup(GroupVo group) {
-		ReturnBasic result = new ReturnBasic();
+		final ReturnBasic result = new ReturnBasic();
 		
 		try {
 			adminUserDao.saveGroup( group );
@@ -96,10 +97,23 @@ class AdminUserServiceImpl implements AdminUserService{
 	
 	@Override
 	public ReturnBasic deleteGroup(GroupVo group) {
-		ReturnBasic result = new ReturnBasic();
+		final ReturnBasic result = new ReturnBasic();
 		
 		try {
 			adminUserDao.deleteGroup( group );
+		} catch (Exception e) {
+			result.setCodeMessage("E", e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	@Override
+	public ReturnBasic setGroupStorageList(int groupNo, List<BnDirectory> list) {
+		final ReturnBasic result = new ReturnBasic();
+		
+		try {
+			adminUserDao.saveGroupStorageList( groupNo, list );
 		} catch (Exception e) {
 			result.setCodeMessage("E", e.getMessage());
 		}

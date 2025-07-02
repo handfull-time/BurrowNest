@@ -121,7 +121,7 @@ public class AdminGroupUserController {
 	@PostMapping("SaveGroupUserStorageList.json")
     public ReturnBasic saveGroupUserStorageList(@RequestParam(name="groupNo") int groupNo, @RequestBody List<BnDirectory> list ) {
 		
-		return storageService.setGroupStorageList(groupNo, list);
+		return userService.setGroupStorageList(groupNo, list);
     }
 
 }

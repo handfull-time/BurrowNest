@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.utime.burrowNest.admin.vo.ManageUserVo;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -70,5 +71,13 @@ public interface AdminUserService {
 	 * @return
 	 */
 	ReturnBasic deleteGroup(GroupVo group);
+	
+	/**
+	 * 그룹 저장소 저장
+	 * @param groupNo
+	 * @param list
+	 * @return
+	 */
+	ReturnBasic setGroupStorageList(int groupNo, List<BnDirectory> list);
 
 }

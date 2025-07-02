@@ -3,6 +3,7 @@ package com.utime.burrowNest.admin.dao;
 import java.util.List;
 
 import com.utime.burrowNest.admin.vo.ManageUserVo;
+import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -64,6 +65,14 @@ public interface AdminUserDao {
 	 * @throws Exception
 	 */
 	int deleteGroup(GroupVo group)throws Exception;
+
+	/**
+	 * 그룹 루트 저장
+	 * @param groupNo
+	 * @param list
+	 * @return
+	 */
+	int saveGroupStorageList(int groupNo, List<BnDirectory> list)throws Exception;
 	
 	
 	

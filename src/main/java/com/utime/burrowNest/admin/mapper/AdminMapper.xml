@@ -108,16 +108,16 @@
 	</delete>
 	
 	<!-- Directory Access 그룹 추가 -->
-	<insert id="insertDirectoryAccessGroup" parameterType="map">
+	<insert id="insertDirectoryAccessGroup" parameterType="com.utime.burrowNest.admin.vo.BnAccessVo">
 		INSERT INTO BN_DIRECTORY_ACCESS ( 
 			DIR_NO
 			, GROUP_NO
 			, ACCESS_FLAGS
-		) SELECT 
-			DIR_NO
+		) VALUES (
+			{no}
 			, #{groupNo} 
 			, #{accType}
-		FROM BN_DIRECTORY_ACCESS WHERE GROUP_NO = 1;
+		)
 	</insert>
 
 	<!-- File Access 그룹 추가 -->
@@ -134,10 +134,10 @@
 	</insert>
 
 	<!-- Directory Access 그룹 수정 -->
-	<update id="updateDirectoryAccessGroup" parameterType="map">
+	<update id="updateDirectoryAccessGroup" parameterType="com.utime.burrowNest.admin.vo.BnAccessVo">
 		UPDATE BN_DIRECTORY_ACCESS SET
 			ACCESS_FLAGS = #{accType}
-		WHERE GROUP_NO = #{groupNo} 
+		WHERE DIR_NO = #{dirNo} AND GROUP_NO = #{groupNo} 
 	</update>
 
 	<!-- File Access 그룹 수정 -->
@@ -146,5 +146,12 @@
 			ACCESS_FLAGS = #{accType}
 		WHERE GROUP_NO = #{groupNo}
 	</update>
+	
+	<!-- Directory Access 그룹 삭제 -->
+	<update id="deleteDirectoryAccessGroup" parameterType="com.utime.burrowNest.admin.vo.BnAccessVo">
+		DELETE FROM BN_DIRECTORY_ACCESS 
+		WHERE DIR_NO = #{dirNo} AND GROUP_NO = #{groupNo} 
+	</update>
+	
 	
 </mapper>

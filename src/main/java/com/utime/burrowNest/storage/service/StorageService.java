@@ -65,12 +65,4 @@ public interface StorageService {
 	 */
 	List<BnDirectory> getGroupStorageList(int groupNo);
 
-	/**
-	 * 그룹 저장소 저장
-	 * @param groupNo
-	 * @param list
-	 * @return
-	 */
-	ReturnBasic setGroupStorageList(int groupNo, List<BnDirectory> list);
-
 }

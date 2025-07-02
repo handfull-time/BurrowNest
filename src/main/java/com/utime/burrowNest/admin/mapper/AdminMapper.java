@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.utime.burrowNest.admin.vo.BnAccessVo;
 import com.utime.burrowNest.admin.vo.ManageUserVo;
 import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
@@ -68,7 +69,14 @@ public interface AdminMapper {
 	 * @param accType
 	 * @return
 	 */
-	int insertDirectoryAccessGroup(@Param("groupNo") int groupNo, @Param("accType") int accType);
+	int insertDirectoryAccessGroup(BnAccessVo vo);
+	
+	/**
+	 * 조회
+	 * @param groupNo
+	 * @return
+	 */
+	List<BnAccessVo> selectDirectoryAccessGroup(@Param("groupNo") int groupNo);
 
 	/**
 	 * File Access 그룹 추가
@@ -84,7 +92,7 @@ public interface AdminMapper {
 	 * @param accType
 	 * @return
 	 */
-	int updateDirectoryAccessGroup(@Param("groupNo") int groupNo, @Param("accType") int accType);
+	int updateDirectoryAccessGroup(BnAccessVo vo);
 
 	/**
 	 * File Access 그룹 수정
@@ -94,6 +102,12 @@ public interface AdminMapper {
 	 */
 	int updateFileAccessGroup(@Param("groupNo") int groupNo, @Param("accType") int accType);
 
-	
+	/**
+	 * Directory Access 그룹 삭제
+	 * @param groupNo
+	 * @param accType
+	 * @return
+	 */
+	int deleteDirectoryAccessGroup(BnAccessVo vo);
 
 }
