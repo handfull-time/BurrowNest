@@ -5,13 +5,9 @@
     <!-- 접근 디렉토리 목록 -->
   	<div class="col-span-4 border rounded shadow">
         <ul id="directoryList" class="space-y-1"></ul>
-        <!-- <div class="flex mt-2">
-            <span class=""></span>
-            <button id="addDirBtn" class="bg-blue-500 text-white px-3 py-1 rounded">+</button>
-        </div> -->
 	</div>
     <div class="flex justify-end space-x-4 pt-4">
-	    <button type="button" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" onclick="sv()">저장</button>
+	    <button type="button" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" onclick="save()">저장</button>
 	    <button type="button" class="bg-gray-500 text-black px-6 py-2 rounded-lg hover:bg-gray-600 transition" onclick="cancel()">취소</button>
 	</div>
 </div>
@@ -36,6 +32,7 @@
         
 
     <script th:inline="javascript">
+    
     function renderDirectoryList(dirs) {
     	const dirTemplate = document.getElementById("directoryItemTemplate");
     	const addTemplate = document.getElementById("directoryAddTemplate");
@@ -59,6 +56,16 @@
 	    directoryListEl.appendChild(addLi);
 	}
     
+	function handleRemoveDirectory(dir) {
+		
+		const rows = document.querySelectorAll(".dir-path");
+		rows.forEach(row => {
+			if (row.dataset.no === String(dir.no)) {
+				row.closest("li").remove();
+			}
+     	});
+    }
+    
     function openSelectDir(){
 		console.log("openSelectDir click");
 
@@ -75,6 +82,10 @@
 
     function cancel(){
     	document.getElementById("PathList").innerHTML = "";
+    }
+    
+    function save(){
+    	
     }
     
     

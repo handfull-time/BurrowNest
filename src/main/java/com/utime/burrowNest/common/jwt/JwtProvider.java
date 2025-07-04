@@ -187,7 +187,7 @@ public class JwtProvider {
             return false;
 		}
 		
-		final String s = claims.get(JWT_KEY.GUN_KEY, String.class);
+//		final String s = claims.get(JWT_KEY.GUN_KEY, String.class);
 		
 		
     	return true;

@@ -188,9 +188,6 @@
                     newScript.setAttribute(attr.name, attr.value);
                 });
 
-                // popupIndex가 외부에 없으면 주석 처리하거나 추가 필요
-                // newScript.dataset.popupId = `popupOverlay_${popupIndex}`;
-
                 oldScript.remove();
                 document.body.appendChild(newScript);
             });
