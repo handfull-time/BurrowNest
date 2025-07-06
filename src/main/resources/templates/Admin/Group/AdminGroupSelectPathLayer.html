@@ -1,0 +1,191 @@
+<div xmlns:th="http://www.thymeleaf.org" 
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{Common/LayoutModal}"
+    th:with="maxHeight='80'">
+    
+    <th:block layout:fragment="modalTitle">루트 목록</th:block>
+
+	<th:block layout:fragment="modalContent">
+	<ul id="directoryTree" class="space-y-1 max-h-[600px] overflow-auto border rounded p-2 bg-white "></ul>
+	
+	<template id="treeNodeTemplate">
+		<li class="mb-1" role="treeitem">
+			<div class="flex items-center space-x-2 group" data-node="true">
+				<svg class="chevron w-4 h-4 text-gray-500 transition-transform"
+					viewBox="0 0 24 24" fill="none" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+				</svg>
+				<input type="checkbox" class="folder-checkbox" />
+				<span class="folder-label"></span>
+			</div>
+		</li>
+	</template>
+    </th:block>
+    
+    <th:block layout:fragment="modalButton">
+    	<button id="saveButton" onclick="saveData(this)" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition">
+            저장
+        </button>
+        <button onclick="closePopup(this)" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition">
+            취소
+        </button>
+    </th:block>
+    
+	<th:block layout:fragment="modalScript">
+		<script th:inline="javascript" defer>
+		
+		function createTreeNode(node, parentOpened = false) {
+		  const template = document.getElementById("treeNodeTemplate");
+		  const clone = template.content.cloneNode(true);
+		  const li = clone.querySelector('li');
+		  const row = clone.querySelector('[data-node]');
+		  const chevron = clone.querySelector('.chevron');
+		  const label = clone.querySelector('.folder-label');
+		  const checkbox = clone.querySelector('.folder-checkbox');
+
+		  row._nodeData = node;
+		  node.row = row;
+		  label.textContent = node.owner.name;
+
+		  let isOpen = false;
+
+		  if (node.child && node.child.length > 0) {
+		    const ul = document.createElement('ul');
+		    ul.className = "ml-6 mt-1 space-y-1 hidden";
+		    ul.dataset.childDirectories = "";
+
+		    node.child.forEach(child => {
+		      const childNode = createTreeNode(child, false);
+		      if (childNode?.dataset?.containsSelected === "true") {
+		        isOpen = true;
+		      }
+		      ul.appendChild(childNode);
+		    });
+
+		    if (isOpen || node.selected || parentOpened) {
+		      row.classList.add("open");
+		      ul.classList.remove("hidden");
+		      chevron.classList.add("rotate-90");
+
+		      if (node.selected) {
+		        label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+		      }
+
+		      li.dataset.containsSelected = "true";
+		    }
+
+		    li.appendChild(ul);
+
+		    row.addEventListener("click", (e) => {
+		      if (e.target.tagName === 'INPUT') return; // checkbox 클릭 제외
+		      e.stopPropagation();
+		      row.classList.toggle("open");
+		      ul.classList.toggle("hidden");
+		      chevron.classList.toggle("rotate-90");
+
+		      document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
+		      label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+
+		      onSelected(node);
+		    });
+		  } else {
+		    chevron.classList.add("opacity-0");
+
+		    if (node.selected) {
+		      label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+		      li.dataset.containsSelected = "true";
+		    }
+
+		    row.addEventListener("click", (e) => {
+		      if (e.target.tagName === 'INPUT') return;
+		      e.stopPropagation();
+
+		      document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
+		      label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+
+		      onSelected(node);
+		    });
+		  }
+
+		  if (node.selected) {
+		    setTimeout(() => {
+		      onSelected(node);
+		    }, 0);
+		  }
+
+		  return li;
+		}
+		
+		function onSelected(node){
+			
+		}
+
+		function getCheckedNodes() {
+		  const checkedNodes = [];
+		  document.querySelectorAll('#directoryTree .folder-checkbox:checked').forEach(checkbox => {
+		    const nodeElement = checkbox.closest('[data-node]');
+		    if (nodeElement?._nodeData) {
+		      checkedNodes.push(nodeElement._nodeData);
+		    }
+		  });
+		  return checkedNodes;
+		}
+
+
+
+		// ✅ 저장 후 목록에 추가
+		function saveData(element) {
+			const nodes = getCheckedNodes();
+			if (nodes.length < 1) {
+			  showCustomAlert("저장소 경로를 추가하세요.");
+			  return;
+			}
+			
+			const directoryListEl = document.getElementById("directoryList");
+			const existingNos = new Set(
+			  Array.from(directoryListEl.querySelectorAll(".dir-path"))
+			    .map(el => el.dataset.no)
+			);
+			
+			// 추가 버튼 제거
+			const addBtn = directoryListEl.querySelector(".add-dir")?.closest("li");
+			if (addBtn) directoryListEl.removeChild(addBtn);
+			
+			nodes.forEach(dir => {
+			  if (!existingNos.has(String(dir.owner.no))) {
+			    appendDirectoryItem(dir);
+			  }
+			});
+			
+			// 다시 추가 버튼 붙이기
+			const addTemplate = document.getElementById("directoryAddTemplate");
+			const addLi = addTemplate.content.cloneNode(true);
+			addLi.querySelector(".add-dir").addEventListener("click", openSelectDir);
+			directoryListEl.appendChild(addLi);
+			
+			closePopup(element);
+		}
+
+
+
+		
+		function loadFunction(owner){
+			const directories = /*[[${list}]]*/ null;
+			const container = document.getElementById("directoryTree");
+			
+			const rootUl = document.createElement("ul");
+			rootUl.setAttribute("role", "tree");
+			
+			directories.forEach(dir => {
+			  const treeNode = createTreeNode(dir);
+			  rootUl.appendChild(treeNode);
+			});
+			
+			container.innerHTML = '';
+			container.appendChild(rootUl);
+		}
+
+		</script>
+    </th:block>
+</div>
+	   

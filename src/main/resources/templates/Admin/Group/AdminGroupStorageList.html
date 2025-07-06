@@ -33,28 +33,41 @@
 
     <script th:inline="javascript">
     
-    function renderDirectoryList(dirs) {
-    	const dirTemplate = document.getElementById("directoryItemTemplate");
-    	const addTemplate = document.getElementById("directoryAddTemplate");
-    	const directoryListEl = document.getElementById("directoryList");
-	  
-	    directoryListEl.innerHTML = "";
-	    dirs.forEach((dir, idx) => {
-			const li = dirTemplate.content.cloneNode(true);
-			const dirPath = li.querySelector(".dir-path");
-			dirPath.textContent = dir.absolutePath;
-			dirPath.dataset.no = dir.no;
-			li.querySelector(".remove-dir").addEventListener("click", () => {
-				const message = `[ ${dir.absolutePath} ] 삭제하시겠습니까?`;
-				showCustomConfirm( message, () => handleRemoveDirectory(dir));
-			});
-			directoryListEl.appendChild(li);
-	    });
-
-	    const addLi = addTemplate.content.cloneNode(true);
-	    addLi.querySelector(".add-dir").addEventListener("click", openSelectDir);
-	    directoryListEl.appendChild(addLi);
+    function appendDirectoryItem(dir) {
+		const dirTemplate = document.getElementById("directoryItemTemplate");
+		const directoryListEl = document.getElementById("directoryList");
+		
+		const li = dirTemplate.content.cloneNode(true);
+		const dirPath = li.querySelector(".dir-path");
+		dirPath.textContent = dir.absolutePath;
+		dirPath.dataset.no = dir.no;
+		
+		li.querySelector(".remove-dir").addEventListener("click", () => {
+		  const message = `[ ${dir.absolutePath} ] 삭제하시겠습니까?`;
+		  showCustomConfirm(message, () => {
+		    dirPath.closest("li").remove();
+		  });
+		});
+		
+		directoryListEl.appendChild(li);
 	}
+
+    
+    function renderDirectoryList(dirs) {
+		const directoryListEl = document.getElementById("directoryList");
+		const addTemplate = document.getElementById("directoryAddTemplate");
+		
+		directoryListEl.innerHTML = "";
+		
+		dirs.forEach(dir => {
+			appendDirectoryItem(dir);
+		});
+		
+		const addLi = addTemplate.content.cloneNode(true);
+		addLi.querySelector(".add-dir").addEventListener("click", openSelectDir);
+		directoryListEl.appendChild(addLi);
+	}
+
     
 	function handleRemoveDirectory(dir) {
 		
@@ -70,11 +83,12 @@
 		console.log("openSelectDir click");
 
         const sendValue = {
-		        url: /*[[@{/Intro/Dir.layer}]]*/ null,
+		        url: /*[[@{/Admin/Group/AdminGroupSelectPath.layer}]]*/ null,
 				method: MethodType.Get, 
 				NotCheck:true,
-				popupId:'SelectDir',
-		        width: '600px'
+				popupId:'AdminGroupSelectPath',
+		        width: '600px',
+		        onLoadFunction: 'loadFunction'
 		    };
 		
 		openPopup(sendValue);
@@ -85,9 +99,9 @@
     }
     
     function save(){
+    	const grupNo = /*[[${group.groupNo}]]*/0;
     	
     }
-    
     
     renderDirectoryList(/*[[${list}]]*/ null);
     

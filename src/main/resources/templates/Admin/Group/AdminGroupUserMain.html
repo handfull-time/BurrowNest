@@ -25,10 +25,12 @@
 
     <th:block layout:fragment="script">
     <script th:inline="javascript">
+		// 첫 로딩시 검색    
         document.addEventListener('DOMContentLoaded', () => {
             search();
         });
         
+		// 검색
         async function search(){
         	
         	const pathList = document.getElementById('PathList');
@@ -56,6 +58,8 @@
         	doSearchList(urlAddress, options, 'ResultList');
         };
         
+        
+        // 그룹 상세 창
         function onGroupDetail(groupNo){
         	const url = /*[[@{/Admin/Group/GroupItem.layer}]]*/ null;
             const urlValue = url + '?groupNo=' + groupNo;
@@ -71,6 +75,7 @@
             openPopup( sendValue );
         }
         
+        // 그룹 루트 dir 보기
         async function onShowPath(groupNo){
         	const params = new URLSearchParams({
         		groupNo: groupNo || ''

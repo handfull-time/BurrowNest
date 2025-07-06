@@ -222,6 +222,7 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 	public List<DirectoryDto> getDirectory(UserVo user, String uid) {
 		
 		final List<DirectoryDto> result =  dirManager.getAccessibleDirectoriesForGroup(user.getGroup().getGroupNo());
+		
 		if( BurrowUtils.isEmpty(uid) ) {
 			log.info("루트 호출");
 		}else{

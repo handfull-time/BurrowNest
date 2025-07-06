@@ -22,9 +22,11 @@
                 <td class="border p-2 text-center" th:text="${item.enabled? '🟢':'🔴'}"></td>
                 <td class="border p-2 text-center" th:text="${item.role}"></td>
                 <td class="border p-2 text-center">
-                	<button
+                	<button 
                 		type="button"
-                		class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                		class="font-bold py-1 px-2 rounded text-white"
+    					th:classappend="${item.groupNo == 1 or item.groupNo == 2} ? ' bg-gray-400 cursor-not-allowed' : ' bg-blue-500 hover:bg-blue-700'"
+                		th:attr="disabled=${!(item.groupNo != 1 and item.groupNo != 2)}"
                 		th:text="'보기'"
                 		th:onclick="|onShowPath('${item.groupNo}')|">
                 	</button>

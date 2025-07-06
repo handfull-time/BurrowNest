@@ -43,7 +43,8 @@
 			NotCheck:false,
 			data:null,
 			popupId:null,
-	        width: '800px'
+	        width: '800px',
+	        onLoadFunction: null
     	}
     	
 		const sendValue = { ...defaults, ...sendObj };
@@ -145,6 +146,14 @@
            		    oldScript.remove();
            		    document.body.appendChild(newScript);
            		});
+           		
+				if( sendValue.onLoadFunction ){
+					if (typeof sendValue.onLoadFunction === 'function') {
+	           			sendValue.onLoadFunction(newPopup);
+	    			}else{
+	    				window[sendValue.onLoadFunction](newPopup);
+	    			}
+				}
         		
         		// ✅ 로딩 화면 숨기기
                 if (loading) loading.classList.add("hidden");
