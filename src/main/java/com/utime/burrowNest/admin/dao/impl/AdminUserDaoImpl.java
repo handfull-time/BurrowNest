@@ -1,5 +1,6 @@
 package com.utime.burrowNest.admin.dao.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -96,7 +97,10 @@ class AdminUserDaoImpl implements AdminUserDao{
 		}
 		
 		final int accType = group.getAccType().getBit();
-		final Map<Long, BnAccessVo> dbAccessMap = mapper.selectDirectoryAccessGroup(groupNo)
+		List<BnAccessVo> accList = mapper.selectDirectoryAccessGroup(groupNo);
+		if( BurrowUtils.isEmpty(accList))
+			accList = new ArrayList<>();
+		final Map<Long, BnAccessVo> dbAccessMap = accList
 		        .stream()
 		        .collect(Collectors.toMap(BnAccessVo::getNo, Function.identity()));
 		
