@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -53,7 +54,8 @@ import jakarta.servlet.http.HttpServletResponse;
 @RequestMapping("Files")
 public class FileController {
 	
-	StorageService storageService;
+	@Autowired
+	private StorageService storageService;
 	
 	@GetMapping("Open/{uid}")
 	public Object openOrPreviewFile(UserVo user, HttpServletRequest request, Model model, @PathVariable("uid") String uid)  {
@@ -114,7 +116,8 @@ public class FileController {
         model.addAttribute("mimeType", mimeType);
 
         // 배경용 썸네일 base64
-        String base64Thumbnail = Base64.getEncoder().encodeToString( storageService.getThumbnail(uid) );
+        final byte [] thumbnail = storageService.getThumbnail(user, uid);
+        final String base64Thumbnail = thumbnail == null? "":Base64.getEncoder().encodeToString( thumbnail );
         model.addAttribute("base64Thumbnail", base64Thumbnail);
 
         return "Common/Streaming";
@@ -490,8 +493,8 @@ public class FileController {
 	}
 	
 	@GetMapping("Thumbnail/{fid}")
-	public ResponseEntity<byte[]> getThumbnail(@PathVariable String fid) {
-	    final byte[] image = storageService.getThumbnail(fid);
+	public ResponseEntity<byte[]> getThumbnail(UserVo user, @PathVariable String fid) {
+	    final byte[] image = storageService.getThumbnail(user, fid);
 	    
 	    if( image == null ) {
 	    	return ResponseEntity.notFound().build();

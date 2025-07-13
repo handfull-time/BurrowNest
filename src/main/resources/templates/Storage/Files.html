@@ -13,7 +13,7 @@
 <!-- 아이콘 보기용 템플릿 -->
 <template id="fileItemIconTemplate">
   <div class="file-item flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer">
-    <div class="thumb w-16 h-16 bg-gray-100 rounded overflow-hidden">
+    <div class="thumb w-16 h-16 bg-gray-100 rounded overflow-hidden not-italic">
       <img class="thumb-img w-full h-full object-cover hidden" loading="lazy" />
       <i class="icon fa-solid fa-file text-gray-400 text-xl flex items-center justify-center h-full"></i>
     </div>
@@ -261,32 +261,6 @@
 		});
 	}
 
-
-	// Ctrl + 클릭 선택
-	/*
-	document.getElementById('fileGrid').addEventListener('click', (e) => {
-	    const item = e.target.closest('.file-item');
-	    if (!item) return;
-
-	    const uid = item.dataset.uid;
-
-	    if (e.ctrlKey) {
-	      if (selectedItems.has(uid)) {
-	        selectedItems.delete(uid);
-	        item.classList.remove('bg-blue-200');
-	      } else {
-	        selectedItems.add(uid);
-	        item.classList.add('bg-blue-200');
-	      }
-	    } else {
-	      document.querySelectorAll('.file-item').forEach(el => el.classList.remove('bg-blue-200'));
-	      selectedItems.clear();
-	      selectedItems.add(uid);
-	      item.classList.add('bg-blue-200');
-	    }
-	}); */
-	  
-	  
 	function formatFileSize(bytes) {
 		if (bytes < 1024) return bytes + ' B';
 		if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';

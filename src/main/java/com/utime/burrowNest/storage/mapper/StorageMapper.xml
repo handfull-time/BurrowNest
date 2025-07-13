@@ -730,7 +730,7 @@
 </update>
 
 <!-- SELECT -->
-<select id="selectThumbnail" parameterType="long" resultMap="com.utime.burrowNest.common.mapper.CommonMapper.BinResultVoMap">
+<select id="selectThumbnail" parameterType="map" resultMap="com.utime.burrowNest.common.mapper.CommonMapper.BinResultVoMap">
     SELECT
         THUMBNAIL AS BIN_DATA
     FROM BN_FILE_THUMBNAIL THM

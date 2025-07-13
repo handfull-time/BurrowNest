@@ -3,8 +3,12 @@ package com.utime.burrowNest.storage.service.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +39,8 @@ public class StorageServiceImpl implements StorageService {
 	
 	private final DirecotryManager dirManager;
 	
+	private final ExecutorService executorThumbnail = Executors.newSingleThreadExecutor();
+	
 	/**
 	 * ApplicationReadyEvent
 	 */
@@ -43,9 +49,37 @@ public class StorageServiceImpl implements StorageService {
 		this.mapFileType = storageDao.getBnFileType();
 	}
 	
+	@EventListener(ContextClosedEvent.class)
+	protected void onShutdown() {
+		executorThumbnail.shutdown();
+		
+		try {
+			executorThumbnail.awaitTermination(10, TimeUnit.MINUTES);
+		} catch (InterruptedException e) {
+			log.error("", e);
+		}
+		
+		if( ! executorThumbnail.isShutdown() ) {
+			executorThumbnail.shutdownNow();
+		}
+    }
+	
+	
 	@Override
-	public byte[] getThumbnail(String uid) {
-		return storageDao.getThumbnail( uid );
+	public byte[] getThumbnail(UserVo user, String uid) {
+		
+		final byte[] result = storageDao.getThumbnail( uid );
+		
+		if( result == null ) {
+			executorThumbnail.execute( () -> {
+				final BnFile file = storageDao.getFile(user, uid);
+				if( file != null ) {
+					
+				}
+			});
+		}
+				
+		return result;
 	}
 
 //	@Override

@@ -430,7 +430,7 @@ class StorageDaoImpl implements StorageDao{
 	public byte[] getThumbnail(String uid) {
 		final BinResultVo result = mapper.selectThumbnail(uid);
 		
-		return result.getBinary();
+		return result == null? null:result.getBinary();
 	}
 
 //	@Override

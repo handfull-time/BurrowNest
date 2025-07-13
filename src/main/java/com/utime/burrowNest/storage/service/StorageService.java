@@ -16,7 +16,7 @@ public interface StorageService {
 	 * @param uid
 	 * @return
 	 */
-	byte [] getThumbnail(String uid);
+	byte [] getThumbnail(UserVo user, String uid);
 
 	/**
 	 * dir 정보 조회

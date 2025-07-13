@@ -278,7 +278,7 @@ public interface StorageMapper {
 	 * @param uid
 	 * @return
 	 */
-	BinResultVo selectThumbnail( @Param("fileId") String uid );
+	BinResultVo selectThumbnail( @Param("fid") String uid );
 
 	/**
 	 * 루트 directory 조회
