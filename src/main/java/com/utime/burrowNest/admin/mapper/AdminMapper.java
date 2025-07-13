@@ -72,7 +72,7 @@ public interface AdminMapper {
 	int insertDirectoryAccessGroup(BnAccessVo vo);
 	
 	/**
-	 * 조회
+	 * Directory access 조회
 	 * @param groupNo
 	 * @return
 	 */

@@ -142,6 +142,7 @@ public class AdminGroupUserController {
 	 * 그룹 저장소 저장
 	 * @return
 	 */
+	@ResponseBody
 	@PostMapping("SaveGroupUserStorageList.json")
     public ReturnBasic saveGroupUserStorageList(@RequestParam(name="groupNo") int groupNo, @RequestBody List<BnDirectory> list ) {
 		

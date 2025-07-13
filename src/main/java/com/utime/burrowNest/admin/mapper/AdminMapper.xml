@@ -114,11 +114,21 @@
 			, GROUP_NO
 			, ACCESS_FLAGS
 		) VALUES (
-			{no}
+			#{no}
 			, #{groupNo} 
 			, #{accType}
 		)
 	</insert>
+	
+	<!-- 조회 -->
+	<select id="selectDirectoryAccessGroup" parameterType="map" resultType="com.utime.burrowNest.admin.vo.BnAccessVo">
+		SELECT
+			DIR_NO AS "no"
+			, GROUP_NO AS "groupNo"
+			, ACCESS_FLAGS AS "accType"
+		FROM BN_DIRECTORY_ACCESS
+		WHERE GROUP_NO = #{groupNo}
+	</select>
 
 	<!-- File Access 그룹 추가 -->
 	<insert id="insertFileAccessGroup" parameterType="map">
