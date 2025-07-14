@@ -14,6 +14,7 @@ import com.utime.burrowNest.admin.service.AdminUserService;
 import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.user.vo.GroupVo;
+import com.utime.burrowNest.user.vo.UserVo;
 
 @Controller
 @RequestMapping("Admin/Storage")
@@ -31,16 +32,9 @@ public class AdminStorageController {
 	 * @return
 	 */
 	@GetMapping("Storage.html")
-	public String adminStoragePage(Model model, @RequestParam(name="currentGroupNo", defaultValue = "0") int groupNo) {
+	public String adminStoragePage(Model model, UserVo user) {
 		
-		final List<GroupVo> groupList = userService.getUserGroupList();
-		// admin
-		groupList.remove(0);
-		// unselected
-		groupList.remove(0);
-		
-		model.addAttribute("groupList", groupList);
-		model.addAttribute("currentGroupNo", groupNo);
+		model.addAttribute("directories", storageService.getGroupStorageList(user) );
 		
 		return "Admin/Storage/AdminStorageMain";
 	}
@@ -48,7 +42,7 @@ public class AdminStorageController {
 	@ResponseBody
 	@GetMapping("GroupStorageList.json")
 	public List<BnDirectory> GroupStorageList(@RequestParam("GroupNo") int groupNo) {
-		return storageService.getGroupStorageList( groupNo );
+		return null;
 	}
 }
 

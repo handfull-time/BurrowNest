@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -60,6 +61,30 @@ class StorageUtils {
 	private final static String Exiftool;
 	
 	static {
+        // 애플리케이션 시작 시 DB 설정 파일만 로드 (커넥션 풀 초기화는 지연)
+        try (InputStream input = StorageUtils.class.getClassLoader().getResourceAsStream("env.properties")) {
+            if (input == null) {
+                log.error("Error: db.properties file not found in classpath.");
+                throw new RuntimeException("db.properties file not found.");
+            }
+            
+            final Properties config = new Properties();
+            config.load(input);
+            
+            final InetAddress localHost = InetAddress.getLocalHost();
+            String hostName = localHost.getHostName();
+            log.info("hostName : {}", hostName);
+            
+            
+            
+            log.info("db.properties loaded successfully.");
+        } catch (Exception ex) {
+            log.error("Fatal error during database configuration loading.", ex);
+            throw new RuntimeException("Failed to load database configuration.", ex);
+        }
+
+		
+		
 		if( BurrowDefine.IsLinux ) {
 			Exiftool = "exiftool";
 		}else {
