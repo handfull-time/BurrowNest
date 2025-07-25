@@ -79,7 +79,7 @@
 			const template = document.getElementById("dirItemTemplate");
 			
 		  try {
-		    const baseUrl = /*[[@{/Intro/PathList.json}]]*/ null;
+		    const baseUrl = /*[[@{/Admin/Storage/PathList.json}]]*/ null;
 		    const url = `${baseUrl}?path=${encodeURIComponent(path)}`;
 		    const response = await fetch(url);
 		    const list = await response.json();

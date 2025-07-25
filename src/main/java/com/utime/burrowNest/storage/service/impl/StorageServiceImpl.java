@@ -316,9 +316,9 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 	}
 	
 	@Override
-	public List<BnDirectory> getGroupStorageList(UserVo user) {
+	public List<BnDirectory> getGroupStorageList(int groupNo) {
 		
-		return this.storageDao.getRootDirectory( user.getGroup().getGroupNo() );
+		return this.storageDao.getRootDirectory( groupNo );
 	}
 	
 }

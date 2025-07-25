@@ -2,7 +2,6 @@ package com.utime.burrowNest.storage.service;
 
 import java.util.List;
 
-import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
@@ -63,6 +62,6 @@ public interface StorageService {
 	 * @param groupNo
 	 * @return
 	 */
-	List<BnDirectory> getGroupStorageList(UserVo user);
+	List<BnDirectory> getGroupStorageList(int groupNo);
 
 }

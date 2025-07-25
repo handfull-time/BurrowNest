@@ -13,6 +13,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.utime.burrowNest.admin.vo.SaveSotrageReqVo;
 import com.utime.burrowNest.common.util.CommandUtil;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.root.service.LoadStorageService;
@@ -24,9 +25,9 @@ import com.utime.burrowNest.storage.vo.BnFile;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.storage.vo.MessageDataVo;
 import com.utime.burrowNest.user.dao.UserDao;
-import com.utime.burrowNest.user.vo.InitInforReqVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,11 +52,21 @@ public class LoadStorageServiceImpl implements LoadStorageService {
 	
 	private Map<String, EBnFileType> mapFileType;
 	
+	@PostConstruct
+	private void initTable() {
+		try {
+			this.storageDao.initTable();
+		} catch (Exception e) {
+			log.error("", e);
+		}
+	}
+	
 	/**
 	 * ApplicationReadyEvent
 	 */
 	@EventListener(ApplicationReadyEvent.class)
 	protected void handleApplicationReadyEvent() {
+		
 		this.mapFileType = storageDao.getBnFileType();
 	}
 	
@@ -76,12 +87,6 @@ public class LoadStorageServiceImpl implements LoadStorageService {
 			this.owner = owner;
 		}
     }
-    
-	
-	@Override
-	public boolean IsInit() {
-		return storageDao.IsInit();
-	}
     
     /*
 		AtomicLong counter = new AtomicLong(0);
@@ -234,10 +239,10 @@ public class LoadStorageServiceImpl implements LoadStorageService {
     
     @SuppressWarnings("unused")
 	private class LibDownLoad implements Runnable{
-    	final InitInforReqVo req;
+    	final SaveSotrageReqVo req;
     	final InitFileLoad ifl;
     	
-    	public LibDownLoad(InitInforReqVo req, InitFileLoad ifl) {
+    	public LibDownLoad(SaveSotrageReqVo req, InitFileLoad ifl) {
 			this.req = req;
 			this.ifl = ifl;
 		}
@@ -331,10 +336,10 @@ public class LoadStorageServiceImpl implements LoadStorageService {
      */
     private class BeginFileLoad implements Runnable{
     	
-    	final InitInforReqVo req;
+    	final SaveSotrageReqVo req;
     	final InitFileLoad ifl;
     	
-    	public BeginFileLoad(InitInforReqVo req, InitFileLoad ifl) {
+    	public BeginFileLoad(SaveSotrageReqVo req, InitFileLoad ifl) {
 			this.req = req;
 			this.ifl = ifl;
 		}
@@ -410,15 +415,8 @@ public class LoadStorageServiceImpl implements LoadStorageService {
     
     
 	@Override
-	public ReturnBasic saveInitStorage(InitInforReqVo req) {
+	public ReturnBasic saveInitStorage(SaveSotrageReqVo req) {
 		
-		try {
-			this.storageDao.initTable();
-		} catch (Exception e) {
-			log.error("", e);
-			return new ReturnBasic("E", e.getMessage() );
-		}
-
 		final InitFileLoad ifl = new InitFileLoad(req.getWsUserName(), userDao.getManageUser());
 		
 		final MessageDataVo message = ifl.message;

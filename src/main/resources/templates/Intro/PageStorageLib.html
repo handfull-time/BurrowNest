@@ -17,11 +17,62 @@
     			이전
     		</button>
     		
-    		<button type="button"
+    		<!-- <button type="button"
     			class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition"
     			onclick="nextPage('PageStorageLib', 'PageStorageSelect')">
     			다음
-    		</button>
+    		</button> -->
+    		<button type="button" id="applyBtn" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" th:onclick="apply()">진행</button>
     	</div>
     </div>
+    
+    <script th:inline="javascript">
+    async function apply(){
+    	
+    	buttonStatus( "applyBtn", false);
+    	
+    	const encrypt = new JSEncrypt();
+        encrypt.setPublicKey(/*[[${unique.publicKey}]]*/ null);
+
+        const encPw = encrypt.encrypt( document.getElementById("password").value );	
+	
+        const imageData = await getProfileImage();
+    	if (!imageData) {
+    		showCustomAlert("이미지 처리 오류가 발생했습니다.");
+    		return;
+    	}
+        
+        const formData = new FormData();
+        formData.append("token", /*[[${unique.token}]]*/ null);
+        formData.append("rsaId", /*[[${unique.rsaId}]]*/ null);
+        formData.append("id", document.getElementById("id").value);
+        formData.append("pw", encPw );
+        formData.append("profileImg", imageData);
+        formData.append("nickname", document.getElementById("nickname").value);
+        formData.append("myRainbow", document.getElementById("myRainbow").value);
+        formData.append("mySeason", document.getElementById("mySeason").value);
+        formData.append("myNumber", document.getElementById("myNumber").value);
+        
+		try {
+	        const res = await fetch(/*[[@{/Intro/SaveInit.json}]]*/ null, {
+                method: "POST",
+                body: formData,
+                credentials: "include"
+            });
+	        
+	        console.info('✅ response', res);
+
+	        if (res.ok) {
+	        	console.info('작업 진행 중');
+	        	nextPage('PageStorageLib', 'PageComplete');
+	        }
+	        return true;
+	    } catch (err) {
+	        console.error("refreshToken 실패:", err);
+	        buttonStatus( "applyBtn", true);
+	        return false;
+	    }
+    }
+    
+    </script>
 </div>

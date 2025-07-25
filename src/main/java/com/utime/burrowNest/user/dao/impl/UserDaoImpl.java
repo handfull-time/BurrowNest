@@ -43,6 +43,11 @@ class UserDaoImpl implements UserDao {
 	final CacheIntervalMap<String, UserVo> intervalMap = new CacheIntervalMap<>(10L, TimeUnit.MINUTES);
 	
 	@Override
+	public boolean isInit() {
+		return common.existTable("BN_USER_GROUP") && common.existTable("BN_USER");
+	}
+
+	@Override
 	public int initTable() throws Exception {
 		int result = 0;
 		if( ! common.existTable("BN_USER_GROUP") ) {

@@ -8,7 +8,13 @@ import com.utime.burrowNest.user.vo.UserVo;
 public interface UserDao {
 	
 	public final String AdminId = "admin";
-	
+
+	/**
+	 * 초기 설정 됐나?
+	 * @return
+	 */
+	boolean isInit();
+
 	/**
 	 * 사용자 테이블 생성
 	 * @return

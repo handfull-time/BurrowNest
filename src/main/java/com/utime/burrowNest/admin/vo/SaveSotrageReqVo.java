@@ -1,4 +1,4 @@
-package com.utime.burrowNest.user.vo;
+package com.utime.burrowNest.admin.vo;
 
 import java.util.List;
 
@@ -8,11 +8,11 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 관리자 가입 요청 값
+ * Root storage 정보
  */
 @Getter
 @Setter
-public class InitInforReqVo extends UserReqVo{
+public class SaveSotrageReqVo {
 	
 	/**
 	 * 저장소 경로

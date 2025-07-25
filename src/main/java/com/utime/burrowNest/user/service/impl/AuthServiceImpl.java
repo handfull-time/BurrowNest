@@ -67,6 +67,11 @@ class AuthServiceImpl implements AuthService {
 	}
 	
 	@Override
+	public boolean IsInit() {
+		return userDao.isInit();
+	}
+	
+	@Override
 	public ReqUniqueVo getNewGenUnique(HttpServletRequest request) {
 		
 		final ReqUniqueVo result = new ReqUniqueVo();

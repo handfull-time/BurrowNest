@@ -7,15 +7,17 @@
     <th:block layout:fragment="css"></th:block>
 
     <div layout:fragment="content">
-    	<div class="bg-white shadow p-6 rounded-md mb-6">
-            <h2 class="text-xl font-bold text-gray-700 mb-4">저장소 관리</h2>
-            <div class="flex space-x-4">
-                <button type="button" class="bg-green-600 text-white p-2 rounded hover:bg-green-700" onclick="openSelectDir()">추가</button>
-            </div>
+    	<div class="col-span-4 border rounded shadow">
+    		<h2 class="text-2xl font-semibold text-center text-gray-800">저장소 지정</h2>
+        	<ul id="storageList" class="space-y-2 h-58">
+        	</ul>
+    	</div>
+    	
+    	<div class="flex justify-between">
+            <button type="button" class="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 transition" onclick="prevPage('PageStorageSelect', 'PageStorageLib')">이전</button>
+            <button type="button" disabled
+    			id="selectNextBtn" class="bg-gray-500 text-black px-6 py-2 rounded hover:bg-gray-600 transition" onclick="goDirScanPage()">다음</button>
         </div>
-
-        <!-- 그룹 목록 -->
-        <div id="ResultList"></div>
     	
     	<div class="bg-gray-50 p-6 font-sans hidden" id="progressContainer">
         	<div class="max-w-xl mx-auto bg-white shadow-lg rounded-xl p-6 space-y-4">

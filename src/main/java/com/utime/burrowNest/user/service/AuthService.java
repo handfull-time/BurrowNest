@@ -13,6 +13,12 @@ import jakarta.servlet.http.HttpServletResponse;
 public interface AuthService {
 	
 	/**
+	 * 초기화 했나?
+	 * @return true:초기화 했다.
+	 */
+	boolean IsInit();
+	
+	/**
 	 * 초기 정보 - 암호화, 유니크 검사 필수 값 등.
 	 * @param request
 	 * @return
@@ -79,10 +85,5 @@ public interface AuthService {
 	 * @return
 	 */
 	ReturnBasic checkId(String id);
-
-	
-
-
-	
 
 }
