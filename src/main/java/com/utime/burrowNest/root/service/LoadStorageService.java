@@ -10,5 +10,5 @@ public interface LoadStorageService {
 	 * @param req
 	 * @return
 	 */
-	ReturnBasic saveInitStorage(SaveSotrageReqVo req);
+	ReturnBasic saveRootStorage(SaveSotrageReqVo req);
 }

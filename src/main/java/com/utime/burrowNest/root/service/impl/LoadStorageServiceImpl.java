@@ -415,7 +415,7 @@ public class LoadStorageServiceImpl implements LoadStorageService {
     
     
 	@Override
-	public ReturnBasic saveInitStorage(SaveSotrageReqVo req) {
+	public ReturnBasic saveRootStorage(SaveSotrageReqVo req) {
 		
 		final InitFileLoad ifl = new InitFileLoad(req.getWsUserName(), userDao.getManageUser());
 		

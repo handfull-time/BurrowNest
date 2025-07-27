@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -156,7 +157,14 @@ public class AdminStorageController {
 	@ResponseBody
 	@PostMapping(path = { "SaveRootStorage.json" })
     public ReturnBasic SaveInitinfor(HttpServletRequest request, SaveSotrageReqVo req) {
-		return loadStorageService.saveInitStorage(req);
+		return loadStorageService.saveRootStorage(req);
+	}
+	
+	@ResponseBody
+	@DeleteMapping(path = { "DeleteRootStorage.json" })
+    public ReturnBasic DeleteInitinfor(HttpServletRequest request, @RequestParam("no") long no) {
+//		return loadStorageService.saveInitStorage(req);
+		return null;
 	}
 }
 

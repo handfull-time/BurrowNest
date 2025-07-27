@@ -15,7 +15,32 @@
         </div>
 
         <!-- 그룹 목록 -->
-        <div id="ResultList"></div>
+        <div class="bg-white shadow p-6 rounded-md">
+		    <h2 class="text-xl font-bold text-gray-700 mb-4">저장소 목록</h2>
+		    <table class="w-full border-collapse border border-gray-200">
+		        <thead>
+		            <tr class="bg-gray-100">
+		                <th class="border p-2 text-center">생성일</th>
+		                <th class="border p-2 text-center">이름</th>
+		                <th class="border p-2 text-center">전체 경로</th>
+		                <th class="border p-2 text-center">권한</th>
+		                <th class="border p-2 text-center"></th>
+		            </tr>
+		        </thead>
+		        <tbody>
+		            <tr th:unless="${#lists.isEmpty(directories)}"
+		            	th:each="item : ${directories}" th:data-no="${item.no}">
+		                <td class="border p-2 text-center" th:text="${#temporals.format(item.regDate,'yyyy.MM.dd HH:mm')}"></td>
+		                <td class="border p-2" th:text="${item.name}"></td>
+		                <td class="border p-2" th:text="${item.absolutePath}"></td>
+		                <td class="border p-2" th:text="${item.accType.dscr}"></td>
+		                <td class="border p-2">
+		                	<button class="remove-dir ml-2 bg-red-500 hover:bg-red-600 text-white text-sm px-2 py-1 rounded">삭제</button>
+		                </td>
+		            </tr>
+		        </tbody>
+		    </table>
+		</div>
     	
     	<div class="bg-gray-50 p-6 font-sans hidden" id="progressContainer">
         	<div class="max-w-xl mx-auto bg-white shadow-lg rounded-xl p-6 space-y-4">
@@ -34,19 +59,6 @@
 		  	</div>
 		</div>
 		
-		<template id="directoryItemTemplate">
-			<li class="flex items-center justify-between px-4 py-2 bg-gray-100 rounded">
-				<span class="dir-name-path flex-1 truncate text-gray-800"></span>
-				<button class="remove-dir ml-2 bg-red-500 hover:bg-red-600 text-white text-sm px-2 py-1 rounded">-</button>
-			</li>
-		</template>
-		
-		<template id="directoryAddTemplate">
-			<li class="flex items-center justify-between px-4 py-2">
-				<span class=""></span>
-				<button id="GroupDirAdd" class="add-dir ml-2 bg-blue-500 hover:bg-blue-600 text-white text-sm px-2 py-1 rounded">+</button>
-			</li>
-		</template>
     </div>
 
     <th:block layout:fragment="script">
@@ -56,57 +68,50 @@
     
     <script th:inline="javascript">
     
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', function () {
+    	document.querySelectorAll('.remove-dir').forEach(function (button) {
+    		button.addEventListener('click', function () {
+    			const row = this.closest('tr');
+    			const no = row.getAttribute('data-no');
+    			
+    			showCustomConfirm('정말 삭제하시겠습니까?', async (isConfirm) => {
+                	
+                	if( ! isConfirm ){
+                		return;
+                	}
+                	
+                	const url = /*[[@{/Admin/Storage/DeleteRootStorage.json}]]*/ null;
+                   	
+                   	const params = new URLSearchParams({
+                   		no: no
+                	});
 
-        const storageList = document.getElementById('storageList');
-        // 기존 목록을 비웁니다 (다시 로드할 경우를 대비).
-        storageList.innerHTML = ''; 
-
-        const storageDataList = /*[[${directories}]]*/ null;
-    	
-        populateStorageList( storageList, storageDataList);
+                	const urlAddress = url + '?' + params.toString();
+                	
+                	const options = {
+               	        method: "DELETE",
+               	        headers: {
+               	            "Content-Type": "application/json"
+               	        }
+               	    };
+                	
+                	const response = await apiRequest( urlAddress, options );
+                	
+                	if (response.ok) {
+    		            const data = await response.json();
+    		            if( data.code === '0' ){
+    		            	showCustomAlert('삭제 성공했습니다.', () => {
+    		            		});
+    		            }else{
+    		            	showCustomAlert(data.code + " - " + data.message);
+    		            }
+    		        } else {
+    		        	showCustomAlert('삭제 실패');
+    		        }
+    			});
+    		});
+    	});
     });
-    
-    /**
-     * storageDataList의 데이터를 기반으로 storageList UL을 채웁니다.
-     */
-    function populateStorageList(ele, list) {
-        
-    	const template = document.getElementById('directoryItemTemplate');
-    	
-        list.forEach(item => {
-        	// 템플릿 내용(content)을 복제하여 새로운 li 요소를 만듭니다.
-            const listItem = template.content.cloneNode(true);
-            
-            // 복제된 li 내에서 클래스명으로 요소를 찾아서 내용을 채웁니다.
-            const namePathSpan = listItem.querySelector('.dir-name-path');
-            if (namePathSpan) {
-                namePathSpan.textContent = `${item.name} (${item.absolutePath})`;
-                // data-no 속성을 li 자체에 추가하여 항목의 고유 ID를 저장합니다.
-                listItem.querySelector('li').setAttribute('data-no', item.no);
-            }
-
-            const deleteButton = listItem.querySelector('.remove-dir');
-            if (deleteButton) {
-                deleteButton.onclick = function() {
-                    // 버튼의 부모 li 요소를 찾아 삭제합니다.
-                    // closest('li')를 사용하여 확실하게 li 요소를 찾습니다.
-                    const liToRemove = this.closest('li');
-                    if (liToRemove) {
-                        liToRemove.remove();
-                        // 필요하다면 여기서 서버에도 삭제 요청을 보낼 수 있습니다.
-                        console.log(`Item with no: ${item.no} deleted from UI.`);
-                        // 실제 서버 삭제 로직 (예: fetch('/api/deleteStorage', { method: 'POST', body: JSON.stringify({ no: item.no }) }))
-                    }
-                };
-            }
-            ele.appendChild(listItem);
-        });
-        
-        const addLi = document.getElementById('directoryAddTemplate').content.cloneNode(true);
-		addLi.querySelector(".add-dir").addEventListener("click", openSelectDir);
-		ele.appendChild(addLi);
-    }
     
     /**
      * 폴더 목록 전달
@@ -120,7 +125,7 @@
 		console.log("openSelectDir click");
 
         const sendValue = {
-		        url: /*[[@{/Intro/Dir.layer}]]*/ null,
+		        url: /*[[@{/Admin/Storage/Dir.layer}]]*/ null,
 				method: MethodType.Get, 
 				NotCheck:true,
 				popupId:'SelectDir',
@@ -135,16 +140,25 @@
 	 */
 	function procNames(names){
 		
-		for (let name of names) {
-		    const list = document.getElementById('storageList');
-		    const li = document.createElement('li');
-		    li.className = 'flex justify-between items-center bg-gray-100 p-2 rounded';
-		    li.innerHTML = `<span>${name}</span><button class="text-red-500 hover:text-red-700" onclick="this.closest('li').remove()">삭제</button>`;
-		    list.appendChild(li);
+		const length = names.length;
+		let message;
+		if( length < 1 ){
+			showCustomAlert( "추가할 Directory를 선택하세요.");
+			return;
+		}else if( length == 1 ){
+			
+			const name  = names[0];
+			
+			showCustomConfirm(name + ' 추가 하시겠습니까?', async (isConfirm) => {
+            	
+            	if( ! isConfirm ){
+            		return;
+            	}
+            	
+            	apply();
+			});
+			
 		}
-		  
-		const selectList = getStorageListValues();
-		buttonStatus( "selectNextBtn", selectList.length > 0);
 	}
 	
 	const eleMessage = document.getElementById("message");
@@ -213,12 +227,13 @@
     }
     
     
-    // 3. saveInit 호출
+    // 3. SaveStorage 호출
 	async function saveRootStoreage(wsUser){
 		
     	const progressContainer = document.getElementById('progressContainer');
     	progressContainer.classList.remove('hidden');
     	
+    	여기 전역 변수 처리하자.
         const storageList = getStorageListValues();
         
         
