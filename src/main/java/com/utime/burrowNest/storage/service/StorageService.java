@@ -2,6 +2,7 @@ package com.utime.burrowNest.storage.service;
 
 import java.util.List;
 
+import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
@@ -10,6 +11,13 @@ import com.utime.burrowNest.user.vo.UserVo;
 
 public interface StorageService {
 	
+	/**
+	 * 저장소 초기 정보 세팅
+	 * @param req
+	 * @return
+	 */
+	ReturnBasic saveInitStorage();
+
 	/**
 	 * 섬네일 조회
 	 * @param uid

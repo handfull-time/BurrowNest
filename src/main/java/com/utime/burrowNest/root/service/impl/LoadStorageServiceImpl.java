@@ -352,17 +352,17 @@ public class LoadStorageServiceImpl implements LoadStorageService {
     		
     		final UserVo owner = ifl.owner;
     		
-    		BnDirectory rootDir;
-			try {
-				rootDir = storageDao.InsertRootDirectory(owner);
-			} catch (Exception e) {
-				log.error("", e);
-				message.setMessage(e.getMessage());
-				
-				messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-				delay();
-				return;
-			}
+//    		BnDirectory rootDir;
+//			try {
+//				rootDir = storageDao.InsertRootDirectory(owner);
+//			} catch (Exception e) {
+//				log.error("", e);
+//				message.setMessage(e.getMessage());
+//				
+//				messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
+//				delay();
+//				return;
+//			}
 			
 			final long parentNo = rootDir.getNo();
 			final int ownerUserNo = ifl.owner.getUserNo();

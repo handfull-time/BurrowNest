@@ -114,13 +114,8 @@
     });
     
     /**
-     * 폴더 목록 전달
+     * 폴더 선택 팝업 화면 생성.
      */
-	function getStorageListValues() {
-	  const spans = document.querySelectorAll('#storageList li span');
-	  return Array.from(spans).map(span => span.textContent.trim());
-	}
-	
 	function openSelectDir(){
 		console.log("openSelectDir click");
 
@@ -138,27 +133,29 @@
 	/**
 	 * 팝업창에서 선택한 목록들 화면 처리.
 	 */
-	function procNames(names){
+	function procNames(storageList){
 		
-		const length = names.length;
+		const length = storageList.length;
 		let message;
 		if( length < 1 ){
 			showCustomAlert( "추가할 Directory를 선택하세요.");
 			return;
 		}else if( length == 1 ){
-			
-			const name  = names[0];
-			
-			showCustomConfirm(name + ' 추가 하시겠습니까?', async (isConfirm) => {
-            	
-            	if( ! isConfirm ){
-            		return;
-            	}
-            	
-            	apply();
-			});
-			
+			const name  = storageList[0];
+			message = '[' + name + '] 추가 하시겠습니까?';
+		}else{
+			const name  = storageList[0];
+			message ='[' + name + ']외 ' + (length - 1) + '개 추가 하시겠습니까?';
 		}
+		
+		showCustomConfirm(message, async (isConfirm) => {
+        	
+        	if( ! isConfirm ){
+        		return;
+        	}
+        	
+        	apply( storageList );
+		});
 	}
 	
 	const eleMessage = document.getElementById("message");
@@ -198,7 +195,7 @@
     
     let socketScript = null;
     
-    function apply(){
+    function apply( storageList ){
     	
     	buttonStatus( "applyBtn", false);
     	
@@ -212,11 +209,13 @@
     		const currentUserKey = frame.headers['user-name'];
     		console.log("연결됨", currentUserKey );
     		
-    		saveRootStoreage( currentUserKey );
+    		saveRootStoreage( currentUserKey, storageList );
     	});
     	
     	connectionInfo.setCloseHandler(() => {
     		console.log("연결 해제");
+    		const progressContainer = document.getElementById('progressContainer');
+        	progressContainer.classList.add('hidden');
     	});
 
     	socketScript = new SocketScript(connectionInfo);
@@ -228,23 +227,22 @@
     
     
     // 3. SaveStorage 호출
-	async function saveRootStoreage(wsUser){
+	async function saveRootStoreage(wsUser, storageList){
 		
     	const progressContainer = document.getElementById('progressContainer');
     	progressContainer.classList.remove('hidden');
     	
-    	여기 전역 변수 처리하자.
-        const storageList = getStorageListValues();
-        
-        
-        const formData = new FormData();
-        formData.append("roots", storageList);
-        formData.append("wsUserName", wsUser);
+        const data = new Object();
+        data.roots = storageList;
+        data.wsUserName = wsUser;
         
 		try {
-	        const res = await fetch(/*[[@{/Admin/SaveStorage.json}]]*/ null, {
+	        const res = await fetch(/*[[@{/Admin/Storage/SaveRootStorage.json}]]*/ null, {
                 method: "POST",
-                body: formData,
+                headers: {
+    				'Content-Type': 'application/json',
+    			},
+    			body: JSON.stringify( data ),
                 credentials: "include"
             });
 	        

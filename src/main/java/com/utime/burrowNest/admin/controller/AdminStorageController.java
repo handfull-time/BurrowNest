@@ -18,6 +18,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -154,12 +155,23 @@ public class AdminStorageController {
 	    }
 	}
 	
+	/**
+	 * Root 저장소 추가.
+	 * @param reqVo
+	 * @return
+	 */
 	@ResponseBody
 	@PostMapping(path = { "SaveRootStorage.json" })
-    public ReturnBasic SaveInitinfor(HttpServletRequest request, SaveSotrageReqVo req) {
-		return loadStorageService.saveRootStorage(req);
+    public ReturnBasic SaveInitinfor( @RequestBody SaveSotrageReqVo reqVo) {
+		return loadStorageService.saveRootStorage(reqVo);
 	}
 	
+	/**
+	 * Root 저장소 삭제
+	 * @param request
+	 * @param no
+	 * @return
+	 */
 	@ResponseBody
 	@DeleteMapping(path = { "DeleteRootStorage.json" })
     public ReturnBasic DeleteInitinfor(HttpServletRequest request, @RequestParam("no") long no) {
