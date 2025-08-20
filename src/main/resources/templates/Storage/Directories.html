@@ -21,16 +21,6 @@
   </li>
 </template>
 
-
-<div>
-    <button id="openBtn" class="px-3 py-1 bg-blue-500 text-white rounded">열기</button>
-    <button id="copyBtn" class="px-3 py-1 bg-blue-500 text-white rounded">복사</button>
-    <button id="cutBtn" class="px-3 py-1 bg-yellow-500 text-white rounded">잘라내기</button>
-    <button id="pasteBtn" class="px-3 py-1 bg-green-500 text-white rounded" disabled>붙여넣기</button>
-    <button id="renameBtn" class="px-3 py-1 bg-blue-500 text-white rounded">이름변경</button>
-    <button id="detailBtn" class="px-3 py-1 bg-blue-500 text-white rounded">속성</button>
-</div>
-
 <th:script th:replace="~{Storage/StorageScript :: script}"/>
 <th:div th:replace="~{Storage/CustomSubMenu :: customMenu}"/>
 <script th:inline="javascript">
@@ -149,37 +139,6 @@
 
     const storage = new BnStorage();
 
-    function updatePasteButton() {
-        const pasteBtn = document.getElementById("pasteBtn");
-        const pasteLi = document.querySelector("#contextMenuFolder [data-action='paste']");
-        const available = storage.isClipboardAvailable();
-
-        pasteBtn.disabled = !available;
-        pasteLi.classList.toggle("text-gray-400", !available);
-        pasteLi.classList.toggle("cursor-not-allowed", !available);
-        pasteLi.classList.toggle("cursor-pointer", available);
-    }
-
-    // 이벤트 연결
-    document.getElementById("copyBtn").addEventListener("click", () => {
-      storage.copyDirectory();
-      updatePasteButton();
-    });
-
-    document.getElementById("cutBtn").addEventListener("click", () => {
-      storage.cutDirectory();
-      updatePasteButton();
-    });
-
-    document.getElementById("pasteBtn").addEventListener("click", async () => {
-      const current = storage.getSelectedDirectory();
-      if (!current) return alert("선택된 디렉토리가 없습니다.");
-      await storage.pasteDirectory(current.owner.uid);
-      alert("붙여넣기 완료!");
-      storage.clearClipboard();
-      updatePasteButton();
-    });
-    
     function highlightTreeSelection(uid) {
    	  // 트리에서 선택된 항목만 강조
    	  document.querySelectorAll('#tree .folder-label').forEach(label => {
@@ -261,36 +220,15 @@
 	    }
 		
 	    function findSelectedNode(nodes) {
-	    	  for (const node of nodes) {
+	    	for (const node of nodes) {
 	    	    if (node.selected) return node;
 	    	    if (node.child) {
 	    	      const found = findSelectedNode(node.child);
 	    	      if (found) return found;
 	    	    }
-	    	  }
-	    	  return null;
 	    	}
-
-
-//	  const params = new URLSearchParams({
-//		  uid: data.uid || ''
-//	  });
-      
-//	  const url = /*[[@{/Dir/Path.html}]]*/ null;
-//      const urlValue = url + '?' + params.toString();
-      
-//      // 이건 사용 기록 덮어쓰기
-//	  window.history.replaceState(null, null, urlValue);
-      
-      // 이건 사용 기록 추가하기.
-	  //window.history.pushState(null, null, urlValue);
-
-	  //const directories = /*[[${directories}]]*/ null;
-
-//	  const ul = document.createElement('ul');
-//	  ul.className = "space-y-1";
-//	  ul.appendChild( createTreeNode(directories) );
-//	  ocument.getElementById("tree-root").appendChild(ul);
+	    	return null;
+	    }
   });
 
 </script>
