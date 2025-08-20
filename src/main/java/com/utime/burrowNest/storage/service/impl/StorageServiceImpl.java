@@ -13,6 +13,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
+import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.storage.dao.StorageDao;
 import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.storage.vo.AbsPath;
@@ -64,6 +65,11 @@ public class StorageServiceImpl implements StorageService {
 		}
     }
 	
+	@Override
+	public ReturnBasic saveInitStorage() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 	@Override
 	public byte[] getThumbnail(UserVo user, String uid) {

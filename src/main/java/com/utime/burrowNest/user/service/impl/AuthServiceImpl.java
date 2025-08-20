@@ -5,7 +5,6 @@ import java.security.KeyPair;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -27,19 +26,19 @@ import com.utime.burrowNest.user.vo.UserVo;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 class AuthServiceImpl implements AuthService {
 	
-	final CacheIntervalMap<String, String> intervalMap = new CacheIntervalMap<>(10L, TimeUnit.MINUTES);
+	private final CacheIntervalMap<String, String> intervalMap = new CacheIntervalMap<>(10L, TimeUnit.MINUTES);
 	
-	@Autowired
-	private JwtProvider jwtUtil;
+	private final JwtProvider jwtUtil;
 	
-	@Autowired
-	private UserDao userDao;
+	private final UserDao userDao;
 	
 	@Value("${security.pwSaltKey}")
     private String saltKey;
@@ -264,7 +263,9 @@ class AuthServiceImpl implements AuthService {
 			return new ReturnBasic("E", e.getMessage());
 		}
 		
-		return this.procJoinUser( req, this.userDao.getAdminGroup(), true, EJwtRole.Admin);
+		final ReturnBasic result = this.procJoinUser( req, this.userDao.getAdminGroup(), true, EJwtRole.Admin); 
+		
+		return result; 
 	}
 	
 	@Override

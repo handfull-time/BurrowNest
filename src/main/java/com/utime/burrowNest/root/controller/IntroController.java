@@ -1,6 +1,5 @@
 package com.utime.burrowNest.root.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -11,20 +10,24 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.user.service.AuthService;
 import com.utime.burrowNest.user.vo.UserReqVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Controller
 @RequestMapping("Intro")
+@RequiredArgsConstructor
 public class IntroController {
 	
-	@Autowired
-	private AuthService authService;
+	private final AuthService authService;
+	
+	private final StorageService storageService;
 	
 	/**
 	 * 인트로 페이지
@@ -59,12 +62,11 @@ public class IntroController {
 		
 		final ReturnBasic userRes = authService.saveInitInfor(req);
 		log.info(userRes.toString());
-//		if( userRes.isError() ) {
-//			return userRes;
-//		}
+		if( userRes.isError() ) {
+			return userRes;
+		}
 		
-//		return storageService.saveInitStorage(req);
-		return userRes;
+		return storageService.saveInitStorage();
     }
 	
 	

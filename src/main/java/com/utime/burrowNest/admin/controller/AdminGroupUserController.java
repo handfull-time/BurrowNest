@@ -2,7 +2,6 @@ package com.utime.burrowNest.admin.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
@@ -24,15 +23,16 @@ import com.utime.burrowNest.storage.vo.EAccessType;
 import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
+import lombok.RequiredArgsConstructor;
+
 @Controller
+@RequiredArgsConstructor
 @RequestMapping("Admin/Group")
 public class AdminGroupUserController {
 	
-	@Autowired
-	private AdminUserService userService;
+	private final AdminUserService userService;
 	
-	@Autowired
-	private StorageService storageService;
+	private final StorageService storageService;
 	
 	/**
 	 * 그룹 관리 페이지
