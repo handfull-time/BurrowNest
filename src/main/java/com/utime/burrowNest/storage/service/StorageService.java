@@ -16,7 +16,7 @@ public interface StorageService {
 	 * @param req
 	 * @return
 	 */
-	ReturnBasic saveInitStorage();
+	ReturnBasic saveRootStorage(UserVo user);
 
 	/**
 	 * 섬네일 조회

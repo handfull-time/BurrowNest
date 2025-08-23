@@ -44,34 +44,5 @@ public class DbConfig {
 	public SqlSessionTemplate sqlSession(SqlSessionFactory sqlSessionFactory) {
 		return new SqlSessionTemplate(sqlSessionFactory);
 	}
-	
-//	@Bean
-//    public ConfigurationCustomizer configurationCustomizer() {
-//		return configuration -> {
-//	        configuration.getTypeHandlerRegistry()
-//	            .register(EArchiveType.class, EArchiveTypeTypeHandler.class);
-//	        configuration.getTypeHandlerRegistry()
-//	            .register(EOrientation.class, EOrientationTypeHandler.class);
-//	        configuration.getTypeHandlerRegistry()
-//            .register(EAccessType.class, EAccessTypeTypeHandler.class);
-//	    };
-//    }
-	
-//	@Bean
-//	public ConfigurationCustomizer configurationCustomizer() {
-//	    return new ConfigurationCustomizer() {
-//	    	
-//			@Override
-//			public void customize(org.apache.ibatis.session.Configuration configuration) {
-//				configuration.getTypeHandlerRegistry()
-//					.register(EArchiveType.class, EArchiveTypeTypeHandler.class);
-//				configuration.getTypeHandlerRegistry()
-//					.register(EOrientation.class, EOrientationTypeHandler.class);
-//				configuration.getTypeHandlerRegistry()
-//					.register(EAccessType.class, EAccessTypeTypeHandler.class);
-//				
-//			}
-//	    };
-//	}
 
 }

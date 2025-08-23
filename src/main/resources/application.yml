@@ -2,7 +2,12 @@ server:
   port: 9709
   servlet:
     context-path: /Burrow
-
+  tomcat:
+    accept-count: 50
+  compression:
+    enabled: true
+    min-response-size: 2048
+    
 spring:
   application:
     name: BurrowNest
@@ -17,6 +22,11 @@ spring:
       validation-query: SELECT 1
     hikari:
       auto-commit: false
+      maximum-pool-size: 5
+      minimum-idle: 1
+      idle-timeout: 120000
+      max-lifetime: 600000
+      connection-timeout: 15000      
   h2:
     console:
       enabled: true
@@ -32,6 +42,9 @@ spring:
     multipart:
       max-file-size: 1024MB
       max-request-size: 1024MB
+  cache.type: caffeine
+caffeine.spec: maximumSize=100,expireAfterAccess=7d
+      
       
 jwt:
   secret: f4e42d85-73b0-4884-913f-f88ad661a1cc

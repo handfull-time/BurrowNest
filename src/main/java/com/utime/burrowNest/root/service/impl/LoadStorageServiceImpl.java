@@ -55,7 +55,7 @@ public class LoadStorageServiceImpl implements LoadStorageService {
 	@PostConstruct
 	private void initTable() {
 		try {
-			this.storageDao.initTable();
+			this.storageDao.initStorageTable();
 		} catch (Exception e) {
 			log.error("", e);
 		}
@@ -352,17 +352,7 @@ public class LoadStorageServiceImpl implements LoadStorageService {
     		
     		final UserVo owner = ifl.owner;
     		
-//    		BnDirectory rootDir;
-//			try {
-//				rootDir = storageDao.InsertRootDirectory(owner);
-//			} catch (Exception e) {
-//				log.error("", e);
-//				message.setMessage(e.getMessage());
-//				
-//				messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-//				delay();
-//				return;
-//			}
+    		BnDirectory rootDir = storageDao.getRootDirectory(owner);
 			
 			final long parentNo = rootDir.getNo();
 			final int ownerUserNo = ifl.owner.getUserNo();

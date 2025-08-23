@@ -12,6 +12,7 @@ import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.user.service.AuthService;
+import com.utime.burrowNest.user.vo.ResUserVo;
 import com.utime.burrowNest.user.vo.UserReqVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -60,13 +61,13 @@ public class IntroController {
 		req.setIp( BurrowUtils.getRemoteAddress( request ) );
 		req.setUserAgent( request.getHeader(HttpHeaders.USER_AGENT) );
 		
-		final ReturnBasic userRes = authService.saveInitInfor(req);
+		final ResUserVo userRes = authService.saveInitInfor(req);
 		log.info(userRes.toString());
 		if( userRes.isError() ) {
 			return userRes;
 		}
 		
-		return storageService.saveInitStorage();
+		return storageService.saveRootStorage( userRes.getUser() );
     }
 	
 	
