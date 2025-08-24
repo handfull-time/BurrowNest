@@ -13,7 +13,6 @@
 		UID UUID DEFAULT RANDOM_UUID(), <!-- 고유 ID -->
 		PUBLIC_ACCESSIBLE BOOLEAN DEFAULT TRUE, <!-- 공용 DIR 여부. T:공용, F:private용 -->
 		PARENT_NO BIGINT NULL,	<!-- 부모 번호 -->
-		OWNER_NO INT NOT NULL, <!-- 소유자 회원 번호 -->
 		HAS_CHILD BOOLEAN DEFAULT FALSE NOT NULL, <!-- 자식 여부. T:있다, F:없다 -->
 		CREATION TIMESTAMP NOT NULL, <!-- 폴더 생성일 -->
 		LAST_MODIFIED TIMESTAMP NOT NULL, <!-- 폴더 수정일 -->
@@ -70,7 +69,6 @@
 		ENABLED BOOLEAN DEFAULT FALSE, <!-- 사용 여부 -->
 		UID UUID DEFAULT RANDOM_UUID(), <!-- 고유 ID -->
 		PARENT_NO BIGINT NOT NULL,	<!-- 부모 번호 -->
-		OWNER_NO INT NOT NULL,<!-- 소유자 회원 번호 -->
 		FILE_LENGTH BIGINT NOT NULL, <!-- 파일 크기 -->
 		FILE_TYPE VARCHAR(16) NOT NULL, <!-- 파일 종류 'Basic','Document','Image','Video','Audio','Archive'-->
 		CREATION TIMESTAMP NOT NULL, <!-- 파일 생성일 -->
