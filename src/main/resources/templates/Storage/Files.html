@@ -70,20 +70,16 @@
 	// 파일 리스트 가져오기
 	async function loadFileList(uid) {
 		
-		console.info('loadFileList', uid );
+		const url = /*[[@{/Dir/Files.json}]]*/ '/Dir/Files.json';
 		
-		const url = /*[[@{/Dir/Files.json}]]*/ null;
-		
-		const params = new URLSearchParams({
-			uid: uid || ''
-		});
+		const params = new URLSearchParams({ uid: uid || '' });
 		
 		const fileListUrl = url + '?' + params.toString();
 		
 		try {
 			const res = await fetch(fileListUrl);
 			const list = await res.json(); 
-			console.info( list );
+			console.info('loadFileList', uid, list );
 			
 			renderFileList(list);
 		} catch (err) {
