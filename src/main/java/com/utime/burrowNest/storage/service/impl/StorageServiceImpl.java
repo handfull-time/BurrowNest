@@ -65,10 +65,19 @@ public class StorageServiceImpl implements StorageService {
 		}
     }
 	
+	/**
+	 * 기본 관리자 계정의 최상위 Root를 생성한다.
+	 */
 	@Override
-	public ReturnBasic saveInitStorage() {
-		// TODO Auto-generated method stub
-		return null;
+	public ReturnBasic saveRootStorage(UserVo user) {
+		final ReturnBasic result = new ReturnBasic();
+		
+		try {
+			storageDao.InsertRootDirectory(user);
+		} catch (Exception e) {
+			result.setCodeMessage("E", "루트 생성 실패");
+		}
+		return result;
 	}
 	
 	@Override

@@ -93,11 +93,6 @@ public class AdminStorageController {
 	@GetMapping("PathList.json")
     public List<BnDirectory> list(@RequestParam String path) {
         
-//		if( storageService.IsInit() ) {
-//			// 이미 초기화 했다면 무효
-//			return null;
-//		}
-		
 		if( "root".equals( path ) ){
 			final File [] roots = File.listRoots();
 			

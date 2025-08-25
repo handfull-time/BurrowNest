@@ -19,7 +19,7 @@ public interface StorageDao {
 	 * @return
 	 * @throws Exception
 	 */
-	int initTable()throws Exception;
+	int initStorageTable()throws Exception;
 	
 	/**
 	 * 관리자 초기화 했는지 여부 
@@ -34,6 +34,13 @@ public interface StorageDao {
 	 * @throws Exception
 	 */
 	BnDirectory InsertRootDirectory(UserVo owner ) throws Exception;
+	
+	/**
+	 * 루트 Dir 조회
+	 * @param owner
+	 * @return
+	 */
+	BnDirectory getRootDirectory(UserVo owner);
 	
 	/**
 	 * 확장자 별 파일 종류
@@ -177,5 +184,7 @@ public interface StorageDao {
 	List<BnDirectory> getAllDirectory();
 
 	List<BnPathAccess> getAllDirectoryAccess();
+
 	
+
 }

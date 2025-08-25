@@ -30,7 +30,7 @@ public interface AuthService {
 	 * @param req
 	 * @return
 	 */
-	ReturnBasic saveInitInfor(UserReqVo req);
+	ResUserVo saveInitInfor(UserReqVo req);
 
 	/**
 	 * 로그인 처리

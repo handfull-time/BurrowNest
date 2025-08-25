@@ -53,14 +53,14 @@ class UserDaoImpl implements UserDao {
 		if( ! common.existTable("BN_USER_GROUP") ) {
 			log.info("BN_USER_GROUP 생성");
 			result += userMapper.createUserGroup();
-			result += common.createUniqueIndex("BN_USER_GROUP_NAME_INDX", "BN_USER_GROUP", "NAME");
+//			result += common.createUniqueIndex("BN_USER_GROUP_NAME_INDX", "BN_USER_GROUP", "NAME");
 			result += this.insertBasicGroup();
 		}
 
 		if( ! common.existTable("BN_USER") ) {
 			log.info("BN_USER 생성");
 			result += userMapper.createUser();
-			result += common.createUniqueIndex("BN_USER_ID_INDX", "BN_USER", "ID");
+//			result += common.createUniqueIndex("BN_USER_ID_INDX", "BN_USER", "ID");
 		}
 
 		if( ! common.existTable("BN_USER_PROFILE_IMG") ) {

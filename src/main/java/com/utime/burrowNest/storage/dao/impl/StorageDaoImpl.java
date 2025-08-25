@@ -115,7 +115,7 @@ class StorageDaoImpl implements StorageDao{
 	}
 	
 	@Override
-	public int initTable() throws Exception {
+	public int initStorageTable() throws Exception {
 		int result = 0;
 		
 		if( ! common.existTable("BN_DIRECTORY") ) {
@@ -222,6 +222,12 @@ class StorageDaoImpl implements StorageDao{
 		this.insertAccess(owner, result);
 		
 		return result;
+	}
+	
+	@Override
+	public BnDirectory getRootDirectory(UserVo owner) {
+		//TODO 
+		return mapper.selectDirectoryByNo(1L);
 	}
 	
 	@Override

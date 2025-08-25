@@ -174,17 +174,17 @@ class AuthServiceImpl implements AuthService {
 		return result;		
 	}
 	
-	private ReturnBasic procJoinUser( UserReqVo reqVo, GroupVo group, boolean enabled, EJwtRole role ) {
+	private ResUserVo procJoinUser( UserReqVo reqVo, GroupVo group, boolean enabled, EJwtRole role ) {
 		log.info("초기화 시도 : {}", reqVo);
 		
 		if( ! this.validation(reqVo) ) {
-			return new ReturnBasic("E", "Invalid credentials");
+			return new ResUserVo("E", "Invalid credentials");
 		}
 		
 		final String pw = this.convertEncPw( reqVo, reqVo.getPw() );
 		
 		if( pw == null ){
-			return new ReturnBasic("E", "Invalid credentials");
+			return new ResUserVo("E", "Invalid credentials");
 		}
 		
 		byte[] profileImg;
@@ -192,7 +192,7 @@ class AuthServiceImpl implements AuthService {
 			profileImg = BurrowUtils.encodeImageToByteArray( reqVo.getProfileImg().getInputStream() );
 		} catch (IOException e) {
 			log.error("", e);
-			return new ReturnBasic("E", e.getMessage());
+			return new ResUserVo("E", e.getMessage());
 		}
 		
 		final UserVo user = new UserVo();
@@ -204,10 +204,11 @@ class AuthServiceImpl implements AuthService {
 		user.setRole(role);
 		user.setAuthHint( this.genUserUniqueHashing( reqVo ) );
 		
-		final ReturnBasic result = new ReturnBasic();
+		final ResUserVo result = new ResUserVo();
 		try {
 			userDao.addUser(reqVo, user, pw, profileImg);
 			this.validationRemove(reqVo);
+			result.setUser(user);
 		} catch (Exception e) {
 			log.error("", e);
 			result.setCodeMessage("E", e.getMessage());
@@ -253,17 +254,17 @@ class AuthServiceImpl implements AuthService {
 	}
 	
 	@Override
-	public ReturnBasic saveInitInfor(UserReqVo req) {
+	public ResUserVo saveInitInfor(UserReqVo req) {
 		
 		try {
 			// 최초 회원 관련 테이블 생성
 			this.userDao.initTable();
 		} catch (Exception e) {
 			log.error("", e);
-			return new ReturnBasic("E", e.getMessage());
+			return new ResUserVo("E", e.getMessage());
 		}
 		
-		final ReturnBasic result = this.procJoinUser( req, this.userDao.getAdminGroup(), true, EJwtRole.Admin); 
+		final ResUserVo result = this.procJoinUser( req, this.userDao.getAdminGroup(), true, EJwtRole.Admin); 
 		
 		return result; 
 	}
