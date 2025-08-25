@@ -210,18 +210,16 @@ class StorageDaoImpl implements StorageDao{
 	
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public BnDirectory InsertRootDirectory(UserVo owner ) throws Exception {
+	public void addRootDirectory(UserVo owner ) throws Exception {
 		
-		if( basic.InsertRootDirectory(owner) < 1 ) {
+		final BnDirectory dir = new BnDirectory();
+		dir.setOwnerNo(owner.getUserNo());
+		if( basic.InsertRootDirectory(dir) < 1 ) {
 			log.warn("root 생성 실패");
 			throw new Exception("Root 생성 실패");
 		}
 		
-		final BnDirectory result = mapper.selectDirectoryByNo(1L);
-
-		this.insertAccess(owner, result);
-		
-		return result;
+		this.insertAccess(owner, dir);
 	}
 	
 	@Override
@@ -456,7 +454,7 @@ class StorageDaoImpl implements StorageDao{
 //	}
 	
 	@Override
-	public List<BnDirectory> getRootDirectory(int groupNo) {
+	public List<BnDirectory> getRootDirectory(long groupNo) {
 		final List<BnDirectory> directories = mapper.selectRootDirectories( groupNo );
 		
 		return directories;

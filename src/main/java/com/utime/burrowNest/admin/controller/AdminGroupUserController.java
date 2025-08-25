@@ -67,7 +67,7 @@ public class AdminGroupUserController {
 	 * @return
 	 */
 	@GetMapping("GroupItem.layer")
-    public String getUserProfile(ModelMap model, @RequestParam(name="groupNo") int groupNo) {
+    public String getUserProfile(ModelMap model, @RequestParam(name="groupNo") long groupNo) {
 		
 		model.addAttribute("item", userService.getGroupByNo(groupNo));
 		model.addAttribute("roles", EJwtRole.values() );
@@ -107,7 +107,7 @@ public class AdminGroupUserController {
 	 * @return
 	 */
 	@GetMapping("GroupUserStorageList.layer")
-    public String getGroupUserStorageList(ModelMap model, @RequestParam(name="groupNo") int groupNo) {
+    public String getGroupUserStorageList(ModelMap model, @RequestParam(name="groupNo") long groupNo) {
 		
 		final GroupVo group = userService.getGroupByNo(groupNo);
 		model.addAttribute("group", group);
@@ -144,7 +144,7 @@ public class AdminGroupUserController {
 	 */
 	@ResponseBody
 	@PostMapping("SaveGroupUserStorageList.json")
-    public ReturnBasic saveGroupUserStorageList(@RequestParam(name="groupNo") int groupNo, @RequestBody List<BnDirectory> list ) {
+    public ReturnBasic saveGroupUserStorageList(@RequestParam(name="groupNo") long groupNo, @RequestBody List<BnDirectory> list ) {
 		
 		return userService.setGroupStorageList(groupNo, list);
     }

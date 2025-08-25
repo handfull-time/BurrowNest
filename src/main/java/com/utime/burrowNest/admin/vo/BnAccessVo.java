@@ -14,7 +14,7 @@ public class BnAccessVo {
 	/**
 	 * group no
 	 */
-	int groupNo;
+	long groupNo;
 	/**
 	 * File 또는 Directory 접근 권한
 	 */
@@ -24,7 +24,7 @@ public class BnAccessVo {
 		
 	}
 	
-	public BnAccessVo( long no, int groupNo, int accType) {
+	public BnAccessVo( long no, long groupNo, int accType) {
 		this.no = no;
 		this.groupNo = groupNo;
 		this.accType = accType;

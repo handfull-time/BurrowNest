@@ -20,7 +20,7 @@ public interface UserDao {
 	 * @return
 	 * @throws Exception
 	 */
-	int initTable()throws Exception;
+	int initUserTable()throws Exception;
 
 	/**
 	 * 회원 로그인
@@ -108,6 +108,6 @@ public interface UserDao {
 	 * @param userNo
 	 * @return
 	 */
-	byte[] getProfileImg(int userNo);
+	byte[] getProfileImg(long userNo);
 
 }

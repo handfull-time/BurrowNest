@@ -39,7 +39,7 @@ class AdminUserDaoImpl implements AdminUserDao{
 	}
 	
 	@Override
-	public UserVo getUserFromNo(int userNo) {
+	public UserVo getUserFromNo(long userNo) {
 		return mapper.getUserDetail(userNo);
 	}
 	
@@ -61,7 +61,7 @@ class AdminUserDaoImpl implements AdminUserDao{
 	}
 
 	@Override
-	public GroupVo getGroupByNo(int groupNo) {
+	public GroupVo getGroupByNo(long groupNo) {
 		return userMapper.selectGroupByNo(groupNo);
 	}
 
@@ -87,7 +87,7 @@ class AdminUserDaoImpl implements AdminUserDao{
 	
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public int saveGroupStorageList(int groupNo, List<BnDirectory> list) throws Exception {
+	public int saveGroupStorageList(long groupNo, List<BnDirectory> list) throws Exception {
 		int result = 0;
 		
 		final GroupVo group = userMapper.selectGroupByNo(groupNo);

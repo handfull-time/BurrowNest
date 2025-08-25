@@ -27,7 +27,7 @@ class AdminUserServiceImpl implements AdminUserService{
 	}
 	
 	@Override
-	public UserVo getUserFromNo(int userNo) {
+	public UserVo getUserFromNo(long userNo) {
 		return adminUserDao.getUserFromNo(userNo);
 	}
 	
@@ -68,7 +68,7 @@ class AdminUserServiceImpl implements AdminUserService{
 	}
 
 	@Override
-	public GroupVo getGroupByNo(int groupNo) {
+	public GroupVo getGroupByNo(long groupNo) {
 		final GroupVo result;
 		if( groupNo < 1 ) {
 			result = new GroupVo();
@@ -109,7 +109,7 @@ class AdminUserServiceImpl implements AdminUserService{
 	}
 	
 	@Override
-	public ReturnBasic setGroupStorageList(int groupNo, List<BnDirectory> list) {
+	public ReturnBasic setGroupStorageList(long groupNo, List<BnDirectory> list) {
 		final ReturnBasic result = new ReturnBasic();
 		
 		try {

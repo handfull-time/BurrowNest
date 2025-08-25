@@ -33,7 +33,7 @@ class UserServiceImpl implements UserService {
 	}
 	
 	@Override
-	public byte[] getThumbnail(int userNo) {
+	public byte[] getThumbnail(long userNo) {
 		
 		if( userNo < 1 ) {
 			return this.defaultProfileImg();

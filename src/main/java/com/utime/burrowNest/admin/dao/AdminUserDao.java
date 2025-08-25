@@ -21,7 +21,7 @@ public interface AdminUserDao {
 	 * @param userNo
 	 * @return
 	 */
-	UserVo getUserFromNo(int userNo);
+	UserVo getUserFromNo(long userNo);
 
 	/**
 	 * 사용자 정보 수정
@@ -49,7 +49,7 @@ public interface AdminUserDao {
 	 * @param groupNo
 	 * @return
 	 */
-	GroupVo getGroupByNo(int groupNo);
+	GroupVo getGroupByNo(long groupNo);
 	
 	/**
 	 * 그룹 정보 저장
@@ -72,7 +72,7 @@ public interface AdminUserDao {
 	 * @param list
 	 * @return
 	 */
-	int saveGroupStorageList(int groupNo, List<BnDirectory> list)throws Exception;
+	int saveGroupStorageList(long groupNo, List<BnDirectory> list)throws Exception;
 	
 	
 	

@@ -52,7 +52,7 @@ public abstract class AbsPath {
     /**
      * The owner of the directory(file)
      */
-    protected int ownerNo;
+    protected long ownerNo;
     
     /**
      * 파일 여부. true: 파일이다. false: directory이다.

@@ -27,7 +27,6 @@ import com.utime.burrowNest.storage.vo.MessageDataVo;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.vo.UserVo;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,15 +50,6 @@ public class LoadStorageServiceImpl implements LoadStorageService {
 	}
 	
 	private Map<String, EBnFileType> mapFileType;
-	
-	@PostConstruct
-	private void initTable() {
-		try {
-			this.storageDao.initStorageTable();
-		} catch (Exception e) {
-			log.error("", e);
-		}
-	}
 	
 	/**
 	 * ApplicationReadyEvent
@@ -206,7 +196,7 @@ public class LoadStorageServiceImpl implements LoadStorageService {
 		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, ifl.message);
 
 		final long parentDirNo = parent.getNo();
-		final int ownerUserNo = ifl.owner.getUserNo();
+		final long ownerUserNo = ifl.owner.getUserNo();
 		final UserVo owner = ifl.owner;
 		
 		for( File file : files ) {
@@ -355,7 +345,7 @@ public class LoadStorageServiceImpl implements LoadStorageService {
     		BnDirectory rootDir = storageDao.getRootDirectory(owner);
 			
 			final long parentNo = rootDir.getNo();
-			final int ownerUserNo = ifl.owner.getUserNo();
+			final long ownerUserNo = ifl.owner.getUserNo();
 			final List<String> list = req.getRoots();
 			for( String s : list ) {
 				log.info("Begin FileLoad : " + s);

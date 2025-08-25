@@ -16,7 +16,7 @@ import lombok.Setter;
 @Getter
 public class GroupVo {
 	/** 회원 번호 */
-	int groupNo;
+	long groupNo;
 	/** 생성일 */
 	LocalDateTime regDate;
 	/** 수정일 */

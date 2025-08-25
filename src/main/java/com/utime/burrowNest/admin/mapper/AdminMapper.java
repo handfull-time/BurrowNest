@@ -34,14 +34,14 @@ public interface AdminMapper {
 	 * @param userNo
 	 * @return
 	 */
-	UserVo getUserDetail( @Param("userNo") int userNo);
+	UserVo getUserDetail( @Param("userNo") long userNo);
 
 	/**
 	 * 회원 삭제
 	 * @param userNo
 	 * @return
 	 */
-	int deleteUser(int userNo);
+	int deleteUser(long userNo);
 
 	/**
 	 * 사용자 그룹 정보 조회
@@ -61,7 +61,7 @@ public interface AdminMapper {
 	 * @param groupNo
 	 * @return
 	 */
-	int deleteGroup(int groupNo);
+	int deleteGroup(long groupNo);
 
 	/**
 	 * Directory Access 그룹 추가
@@ -76,7 +76,7 @@ public interface AdminMapper {
 	 * @param groupNo
 	 * @return
 	 */
-	List<BnAccessVo> selectDirectoryAccessGroup(@Param("groupNo") int groupNo);
+	List<BnAccessVo> selectDirectoryAccessGroup(@Param("groupNo") long groupNo);
 
 	/**
 	 * File Access 그룹 추가
@@ -84,7 +84,7 @@ public interface AdminMapper {
 	 * @param accType
 	 * @return
 	 */
-	int insertFileAccessGroup(@Param("groupNo") int groupNo, @Param("accType") int accType);
+	int insertFileAccessGroup(@Param("groupNo") long groupNo, @Param("accType") int accType);
 
 	/**
 	 * Directory Access 그룹 수정
@@ -100,7 +100,7 @@ public interface AdminMapper {
 	 * @param accType
 	 * @return
 	 */
-	int updateFileAccessGroup(@Param("groupNo") int groupNo, @Param("accType") int accType);
+	int updateFileAccessGroup(@Param("groupNo") long groupNo, @Param("accType") int accType);
 
 	/**
 	 * Directory Access 그룹 삭제

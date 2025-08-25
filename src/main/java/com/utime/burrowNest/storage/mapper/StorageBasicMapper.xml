@@ -12,26 +12,28 @@
 		ENABLED BOOLEAN DEFAULT FALSE, <!-- 사용 여부. T:사용, F:미사용 -->
 		UID UUID DEFAULT RANDOM_UUID(), <!-- 고유 ID -->
 		PUBLIC_ACCESSIBLE BOOLEAN DEFAULT TRUE, <!-- 공용 DIR 여부. T:공용, F:private용 -->
-		PARENT_NO BIGINT NULL,	<!-- 부모 번호 -->
+		PARENT_NO BIGINT NULL,	<!-- 부모 DIRECTORY 번호 -->
+		OWNER_NO BIGINT NOT NULL, <!-- 최초 소유자 번호 -->
 		HAS_CHILD BOOLEAN DEFAULT FALSE NOT NULL, <!-- 자식 여부. T:있다, F:없다 -->
 		CREATION TIMESTAMP NOT NULL, <!-- 폴더 생성일 -->
 		LAST_MODIFIED TIMESTAMP NOT NULL, <!-- 폴더 수정일 -->
 		NAME VARCHAR(255) NOT NULL, <!-- 순수  이름 -->
 		ABSOLUTE_PATH VARCHAR(2048), <!-- 풀 경로 -->
-		CONSTRAINT FK_DIR_PARENT FOREIGN KEY (PARENT_NO) REFERENCES BN_DIRECTORY(NO) ON DELETE CASCADE,
-		CONSTRAINT FK_DIR_OWNER FOREIGN KEY (OWNER_NO) REFERENCES BN_USER(NO),
+		CONSTRAINT FK_DIR_PARENT FOREIGN KEY (PARENT_NO) REFERENCES BN_DIRECTORY(NO) ON DELETE CASCADE, <!-- PARENT_NO는 같은 테이블(BN_DIRECTORY)의 NO를 참조하는 자기참조 외래키(Foreign Key) -->
 		CONSTRAINT UK_DIR_PATH UNIQUE (ABSOLUTE_PATH),
+		CONSTRAINT FK_DIR_OWNER FOREIGN KEY (OWNER_NO) REFERENCES BN_USER(NO),
 		CONSTRAINT UK_DIR_PARENT_NAME UNIQUE (PARENT_NO, NAME) <!-- 같은 부모 밑 중복명 금지 -->
 	)
 </insert>
 
 <!-- 루트 생성 -->
-<insert id="InsertRootDirectory" parameterType="com.utime.burrowNest.user.vo.UserVo">
+<insert id="InsertRootDirectory" parameterType="com.utime.burrowNest.storage.vo.BnDirectory"
+	useGeneratedKeys="true"  keyProperty="no">
 	INSERT INTO BN_DIRECTORY (
 		UPDATE_DATE 
 		, ENABLED 
 		, PARENT_NO	
-		, OWNER_NO 
+		, OWNER_NO
 		, HAS_CHILD
 		, CREATION 
 		, LAST_MODIFIED 
@@ -41,7 +43,7 @@
 		CURRENT_TIMESTAMP
 		, TRUE
 		, NULL
-		, #{userNo}
+		, #{ownerNo}
 		, true
 		, CURRENT_TIMESTAMP
 		, CURRENT_TIMESTAMP
@@ -69,6 +71,7 @@
 		ENABLED BOOLEAN DEFAULT FALSE, <!-- 사용 여부 -->
 		UID UUID DEFAULT RANDOM_UUID(), <!-- 고유 ID -->
 		PARENT_NO BIGINT NOT NULL,	<!-- 부모 번호 -->
+		OWNER_NO BIGINT NOT NULL, <!-- 최초 소유자 번호 -->
 		FILE_LENGTH BIGINT NOT NULL, <!-- 파일 크기 -->
 		FILE_TYPE VARCHAR(16) NOT NULL, <!-- 파일 종류 'Basic','Document','Image','Video','Audio','Archive'-->
 		CREATION TIMESTAMP NOT NULL, <!-- 파일 생성일 -->
@@ -76,8 +79,8 @@
 		EXTENSION VARCHAR(16) DEFAULT NULL, <!-- 파일 확장자 -->
 		NAME VARCHAR(255) NOT NULL,  <!-- 순수 이름 확장자 미포함 -->
 		CONSTRAINT FK_FILE_DIR FOREIGN KEY (PARENT_NO) REFERENCES BN_DIRECTORY(NO) ON DELETE CASCADE,
-		CONSTRAINT FK_FILE_OWNER FOREIGN KEY (OWNER_NO) REFERENCES BN_USER(NO),
 		CONSTRAINT CK_FILE_TYPE CHECK (FILE_TYPE IN ('Basic','Document','Image','Video','Audio','Archive')),
+		CONSTRAINT FK_FILE_OWNER FOREIGN KEY (OWNER_NO) REFERENCES BN_USER(NO),
 		CONSTRAINT UK_FILE_PARENT_NAME UNIQUE (PARENT_NO, NAME, EXTENSION) <!--  같은 폴더 내 중복명 금지 -->
 	)
 </insert>

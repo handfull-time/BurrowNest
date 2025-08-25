@@ -51,7 +51,6 @@
 			UPDATE_DATE = CURRENT_TIMESTAMP
 			, ENABLED = #{enabled}
 			, GROUP_NO = #{group.groupNo}
-			, ROLE = #{role}
 			, NOTE = <choose> <when test="note != null and note != '' ">#{note}</when> <otherwise>NULL</otherwise> </choose>
 			, DAILY_UPLOAD_LIMIT = #{dailyUploadLimit} 
 			, DAILY_DOWNLOAD_LIMIT = #{dailyDownloadLimit}
@@ -91,7 +90,7 @@
 			, ENABLED = #{enabled}
 			, NAME = #{name}
 			, ROLE = #{role}
-			, ACCESS_FLAGS = #{accType}
+			, ACCESS_FLAGS = #{accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler}
 			<if test="note != null and note != '' "> 
 			, NOTE = #{note}
 			</if>

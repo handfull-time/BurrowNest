@@ -73,8 +73,18 @@ public class StorageServiceImpl implements StorageService {
 		final ReturnBasic result = new ReturnBasic();
 		
 		try {
-			storageDao.InsertRootDirectory(user);
+			// 관련 테이블 생성
+			this.storageDao.initStorageTable();
 		} catch (Exception e) {
+			log.error("", e);
+			result.setCodeMessage("E", "기본 Storage Table 생성 실패");
+			return result;
+		}
+
+		try {
+			storageDao.addRootDirectory(user);
+		} catch (Exception e) {
+			log.error("", e);
 			result.setCodeMessage("E", "루트 생성 실패");
 		}
 		return result;
@@ -300,7 +310,7 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 	@Override
 	public List<AbsPath> getFiles(UserVo user, String uid) {
 		
-		final int groupNo = user.getGroup().getGroupNo();
+		final long groupNo = user.getGroup().getGroupNo();
 		final List<AbsPath> result = new ArrayList<>();
 		
 		final DirectoryDto dir = dirManager.getDirectoryForGroup(groupNo, uid); //this.storageDao.getDirectory(user, uid);
@@ -331,7 +341,7 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 	}
 	
 	@Override
-	public List<BnDirectory> getGroupStorageList(int groupNo) {
+	public List<BnDirectory> getGroupStorageList(long groupNo) {
 		
 		return this.storageDao.getRootDirectory( groupNo );
 	}

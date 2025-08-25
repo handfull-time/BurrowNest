@@ -12,6 +12,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.storage.dao.StorageDao;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnPathAccess;
@@ -29,7 +30,7 @@ public class DirecotryManager {
 	final Map<Long, DirectoryDto> mapDirNoBnDirectory = new HashMap<>();
 	final Map<String, DirectoryDto> mapUidBnDirectory = new HashMap<>();
 	final Map<Long, BnPathAccess> mapDirNoPathAccess = new HashMap<>();
-	final Map<Integer, Set<Long>> groupDirectoryAccess = new HashMap<>();
+	final Map<Long, Set<Long>> groupDirectoryAccess = new HashMap<>();
 	DirectoryDto root;
 	
 	/**
@@ -56,6 +57,10 @@ public class DirecotryManager {
 	}
 	
 	private void loadDirecotryManager(List<BnDirectory> directorylist, List<BnPathAccess> accessList) {
+		
+		if( BurrowUtils.isEmpty(directorylist) ) {
+			return;
+		}
 		
 		final Map< Long, List<DirectoryDto> > mapListDirectory = new HashMap<>();
 		final BnDirectory rootDir = directorylist.remove(0);
@@ -118,7 +123,7 @@ public class DirecotryManager {
 	    groupDirectoryAccess.clear();
 	}
 	
-	public List<DirectoryDto> getAccessibleDirectoriesForGroup(int groupNo) {
+	public List<DirectoryDto> getAccessibleDirectoriesForGroup(long groupNo) {
 	    final Set<Long> accessibleDirs = groupDirectoryAccess.getOrDefault(groupNo, Collections.emptySet());
 	    final List<DirectoryDto> result = new ArrayList<>();
 	    
@@ -132,7 +137,7 @@ public class DirecotryManager {
 	    return result;
 	}
 	
-	public DirectoryDto getDirectoryForGroup(int groupNo, long dirNo) {
+	public DirectoryDto getDirectoryForGroup(long groupNo, long dirNo) {
 		final Set<Long> accessibleDirs = groupDirectoryAccess.getOrDefault(groupNo, Collections.emptySet());
 
 	    // 현재 디렉터리를 검사
@@ -145,7 +150,7 @@ public class DirecotryManager {
 	    return this.findAccessibleParent(dir, accessibleDirs);
 	}
 	
-	public DirectoryDto getDirectoryForGroup(int groupNo, String uid) {
+	public DirectoryDto getDirectoryForGroup(long groupNo, String uid) {
 	    final Set<Long> accessibleDirs = groupDirectoryAccess.getOrDefault(groupNo, Collections.emptySet());
 
 	    DirectoryDto dir = mapUidBnDirectory.get(uid);
@@ -172,7 +177,7 @@ public class DirecotryManager {
 	}
 	
 	
-//	public DirectoryDto getDirectoryForGroup(int groupNo, String uid) {
+//	public DirectoryDto getDirectoryForGroup(long groupNo, String uid) {
 //		final Set<Long> accessibleDirs = groupDirectoryAccess.getOrDefault(groupNo, Collections.emptySet());
 //
 //	    // 현재 디렉터리를 검사
@@ -286,7 +291,7 @@ public class DirecotryManager {
      * @param parentUid
      * @return
      */
-    public List<DirectoryDto> getAccessibleChildren(int groupNo, String parentUid) {
+    public List<DirectoryDto> getAccessibleChildren(long groupNo, String parentUid) {
         final Set<Long> accessibleDirs = groupDirectoryAccess.getOrDefault(groupNo, Collections.emptySet());
 
         final DirectoryDto parent = mapUidBnDirectory.get(parentUid);

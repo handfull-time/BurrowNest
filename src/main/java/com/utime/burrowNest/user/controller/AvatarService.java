@@ -13,7 +13,7 @@ public class AvatarService {
 //  public record ThumbDTO(String mime, String etag, byte[] img) {}
 //
 //  @Cacheable(cacheNames="avatarThumb", key="T(String).format('u:%d:%s', #userNo, #etag)", unless="#result==null")
-//  public ThumbDTO getThumb(int userNo, String etagHint) {
+//  public ThumbDTO getThumb(long userNo, String etagHint) {
 //    var t = repo.findById(userNo).orElse(null);
 //    if (t == null) return null;
 //    return new ThumbDTO(t.getMime(), t.getEtag(), t.getImg());
@@ -21,7 +21,7 @@ public class AvatarService {
 //
 //  @CacheEvict(cacheNames="avatarThumb", allEntries=true) // 단순화
 //  @Transactional
-//  public void updateThumb(int userNo, MultipartFile file) { /* 썸네일 생성->DB 저장, etag 갱신 */ }
+//  public void updateThumb(long userNo, MultipartFile file) { /* 썸네일 생성->DB 저장, etag 갱신 */ }
 }
 
 
@@ -30,7 +30,7 @@ public class AvatarService {
  * 
  *컨트롤러(304 처리) 
 @GetMapping("/users/{userNo}/avatar")
-public ResponseEntity<byte[]> get(@PathVariable int userNo,
+public ResponseEntity<byte[]> get(@PathVariable long userNo,
         @RequestHeader(value="If-None-Match", required=false) String inm) {
 
   // etag 힌트 없이도 OK: 서비스에서 최신 ETag 리턴

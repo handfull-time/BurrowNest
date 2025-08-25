@@ -59,7 +59,7 @@ public class AdminStorageController {
 	
 	@ResponseBody
 	@GetMapping("GroupStorageList.json")
-	public List<BnDirectory> GroupStorageList(@RequestParam("GroupNo") int groupNo) {
+	public List<BnDirectory> GroupStorageList(@RequestParam("GroupNo") long groupNo) {
 		return null;
 	}
 	

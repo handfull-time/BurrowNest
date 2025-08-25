@@ -22,7 +22,7 @@ public interface AdminUserService {
 	 * @param userNo
 	 * @return
 	 */
-	UserVo getUserFromNo(int userNo);
+	UserVo getUserFromNo(long userNo);
 
 	/**
 	 * 사용자 정보 저장
@@ -56,7 +56,7 @@ public interface AdminUserService {
 	 * @param groupNo
 	 * @return
 	 */
-	GroupVo getGroupByNo(int groupNo);
+	GroupVo getGroupByNo(long groupNo);
 	
 	/**
 	 * 그룹 정보 저장
@@ -78,6 +78,6 @@ public interface AdminUserService {
 	 * @param list
 	 * @return
 	 */
-	ReturnBasic setGroupStorageList(int groupNo, List<BnDirectory> list);
+	ReturnBasic setGroupStorageList(long groupNo, List<BnDirectory> list);
 
 }

@@ -34,7 +34,7 @@ public class UserController {
 	 * @return
 	 */
 	@GetMapping("{userNo}/Profile.img")
-    public ResponseEntity<byte[]> getUserThumbnail(@PathVariable("userNo") int userNo) {
+    public ResponseEntity<byte[]> getUserThumbnail(@PathVariable("userNo") long userNo) {
 		
 		final byte[] image = userService.getThumbnail( userNo );
         
@@ -58,7 +58,7 @@ public class UserController {
     @GetMapping("Profile.img")
     public ResponseEntity<byte[]> getMyThumbnail(UserVo user) {
     	
-    	final int userNo = user == null ? 0:user.getUserNo();
+    	final long userNo = user == null ? 0:user.getUserNo();
 		
     	return this.getUserThumbnail( userNo );
     }

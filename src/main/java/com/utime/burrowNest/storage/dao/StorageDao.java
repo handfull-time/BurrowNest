@@ -4,11 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
-import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
 import com.utime.burrowNest.storage.vo.BnPathAccess;
-import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -33,7 +31,7 @@ public interface StorageDao {
 	 * @return
 	 * @throws Exception
 	 */
-	BnDirectory InsertRootDirectory(UserVo owner ) throws Exception;
+	void addRootDirectory(UserVo owner ) throws Exception;
 	
 	/**
 	 * 루트 Dir 조회
@@ -143,7 +141,7 @@ public interface StorageDao {
 	 * @param groupNo
 	 * @return
 	 */
-	List<BnDirectory> getRootDirectory(int groupNo);
+	List<BnDirectory> getRootDirectory(long groupNo);
 
 	/**
 	 * dir의 파일 목록

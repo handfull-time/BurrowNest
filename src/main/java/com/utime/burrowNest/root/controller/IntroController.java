@@ -40,12 +40,15 @@ public class IntroController {
 	@GetMapping(path = { "Intro.html" })
     public String BeginIntro(HttpServletRequest request, ModelMap model, UserVo user) {
 
+		final String result;
 		if( ! authService.IsInit() ) {
 			model.addAttribute("unique", authService.getNewGenUnique(request) );
-			return "Intro/Infor";
+			result = "Intro/Infor";
+		}else {
+			result = "redirect:/";
 		}
 		
-		return "redirect:/";
+		return result;
     }
 	
 	/**

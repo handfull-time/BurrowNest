@@ -174,6 +174,14 @@ class AuthServiceImpl implements AuthService {
 		return result;		
 	}
 	
+	/**
+	 * 회원 DB 추가
+	 * @param reqVo 요청 값
+	 * @param group 그룹 정보
+	 * @param enabled 사용 여부
+	 * @param role 권한
+	 * @return
+	 */
 	private ResUserVo procJoinUser( UserReqVo reqVo, GroupVo group, boolean enabled, EJwtRole role ) {
 		log.info("초기화 시도 : {}", reqVo);
 		
@@ -201,7 +209,6 @@ class AuthServiceImpl implements AuthService {
 		user.setGroup(group);
 		user.setId(reqVo.getId());
 		user.setNickname(reqVo.getNickname());
-		user.setRole(role);
 		user.setAuthHint( this.genUserUniqueHashing( reqVo ) );
 		
 		final ResUserVo result = new ResUserVo();
@@ -258,7 +265,7 @@ class AuthServiceImpl implements AuthService {
 		
 		try {
 			// 최초 회원 관련 테이블 생성
-			this.userDao.initTable();
+			this.userDao.initUserTable();
 		} catch (Exception e) {
 			log.error("", e);
 			return new ResUserVo("E", e.getMessage());

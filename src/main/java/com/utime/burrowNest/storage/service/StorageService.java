@@ -70,6 +70,6 @@ public interface StorageService {
 	 * @param groupNo
 	 * @return
 	 */
-	List<BnDirectory> getGroupStorageList(int groupNo);
+	List<BnDirectory> getGroupStorageList(long groupNo);
 
 }

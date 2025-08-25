@@ -38,7 +38,7 @@ public interface UserMapper {
 	 * @param groupNo
 	 * @return
 	 */
-	GroupVo selectGroupByNo( @Param("groupNo") int groupNo );
+	GroupVo selectGroupByNo( @Param("groupNo") long groupNo );
 	
 	/**
 	 * 회원 테이블 생성
@@ -78,7 +78,7 @@ public interface UserMapper {
 	 * @param profileImg
 	 * @return
 	 */
-	int insertUserProfileImg(@Param("userNo") int userNo, @Param("profileImg") byte [] profileImg); 
+	int insertUserProfileImg(@Param("userNo") long userNo, @Param("profileImg") byte [] profileImg); 
 	
 	/**
 	 * 로그인 기록 추가.
@@ -148,7 +148,7 @@ public interface UserMapper {
 	 * @return
 	 * @throws Exception
 	 */
-	int updateUserProfileImg( @Param("userNo") int userNo, @Param("profileImg") byte [] profileImg )throws Exception ;
+	int updateUserProfileImg( @Param("userNo") long userNo, @Param("profileImg") byte [] profileImg )throws Exception ;
 
 	/**
 	 * PW 성공 여부 횟수 업데이트
@@ -170,5 +170,5 @@ public interface UserMapper {
 	 * @param userNo
 	 * @return
 	 */
-	BinResultVo selectProfileImg(@Param("userNo") int userNo);
+	BinResultVo selectProfileImg(@Param("userNo") long userNo);
 }

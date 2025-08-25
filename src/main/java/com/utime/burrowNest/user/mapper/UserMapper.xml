@@ -5,23 +5,22 @@
 
 	<insert id="createUserGroup">
 		CREATE TABLE BN_USER_GROUP (
-			NO IDENTITY PRIMARY KEY,
-			REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP, <!-- 생성일 -->
-			UPDATE_DATE TIMESTAMP NOT NULL, <!-- 수정일 -->
-			ENABLED BOOLEAN DEFAULT FALSE, <!-- 사용 여부 -->
-			NAME VARCHAR(128) NOT NULL, <!-- 이름 -->
-			ROLE VARCHAR(16) NOT NULL,  <!-- 사용자 권한 'Admin' | 'User'-->
-			ACCESS_FLAGS SMALLINT NOT NULL, <!-- 파일 접근 권한 bitmask --> 
-			NOTE VARCHAR(255),  <!-- 비고 -->
-			DAILY_UPLOAD_LIMIT BIGINT DEFAULT 0,  <!-- 하루 업로드 제한 (byte) -->
-			DAILY_DOWNLOAD_LIMIT BIGINT DEFAULT 0,   <!-- 일일 최대 다운로드 용량 -->
-			MAX_STORAGE_USAGE BIGINT DEFAULT 0,  <!-- 저장공간 최대 사용 용량 -->
-			CONSTRAINT UK_UG_NAME UNIQUE (NAME),
-			CONSTRAINT CK_UG_ROLE CHECK (ROLE IN ('Admin','User')),
-			CONSTRAINT CK_UG_FLAGS CHECK (ACCESS_FLAGS BETWEEN 0 AND 65535)
+			NO IDENTITY PRIMARY KEY
+			, REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP <!-- 생성일 -->
+			, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
+			, ENABLED BOOLEAN DEFAULT FALSE <!-- 사용 여부 -->
+			, NAME VARCHAR(128) NOT NULL <!-- 이름 -->
+			, ROLE VARCHAR(16) NOT NULL  <!-- 사용자 권한 'Admin' | 'User'-->
+			, ACCESS_FLAGS SMALLINT NOT NULL <!-- 파일 접근 권한 bitmask --> 
+			, NOTE VARCHAR(255)  <!-- 비고 -->
+			, DAILY_UPLOAD_LIMIT BIGINT DEFAULT 0  <!-- 하루 업로드 제한 (byte) -->
+			, DAILY_DOWNLOAD_LIMIT BIGINT DEFAULT 0   <!-- 일일 최대 다운로드 용량 -->
+			, MAX_STORAGE_USAGE BIGINT DEFAULT 0  <!-- 저장공간 최대 사용 용량 -->
+			, CONSTRAINT UK_UG_NAME UNIQUE (NAME)
+			, CONSTRAINT CK_UG_ROLE CHECK (ROLE IN ('Admin','User'))
+			, CONSTRAINT CK_UG_FLAGS CHECK (ACCESS_FLAGS BETWEEN 0 AND 65535)
 		)
 	</insert>
-	
 	
 	<!-- 어드민 그룹 -->
 	<insert id="insertGroup" parameterType="com.utime.burrowNest.user.vo.GroupVo" 
@@ -55,35 +54,35 @@
 	
 	<insert id="createUser">
 		CREATE TABLE BN_USER (
-			NO IDENTITY PRIMARY KEY,
-			REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP, <!-- 생성일 -->
-			UPDATE_DATE TIMESTAMP NOT NULL,  <!-- 수정일 -->
-			ENABLED BOOLEAN DEFAULT FALSE,  <!-- 사용 여부 -->
-			GROUP_NO INT NOT NULL, <!-- 사용자 그룹 번호 --> 
-			ID VARCHAR(32) NOT NULL, <!-- ID -->
-			NICK_NAME VARCHAR(128) NOT NULL,  <!-- 별명 -->
-			NOTE VARCHAR(255), <!-- 비고 -->
-			AUTH_HINT VARCHAR(64), <!-- 계정 찾기 힌트 (이름 + 질문1 + 질문2 + 질문3: 해쉬) -->
-			DAILY_UPLOAD_LIMIT BIGINT DEFAULT 0, <!-- 하루 업로드 제한 (byte) -->
-			DAILY_DOWNLOAD_LIMIT BIGINT DEFAULT 0,  <!-- 일일 최대 다운로드 용량 -->
-			MAX_STORAGE_USAGE BIGINT DEFAULT 0, <!-- 저장공간 최대 사용 용량 -->
-			CONSTRAINT FK_USER_GROUP FOREIGN KEY (GROUP_NO) REFERENCES BN_USER_GROUP(NO) ON DELETE RESTRICT,
-			CONSTRAINT UK_USER_ID UNIQUE (ID)
+			NO IDENTITY PRIMARY KEY
+			, REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP <!-- 생성일 -->
+			, UPDATE_DATE TIMESTAMP NOT NULL  <!-- 수정일 -->
+			, ENABLED BOOLEAN DEFAULT FALSE  <!-- 사용 여부 -->
+			, GROUP_NO BIGINT NOT NULL <!-- 사용자 그룹 번호 --> 
+			, ID VARCHAR(32) NOT NULL <!-- ID -->
+			, NICK_NAME VARCHAR(128) NOT NULL  <!-- 별명 -->
+			, NOTE VARCHAR(255) <!-- 비고 -->
+			, AUTH_HINT VARCHAR(64) <!-- 계정 찾기 힌트 (이름 + 질문1 + 질문2 + 질문3: 해쉬) -->
+			, DAILY_UPLOAD_LIMIT BIGINT DEFAULT 0 <!-- 하루 업로드 제한 (byte) -->
+			, DAILY_DOWNLOAD_LIMIT BIGINT DEFAULT 0  <!-- 일일 최대 다운로드 용량 -->
+			, MAX_STORAGE_USAGE BIGINT DEFAULT 0 <!-- 저장공간 최대 사용 용량 -->
+			, CONSTRAINT FK_USER_GROUP FOREIGN KEY (GROUP_NO) REFERENCES BN_USER_GROUP(NO) ON DELETE RESTRICT
+			, CONSTRAINT UK_USER_ID UNIQUE (ID)
 		)
 	</insert>
 	
 	<insert id="createProfileImg">
 		CREATE TABLE BN_USER_PROFILE_IMG (
-			USER_NO INT PRIMARY KEY,
-			UPDATE_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, <!-- 수정일 -->
-			PROFILE_IMG BLOB NOT NULL, <!-- 아이콘 이미지  -->
-			CONSTRAINT FK_PROFILE_USER FOREIGN KEY (USER_NO) REFERENCES BN_USER(NO) ON DELETE CASCADE
+			USER_NO BIGINT PRIMARY KEY
+			, UPDATE_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL <!-- 수정일 -->
+			, PROFILE_IMG BLOB NOT NULL <!-- 아이콘 이미지  -->
+			, CONSTRAINT FK_PROFILE_USER FOREIGN KEY (USER_NO) REFERENCES BN_USER(NO) ON DELETE CASCADE
 		)
 	</insert>
 	
 	<insert id="createUserPw">
 		CREATE TABLE BN_USER_PW (
-			USER_NO INT PRIMARY KEY 
+			USER_NO BIGINT PRIMARY KEY 
 			, UPDATE_DATE TIMESTAMP NOT NULL <!-- 수정일 -->
 			, AUTH_VALUE VARCHAR(128) NOT NULL <!-- 비번 -->
 			, FAIL_COUNT TINYINT DEFAULT 0 <!-- 암호 틀린 횟수 -->
@@ -94,13 +93,13 @@
 	<!-- 로그인 기록 -->
 	<insert id="createLoginRecord">
 		CREATE TABLE BN_USER_LOGIN_RECORD (
-			NO INT PRIMARY KEY AUTO_INCREMENT
+			NO IDENTITY PRIMARY KEY
 			, REG_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP <!-- 생성일 -->
 			, IP VARCHAR(32) NOT NULL
 			, USER_AGENT VARCHAR(255) NOT NULL
 			, STATUS VARCHAR(32) NOT NULL
 			, REQ_ID VARCHAR(32) NOT NULL <!-- 요청 ID -->
-			, USER_NO INT DEFAULT -1
+			, USER_NO BIGINT DEFAULT -1
 		)
 	</insert>
 	
@@ -113,7 +112,6 @@
 			, GROUP_NO
 			, ID 
 			, NICK_NAME 
-			, ROLE
 			, AUTH_HINT
 			, DAILY_UPLOAD_LIMIT 
 			, DAILY_DOWNLOAD_LIMIT 
@@ -124,7 +122,6 @@
 			, #{group.groupNo}
 			, #{id}
 			, #{nickname}
-			, #{group.role}
 			, #{authHint}
 			, #{group.dailyUploadLimit}
 			, #{group.dailyDownloadLimit}
@@ -212,7 +209,6 @@
 		, UR.GROUP_NO
 		, UR.ID 
 		, UR.NICK_NAME 
-		, UR.ROLE
 	</sql>
 	
 	<sql id="UserAllColumn">
@@ -231,7 +227,6 @@
 		<result column="ENABLED" property="enabled"/>
 		<result column="ID" property="id"/>
 		<result column="NICK_NAME" property="nickname"/>
-		<result column="ROLE" property="role"/>
 		<result column="UPDATE_DATE" property="updateDate"/>
 		<result column="NOTE" property="note"/>
 		<result column="AUTH_HINT" property="authHint"/>

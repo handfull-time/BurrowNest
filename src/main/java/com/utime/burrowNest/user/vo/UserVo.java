@@ -3,7 +3,6 @@ package com.utime.burrowNest.user.vo;
 import java.time.LocalDateTime;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
-import com.utime.burrowNest.common.vo.EJwtRole;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,7 +14,7 @@ import lombok.Setter;
 @Getter
 public class UserVo {
 	/** 회원 번호 */
-	int userNo;
+	long userNo;
 	/** 생성일 */
 	LocalDateTime regDate;
 	/** 수정일 */
@@ -28,8 +27,6 @@ public class UserVo {
 	String id;
 	/** 닉네임 */
 	String nickname;
-	/** 권한 */
-	EJwtRole role;
 	/** 비고 */
 	String note;
 	/** 암호 찾기 값 */

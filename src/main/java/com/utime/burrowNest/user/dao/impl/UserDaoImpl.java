@@ -48,7 +48,7 @@ class UserDaoImpl implements UserDao {
 	}
 
 	@Override
-	public int initTable() throws Exception {
+	public int initUserTable() throws Exception {
 		int result = 0;
 		if( ! common.existTable("BN_USER_GROUP") ) {
 			log.info("BN_USER_GROUP 생성");
@@ -260,7 +260,7 @@ class UserDaoImpl implements UserDao {
 	}
 	
 	@Override
-	public byte[] getProfileImg(int userNo) {
+	public byte[] getProfileImg(long userNo) {
 		
 		final BinResultVo result = userMapper.selectProfileImg( userNo );
 		

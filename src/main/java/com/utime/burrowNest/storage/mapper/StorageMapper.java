@@ -15,7 +15,6 @@ import com.utime.burrowNest.storage.vo.BnFileImage;
 import com.utime.burrowNest.storage.vo.BnFileVideo;
 import com.utime.burrowNest.storage.vo.BnPathAccess;
 import com.utime.burrowNest.user.vo.GroupVo;
-import com.utime.burrowNest.user.vo.UserVo;
 
 @Mapper
 public interface StorageMapper {
@@ -110,7 +109,7 @@ public interface StorageMapper {
 	 * @param accType
 	 * @return
 	 */
-	int insertDirectoryAccess(@Param("dirNo") long dirNo, @Param("groupNo") int groupNo, @Param("accType") int accType);
+	int insertDirectoryAccess(@Param("dirNo") long dirNo, @Param("groupNo") long groupNo, @Param("accType") int accType);
 
 	/**
 	 * Dir 권한 수정
@@ -119,7 +118,7 @@ public interface StorageMapper {
 	 * @param accType
 	 * @return
 	 */
-	int updateDirectoryAccess(@Param("dirNo") long dirNo, @Param("groupNo") int groupNo, @Param("accType") int accType);
+	int updateDirectoryAccess(@Param("dirNo") long dirNo, @Param("groupNo") long groupNo, @Param("accType") int accType);
 	
 	/**
 	 * 전체 엑세스 목록
@@ -134,7 +133,7 @@ public interface StorageMapper {
 	 * @param accType
 	 * @return
 	 */
-	int insertFileAccess(@Param("fileNo") long fileNo, @Param("groupNo") int groupNo, @Param("accType") int accType);
+	int insertFileAccess(@Param("fileNo") long fileNo, @Param("groupNo") long groupNo, @Param("accType") int accType);
 
 	/**
 	 * 파일 권한 수정하기
@@ -143,7 +142,7 @@ public interface StorageMapper {
 	 * @param accType
 	 * @return
 	 */
-	int updateFileAccess(@Param("fileNo") long fileNo, @Param("groupNo") int groupNo, @Param("accType") int accType);
+	int updateFileAccess(@Param("fileNo") long fileNo, @Param("groupNo") long groupNo, @Param("accType") int accType);
 
 	/**
 	 * 확장 정보 유무
@@ -285,7 +284,7 @@ public interface StorageMapper {
 	 * @param user
 	 * @return
 	 */
-	List<BnDirectory> selectRootDirectories(@Param("groupNo") int groupNo);
+	List<BnDirectory> selectRootDirectories(@Param("groupNo") long groupNo);
 
 	/**
 	 * directory 속한 파일 및 폴더 목록

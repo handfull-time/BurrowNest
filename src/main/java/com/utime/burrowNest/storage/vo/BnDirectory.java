@@ -26,6 +26,7 @@ public class BnDirectory extends AbsPath{
 
     /**
      * The absolute path of the directory in the file system.
+     * 반드시 끝 문자열은 '/' 로 끝날 것.
      */
     protected String absolutePath;
     
