@@ -3,7 +3,7 @@
      id="customModal"
      class="fixed inset-0 z-50 hidden flex items-center justify-center
             bg-black/50 backdrop-blur-sm transition-opacity duration-150 ease-out
-            opacity-0"
+            opacity-0 z-[12000]"
      role="dialog" 
      aria-modal="true"
      aria-labelledby="modalTitle"
@@ -54,12 +54,41 @@
       let escHandler     = null;
       let keytrapHandler = null;
 
+      // ======== 유틸 추가 ========
+      function computeTopModalZ() {
+        const overlays = Array.from(document.querySelectorAll('[id^="popupOverlay"]'));
+        let maxZ = 0;
+        for (const el of overlays) {
+          const z = parseInt(getComputedStyle(el).zIndex, 10) || 0;
+          if (z > maxZ) maxZ = z;
+        }
+        return maxZ;
+      }
+
+      function bringAlertToFront() {
+        const FALLBACK = 12000;
+        const topZ = computeTopModalZ();
+        const overlayZ = Math.max(FALLBACK, topZ + 2);
+        const dialogZ  = overlayZ + 1;
+        modalEl.style.zIndex  = String(overlayZ);
+        dialogEl.style.zIndex = String(dialogZ);
+      }
+      
       // 중복 초기화 가드
       if (modalEl.dataset.init === '1') return;
       modalEl.dataset.init = '1';
 
       // ======== 유틸 ========
       function openModal({ showCancel = false, prompt = false, okText = '확인' }) {
+    	  
+    	// body 직속 보장
+    	if (modalEl.parentElement !== document.body) {
+    	    document.body.appendChild(modalEl);
+    	}
+
+    	// 🔹 항상 맨 위로
+    	bringAlertToFront();
+    	  
         // 상태
         isPromptMode = prompt;
 

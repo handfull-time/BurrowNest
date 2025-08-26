@@ -93,6 +93,90 @@
         	
         	doSearchList(urlAddress, options, 'PathList');
         }
+        
+        function getGroupInfo(){
+			return getFormObject('updateGroupForm');
+		}
+		
+		function deleteGroup(ele) {
+			
+			showCustomConfirm("정말로 이 그룹을 삭제하시겠습니까?", async (isConfirm) => {
+            	
+            	if( ! isConfirm ){
+            		return;
+            	}
+            	
+               	const url = /*[[@{/Admin/Group/DeleteGroup.json}]]*/ null;
+               	
+            	const options = {
+            			method: 'POST',
+            			headers: {
+            				'Content-Type': 'application/json',
+            			},
+            			body: JSON.stringify( getGroupInfo() ),
+            	    };
+            	
+            	const response = await apiRequest(url, options);
+                if (!response.ok) {
+                    throw new Error(`HTTP 오류 발생: ${response.status} ${response.statusText}`);
+                }
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('삭제 결과:', result);
+                    if( result.code == '0' ){
+                    	showCustomAlert( '삭제됐습니다.', function(){
+                            location.reload(); 
+                    	} );
+                    }else{
+                    	showCustomAlert( '삭제 실패 ' + result.code + ':' + result.message, function(){
+                    		closePopup(ele);
+                    	} );
+                    }
+                } else {
+                	console.error('삭제 오류:', response.status);
+                	showCustomAlert( '삭제 오류:' + response.status , function(){
+                		closePopup(ele);
+                	} );
+                }
+			});
+            	
+        }
+		
+		 // 데이터 저장
+        async function saveData(ele) {
+        	
+        	const url = /*[[@{/Admin/Group/SaveGroup.json}]]*/ null;
+        	const options = {
+        			method: 'POST',
+        			headers: {
+        				'Content-Type': 'application/json',
+        			},
+        			body: JSON.stringify( getGroupInfo() ),
+        	    };
+        	
+        	const response = await apiRequest(url, options);
+            if (!response.ok) {
+                throw new Error(`HTTP 오류 발생: ${response.status} ${response.statusText}`);
+            }
+			
+            if (response.ok) {
+                const result = await response.json();
+                console.log('저장 결과:', result);
+                if( result.code == '0' ){
+                	location.reload(); 
+                }else{
+                	showCustomAlert( '저장 실패 ' + result.code + ':' + result.message, function(){
+                		closePopup(ele);
+                	} );
+                }
+            } else {
+            	console.error('저장 오류:', response.status);
+            	showCustomAlert( '저장 오류:' + response.status , function(){
+            		closePopup(ele);
+            	} );
+            }
+		 }
     </script>
     </th:block>
 
