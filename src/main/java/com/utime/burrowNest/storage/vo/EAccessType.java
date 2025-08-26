@@ -7,9 +7,9 @@ package com.utime.burrowNest.storage.vo;
  */
 public enum EAccessType {
 //	NONE(         0b0000), //  0 권한 없음
-//    READ(         0b0001), //  1 목록 조회 권한
-//    WRITE_UPLOAD( 0b0011), //  3 업로드 권한
-//    WRITE_MODIFY( 0b0111), //  7 수정 권한
+//  READ(         0b0001), //  1 목록 조회 권한
+//  WRITE_UPLOAD( 0b0011), //  3 업로드 권한
+//  WRITE_MODIFY( 0b0111), //  7 수정 권한
 //	ALL(          0b1111); // 15 모든 권한
 	None(0, "없음")
 	, Read(1, "읽기 전용")
