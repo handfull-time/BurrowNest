@@ -5,7 +5,9 @@ import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.ReqUniqueVo;
 import com.utime.burrowNest.user.vo.ResUserVo;
+import com.utime.burrowNest.user.vo.ThumbnailData;
 import com.utime.burrowNest.user.vo.UserReqVo;
+import com.utime.burrowNest.user.vo.UserVo;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,13 +35,11 @@ public interface AuthService {
 	ResUserVo saveInitInfor(UserReqVo req);
 
 	/**
-	 * 로그인 처리
-	 * @param request
-	 * @param response
-	 * @param reqVo
+	 * 회원 섬네일
+	 * @param userNo
 	 * @return
 	 */
-	ResUserVo procLogin(HttpServletRequest request, HttpServletResponse response, LoginReqVo reqVo);
+	ThumbnailData getThumbnail(long userNo);
 	
 	/**
 	 * 회원 가입
@@ -48,7 +48,24 @@ public interface AuthService {
 	 * @return
 	 */
 	ReturnBasic procJoinUser(UserReqVo reqVo);
-
+	
+	/**
+	 * 회원 정보 수정
+	 * @param request
+	 * @param reqVo
+	 * @return
+	 */
+	ReturnBasic procUpdateUser(UserVo user, UserReqVo reqVo);
+	
+	/**
+	 * 로그인 처리
+	 * @param request
+	 * @param response
+	 * @param reqVo
+	 * @return
+	 */
+	ResUserVo procLogin(HttpServletRequest request, HttpServletResponse response, LoginReqVo reqVo);
+	
 	/**
 	 * 로그 아웃
 	 * @param request

@@ -1,5 +1,6 @@
 package com.utime.burrowNest.user.dao;
 
+import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.ResUserVo;
@@ -108,6 +109,6 @@ public interface UserDao {
 	 * @param userNo
 	 * @return
 	 */
-	byte[] getProfileImg(long userNo);
+	BinResultVo getProfileImg(long userNo);
 
 }

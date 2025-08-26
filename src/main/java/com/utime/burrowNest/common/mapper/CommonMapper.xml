@@ -33,6 +33,7 @@
 	<!-- 바이너리 데이터 VO MAP -->
 	<resultMap id="BinResultVoMap" type="com.utime.burrowNest.common.vo.BinResultVo">
 		<result column="BIN_DATA" property="binary" jdbcType="VARBINARY" />
+		<result column="LAST_DATE" property="lastDate" />
 	</resultMap>
 	
 	<!-- 테이블 컬럼 정보 조회 -->

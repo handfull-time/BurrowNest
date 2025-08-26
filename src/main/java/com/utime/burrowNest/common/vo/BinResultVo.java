@@ -1,13 +1,15 @@
 package com.utime.burrowNest.common.vo;
 
-public class BinResultVo {
-	byte [] binary;
+import java.util.Date;
 
-	public byte[] getBinary() {
-		return binary;
-	}
+import lombok.Data;
 
-	public void setBinary(byte[] binary) {
-		this.binary = binary;
-	}
+/**
+ * DB Binary 정보 조회
+ */
+@Data
+public class BinResultVo{
+	private byte [] binary;
+	private Date lastDate;
 }
+

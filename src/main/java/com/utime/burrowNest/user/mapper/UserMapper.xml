@@ -356,6 +356,7 @@
 	<select id="selectProfileImg" parameterType="map" resultMap="com.utime.burrowNest.common.mapper.CommonMapper.BinResultVoMap">
 		SELECT
 			PROFILE_IMG AS BIN_DATA
+			, UPDATE_DATE AS LAST_DATE
 		FROM BN_USER_PROFILE_IMG 
 		WHERE USER_NO = #{userNo}
 	</select>

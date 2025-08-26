@@ -6,6 +6,9 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import com.utime.burrowNest.common.jwt.JwtProvider;
@@ -13,6 +16,7 @@ import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.util.CacheIntervalMap;
 import com.utime.burrowNest.common.util.RsaEncDec;
 import com.utime.burrowNest.common.util.Sha256;
+import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.user.dao.UserDao;
@@ -21,6 +25,7 @@ import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.ReqUniqueVo;
 import com.utime.burrowNest.user.vo.ResUserVo;
+import com.utime.burrowNest.user.vo.ThumbnailData;
 import com.utime.burrowNest.user.vo.UserReqVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -175,6 +180,44 @@ class AuthServiceImpl implements AuthService {
 	}
 	
 	/**
+	 * 기본 이미지 로딩
+	 * @return
+	 */
+	private ThumbnailData defaultProfileImg() {
+		
+		ThumbnailData result = null;
+		try {
+			final ClassPathResource resource = new ClassPathResource("static/images/profile/DefaultProfile.png");
+			final byte [] bytes = BurrowUtils.encodeImageToByteArray(resource.getInputStream());
+			result = new ThumbnailData(bytes, resource.lastModified());
+		} catch (IOException e) {
+			log.error("", e);
+		}
+		
+		return result;
+	}
+	
+	@Override
+	@Cacheable(cacheNames = "profileThumbnails", key = "#userNo", unless="#result==null")
+	public ThumbnailData getThumbnail(long userNo) {
+		
+		if( userNo < 1L ) {
+			return this.defaultProfileImg();
+		}
+		
+		final BinResultVo dbData = userDao.getProfileImg( userNo );
+		
+		final ThumbnailData result;
+		if( dbData == null ) {
+			result = this.defaultProfileImg();
+		}else {
+			result = new ThumbnailData(dbData.getBinary(), dbData.getLastDate().getTime());
+		}
+		
+		return result;
+	}
+	
+	/**
 	 * 회원 DB 추가
 	 * @param reqVo 요청 값
 	 * @param group 그룹 정보
@@ -216,6 +259,40 @@ class AuthServiceImpl implements AuthService {
 			userDao.addUser(reqVo, user, pw, profileImg);
 			this.validationRemove(reqVo);
 			result.setUser(user);
+		} catch (Exception e) {
+			log.error("", e);
+			result.setCodeMessage("E", e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	@Override
+	@CacheEvict(cacheNames="profileThumbnails",key = "#user.userNo")
+	public ReturnBasic procUpdateUser(UserVo user, UserReqVo reqVo) {
+		
+		final String pw = this.convertEncPw( reqVo, reqVo.getPw() );
+		
+		byte[] profileImg;
+		try {
+			profileImg = BurrowUtils.encodeImageToByteArray( reqVo.getProfileImg().getInputStream() );
+		} catch (IOException e) {
+			log.error("", e);
+			return new ResUserVo("E", e.getMessage());
+		}
+		
+		user.setNickname(reqVo.getNickname());
+		user.setAuthHint( this.genUserUniqueHashing( reqVo ) );
+		
+		final ReturnBasic result = new ReturnBasic();
+		try {
+			if( pw != null ) {
+				log.info("비밀 번호 변경");
+				userDao.updateUserPw(user, pw);
+			}
+			
+			userDao.updateUser(user, profileImg);
+			this.validationRemove(reqVo);
 		} catch (Exception e) {
 			log.error("", e);
 			result.setCodeMessage("E", e.getMessage());

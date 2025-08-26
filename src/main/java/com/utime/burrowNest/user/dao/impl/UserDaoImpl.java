@@ -223,7 +223,11 @@ class UserDaoImpl implements UserDao {
 	@Transactional(rollbackFor = Exception.class)
 	public int updateUser(UserVo user, byte [] profileImg) throws Exception {
 		int result = userMapper.updateUser(user);
-		result += userMapper.updateUserProfileImg(user.getUserNo(), profileImg);
+		
+		if( profileImg != null ) {
+			result += userMapper.updateUserProfileImg(user.getUserNo(), profileImg);
+		}
+			
 		return result;
 	}
 	
@@ -260,10 +264,10 @@ class UserDaoImpl implements UserDao {
 	}
 	
 	@Override
-	public byte[] getProfileImg(long userNo) {
+	public BinResultVo getProfileImg(long userNo) {
 		
 		final BinResultVo result = userMapper.selectProfileImg( userNo );
 		
-		return result.getBinary();
+		return result;
 	}
 }
