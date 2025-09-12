@@ -223,9 +223,8 @@ class StorageDaoImpl implements StorageDao{
 	}
 	
 	@Override
-	public BnDirectory getRootDirectory(UserVo owner) {
-		//TODO 
-		return mapper.selectDirectoryByNo(1L);
+	public BnDirectory getRootDirectory() {
+		return mapper.selectRootDirectory();
 	}
 	
 	@Override
@@ -492,5 +491,11 @@ class StorageDaoImpl implements StorageDao{
 	public List<BnPathAccess> getAllDirectoryAccess() {
 		
 		return mapper.selectBnDirectoryAccess();
+	}
+	
+	@Override
+	public List<BnDirectory> getAdminRootStorage() {
+		
+		return mapper.selectBnDirectoryParentNo(1L);
 	}
 }

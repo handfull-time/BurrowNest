@@ -44,6 +44,13 @@ public interface StorageMapper {
 	 * @return
 	 */
 	List<BnDirectory> selectAllDirectory();
+
+	/**
+	 * 루트 Dir 조회
+	 * @return
+	 */
+	BnDirectory selectRootDirectory();
+
 	/**
 	 * dir 조회
 	 * @param dirNo
@@ -309,6 +316,14 @@ public interface StorageMapper {
 	 * @return
 	 */
 	List<String> selectPaths(@Param("group") GroupVo group, @Param("dirNo") long no);
+
+	/**
+	 * parentNo 기준 조회
+	 * @param parentNo
+	 * @return
+	 */
+	List<BnDirectory> selectBnDirectoryParentNo(@Param("parentNo") long parentNo);
+
 
 }
 

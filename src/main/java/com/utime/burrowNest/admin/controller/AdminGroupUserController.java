@@ -129,11 +129,7 @@ public class AdminGroupUserController {
 		
 		final List<DirectoryDto> dirList = storageService.getDirectory(user, null);
 		
-		if( BurrowUtils.isEmpty(dirList) ) {
-			throw new Exception("폴더 없음.");
-		}
-		
-		model.addAttribute("list", dirList);
+		model.addAttribute("directories", dirList);
 		
 		return "Admin/Group/AdminGroupSelectPathLayer";
     }

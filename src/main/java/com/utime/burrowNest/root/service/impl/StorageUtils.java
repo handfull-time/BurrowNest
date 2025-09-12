@@ -75,21 +75,18 @@ class StorageUtils {
             String hostName = localHost.getHostName();
             log.info("hostName : {}", hostName);
             
-            
-            
-            log.info("db.properties loaded successfully.");
+    		if( BurrowDefine.IsLinux ) {
+    			Exiftool = "exiftool";
+    		}else {
+    			Exiftool = new File(config.getProperty(hostName + ".exiftool")).getAbsolutePath();
+    		}
+
+    		log.info("db.properties loaded successfully.");
         } catch (Exception ex) {
             log.error("Fatal error during database configuration loading.", ex);
             throw new RuntimeException("Failed to load database configuration.", ex);
         }
 
-		
-		
-		if( BurrowDefine.IsLinux ) {
-			Exiftool = "exiftool";
-		}else {
-			Exiftool = new File("D:\\Projects\\OtherTools\\exiftool-13.28_64", "exiftool.exe").getAbsolutePath();
-		}
 	}
 	
 	

@@ -150,6 +150,15 @@
     WHERE DR.NO = #{dirNo}
 </select>
 
+<!-- Select: Root 디렉토리 검색 -->
+<select id="selectRootDirectory" parameterType="long" resultMap="BnDirectoryMap">
+    SELECT 
+    	<include refid="BnDirectoryColumn" /> 
+    	, NULL AS PARENT_UID
+    FROM BN_DIRECTORY DR
+    WHERE DR.NO = 1
+</select>
+
 
 
 <!-- Delete: 특정 디렉토리 삭제 -->
@@ -823,6 +832,17 @@
 		NAME
 	FROM PATH_TO_ROOT
 	ORDER BY LEVEL DESC
+</select>
+
+<!-- parentNo 기준 조회 -->
+<select id="selectBnDirectoryParentNo" parameterType="map" resultMap="BnDirectoryMap">
+	SELECT 
+    	<include refid="BnDirectoryColumn" />
+    	, P.UID AS PARENT_UID
+    FROM BN_DIRECTORY DR
+    	INNER JOIN BN_DIRECTORY P ON DR.PARENT_NO = P.NO
+    WHERE DR.PARENT_NO = #{parentNo}
+    ORDER BY NO
 </select>
 
 </mapper>

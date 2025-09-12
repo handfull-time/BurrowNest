@@ -33,7 +33,7 @@
 		                <td class="border p-2 text-center" th:text="${#temporals.format(item.regDate,'yyyy.MM.dd HH:mm')}"></td>
 		                <td class="border p-2" th:text="${item.name}"></td>
 		                <td class="border p-2" th:text="${item.absolutePath}"></td>
-		                <td class="border p-2" th:text="${item.accType.dscr}"></td>
+		                <td class="border p-2" th:text="${item.accType?.dscr}"></td>
 		                <td class="border p-2">
 		                	<button class="remove-dir ml-2 bg-red-500 hover:bg-red-600 text-white text-sm px-2 py-1 rounded">삭제</button>
 		                </td>

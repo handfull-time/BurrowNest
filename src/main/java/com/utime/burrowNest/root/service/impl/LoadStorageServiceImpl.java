@@ -14,7 +14,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.utime.burrowNest.admin.vo.SaveSotrageReqVo;
-import com.utime.burrowNest.common.util.CommandUtil;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.root.service.LoadStorageService;
 import com.utime.burrowNest.storage.dao.StorageDao;
@@ -227,99 +226,99 @@ public class LoadStorageServiceImpl implements LoadStorageService {
 		}
     }
     
-    @SuppressWarnings("unused")
-	private class LibDownLoad implements Runnable{
-    	final SaveSotrageReqVo req;
-    	final InitFileLoad ifl;
-    	
-    	public LibDownLoad(SaveSotrageReqVo req, InitFileLoad ifl) {
-			this.req = req;
-			this.ifl = ifl;
-		}
-    	
-    	@Override
-    	public void run() {
-        	final MessageDataVo message = ifl.message;
-
-        	final String os = System.getProperty("os.name").toLowerCase();
-    		log.info( "현재 OS: " + os );
-            
-            if (os.contains("windows")) {
-            	message.setMessage("파일 로딩 준비");
-        		
-        		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-        		delay();
-            	new Thread( new BeginFileLoad(req, ifl) ).start();
-            	return;
-            }
-            
-            {
-            	// ffmpeg 설치 여부 확인
-                final List<String> result = CommandUtil.workExe("ffmpeg", "-version");
-
-                if (result.isEmpty() || result.get(0).contains("command not found")) {
-            		log.info( "ffmpeg 설치 진행" );
-                    message.setMessage("ffmpeg를 설치합니다...");
-            		
-            		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-            		delay();
-                    
-                    // ffmpeg 설치 명령 실행
-            		final List<String> installResult = CommandUtil.workExe("apt", "install", "-y", "ffmpeg");
-
-                    if (installResult.isEmpty()) {
-                        message.setMessage("ffmpeg를 설치 실패했습니다.");
-                		
-                		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-                		delay();
-                        return;
-                    }else {
-                    	log.info( "ffmpeg 설치: " + result.get(0) );
-                    }
-                }else {
-                	log.info( "ffmpeg 설치된 버전: " + result.get(0) );
-                }
-            }
-    		
-            {
-            	// exiftool 설치 여부 확인
-                final List<String> result = CommandUtil.workExe("exiftool", "-ver");
-                
-                if( result != null && !result.isEmpty() ) {
-                	final String line = result.get(0);
-                	
-                    if ( line.contains("command not found")) {
-                		log.info( "exiftool 설치 진행" );
-                        message.setMessage("exiftool를 설치합니다...");
-                		
-                		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-                		delay();
-                        
-                        // ffmpeg 설치 명령 실행
-                		final List<String> installResult = CommandUtil.workExe("apt", "install", "-y", "exiftool");
-
-                        if (installResult.isEmpty()) {
-                            message.setMessage("exiftool를 설치 실패했습니다.");
-                    		
-                    		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-                    		delay();
-                            return;
-                        }else {
-                        	log.info( "exiftool 설치: " + line );
-                        }
-                    }else {
-                    	log.info( "exiftool 설치된 버전: " + line );
-                    }
-                	
-                }else {
-                	log.info("설치 오류...");
-                }
-
-            }
-            
-            new Thread( new BeginFileLoad(req, ifl) ).start();
-    	}
-    }
+//    @SuppressWarnings("unused")
+//	private class LibDownLoad implements Runnable{
+//    	final SaveSotrageReqVo req;
+//    	final InitFileLoad ifl;
+//    	
+//    	public LibDownLoad(SaveSotrageReqVo req, InitFileLoad ifl) {
+//			this.req = req;
+//			this.ifl = ifl;
+//		}
+//    	
+//    	@Override
+//    	public void run() {
+//        	final MessageDataVo message = ifl.message;
+//
+//        	final String os = System.getProperty("os.name").toLowerCase();
+//    		log.info( "현재 OS: " + os );
+//            
+//            if (os.contains("windows")) {
+//            	message.setMessage("파일 로딩 준비");
+//        		
+//        		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
+//        		delay();
+//            	new Thread( new BeginFileLoad(req, ifl) ).start();
+//            	return;
+//            }
+//            
+//            {
+//            	// ffmpeg 설치 여부 확인
+//                final List<String> result = CommandUtil.workExe("ffmpeg", "-version");
+//
+//                if (result.isEmpty() || result.get(0).contains("command not found")) {
+//            		log.info( "ffmpeg 설치 진행" );
+//                    message.setMessage("ffmpeg를 설치합니다...");
+//            		
+//            		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
+//            		delay();
+//                    
+//                    // ffmpeg 설치 명령 실행
+//            		final List<String> installResult = CommandUtil.workExe("apt", "install", "-y", "ffmpeg");
+//
+//                    if (installResult.isEmpty()) {
+//                        message.setMessage("ffmpeg를 설치 실패했습니다.");
+//                		
+//                		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
+//                		delay();
+//                        return;
+//                    }else {
+//                    	log.info( "ffmpeg 설치: " + result.get(0) );
+//                    }
+//                }else {
+//                	log.info( "ffmpeg 설치된 버전: " + result.get(0) );
+//                }
+//            }
+//    		
+//            {
+//            	// exiftool 설치 여부 확인
+//                final List<String> result = CommandUtil.workExe("exiftool", "-ver");
+//                
+//                if( result != null && !result.isEmpty() ) {
+//                	final String line = result.get(0);
+//                	
+//                    if ( line.contains("command not found")) {
+//                		log.info( "exiftool 설치 진행" );
+//                        message.setMessage("exiftool를 설치합니다...");
+//                		
+//                		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
+//                		delay();
+//                        
+//                        // ffmpeg 설치 명령 실행
+//                		final List<String> installResult = CommandUtil.workExe("apt", "install", "-y", "exiftool");
+//
+//                        if (installResult.isEmpty()) {
+//                            message.setMessage("exiftool를 설치 실패했습니다.");
+//                    		
+//                    		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
+//                    		delay();
+//                            return;
+//                        }else {
+//                        	log.info( "exiftool 설치: " + line );
+//                        }
+//                    }else {
+//                    	log.info( "exiftool 설치된 버전: " + line );
+//                    }
+//                	
+//                }else {
+//                	log.info("설치 오류...");
+//                }
+//
+//            }
+//            
+//            new Thread( new BeginFileLoad(req, ifl) ).start();
+//    	}
+//    }
 
     /**
      * 최초 시작 파일 로드
@@ -342,7 +341,7 @@ public class LoadStorageServiceImpl implements LoadStorageService {
     		
     		final UserVo owner = ifl.owner;
     		
-    		BnDirectory rootDir = storageDao.getRootDirectory(owner);
+    		BnDirectory rootDir = storageDao.getRootDirectory();
 			
 			final long parentNo = rootDir.getNo();
 			final long ownerUserNo = ifl.owner.getUserNo();

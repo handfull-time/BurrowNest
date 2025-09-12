@@ -45,24 +45,17 @@ public class AdminStorageController {
 	private StorageService storageService;
 	
 	/**
-	 * 그룹 Storeage 목록
+	 *  Storeage 목록
 	 * @param user
 	 * @return
 	 */
 	@GetMapping("Storage.html")
 	public String adminStoragePage(Model model, UserVo user) {
 		
-		model.addAttribute("directories", storageService.getGroupStorageList(user.getGroup().getGroupNo()) );
+		model.addAttribute("directories", storageService.getAdminRootStorage() );
 		
 		return "Admin/Storage/AdminStorageMain";
 	}
-	
-	@ResponseBody
-	@GetMapping("GroupStorageList.json")
-	public List<BnDirectory> GroupStorageList(@RequestParam("GroupNo") long groupNo) {
-		return null;
-	}
-	
 	
 	/**
 	 * 저장소 목록을 보여질 팝업창

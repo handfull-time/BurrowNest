@@ -72,4 +72,10 @@ public interface StorageService {
 	 */
 	List<BnDirectory> getGroupStorageList(long groupNo);
 
+	/**
+	 * 그룹 최상위 폴더 목록 전달
+	 * @return
+	 */
+	List<BnDirectory> getAdminRootStorage();
+
 }

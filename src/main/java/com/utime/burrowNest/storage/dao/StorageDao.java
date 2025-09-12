@@ -38,7 +38,7 @@ public interface StorageDao {
 	 * @param owner
 	 * @return
 	 */
-	BnDirectory getRootDirectory(UserVo owner);
+	BnDirectory getRootDirectory();
 	
 	/**
 	 * 확장자 별 파일 종류
@@ -182,6 +182,12 @@ public interface StorageDao {
 	List<BnDirectory> getAllDirectory();
 
 	List<BnPathAccess> getAllDirectoryAccess();
+
+	/**
+	 * 최상위 폴더 목록 전달
+	 * @return
+	 */
+	List<BnDirectory> getAdminRootStorage();
 
 	
 
