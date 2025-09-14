@@ -238,6 +238,16 @@ class StorageDaoImpl implements StorageDao{
 		
 		return result;
 	}
+	
+	@Override
+	public int saveRootDirectory(BnDirectory dir, UserVo owner) throws Exception {
+
+		int result = 0;
+		result += this.saveDirectory(dir, owner);
+		result += this.insertAccess( owner, dir);
+		
+		return result;
+	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)

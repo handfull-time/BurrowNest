@@ -11,7 +11,6 @@
    	, DR.PUBLIC_ACCESSIBLE
    	, DR.PARENT_NO
    	, DR.OWNER_NO
-   	, DR.HAS_CHILD
    	, DR.CREATION
 	, DR.LAST_MODIFIED 
 	, DR.NAME
@@ -54,7 +53,6 @@
 <resultMap id="BnDirectoryMap" type="com.utime.burrowNest.storage.vo.BnDirectory"
 	extends="com.utime.burrowNest.storage.mapper.StorageMapper.AbsPathMap">
 	<result column="PUBLIC_ACCESSIBLE" property="publicAccessible"/>
-	<result column="HAS_CHILD" property="hasChild"/>
 	<result column="ABSOLUTE_PATH" property="absolutePath"/>
 	<result column="PARENT_UID" property="parentUid"/>
 <!-- 	
@@ -96,7 +94,6 @@
     	, PUBLIC_ACCESSIBLE
     	, PARENT_NO
     	, OWNER_NO
-    	, HAS_CHILD
     	, CREATION
 		, LAST_MODIFIED 
 		, NAME
@@ -107,7 +104,6 @@
 		, #{publicAccessible}
 		, #{parentNo}
 		, #{ownerNo}
-		, #{hasChild}
 		, #{creation}
 		, #{lastModified}
 		, #{name}
@@ -122,7 +118,6 @@
     	, ENABLED = #{enabled}
     	, PUBLIC_ACCESSIBLE = #{publicAccessible}
     	, PARENT_NO = #{parentNo}
-    	, HAS_CHILD = #{hasChild}
 		, LAST_MODIFIED = #{lastModified}
 		, NAME = #{name}
 		, ABSOLUTE_PATH	= #{absolutePath}

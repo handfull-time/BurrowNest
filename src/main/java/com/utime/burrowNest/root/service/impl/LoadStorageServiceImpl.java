@@ -358,7 +358,7 @@ public class LoadStorageServiceImpl implements LoadStorageService {
 					parentDir.setPublicAccessible(true);
 					parentDir.setParentNo( parentNo );
 					parentDir.setOwnerNo( ownerUserNo );
-					if( storageDao.saveDirectory( parentDir, owner ) < 1 ) {
+					if( storageDao.saveRootDirectory( parentDir, owner ) < 1 ) {
 						log.warn("Dir 저장 실패: " + parentDir);
 					};
 					

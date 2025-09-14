@@ -46,6 +46,17 @@ public interface StorageDao {
 	 */
 	Map<String, EBnFileType> getBnFileType();
 
+
+	/**
+	 * Root Dir 저장
+	 * @param dir
+	 * @param owner
+	 * @return
+	 * @throws Exception
+	 */
+	int saveRootDirectory(BnDirectory dir, UserVo owner) throws Exception;
+
+	
 	/**
 	 * Dir 저장
 	 * @param dir

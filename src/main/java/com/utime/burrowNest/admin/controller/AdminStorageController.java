@@ -144,7 +144,7 @@ public class AdminStorageController {
 	}
 	
 	/**
-	 * Root 저장소 추가.
+	 * 관리자의 Root 저장소 추가.
 	 * @param reqVo
 	 * @return
 	 */
