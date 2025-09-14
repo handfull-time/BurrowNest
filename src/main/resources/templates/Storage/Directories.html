@@ -1,29 +1,31 @@
-<div 
-	xmlns:th="http://www.thymeleaf.org" 
-	th:fragment="directories" 
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="directories"
 	class="p-2 text-sm bg-white text-black select-none">
-  
-<div id="tree" class="max-w-xl mx-auto bg-white shadow rounded-lg p-4 font-mono text-sm" role="tree"></div>
 
-<template id="treeNodeTemplate">
-  <li class="mb-1" role="treeitem">
-    <div class="flex items-center space-x-1 cursor-pointer group" data-node="true">
-      <svg class="chevron w-4 h-4 text-gray-500 transition-transform"
-           viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 5l7 7-7 7"/>
+	<div id="tree"
+		class="max-w-xl mx-auto bg-white shadow rounded-lg p-4 font-mono text-sm"
+		role="tree"></div>
+
+	<template id="treeNodeTemplate">
+		<li class="mb-1" role="treeitem">
+			<div class="flex items-center space-x-1 cursor-pointer group"
+				data-node="true">
+				<svg class="chevron w-4 h-4 text-gray-500 transition-transform"
+					viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round"
+						stroke-width="2" d="M9 5l7 7-7 7" />
       </svg>
-      <svg class="folder-icon w-5 h-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+				<svg class="folder-icon w-5 h-5 text-yellow-500" viewBox="0 0 20 20"
+					fill="currentColor">
         <!-- 아이콘은 JS에서 open/close 교체 -->
       </svg>
-      <span class="folder-label"></span>
-    </div>
-  </li>
-</template>
+				<span class="folder-label"></span>
+			</div>
+		</li>
+	</template>
 
-<th:script th:replace="~{Storage/StorageScript :: script}"/>
-<th:div th:replace="~{Storage/CustomSubMenu :: customMenu}"/>
-<script th:inline="javascript">
+	<th:script th:replace="~{Storage/StorageScript :: script}" />
+	<th:div th:replace="~{Storage/CustomSubMenu :: customMenu}" />
+	<script th:inline="javascript">
 
 	const closedFolder = `
 	  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v1H2V6z"/>
@@ -177,58 +179,82 @@
 		highlightTreeSelection(uid); 
     }
     
+    
+ 	// 컨텍스트 응답 → 기존 트리 노드 구조(owner/child)로 변환
+	function buildTreeFromContext(ctx){
+ 		// owner/child 구조로 래핑
+ 		const wrap = (n, selected=false) => ({
+ 			owner: { uid: n.uid, name: n.name },
+ 			hasChild: !!n.hasChild,
+ 			selected,
+ 			child: []
+ 		});
+ 		
+ 		// 조상 체인(root→parent) 연결
+ 		let roots = [];
+ 		let current = null;
+ 		if (ctx.ancestors && ctx.ancestors.length > 0) {
+ 			roots = [ wrap(ctx.ancestors[0]) ];
+ 			current = roots[0];
+ 			
+ 			for (let i=1; i<ctx.ancestors.length; i++){
+ 				const next = wrap(ctx.ancestors[i]);
+ 				current.child = [ next ];
+ 				current = next;
+ 			}
+ 		} else {
+ 			// 조상이 없으면 단일 루트(=node)가 시작점
+ 			roots = [ wrap(ctx.node, true) ];
+ 			current = roots[0];
+ 		}
+ 		
+ 		// node 붙이기 (조상 끝 아래에)
+ 		const selectedNode = wrap(ctx.node, true);
+ 		if (current.owner.uid !== selectedNode.owner.uid) {
+ 			current.child = [ selectedNode ];
+ 		} else {
+ 			// 이미 current가 node라면 selected 유지
+ 			current.selected = true;
+ 		}
+ 		
+ 		// node의 children 연결
+ 		const children = (ctx.children || []).map(c => wrap(c));
+ 		const attachTo = (current.owner.uid === selectedNode.owner.uid) ? current : selectedNode;
+ 		attachTo.child = children;
+
+ 		return roots;
+    }
+
+    
+    async function loadAndRenderContext( initialUid ){
+    	
+        const url = new URL(/*[[@{/api/dir/context}]]*/ '/api/dir/context', window.location.origin);
+        
+        if (initialUid) 
+        	url.searchParams.set('uid', initialUid);
+        
+        const res = await fetch(url);
+        if (!res.ok) 
+        	throw new Error('context load failed');
+        
+        const ctx = await res.json();
+
+        const roots = buildTreeFromContext(ctx);
+        createTree(roots, document.getElementById("tree")); // 기존 함수 그대로 활용
+
+        // 빵크럼/선택 상태도 기존 로직(onSelected)과 연동됨
+        const selectedUid = ctx.node?.uid;
+        if (selectedUid) {
+        	highlightTreeSelection(selectedUid);
+        }
+    }
+    
 	document.addEventListener('DOMContentLoaded', function() {
 		console.info( "여기가 시작이다." );
 		
-		const directories = /*[[${directories}]]*/ null;
+		const initialUid = /*[[${selectedUid}]]*/ null;
+	    loadAndRenderContext( initialUid ).catch(console.error);
 		
-		function _traverseClear(dir) {
-    	    if (dir) {
-    	      	dir.selected = dir.owner.uid ===/*[[${selectedUid}]]*/ null;
-    	      	if( dir.selected ){
-    	      		console.info('dir.selected', dir.owner.uid);
-    	      	}
-    	    }
-    	    
-    	    for (const item of dir.child) {
-    	      	_traverseClear(item);
-    	    }
-    	}
-		
-		for (const item of directories) {
-	      	_traverseClear(item);
-	    }
-		
-	    const node = findSelectedNode( directories );
-	    if( node != null ){
-	    	console.info( 'Selected Node' , node.owner.name );
-	    }
-		
-		// 디렉토리 트리 렌더링
-		createTree(directories, document.getElementById("tree"));
-		
-		// uid로 선택된 노드를 찾기
-	    function findNodeByUid(nodes, uid) {
-	      for (const node of nodes) {
-	        if (node.owner?.uid === uid) return node;
-	        if (node.child) {
-	          const found = findNodeByUid(node.child, uid);
-	          if (found) return found;
-	        }
-	      }
-	      return null;
-	    }
-		
-	    function findSelectedNode(nodes) {
-	    	for (const node of nodes) {
-	    	    if (node.selected) return node;
-	    	    if (node.child) {
-	    	      const found = findSelectedNode(node.child);
-	    	      if (found) return found;
-	    	    }
-	    	}
-	    	return null;
-	    }
   });
 
 </script>

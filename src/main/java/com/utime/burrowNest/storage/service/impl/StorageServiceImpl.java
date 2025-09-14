@@ -7,14 +7,21 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.storage.dao.StorageDao;
+import com.utime.burrowNest.storage.dto.ChildrenResponse;
+import com.utime.burrowNest.storage.dto.DirContextResponse;
+import com.utime.burrowNest.storage.dto.DirNodeDto;
+import com.utime.burrowNest.storage.mapper.DirectoryMapper;
+import com.utime.burrowNest.storage.mapper.row.DirNodeRow;
 import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
@@ -349,5 +356,80 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 	public List<BnDirectory> getAdminRootStorage() {
 		return this.storageDao.getAdminRootStorage();
 	}
+	
+	@Autowired
+	DirectoryMapper directoryMapper;
+	
+	@Override
+    public DirContextResponse buildContext(UserVo user, String uid) {
+        // 1) 타깃 노드 결정: uid 없으면 사용자 접근 가능한 루트, 있으면 해당 uid
+        DirNodeRow node = (uid == null || uid.isBlank())
+                ? directoryMapper.selectDefaultRootForUser(user.getUserNo()) // 없으면 시스템 루트 반환하도록 쿼리 설계
+                : directoryMapper.selectByUid(uid);
+
+        if (node == null) return null;
+
+        
+        final long nodeNo = node.getNo();
+        
+        // 2) 조상(루트→부모) 목록
+        List<DirNodeRow> ancestors = directoryMapper.selectAncestorsByNo(nodeNo);
+
+        // 3) 현재 노드 유효 권한 플래그 (Allow 상속 OR-집계)
+        Integer effectiveFlags = directoryMapper.selectEffectiveFlags(user.getUserNo(), nodeNo);
+        if (effectiveFlags == null) effectiveFlags = 0;
+
+        // 4) 자식 목록(읽기 권한 있는 것만) + hasChild 계산 포함
+        List<DirNodeRow> children = directoryMapper.selectChildrenReadable(user.getUserNo(), nodeNo);
+
+        // 5) DTO 변환
+        DirContextResponse resp = new DirContextResponse();
+        resp.setNode(toDto(node, true));
+        resp.setAncestors(ancestors.stream().map(r -> toDto(r, false)).toList());
+        resp.setChildren(children.stream().map(r -> toDto(r, false)).toList());
+        resp.setBreadcrumbs(buildBreadcrumbs(ancestors, node));
+        resp.setEffectiveFlags(effectiveFlags);
+        return resp;
+    }
+
+    private DirNodeDto toDto(DirNodeRow r, boolean selected) {
+        DirNodeDto dto = new DirNodeDto();
+        dto.setOwner(r.getUid(), r.getName());
+        dto.setHasChild(r.isHasChild());
+//        dto.setEffectiveFlags(null); // 필요시 개별 노드에 표시
+        dto.setSelected(selected);
+        dto.setChild(List.of());     // 지연로딩 기본 비움
+        return dto;
+    }
+
+    private List<String> buildBreadcrumbs(List<DirNodeRow> ancestors, DirNodeRow node) {
+        List<String> names = new ArrayList<>();
+        for (DirNodeRow a : ancestors) names.add(a.getName());
+        names.add(node.getName());
+        return names;
+    }
+	
+    @Override
+    @Transactional(readOnly = true)
+    public List<DirNodeDto> findAllowedRoots(UserVo user) {
+        List<DirNodeRow> rows = directoryMapper.selectAllowedRoots(user.getUserNo());
+        return rows.stream()
+                .map(r -> {
+                    DirNodeDto dto = new DirNodeDto();
+                    dto.setOwner(r.getUid(), r.getName());
+                    dto.setHasChild(r.isHasChild());
+//                    dto.setEffectiveFlags(null);     // 원하면 집계 플래그 넣어도 됨
+                    return dto;
+                })
+                .toList();
+    }
+
+	
+	@Override
+	public ChildrenResponse findChildren(UserVo user, String uid, int page, int size, Object object) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 	
 }

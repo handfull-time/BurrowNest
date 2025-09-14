@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.utime.burrowNest.storage.mapper.DirectoryMapper">
+
+  <!-- uid → 노드 -->
+  <select id="selectByUid" resultType="com.utime.burrowNest.storage.mapper.row.DirNodeRow">
+    SELECT d.NO    AS no,
+           CAST(d.UID AS VARCHAR) AS uid,
+           d.NAME  AS name,
+           d.PARENT_NO AS parentNo,
+           EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d.NO) AS hasChild
+    FROM BN_DIRECTORY d
+    WHERE d.UID = #{uid}
+  </select>
+
+  <!-- 기본 루트: 사용자에게 읽기 가능한 루트가 있으면 그 중 하나, 없으면 시스템 루트(PARENT_NO IS NULL, NAME='/') -->
+  <select id="selectDefaultRootForUser" resultType="com.utime.burrowNest.storage.mapper.row.DirNodeRow">
+    WITH roots AS (
+      SELECT d.NO, CAST(d.UID AS VARCHAR) AS uid, d.NAME, d.PARENT_NO,
+             EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d.NO) AS hasChild
+      FROM BN_DIRECTORY d
+      WHERE d.PARENT_NO IS NULL
+    ),
+    readable AS (
+      SELECT r.NO, r.uid, r.NAME, r.PARENT_NO, r.hasChild
+      FROM roots r
+      WHERE (
+        SELECT
+            (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 1) > 0 THEN 1 ELSE 0 END)
+          | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 2) > 0 THEN 2 ELSE 0 END)
+          | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 4) > 0 THEN 4 ELSE 0 END)
+          | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 8) > 0 THEN 8 ELSE 0 END)
+        FROM BN_DIRECTORY_ACCESS da
+        JOIN BN_USER_GROUP_MEMBER ugm ON ugm.GROUP_NO = da.GROUP_NO
+        WHERE ugm.USER_NO = #{userNo}
+          AND da.DIR_NO = r.NO
+      ) &amp; 1 = 1
+    )
+    SELECT NO AS no, uid, NAME AS name, PARENT_NO AS parentNo, hasChild
+    FROM readable
+    UNION ALL
+    SELECT NO, uid, NAME, PARENT_NO, hasChild
+    FROM roots
+    WHERE NOT EXISTS (SELECT 1 FROM readable)
+    FETCH FIRST ROW ONLY
+  </select>
+
+  <!-- 조상(루트→부모), 자신 제외 -->
+  <select id="selectAncestorsByNo" resultType="com.utime.burrowNest.storage.mapper.row.DirNodeRow">
+    WITH RECURSIVE a (NO, PARENT_NO, NAME, UID, DEPTH) AS (
+      SELECT d.NO, d.PARENT_NO, d.NAME, CAST(d.UID AS VARCHAR), CAST(0 AS INT)
+      FROM BN_DIRECTORY d
+      WHERE d.NO = #{no}
+      UNION ALL
+      SELECT p.NO, p.PARENT_NO, p.NAME, CAST(p.UID AS VARCHAR), a.DEPTH + 1
+      FROM BN_DIRECTORY p
+      JOIN a ON a.PARENT_NO = p.NO
+    )
+    SELECT x.NO AS no,
+           x.UID AS uid,
+           x.NAME AS name,
+           x.PARENT_NO AS parentNo,
+           EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = x.NO) AS hasChild
+    FROM a x
+    WHERE x.NO  <![CDATA[ <> ]]>  #{no}
+    ORDER BY x.DEPTH DESC  <!-- 루트→부모 순서 -->
+  </select>
+
+  <!-- 현재 디렉터리의 유효 권한 비트 (Allow OR-집계; 조상 상속) -->
+  <select id="selectEffectiveFlags" resultType="int">
+    WITH RECURSIVE anc (NO, PARENT_NO) AS (
+      SELECT NO, PARENT_NO FROM BN_DIRECTORY WHERE NO = #{dirNo}
+      UNION ALL
+      SELECT p.NO, p.PARENT_NO FROM BN_DIRECTORY p JOIN anc a ON a.PARENT_NO = p.NO
+    )
+    SELECT
+        (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 1) > 0 THEN 1 ELSE 0 END)
+      | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 2) > 0 THEN 2 ELSE 0 END)
+      | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 4) > 0 THEN 4 ELSE 0 END)
+      | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 8) > 0 THEN 8 ELSE 0 END)
+    FROM anc
+    JOIN BN_DIRECTORY_ACCESS da ON da.DIR_NO = anc.NO
+    JOIN BN_USER_GROUP_MEMBER ugm ON ugm.GROUP_NO = da.GROUP_NO
+    WHERE ugm.USER_NO = #{userNo}
+  </select>
+
+  <!-- 직계 자식 + 읽기 권한 필터 + hasChild 계산 -->
+  <select id="selectChildrenReadable" resultType="com.utime.burrowNest.storage.mapper.row.DirNodeRow">
+    SELECT d2.NO AS no,
+           CAST(d2.UID AS VARCHAR) AS uid,
+           d2.NAME AS name,
+           d2.PARENT_NO AS parentNo,
+           EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d2.NO) AS hasChild
+    FROM BN_DIRECTORY d2
+    WHERE d2.PARENT_NO = #{parentNo}
+      AND (
+        SELECT
+            (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 1) > 0 THEN 1 ELSE 0 END)
+          | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 2) > 0 THEN 2 ELSE 0 END)
+          | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 4) > 0 THEN 4 ELSE 0 END)
+          | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 8) > 0 THEN 8 ELSE 0 END)
+        FROM (
+          -- d2의 조상(자기 자신 포함)
+          WITH RECURSIVE anc2 (NO, PARENT_NO) AS (
+            SELECT NO, PARENT_NO FROM BN_DIRECTORY WHERE NO = d2.NO
+            UNION ALL
+            SELECT p.NO, p.PARENT_NO FROM BN_DIRECTORY p JOIN anc2 a ON a.PARENT_NO = p.NO
+          )
+          SELECT NO FROM anc2
+        ) an
+        JOIN BN_DIRECTORY_ACCESS da ON da.DIR_NO = an.NO
+        JOIN BN_USER_GROUP_MEMBER ugm ON ugm.GROUP_NO = da.GROUP_NO
+        WHERE ugm.USER_NO = #{userNo}
+      ) &amp; 1 = 1  <!-- Read 비트가 있어야 자식으로 노출 -->
+    ORDER BY d2.NAME
+  </select>
+  
+  <!-- DirectoryMapper.xml -->
+	<select id="selectAllowedRoots" resultType="com.utime.burrowNest.storage.mapper.row.DirNodeRow">
+	  WITH grants AS (
+	    SELECT
+	      da.DIR_NO,
+	        (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 1) > 0 THEN 1 ELSE 0 END)
+	      | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 2) > 0 THEN 2 ELSE 0 END)
+	      | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 4) > 0 THEN 4 ELSE 0 END)
+	      | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 8) > 0 THEN 8 ELSE 0 END) AS FLAGS
+	    FROM BN_DIRECTORY_ACCESS da
+	    JOIN BN_USER_GROUP_MEMBER ugm
+	      ON ugm.GROUP_NO = da.GROUP_NO
+	    WHERE ugm.USER_NO = #{userNo}
+	    GROUP BY da.DIR_NO
+	  ),
+	  roots AS (
+	    SELECT DIR_NO
+	    FROM grants
+	    WHERE (FLAGS &amp; 1) = 1  <!--  Read 비트가 있는 것만 루트로 노출 -->
+	  )
+	  SELECT d.NO AS no,
+	         CAST(d.UID AS VARCHAR) AS uid,
+	         d.NAME AS name,
+	         d.PARENT_NO AS parentNo,
+	         EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d.NO) AS hasChild
+	  FROM BN_DIRECTORY d
+	  JOIN roots r ON r.DIR_NO = d.NO
+	  ORDER BY d.NAME
+	</select>
+	  
+
+</mapper>

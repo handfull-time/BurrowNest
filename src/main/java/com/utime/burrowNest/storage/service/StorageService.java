@@ -3,6 +3,9 @@ package com.utime.burrowNest.storage.service;
 import java.util.List;
 
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.storage.dto.ChildrenResponse;
+import com.utime.burrowNest.storage.dto.DirContextResponse;
+import com.utime.burrowNest.storage.dto.DirNodeDto;
 import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
@@ -77,5 +80,11 @@ public interface StorageService {
 	 * @return
 	 */
 	List<BnDirectory> getAdminRootStorage();
+
+	DirContextResponse buildContext(UserVo user, String uid);
+
+	ChildrenResponse findChildren(UserVo user, String uid, int page, int size, Object object);
+
+	List<DirNodeDto> findAllowedRoots(UserVo user);
 
 }
