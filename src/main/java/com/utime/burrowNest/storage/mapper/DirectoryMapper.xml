@@ -15,34 +15,35 @@
 
   <!-- 기본 루트: 사용자에게 읽기 가능한 루트가 있으면 그 중 하나, 없으면 시스템 루트(PARENT_NO IS NULL, NAME='/') -->
   <select id="selectDefaultRootForUser" resultType="com.utime.burrowNest.storage.mapper.row.DirNodeRow">
-    WITH roots AS (
-      SELECT d.NO, CAST(d.UID AS VARCHAR) AS uid, d.NAME, d.PARENT_NO,
-             EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d.NO) AS hasChild
-      FROM BN_DIRECTORY d
-      WHERE d.PARENT_NO IS NULL
-    ),
-    readable AS (
-      SELECT r.NO, r.uid, r.NAME, r.PARENT_NO, r.hasChild
-      FROM roots r
-      WHERE (
-        SELECT
-            (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 1) > 0 THEN 1 ELSE 0 END)
-          | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 2) > 0 THEN 2 ELSE 0 END)
-          | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 4) > 0 THEN 4 ELSE 0 END)
-          | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 8) > 0 THEN 8 ELSE 0 END)
-        FROM BN_DIRECTORY_ACCESS da
-        JOIN BN_USER_GROUP_MEMBER ugm ON ugm.GROUP_NO = da.GROUP_NO
-        WHERE ugm.USER_NO = #{userNo}
-          AND da.DIR_NO = r.NO
-      ) &amp; 1 = 1
-    )
-    SELECT NO AS no, uid, NAME AS name, PARENT_NO AS parentNo, hasChild
-    FROM readable
-    UNION ALL
-    SELECT NO, uid, NAME, PARENT_NO, hasChild
-    FROM roots
-    WHERE NOT EXISTS (SELECT 1 FROM readable)
-    FETCH FIRST ROW ONLY
+  	WITH roots AS (
+	  SELECT d.NO,
+	         CAST(d.UID AS VARCHAR) AS uid,
+	         d.NAME,
+	         d.PARENT_NO,
+	         EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d.NO) AS hasChild
+	  FROM BN_DIRECTORY d
+	  WHERE d.PARENT_NO IS NULL
+	),
+	readable AS (
+	  SELECT r.NO, r.uid, r.NAME, r.PARENT_NO, r.hasChild
+	  FROM roots r
+	  WHERE EXISTS (
+	    SELECT 1
+	    FROM BN_DIRECTORY_ACCESS da
+	    JOIN BN_USER ugm ON ugm.GROUP_NO = da.GROUP_NO
+	    WHERE ugm.NO = #{userNo}
+	      AND da.DIR_NO = r.NO
+	      AND BITAND(da.ACCESS_FLAGS, 1) = 1  <!-- Read 비트 보유 여부 -->
+	  )
+	)
+	SELECT 
+		NO AS no, uid, NAME AS name, PARENT_NO AS parentNo, hasChild
+	FROM readable
+	UNION ALL
+	SELECT NO, uid, NAME, PARENT_NO, hasChild
+	FROM roots
+	WHERE NOT EXISTS (SELECT 1 FROM readable)
+	FETCH FIRST ROW ONLY
   </select>
 
   <!-- 조상(루트→부모), 자신 제외 -->
@@ -69,50 +70,80 @@
   <!-- 현재 디렉터리의 유효 권한 비트 (Allow OR-집계; 조상 상속) -->
   <select id="selectEffectiveFlags" resultType="int">
     WITH RECURSIVE anc (NO, PARENT_NO) AS (
-      SELECT NO, PARENT_NO FROM BN_DIRECTORY WHERE NO = #{dirNo}
-      UNION ALL
-      SELECT p.NO, p.PARENT_NO FROM BN_DIRECTORY p JOIN anc a ON a.PARENT_NO = p.NO
-    )
-    SELECT
-        (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 1) > 0 THEN 1 ELSE 0 END)
-      | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 2) > 0 THEN 2 ELSE 0 END)
-      | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 4) > 0 THEN 4 ELSE 0 END)
-      | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 8) > 0 THEN 8 ELSE 0 END)
-    FROM anc
-    JOIN BN_DIRECTORY_ACCESS da ON da.DIR_NO = anc.NO
-    JOIN BN_USER_GROUP_MEMBER ugm ON ugm.GROUP_NO = da.GROUP_NO
-    WHERE ugm.USER_NO = #{userNo}
+  SELECT NO, PARENT_NO
+  FROM BN_DIRECTORY
+  WHERE NO = #{dirNo}
+  UNION ALL
+  SELECT p.NO, p.PARENT_NO
+  FROM BN_DIRECTORY p
+  JOIN anc a ON a.PARENT_NO = p.NO
+)
+SELECT
+    (CASE WHEN EXISTS (
+        SELECT 1
+        FROM anc an
+        JOIN BN_DIRECTORY_ACCESS da ON da.DIR_NO = an.NO
+        JOIN BN_USER ugm ON ugm.GROUP_NO = da.GROUP_NO
+        WHERE ugm.NO = #{userNo}
+          AND BITAND(da.ACCESS_FLAGS, 1) = 1
+    ) THEN 1 ELSE 0 END)
+  + (CASE WHEN EXISTS (
+        SELECT 1
+        FROM anc an
+        JOIN BN_DIRECTORY_ACCESS da ON da.DIR_NO = an.NO
+        JOIN BN_USER ugm ON ugm.GROUP_NO = da.GROUP_NO
+        WHERE ugm.NO = #{userNo}
+          AND BITAND(da.ACCESS_FLAGS, 2) = 2
+    ) THEN 2 ELSE 0 END)
+  + (CASE WHEN EXISTS (
+        SELECT 1
+        FROM anc an
+        JOIN BN_DIRECTORY_ACCESS da ON da.DIR_NO = an.NO
+        JOIN BN_USER ugm ON ugm.GROUP_NO = da.GROUP_NO
+        WHERE ugm.NO = #{userNo}
+          AND BITAND(da.ACCESS_FLAGS, 4) = 4
+    ) THEN 4 ELSE 0 END)
+  + (CASE WHEN EXISTS (
+        SELECT 1
+        FROM anc an
+        JOIN BN_DIRECTORY_ACCESS da ON da.DIR_NO = an.NO
+        JOIN BN_USER ugm ON ugm.GROUP_NO = da.GROUP_NO
+        WHERE ugm.NO = #{userNo}
+          AND BITAND(da.ACCESS_FLAGS, 8) = 8
+    ) THEN 8 ELSE 0 END) AS EFFECTIVE_FLAGS
   </select>
 
   <!-- 직계 자식 + 읽기 권한 필터 + hasChild 계산 -->
   <select id="selectChildrenReadable" resultType="com.utime.burrowNest.storage.mapper.row.DirNodeRow">
-    SELECT d2.NO AS no,
-           CAST(d2.UID AS VARCHAR) AS uid,
-           d2.NAME AS name,
-           d2.PARENT_NO AS parentNo,
-           EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d2.NO) AS hasChild
-    FROM BN_DIRECTORY d2
-    WHERE d2.PARENT_NO = #{parentNo}
-      AND (
-        SELECT
-            (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 1) > 0 THEN 1 ELSE 0 END)
-          | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 2) > 0 THEN 2 ELSE 0 END)
-          | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 4) > 0 THEN 4 ELSE 0 END)
-          | (CASE WHEN MAX(da.ACCESS_FLAGS &amp; 8) > 0 THEN 8 ELSE 0 END)
-        FROM (
-          -- d2의 조상(자기 자신 포함)
-          WITH RECURSIVE anc2 (NO, PARENT_NO) AS (
-            SELECT NO, PARENT_NO FROM BN_DIRECTORY WHERE NO = d2.NO
-            UNION ALL
-            SELECT p.NO, p.PARENT_NO FROM BN_DIRECTORY p JOIN anc2 a ON a.PARENT_NO = p.NO
-          )
-          SELECT NO FROM anc2
-        ) an
-        JOIN BN_DIRECTORY_ACCESS da ON da.DIR_NO = an.NO
-        JOIN BN_USER_GROUP_MEMBER ugm ON ugm.GROUP_NO = da.GROUP_NO
-        WHERE ugm.USER_NO = #{userNo}
-      ) &amp; 1 = 1  <!-- Read 비트가 있어야 자식으로 노출 -->
-    ORDER BY d2.NAME
+  WITH RECURSIVE rel (child_no, no, parent_no) AS (
+  <!-- -- 씨드: parent의 직계 자식 -->
+  SELECT d.NO AS child_no, d.NO AS no, d.PARENT_NO
+  FROM BN_DIRECTORY d
+  WHERE d.PARENT_NO = #{parentNo}
+
+  UNION ALL
+  <!-- -- 각 child의 조상들을 위로 타며 수집 -->
+  SELECT rel.child_no, p.NO, p.PARENT_NO
+  FROM BN_DIRECTORY p
+  JOIN rel ON rel.parent_no = p.NO
+),
+readable (child_no) AS (   <!-- -- 👈 컬럼 목록 추가! -->
+  SELECT DISTINCT rel.child_no
+  FROM rel
+  JOIN BN_DIRECTORY_ACCESS da ON da.DIR_NO = rel.no
+  JOIN BN_USER ugm ON ugm.GROUP_NO = da.GROUP_NO
+  WHERE ugm.NO = #{userNo}
+    AND BITAND(da.ACCESS_FLAGS, 1) = 1 <!--   -- Read 비트 -->
+)
+SELECT d.NO AS no,
+       CAST(d.UID AS VARCHAR) AS uid,
+       d.NAME AS name,
+       d.PARENT_NO AS parentNo,
+       EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d.NO) AS hasChild
+FROM BN_DIRECTORY d
+WHERE d.PARENT_NO = #{parentNo}
+  AND EXISTS (SELECT 1 FROM readable r WHERE r.child_no = d.NO)
+ORDER BY d.NAME;
   </select>
   
   <!-- DirectoryMapper.xml -->
