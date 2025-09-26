@@ -127,9 +127,11 @@ public class AdminGroupUserController {
 	@GetMapping(path = { "AdminGroupSelectPath.layer" })
     public String BeginIntroDirListLayer(UserVo user, ModelMap model) throws Exception {
 		
-		final List<DirectoryDto> dirList = storageService.getDirectory(user, null);
+//		final List<DirectoryDto> dirList = storageService.getDirectory(user, null);
 		
-		model.addAttribute("directories", dirList);
+//		model.addAttribute("directories", dirList);
+		BnDirectory dir = storageService.getAdminTopStorage();
+		model.addAttribute("selectedUid", dir.getUid());		
 		
 		return "Admin/Group/AdminGroupSelectPathLayer";
     }

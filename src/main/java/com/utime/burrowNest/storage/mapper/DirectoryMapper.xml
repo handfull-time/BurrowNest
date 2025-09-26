@@ -116,24 +116,24 @@ SELECT
   <!-- 직계 자식 + 읽기 권한 필터 + hasChild 계산 -->
   <select id="selectChildrenReadable" resultType="com.utime.burrowNest.storage.mapper.row.DirNodeRow">
   WITH RECURSIVE rel (child_no, no, parent_no) AS (
-  <!-- -- 씨드: parent의 직계 자식 -->
+  <!-- 씨드: parent의 직계 자식 -->
   SELECT d.NO AS child_no, d.NO AS no, d.PARENT_NO
   FROM BN_DIRECTORY d
   WHERE d.PARENT_NO = #{parentNo}
 
   UNION ALL
-  <!-- -- 각 child의 조상들을 위로 타며 수집 -->
+  <!-- 각 child의 조상들을 위로 타며 수집 -->
   SELECT rel.child_no, p.NO, p.PARENT_NO
   FROM BN_DIRECTORY p
   JOIN rel ON rel.parent_no = p.NO
 ),
-readable (child_no) AS (   <!-- -- 👈 컬럼 목록 추가! -->
+readable (child_no) AS (   <!-- 👈 컬럼 목록 추가! -->
   SELECT DISTINCT rel.child_no
   FROM rel
   JOIN BN_DIRECTORY_ACCESS da ON da.DIR_NO = rel.no
   JOIN BN_USER ugm ON ugm.GROUP_NO = da.GROUP_NO
   WHERE ugm.NO = #{userNo}
-    AND BITAND(da.ACCESS_FLAGS, 1) = 1 <!--   -- Read 비트 -->
+    AND BITAND(da.ACCESS_FLAGS, 1) = 1 <!-- Read 비트 -->
 )
 SELECT d.NO AS no,
        CAST(d.UID AS VARCHAR) AS uid,
@@ -176,5 +176,4 @@ ORDER BY d.NAME;
 	  ORDER BY d.NAME
 	</select>
 	  
-
 </mapper>

@@ -87,4 +87,10 @@ public interface StorageService {
 
 	List<DirNodeDto> findAllowedRoots(UserVo user);
 
+	/**
+	 * 최상위 top of Root 조회 
+	 * @return
+	 */
+	BnDirectory getAdminTopStorage();
+
 }

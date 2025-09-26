@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.utime.burrowNest.storage.mapper.row.DirNodeRow;
+import com.utime.burrowNest.storage.vo.BnDirectory;
 
 @Mapper
 public interface DirectoryMapper {
@@ -27,4 +28,5 @@ public interface DirectoryMapper {
     
     //“최상위 허용 디렉터리만” 반환
     List<DirNodeRow> selectAllowedRoots(@Param("userNo") long userNo);
+
 }

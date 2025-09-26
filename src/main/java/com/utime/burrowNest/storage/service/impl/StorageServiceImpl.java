@@ -286,16 +286,17 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 	@Override
 	public List<DirectoryDto> getDirectory(UserVo user, String uid) {
 		
-		List<DirectoryDto> result =  dirManager.getAccessibleDirectoriesForGroup(user.getGroup().getGroupNo());
 		
-		if( BurrowUtils.isEmpty(uid) ) {
-			log.info("루트 호출");
-		}else{
-			final DirectoryDto dir = dirManager.getDirectoryForGroup(user.getGroup().getGroupNo(), uid);
-			if( dir != null ) {
-				dir.setSelected(true);
-			}
-		}
+		List<DirectoryDto> result =  dirManager.getAccessibleDirectoriesForGroup(user.getGroup().getGroupNo());
+//		
+//		if( BurrowUtils.isEmpty(uid) ) {
+//			log.info("루트 호출");
+//		}else{
+//			final DirectoryDto dir = dirManager.getDirectoryForGroup(user.getGroup().getGroupNo(), uid);
+//			if( dir != null ) {
+//				dir.setSelected(true);
+//			}
+//		}
 		
 		return result;
 	}
@@ -430,6 +431,10 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
+	@Override
+	public BnDirectory getAdminTopStorage() {
+		return storageDao.getRootDirectory();
+	}
 	
 }
