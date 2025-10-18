@@ -55,6 +55,8 @@
 	<result column="PUBLIC_ACCESSIBLE" property="publicAccessible"/>
 	<result column="ABSOLUTE_PATH" property="absolutePath"/>
 	<result column="PARENT_UID" property="parentUid"/>
+	<result column="HAS_CHILD" property="hasChild"/>
+	
 <!-- 	
 	<association 
 			column="{dirNo=PARENT_NO}" 
@@ -839,5 +841,32 @@
     WHERE DR.PARENT_NO = #{parentNo}
     ORDER BY NO
 </select>
+
+<select id="getGroupStorageList" parameterType="map" resultMap="BnDirectoryMap">
+	SELECT
+	    d.NO
+	    , d.PARENT_NO
+	    , CAST(d.UID AS VARCHAR) AS UID
+	    , d.NAME
+	    , EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d.NO) AS HAS_CHILD
+	FROM BN_DIRECTORY d
+	WHERE 1=1
+		AND d.PARENT_NO = #{dirNo}
+	AND NOT EXISTS (
+	    SELECT 1
+	    FROM BN_DIRECTORY_ACCESS da
+	    WHERE da.DIR_NO   = d.NO
+	      AND da.GROUP_NO = #{groupNo}
+	)
+	ORDER BY d.NAME
+</select>
+
+<!--그룹 저장소 삭제-->
+<delete id="removeGroupStorage">
+	DELETE FROM BN_DIRECTORY_ACCESS 
+	WHERE 1=1
+		AND DIR_NO = #{dirNo}
+		AND GROUP_NO = #{groupNo}
+</delete>
 
 </mapper>

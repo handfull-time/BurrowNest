@@ -157,10 +157,10 @@
 	</update>
 	
 	<!-- Directory Access 그룹 삭제 -->
-	<update id="deleteDirectoryAccessGroup" parameterType="com.utime.burrowNest.admin.vo.BnAccessVo">
+	<delete id="deleteDirectoryAccessGroup" parameterType="com.utime.burrowNest.admin.vo.BnAccessVo">
 		DELETE FROM BN_DIRECTORY_ACCESS 
 		WHERE DIR_NO = #{dirNo} AND GROUP_NO = #{groupNo} 
-	</update>
+	</delete>
 	
 	
 </mapper>

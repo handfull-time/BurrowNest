@@ -64,15 +64,6 @@ public class AdminStorageController {
 	 */
 	@GetMapping(path = { "Dir.layer" })
     public String BeginIntroDirListLayer(ModelMap model) {
-		final File [] roots = File.listRoots();
-		
-		final List<String> list = new ArrayList<>();
-		
-		for( File f : roots ) {
-			list.add( f.getPath().toString() );
-		}
-		
-		model.addAttribute("list", list);
 		
 		return "Admin/Storage/DirLayer";
     }

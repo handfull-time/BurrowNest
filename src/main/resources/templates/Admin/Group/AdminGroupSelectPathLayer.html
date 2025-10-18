@@ -6,7 +6,20 @@
     <th:block layout:fragment="modalTitle">루트 목록</th:block>
 
 	<th:block layout:fragment="modalContent">
-		<div th:insert="~{Storage/Directories :: directories}"></div>
+		<ul id="directoryTree" class="space-y-1 max-h-[600px] overflow-auto border rounded p-2 bg-white "></ul>
+
+		<template id="dirItemTemplate">
+		  <li>
+		    <div class="flex items-center gap-1">
+		      <button class="toggle-btn text-blue-600" data-no="" data-loaded="false">[+]</button>
+		      <div class="flex items-center space-x-2">
+		        <input type="checkbox" class="form-checkbox dir-checkbox" data-no="" data-name="">
+		        <span class="text-sm text-gray-700 cursor-pointer dir-label" data-no="">폴더명</span>
+		      </div>
+		    </div>
+		    <ul class="pl-4 hidden" data-children-for=""></ul>
+		  </li>
+		</template>
     </th:block>
     
     <th:block layout:fragment="modalButton">
@@ -20,9 +33,167 @@
     
 	<th:block layout:fragment="modalScript">
 		<script th:inline="javascript" defer>
-		
-		
+					
+		// 초기 로딩
+		loadDirectory(0, document.getElementById("directoryTree"));
 
+		// 트리 클릭 이벤트
+		document.getElementById("directoryTree").addEventListener("click", async (e) => {
+		  const toggleBtn = e.target.closest(".toggle-btn");
+		  if (toggleBtn) {
+		    const no = toggleBtn.dataset.no;
+		    const li = toggleBtn.closest("li");
+		    const container = li.querySelector('ul');
+		    
+		    if (toggleBtn.textContent === "[+]") {
+		      toggleBtn.textContent = "[-]";
+		
+		      if (toggleBtn.dataset.loaded !== "true") {
+		        await loadDirectory(no, container);
+		        toggleBtn.dataset.loaded = "true";
+		      }
+		
+		      container.classList.remove("hidden");
+		    } else {
+		      toggleBtn.textContent = "[+]";
+		      container.classList.add("hidden");
+		    }
+		
+		    return;
+		  }
+		
+		  const label = e.target.closest(".dir-label");
+		  if (label) {
+		    const checkbox = label.closest("div").querySelector(".dir-checkbox");
+		    if (checkbox) {
+		      checkbox.checked = !checkbox.checked;
+		    }
+		  }
+		});
+
+
+		// 디렉토리 로딩
+		async function loadDirectory(no, container) {
+			
+			const template = document.getElementById("dirItemTemplate");
+			const groupNo = document.getElementById("groupNo").value;
+			
+		  try {
+			const baseUrl = /*[[@{/Admin/Group/PathList.json}]]*/ null;
+						
+			const params = new URLSearchParams({
+				no: no || '0',
+				groupNo: groupNo
+			});
+
+			const options = {
+				method: 'GET',
+			    headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+			    },
+			};
+			        	
+			const urlAddress = baseUrl + '?' + params.toString();
+			
+			const response = await apiRequest(urlAddress, options);
+		    const list = await response.json();
+
+		    list.forEach(item => {
+		      const clone = template.content.cloneNode(true);
+		      const toggleBtn = clone.querySelector(".toggle-btn");
+		      const label = clone.querySelector(".dir-label");
+		      const checkbox = clone.querySelector(".dir-checkbox");
+		      const ul = clone.querySelector("ul");
+
+		      label.textContent = item.name;
+		      label.dataset.no = item.no;
+		      checkbox.dataset.no = item.no;
+		      checkbox.dataset.name = item.name;
+
+		      if (item.hasChild) {
+		        toggleBtn.dataset.no = item.no;
+		        toggleBtn.dataset.loaded = "false";
+		        toggleBtn.textContent = "[+]";
+		      } else {
+		        toggleBtn.remove();
+		      }
+
+		      ul.dataset.childrenFor = item.no;
+		      ul.classList.add("hidden");
+
+		      container.appendChild(clone);
+		    });
+
+		  } catch (err) {
+		    console.error("디렉토리 로딩 오류:", err);
+		  }
+		}
+
+		// ✅ 선택된 경로 리스트 반환 함수
+		function getCheckedNos() {
+		  const checked = document.querySelectorAll('.dir-checkbox:checked');
+		  return Array.from(checked).map(cb => cb.dataset.no);
+		}
+
+		// ✅ 저장 후 목록에 추가
+		async function saveData(element) {
+			const nos = getCheckedNos();
+			console.info( nos );
+			
+			if( nos.length < 1 ){
+    			showCustomAlert( "추가할 Directory를 선택하세요.");
+    			return;
+    		}
+			
+			const data = [];
+
+	        nos.forEach(no => {
+                data.push({ no: Number(no) });
+	        });
+			
+			const ok = confirmP("저장하시겠습니까?");
+			if( !ok ) return;
+			
+			closePopup(element);
+	        	
+           	const url = /*[[@{/Admin/Group/SaveGroupUserStorageList.json}]]*/ null;
+			const groupNo = document.getElementById("groupNo").value;
+           	
+           	const params = new URLSearchParams({
+           		groupNo: groupNo
+        	});
+
+        	const urlAddress = url + '?' + params.toString();
+           	
+        	const options = {
+        			method: 'POST',
+        			headers: {
+        				'Content-Type': 'application/json',
+        			},
+        			body: JSON.stringify( data ),
+        	    };
+        	
+        	const response = await apiRequest(urlAddress, options);
+            if (!response.ok) {
+                throw new Error(`HTTP 오류 발생: ${response.status} ${response.statusText}`);
+            } else {
+            	console.error('저장 오류:', response.status);
+            	showCustomAlert( '저장 오류:' + response.status , function(){
+            		location.reload();
+            	} );
+            }
+	        
+			const result = await response.json();
+	        console.log('저장 결과:', result);
+	        if( result.code == '0' ){
+	            await alertP('저장됐습니다.');
+				onShowPath( groupNo );
+            }else{
+				await alertP('저장 실패 ' + result.code + ':' + result.message);
+				location.reload();
+            }
+		}
+		
 		</script>
     </th:block>
 </div>

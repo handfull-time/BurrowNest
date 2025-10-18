@@ -158,6 +158,7 @@
     
     async function doSearchList(url, options, targetId) {
         const container = document.getElementById(targetId);
+		container.src = "about:blank";
 
         if (!container) {
             throw new Error(`대상 ID(${targetId})를 찾을 수 없습니다.`);

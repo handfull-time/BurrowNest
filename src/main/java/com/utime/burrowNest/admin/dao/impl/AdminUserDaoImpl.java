@@ -117,10 +117,11 @@ class AdminUserDaoImpl implements AdminUserDao{
 			}
 		}
 
-		for (BnAccessVo leftover : dbAccessMap.values()) {
-			result += mapper.deleteDirectoryAccessGroup(leftover);
-		}
+//		for (BnAccessVo leftover : dbAccessMap.values()) {
+//			result += mapper.deleteDirectoryAccessGroup(leftover);
+//		}
 		
 		return result;
 	}
+	
 }

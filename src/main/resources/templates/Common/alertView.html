@@ -12,11 +12,12 @@
 
   <!-- backdrop click 영역 -->
   <div id="modalDialog"
-              class="bg-white p-6 rounded-lg shadow-lg w-80 text-center
-              transform transition duration-150 ease-out opacity-0 scale-95"
+       class="bg-white p-6 rounded-lg shadow-lg
+              w-[min(92vw,32rem)] max-h-[80vh] overflow-y-auto
+              text-center transform transition duration-150 ease-out opacity-0 scale-95"
        role="document">
     <h2 id="modalTitle" class="sr-only">알림</h2>
-    <p id="modalMessage" class="mb-4 truncate max-w-[18rem]"></p>
+	<p id="modalMessage" class="mb-4 break-keep whitespace-pre-line"></p>
 
     <input type="text"
            id="modalInput"
@@ -135,13 +136,20 @@
         document.addEventListener('keydown', escHandler);
         document.addEventListener('keydown', keytrapHandler);
       }
+	  
+	  let hideTimer = null;
 
       function close(returnVal) {
         // 트랜지션 아웃
         modalEl.classList.add('opacity-0');
         dialogEl.classList.add('opacity-0', 'scale-95');
-        setTimeout(() => {
+		
+		// 이전 타이머 정리
+		if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+		
+        hideTimer = setTimeout(() => {
           modalEl.classList.add('hidden');
+		  hideTimer = null;
         }, 120);
 
         // 스크롤 복구
@@ -158,15 +166,11 @@
         document.removeEventListener('keydown', keytrapHandler);
         escHandler = keytrapHandler = null;
 
-        // 콜백/프로미스 호출
-        if (modalCallback) {
-          modalCallback(returnVal);
-          modalCallback = null;
-        }
-        if (resolvePromise) {
-          resolvePromise(returnVal);
-          resolvePromise = null;
-        }
+		
+		setTimeout(() => {
+		    if (modalCallback) { modalCallback(returnVal); modalCallback = null; }
+		    if (resolvePromise) { resolvePromise(returnVal); resolvePromise = null; }
+		}, 130);
       }
 
       function trapFocus(e) {

@@ -200,6 +200,22 @@ public interface StorageDao {
 	 */
 	List<BnDirectory> getAdminRootStorage();
 
+	/**
+	 * 
+	 * @param groupNo
+	 * @param uid
+	 * @return
+	 */
+	List<BnDirectory> getGroupStorageList(long groupNo, long dirNo);
+	
+	/**
+	 * 그룹 저장소 삭제
+	 * @param groupNo
+	 * @param dirNo
+	 * @return
+	 */
+	int removeGroupStorage(long groupNo, long dirNo)throws Exception;
+
 	
 
 }

@@ -323,7 +323,22 @@ public interface StorageMapper {
 	 * @return
 	 */
 	List<BnDirectory> selectBnDirectoryParentNo(@Param("parentNo") long parentNo);
+	
+	/**
+	 * 
+	 * @param groupNo
+	 * @param uid
+	 * @return
+	 */
+	List<BnDirectory> getGroupStorageList(@Param("groupNo") long groupNo, @Param("dirNo") long dirNo);
 
+	/**
+	 * 그룹 저장소 삭제
+	 * @param groupNo
+	 * @param dirNo
+	 * @return
+	 */
+	int removeGroupStorage(@Param("groupNo") long groupNo, @Param("dirNo") long dirNo)throws Exception;
 
 }
 

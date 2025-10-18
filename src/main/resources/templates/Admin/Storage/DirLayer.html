@@ -80,8 +80,21 @@
 			
 		  try {
 		    const baseUrl = /*[[@{/Admin/Storage/PathList.json}]]*/ null;
-		    const url = `${baseUrl}?path=${encodeURIComponent(path)}`;
-		    const response = await fetch(url);
+			
+			const params = new URLSearchParams({
+				path: path || ''
+			});
+
+			const options = {
+				method: 'GET',
+			    headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+			    },
+			};
+			        	
+			const urlAddress = baseUrl + '?' + params.toString();
+			
+			const response = await apiRequest(urlAddress, options);
 		    const list = await response.json();
 
 		    list.forEach(item => {

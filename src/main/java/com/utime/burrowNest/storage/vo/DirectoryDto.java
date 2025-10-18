@@ -10,26 +10,34 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class DirectoryDto {
+public class DirectoryDto extends BnDirectory {
 
-	private boolean selected;
-	
-	private final BnDirectory owner;
+	boolean selected;
     
-    List<DirectoryDto> child = new ArrayList<>();
+    List<BnDirectory> childs = new ArrayList<>();
     
     public DirectoryDto() {
     	this(null);
     }
     
     public DirectoryDto(BnDirectory dir){
-   		this.owner = dir;
+    	if( dir != null ) {
+    		this.creation = dir.creation;
+    		this.lastModified = dir.lastModified;
+    		this.name = dir.name;
+    		this.ownerNo = dir.ownerNo;
+    		this.parentNo = dir.parentNo;
+    		this.uid = dir.uid;
+    		this.publicAccessible = dir.publicAccessible;
+    		this.hasChild = dir.hasChild;
+    		this.absolutePath = dir.absolutePath;
+    	}
     	this.selected = false;
     }
     
 	@Override
 	public String toString() {
-		return BurrowUtils.toJson(this.owner) + "ChildSize:" + child.size() + "\n";
+		return BurrowUtils.toJson(this);
 	}
 }
 

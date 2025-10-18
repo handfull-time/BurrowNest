@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.utime.burrowNest.common.mapper.CommonMapper;
+import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.storage.dao.StorageDao;
 import com.utime.burrowNest.storage.mapper.StorageBasicMapper;
@@ -507,5 +508,21 @@ class StorageDaoImpl implements StorageDao{
 	public List<BnDirectory> getAdminRootStorage() {
 		
 		return mapper.selectBnDirectoryParentNo(1L);
+	}
+	
+	@Override
+	public List<BnDirectory> getGroupStorageList(long groupNo, long dirNo) {
+		
+		if( dirNo < 1L ) {
+			BnDirectory dir = this.getRootDirectory();
+			dirNo = dir.getNo();
+		}
+		
+		return mapper.getGroupStorageList(groupNo, dirNo);
+	}
+	
+	@Override
+	public int removeGroupStorage(long groupNo, long dirNo) throws Exception {
+		return mapper.removeGroupStorage(groupNo, dirNo);
 	}
 }

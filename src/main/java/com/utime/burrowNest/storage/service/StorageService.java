@@ -93,4 +93,19 @@ public interface StorageService {
 	 */
 	BnDirectory getAdminTopStorage();
 
+	/**
+	 * 
+	 * @param groupNo
+	 * @param dirNo
+	 * @return
+	 */
+	List<BnDirectory> getGroupStorageList(long groupNo, long dirNo);
+	
+	/**
+	 * 그룹 저장소 삭제
+	 * @param groupNo
+	 * @param dirNo
+	 * @return
+	 */
+	ReturnBasic removeGroupStorage(long groupNo, long dirNo);
 }

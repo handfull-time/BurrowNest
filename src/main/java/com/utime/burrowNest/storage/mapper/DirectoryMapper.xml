@@ -49,11 +49,21 @@
   <!-- 조상(루트→부모), 자신 제외 -->
   <select id="selectAncestorsByNo" resultType="com.utime.burrowNest.storage.mapper.row.DirNodeRow">
     WITH RECURSIVE a (NO, PARENT_NO, NAME, UID, DEPTH) AS (
-      SELECT d.NO, d.PARENT_NO, d.NAME, CAST(d.UID AS VARCHAR), CAST(0 AS INT)
+      SELECT 
+      	d.NO
+      	, d.PARENT_NO
+      	, d.NAME
+      	, d.UID
+      	, CAST(0 AS INT)
       FROM BN_DIRECTORY d
       WHERE d.NO = #{no}
       UNION ALL
-      SELECT p.NO, p.PARENT_NO, p.NAME, CAST(p.UID AS VARCHAR), a.DEPTH + 1
+      SELECT 
+      	p.NO
+      	, p.PARENT_NO
+      	, p.NAME
+      	, p.UID
+      	, a.DEPTH + 1
       FROM BN_DIRECTORY p
       JOIN a ON a.PARENT_NO = p.NO
     )
@@ -63,7 +73,7 @@
            x.PARENT_NO AS parentNo,
            EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = x.NO) AS hasChild
     FROM a x
-    WHERE x.NO  <![CDATA[ <> ]]>  #{no}
+    WHERE x.NO != #{no}
     ORDER BY x.DEPTH DESC  <!-- 루트→부모 순서 -->
   </select>
 

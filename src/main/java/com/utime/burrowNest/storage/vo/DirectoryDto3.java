@@ -10,9 +10,9 @@ import lombok.Setter;
 @Getter
 public class DirectoryDto3 extends BnDirectory {
 
-	private boolean selected;
+	boolean selected;
     
-    List<BnDirectory> childDirectories = new ArrayList<>();
+    List<BnDirectory> childs = new ArrayList<>();
     
     public DirectoryDto3() {
     	this(null);
@@ -22,11 +22,7 @@ public class DirectoryDto3 extends BnDirectory {
     	if( dir != null ) {
     		this.creation = dir.creation;
     		this.lastModified = dir.lastModified;
-    		this.regDate = dir.regDate;
-    		this.updateDate = dir.updateDate;
-    		this.enabled = dir.enabled;
     		this.name = dir.name;
-    		this.no = dir.no;
     		this.ownerNo = dir.ownerNo;
     		this.parentNo = dir.parentNo;
     		this.uid = dir.uid;

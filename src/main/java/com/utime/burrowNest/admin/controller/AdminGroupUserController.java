@@ -146,6 +146,27 @@ public class AdminGroupUserController {
 		
 		return userService.setGroupStorageList(groupNo, list);
     }
+	
+	/**
+	 * 그룹 저장소 삭제
+	 * @param groupNo
+	 * @param dirNo
+	 * @return
+	 */
+	@ResponseBody
+	@PostMapping("RemoveGroupUserStorage.json")
+    public ReturnBasic removeGroupUserStorage(@RequestParam(name="groupNo") long groupNo, @RequestParam(name="dirNo") long dirNo ) {
+		
+		return storageService.removeGroupStorage(groupNo, dirNo);
+    }
+	
+	@ResponseBody
+	@GetMapping("PathList.json")
+    public List<BnDirectory> sourcelist(@RequestParam(name="groupNo") long groupNo, @RequestParam(name="no") long dirNo) {
+		final List<BnDirectory> result = storageService.getGroupStorageList(groupNo, dirNo );
+		
+		return result;
+	}
 
 }
 

@@ -45,8 +45,6 @@ public class StorageServiceImpl implements StorageService {
 	
 	private Map<String, EBnFileType> mapFileType;
 	
-	private final DirecotryManager dirManager;
-	
 	private final ExecutorService executorThumbnail = Executors.newSingleThreadExecutor();
 	
 	/**
@@ -116,8 +114,14 @@ public class StorageServiceImpl implements StorageService {
 
 //	@Override
 	public List<DirectoryDto> getRootDirectory(UserVo user) {
+		List<DirectoryDto> result = new ArrayList<>();
+		List<BnDirectory> list = storageDao.getAdminRootStorage();
+		for( BnDirectory item : list ) {
+			final DirectoryDto add = new DirectoryDto(item);
+			result.add(add);
+		}
 		
-		return dirManager.getAccessibleDirectoriesForGroup(user.getGroup().getGroupNo());
+		return result; //dirManager.getAccessibleDirectoriesForGroup(user.getGroup().getGroupNo());
 		
 //		final BnDirectory result = storageDao.getRootDirectory(user);
 		
@@ -287,7 +291,7 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 	public List<DirectoryDto> getDirectory(UserVo user, String uid) {
 		
 		
-		List<DirectoryDto> result =  dirManager.getAccessibleDirectoriesForGroup(user.getGroup().getGroupNo());
+		List<DirectoryDto> result = this.getRootDirectory(null);//  dirManager.getAccessibleDirectoriesForGroup(user.getGroup().getGroupNo());
 //		
 //		if( BurrowUtils.isEmpty(uid) ) {
 //			log.info("루트 호출");
@@ -320,21 +324,21 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 		final long groupNo = user.getGroup().getGroupNo();
 		final List<AbsPath> result = new ArrayList<>();
 		
-		final DirectoryDto dir = dirManager.getDirectoryForGroup(groupNo, uid); //this.storageDao.getDirectory(user, uid);
-		if( dir == null ) {
-			return result;
-		}
-		
-		List<DirectoryDto> directories = dirManager.getAccessibleChildren(groupNo, uid);
-		if( BurrowUtils.isNotEmpty(directories) ) {
-			for( DirectoryDto dto : directories ) {
-				result.add(dto.getOwner());
-			}
-		}
-
-		final List<BnFile> files = this.storageDao.getFiles(user, dir.getOwner());
-		if( BurrowUtils.isNotEmpty(files) )
-			result.addAll( files );
+//		final DirectoryDto dir = dirManager.getDirectoryForGroup(groupNo, uid); //this.storageDao.getDirectory(user, uid);
+//		if( dir == null ) {
+//			return result;
+//		}
+//		
+//		List<DirectoryDto> directories = dirManager.getAccessibleChildren(groupNo, uid);
+//		if( BurrowUtils.isNotEmpty(directories) ) {
+//			for( DirectoryDto dto : directories ) {
+//				result.add(dto.getOwner());
+//			}
+//		}
+//
+//		final List<BnFile> files = this.storageDao.getFiles(user, dir.getOwner());
+//		if( BurrowUtils.isNotEmpty(files) )
+//			result.addAll( files );
 		
 		return result;
 	}
@@ -436,5 +440,22 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 	public BnDirectory getAdminTopStorage() {
 		return storageDao.getRootDirectory();
 	}
+	@Override
+	public List<BnDirectory> getGroupStorageList(long groupNo, long dirNo) {
+		List<BnDirectory> result = storageDao.getGroupStorageList( groupNo, dirNo );
+		return result;
+	}
 	
+	@Override
+	public ReturnBasic removeGroupStorage(long groupNo, long dirNo) {
+		final ReturnBasic result = new ReturnBasic();
+		
+		try {
+			storageDao.removeGroupStorage( groupNo, dirNo );
+		} catch (Exception e) {
+			result.setCodeMessage("E", e.getMessage());
+		}
+		
+		return result;
+	}
 }
