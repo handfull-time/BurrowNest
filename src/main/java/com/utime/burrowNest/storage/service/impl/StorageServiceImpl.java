@@ -290,6 +290,11 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 	@Override
 	public List<DirectoryDto> getDirectory(UserVo user, String uid) {
 		
+		if( BurrowUtils.isEmpty(uid) ) {
+			log.info("루트 호출");
+			this.storageDao.getRootDirectory( user.getGroup().getGroupNo() );	
+		}
+		
 		
 		List<DirectoryDto> result = this.getRootDirectory(null);//  dirManager.getAccessibleDirectoriesForGroup(user.getGroup().getGroupNo());
 //		

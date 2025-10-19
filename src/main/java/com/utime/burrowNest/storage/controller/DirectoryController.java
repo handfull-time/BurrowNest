@@ -32,21 +32,14 @@ public class DirectoryController {
 	 * @return
 	 */
 	@GetMapping(path = { "/", "Index.html" })
-    public String noneAuthMetaPage(ModelMap model, UserVo user) throws Exception{
+    public String noneAuthMetaPage(ModelMap model) throws Exception{
 		
-		return this.path(model, user, null);
+		return this.path(model, null);
     }
 	
 	@GetMapping("Path.html")
-    public String path(ModelMap model, UserVo user, @RequestParam("uid") String uid) throws Exception {
+    public String path(ModelMap model, @RequestParam("uid") String uid) throws Exception {
 		
-		final List<DirectoryDto> dirList = storageService.getDirectory(user, uid);
-		
-		if( BurrowUtils.isEmpty(dirList) ) {
-			throw new Exception("폴더 없음.");
-		}
-		
-		model.addAttribute("directories", dirList);
 		model.addAttribute("selectedUid", uid);
 	    
 	    return "Storage/StorageMain";
