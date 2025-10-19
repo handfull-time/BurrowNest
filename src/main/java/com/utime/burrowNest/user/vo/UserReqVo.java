@@ -2,16 +2,16 @@ package com.utime.burrowNest.user.vo;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
+
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
  * 회원가입 요청 값
  */
 @Setter
 @Getter
-@ToString(callSuper = true)
 public class UserReqVo extends LoginReqVo{
 	
 	/** 별명 */
@@ -32,5 +32,10 @@ public class UserReqVo extends LoginReqVo{
 	 * 암호 찾기 : 숫자
 	 */
 	private String myNumber;
+	
+	@Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
+	}
 
 }

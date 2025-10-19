@@ -1,0 +1,36 @@
+package com.utime.burrowNest.storage.vo;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
+public class DirectoryDto3 extends BnDirectory {
+
+	boolean selected;
+    
+    List<BnDirectory> childs = new ArrayList<>();
+    
+    public DirectoryDto3() {
+    	this(null);
+    }
+    
+    public DirectoryDto3(BnDirectory dir){
+    	if( dir != null ) {
+    		this.creation = dir.creation;
+    		this.lastModified = dir.lastModified;
+    		this.name = dir.name;
+    		this.ownerNo = dir.ownerNo;
+    		this.parentNo = dir.parentNo;
+    		this.uid = dir.uid;
+    		this.publicAccessible = dir.publicAccessible;
+    		this.hasChild = dir.hasChild;
+    		this.absolutePath = dir.absolutePath;
+    	}
+    	this.selected = false;
+    }
+}
+

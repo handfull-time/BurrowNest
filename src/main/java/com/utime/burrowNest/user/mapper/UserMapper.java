@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Param;
 
 import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.user.vo.ELoginResult;
+import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -15,10 +16,41 @@ import com.utime.burrowNest.user.vo.UserVo;
 public interface UserMapper {
 	
 	/**
+	 * 사용자 그룹
+	 * @return
+	 */
+	int createUserGroup();
+	
+	/**
+	 * 그룹 추가
+	 * @return
+	 */
+	int insertGroup( GroupVo group );
+	
+	/**
+	 * 그룹 조회
+	 * @return
+	 */
+	GroupVo selectGroupByName( @Param("name") String name );
+	
+	/**
+	 * 그룹 조회
+	 * @param groupNo
+	 * @return
+	 */
+	GroupVo selectGroupByNo( @Param("groupNo") long groupNo );
+	
+	/**
 	 * 회원 테이블 생성
 	 * @return
 	 */
 	int createUser();
+	
+	/**
+	 * 회원 프로필 이미지 생성
+	 * @return
+	 */
+	int createProfileImg();
 	
 	/**
 	 * 비번 
@@ -38,7 +70,15 @@ public interface UserMapper {
 	 * @param user
 	 * @return
 	 */
-	int insertUser(@Param("user") UserVo user, @Param("profileImg") byte [] profileImg);
+	int insertUser(UserVo user);
+	
+	/**
+	 * 사용자 프로필 이미지 추가
+	 * @param userNo
+	 * @param profileImg
+	 * @return
+	 */
+	int insertUserProfileImg(@Param("userNo") long userNo, @Param("profileImg") byte [] profileImg); 
 	
 	/**
 	 * 로그인 기록 추가.
@@ -54,21 +94,21 @@ public interface UserMapper {
 	 * @param id
 	 * @return
 	 */
-	UserVo getUserId(@Param("id") String id);
+	UserVo selectUserId(@Param("id") String id);
 	
 	/**
 	 * 기본 회원 정보 조회
 	 * @param id
 	 * @return
 	 */
-	UserVo getUserIdBasic(@Param("id") String id);
+	UserVo selectUserIdBasic(@Param("id") String id);
 	
 	/**
 	 * 암호 조회
 	 * @param id
 	 * @return
 	 */
-	String getUserPw(@Param("id") String id);
+	String selectUserPw(@Param("id") String id);
 
 	/**
 	 * pw 추가
@@ -99,7 +139,16 @@ public interface UserMapper {
 	 * @param user
 	 * @return
 	 */
-	int updateUser( @Param("user") UserVo user, @Param("profileImg") byte [] profileImg )throws Exception ;
+	int updateUser( UserVo user )throws Exception ;
+	
+	/**
+	 * 사용자 이미지 갱신
+	 * @param userNo
+	 * @param profileImg
+	 * @return
+	 * @throws Exception
+	 */
+	int updateUserProfileImg( @Param("userNo") long userNo, @Param("profileImg") byte [] profileImg )throws Exception ;
 
 	/**
 	 * PW 성공 여부 횟수 업데이트
@@ -121,5 +170,5 @@ public interface UserMapper {
 	 * @param userNo
 	 * @return
 	 */
-	BinResultVo getProfileImg(@Param("userNo") int userNo);
+	BinResultVo selectProfileImg(@Param("userNo") long userNo);
 }

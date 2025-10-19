@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -66,6 +67,7 @@ public class JwtProvider {
     private static class JWT_KEY {
         static final String AUTHORIZATION = "Authorization";
         static final String TOKEN_PREFIX = "Bearer ";
+        static final String GUN_KEY = "PS3K91L287C";
         static final String IP = "ReqIp";
         static final String AGENT = "ReqAgent";
         static final String UserNo = "userNo";
@@ -185,6 +187,9 @@ public class JwtProvider {
             return false;
 		}
 		
+//		final String s = claims.get(JWT_KEY.GUN_KEY, String.class);
+		
+		
     	return true;
     }
 
@@ -249,27 +254,44 @@ public class JwtProvider {
      */
 	public ReturnBasic procLogin(HttpServletRequest request, HttpServletResponse response, UserVo user) {
 		
-        final String domain = request.getServerName();
-        
+        this.genCookie(request, response, user);
+
         final Map<String, Object> claims = this.createPagingClaims(request);
-
-        response.addCookie( this.createTokenAndCookie( JwtProvider.KeyAccessToken, 
-        		user, new HashMap<>(), 
-        		ACCESS_EXPIRATION_TIME, 
-        		domain, BurrowDefine.ContextPath));
-        
-        response.addCookie( this.createTokenAndCookie( JwtProvider.KeyPagingToken, 
-        		user, new HashMap<>(claims), 
-        		PAGING_EXPIRATION_TIME, 
-        		domain, BurrowDefine.ContextPath));
-
         response.addCookie( this.createTokenAndCookie( BurrowDefine.KeyRefreshToken, 
         		user, new HashMap<>(claims), 
         		REFRESH_EXPIRATION_TIME, 
-        		domain, BurrowDefine.ContextPath));
+        		request.getServerName(), BurrowDefine.ContextPath));
 
         return new ReturnBasic();
+	}
+	
+	/**
+	 * 토근 쿠키 생성
+	 * @param request
+	 * @param response
+	 * @param user
+	 */
+	private void genCookie(HttpServletRequest request, HttpServletResponse response, UserVo user ) {
+		final String uuid = UUID.randomUUID().toString();
+		final String domain = request.getServerName();
+        
+        {
+        	final Map<String, Object> claims = new HashMap<>();
+        	claims.put(JWT_KEY.GUN_KEY, uuid);
+            response.addCookie( this.createTokenAndCookie( JwtProvider.KeyAccessToken, 
+            		user, new HashMap<>(), 
+            		ACCESS_EXPIRATION_TIME, 
+            		domain, BurrowDefine.ContextPath));
+        }
 
+        {
+            final Map<String, Object> claims = this.createPagingClaims(request);
+            claims.put(uuid, "" + System.currentTimeMillis());
+            response.addCookie( this.createTokenAndCookie( JwtProvider.KeyPagingToken, 
+            		user, new HashMap<>(claims), 
+            		PAGING_EXPIRATION_TIME, 
+            		domain, BurrowDefine.ContextPath));
+        }
 	}
 	
 	/**
@@ -309,17 +331,7 @@ public class JwtProvider {
         final UserVo user = this.extractUserFromClaims(claims);
         result.setUser(user);
         
-        final String domain = request.getServerName();
-
-        response.addCookie( this.createTokenAndCookie( JwtProvider.KeyAccessToken, 
-        		user, new HashMap<>(), 
-        		ACCESS_EXPIRATION_TIME, 
-        		domain, BurrowDefine.ContextPath));
-        
-        response.addCookie( this.createTokenAndCookie( JwtProvider.KeyPagingToken, 
-        		user, this.createPagingClaims(request), 
-        		PAGING_EXPIRATION_TIME, 
-        		domain, BurrowDefine.ContextPath));
+        this.genCookie(request, response, user);
 
         return result;
 	}

@@ -5,6 +5,7 @@ import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -31,7 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private JwtProvider jwtUtil;
     
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) throws ServletException {
     	 
     	final String path = request.getRequestURI().substring(request.getContextPath().length());
 //    	final String path = request.getRequestURI();
@@ -43,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
     	
     	ResUserVo tokenRes = jwtUtil.procPagingToken(request, response);
@@ -67,7 +68,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.info("Setting Authentication for user: {}", user.getId());
             
             final Authentication authToken = new UsernamePasswordAuthenticationToken(user, null,
-                    Collections.singleton(new SimpleGrantedAuthority(user.getRole().name())));
+                    Collections.singleton( new SimpleGrantedAuthority(user.getGroup().getRole().name()) ));
             
             SecurityContextHolder.getContext().setAuthentication(authToken);
         }

@@ -17,6 +17,8 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.spring6.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.templatemode.TemplateMode;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.utime.burrowNest.common.vo.WhiteAddressList;
 
 import jakarta.annotation.Resource;
@@ -87,5 +89,11 @@ public class ViewResolverConfig implements WebMvcConfigurer {
         return templateEngine;
     }
     
+    @Bean
+    public ObjectMapper objectMapper() {
+    	final ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule()); // Java 8 날짜/시간 타입 지원 추가
+        return objectMapper;
+    }
 
 }

@@ -1,8 +1,12 @@
 package com.utime.burrowNest.storage.vo;
 
-import lombok.Data;
+import com.utime.burrowNest.common.util.BurrowUtils;
 
-@Data
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
 public class FileDto {
 	private String name;
     private long size;
@@ -20,5 +24,10 @@ public class FileDto {
 		this.isDirectory = isDirectory;
 		this.contentType = contentType;
 		this.lastModified = lastModified;
+	}
+    
+    @Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
 	}
 }

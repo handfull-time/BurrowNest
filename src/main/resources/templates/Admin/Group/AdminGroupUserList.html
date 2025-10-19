@@ -1,0 +1,50 @@
+<!-- 회원 목록 -->
+<div xmlns:th="http://www.thymeleaf.org">
+<div class="bg-white shadow p-6 rounded-md">
+    <h2 class="text-xl font-bold text-gray-700 mb-4">그룹 목록</h2>
+    <table class="w-full border-collapse border border-gray-200">
+        <thead>
+            <tr class="bg-gray-100">
+                <th class="border p-2 text-center">생성일</th>
+                <th class="border p-2 text-center">수정일</th>
+                <th class="border p-2 text-center">이름</th>
+                <th class="border p-2 text-center">사용여부</th>
+                <th class="border p-2 text-center">역할</th>
+                <th class="border p-2 text-center">파일 접근 폴더</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:unless="${#lists.isEmpty(groups)}"
+            	th:each="item : ${groups}" th:data-group-no="${item.groupNo}">
+                <td class="border p-2 text-center" th:text="${#temporals.format(item.regDate,'yyyy.MM.dd HH:mm')}"></td>
+                <td class="border p-2 text-center" th:text="${#temporals.format(item.updateDate,'yyyy.MM.dd HH:mm')}"></td>
+                <td class="border p-2 id-cell underline cursor-pointer" th:text="${item.name}"></td>
+                <td class="border p-2 text-center" th:text="${item.enabled? '🟢':'🔴'}"></td>
+                <td class="border p-2 text-center" th:text="${item.role}"></td>
+                <td class="border p-2 text-center">
+                	<button 
+                		type="button"
+                		class="font-bold py-1 px-2 rounded text-white"
+    					th:classappend="${item.groupNo == 1 or item.groupNo == 2} ? ' bg-gray-400 cursor-not-allowed' : ' bg-blue-500 hover:bg-blue-700'"
+                		th:attr="disabled=${!(item.groupNo != 1 and item.groupNo != 2)}"
+                		th:text="'보기'"
+                		th:onclick="|onShowPath('${item.groupNo}')|">
+                	</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script th:inline="javascript">
+
+    document.querySelectorAll('.id-cell').forEach(idCell => {
+        idCell.addEventListener('click', function() {
+            const row = this.parentNode;
+            const groupNo = row.dataset.groupNo;
+            
+            onGroupDetail( groupNo );
+        });
+    });
+</script>
+</div>

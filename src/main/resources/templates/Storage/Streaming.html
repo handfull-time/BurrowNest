@@ -1,78 +1,116 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
-	<meta charset="UTF-8">
-	<title th:text="'? BurrowNest - ' + ${fileName}">Streaming</title>
-	<th:block th:replace="~{Common/Favicon :: Favicon}"></th:block>
-	<script type="text/javascript" th:src="@{/js/tailwind/tailwind.min.js}"></script>
-</head>
-<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-4">
-	<div class="w-full max-w-5xl">
-		<!-- Video 영역 -->
-		<div th:if="${mimeType.startsWith('video')}" class="relative bg-black rounded shadow overflow-hidden">
-			<video id="player" class="w-full h-auto rounded" controls autoplay>
-				<source th:src="@{/File/Stream(path=${path})}" th:type="${mimeType}" />
-				    해당 브라우저는 비디오를 지원하지 않습니다.
-			</video>
-		</div>
-
-		<!-- Audio 영역 -->
-		<div th:if="${mimeType.startsWith('audio')}" class="bg-gray-800 rounded p-6 shadow">
-			<audio id="player" class="w-full" controls autoplay>
-				<source th:src="@{/File/Stream(path=${path})}" th:type="${mimeType}" />
-				    해당 브라우저는 오디오를 지원하지 않습니다.
-			</audio>
-		</div>
-
-		<!-- 컨트롤 패널 -->
-		<div class="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-			<div class="text-gray-300">
-				<div class="text-lg font-bold" th:text="${fileName}">파일명</div>
-				<div class="text-sm" th:text="${mimeType}">파일타입</div>
-			</div>
-
-			<div class="flex gap-2 items-center">
-				<!-- 배속 -->
-				<label for="speed" class="text-sm text-gray-400">재생 속도</label>
-				<select id="speed" class="bg-gray-800 border border-gray-600 rounded text-sm px-2 py-1 text-white">
-					<option value="0.5">0.5x</option>
-					<option value="0.8">0.8x</option>
-					<option value="1" selected>1x</option>
-					<option value="1.2">1.2x</option>
-					<option value="1.5">1.5x</option>
-					<option value="2">2x</option>
-				</select>
-				
-				<!-- 전체화면 버튼 -->
-				<button id="fullscreenBtn" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm">
-					전체화면
-				</button>
-			</div>
-		</div>
-	</div>
-
-	<script>
-	const videoPlayer = document.getElementById("player");
-	
-	if (videoPlayer) {
-		
-		const speedControl = document.getElementById("speed");
-		const fullscreenBtn = document.getElementById("fullscreenBtn");
-		
-		speedControl.addEventListener("change", (e) => {
-			videoPlayer.playbackRate = parseFloat(e.target.value);
-		});
-	
-		fullscreenBtn.addEventListener("click", () => {
-			if (videoPlayer.requestFullscreen) {
-				videoPlayer.requestFullscreen();
-			} else if (videoPlayer.webkitRequestFullscreen) {
-			  	videoPlayer.webkitRequestFullscreen();
-			} else if (videoPlayer.msRequestFullscreen) {
-			  	videoPlayer.msRequestFullscreen();
-			}
-		});
+  <meta charset="UTF-8">
+  <title th:text="'? BurrowNest - ' + ${fileName}">Streaming</title>
+  <link rel="stylesheet" th:href="@{/css/tailwind/tailwind.min.css}">
+  <style>
+	.bg-blurred {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		background-size: cover;
+		background-position: center;
+		filter: blur(20px);
+		opacity: 0.6;
+		z-index: -1;
 	}
-	</script>
+    .content-layer {
+      position: relative;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="bg-black text-white min-h-screen flex items-center justify-center p-4">
+<!-- Blur Background -->
+  <div class="bg-blurred" th:style="|background-image: url('data:image/jpeg;base64,${thumbnailBase64}')|"></div>
+	
+  <div class="w-full max-w-5xl relative blur-bg">
+    <div class="content-layer">
+      <!-- 이미지 -->
+      <div th:if="${mimeType.startsWith('image')}">
+        <img th:src="@{/File/Stream(path=${path})}" class="max-w-full max-h-screen mx-auto rounded shadow" loading="lazy" />
+      </div>
+
+      <!-- 동영상 -->
+      <div th:if="${mimeType.startsWith('video')}">
+        <video id="player" class="w-full h-auto rounded shadow" controls autoplay>
+          <source th:src="@{/File/Stream(path=${path})}" th:type="${mimeType}" />
+          해당 브라우저는 비디오를 지원하지 않습니다.
+        </video>
+      </div>
+
+      <!-- 오디오 -->
+      <div th:if="${mimeType.startsWith('audio')}">
+        <div class="flex flex-col items-center">
+          <img th:src="@{'/thumbnail/' + ${fileUid}}" class="w-48 h-48 rounded shadow mb-4" />
+          <audio id="player" class="w-full" controls autoplay>
+            <source th:src="@{/File/Stream(path=${path})}" th:type="${mimeType}" />
+            해당 브라우저는 오디오를 지원하지 않습니다.
+          </audio>
+        </div>
+      </div>
+
+      <!-- 텍스트 -->
+      <div th:if="${mimeType.startsWith('text') || mimeType.contains('json') || mimeType.contains('xml') || mimeType.contains('javascript') || mimeType.contains('html') || mimeType.contains('css') || mimeType.contains('csv') || mimeType.contains('plain')}">
+        <pre class="bg-gray-900 text-green-200 p-4 rounded overflow-auto max-h-screen whitespace-pre-wrap" th:text="${fileContent}">파일 내용 로딩 실패</pre>
+      </div>
+
+      <!-- 파일 정보 및 컨트롤 -->
+      <div class="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="text-gray-300">
+          <div class="text-lg font-bold" th:text="${fileName}">파일명</div>
+          <div class="text-sm" th:text="${mimeType}">파일타입</div>
+        </div>
+
+        <div class="flex gap-2 items-center">
+          <!-- 배속 -->
+          <label for="speed" class="text-sm text-gray-400">재생 속도</label>
+          <select id="speed" class="bg-gray-800 border border-gray-600 rounded text-sm px-2 py-1 text-white">
+            <option value="0.5">0.5x</option>
+            <option value="0.8">0.8x</option>
+            <option value="1" selected>1x</option>
+            <option value="1.2">1.2x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+          </select>
+
+          <!-- 다운로드 -->
+          <a th:href="@{/File/Download(path=${path})}" class="ml-2 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">다운로드</a>
+
+          <!-- 전체화면 -->
+          <button id="fullscreenBtn" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm">
+            전체화면
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const player = document.getElementById("player");
+    if (player) {
+      const speedControl = document.getElementById("speed");
+      const fullscreenBtn = document.getElementById("fullscreenBtn");
+
+      if (speedControl) {
+        speedControl.addEventListener("change", (e) => {
+          player.playbackRate = parseFloat(e.target.value);
+        });
+      }
+
+      fullscreenBtn.addEventListener("click", () => {
+        if (player.requestFullscreen) {
+          player.requestFullscreen();
+        } else if (player.webkitRequestFullscreen) {
+          player.webkitRequestFullscreen();
+        } else if (player.msRequestFullscreen) {
+          player.msRequestFullscreen();
+        }
+      });
+    }
+  </script>
 </body>
 </html>

@@ -2,6 +2,8 @@ package com.utime.burrowNest.storage.vo;
 
 import java.time.LocalDateTime;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -12,7 +14,6 @@ import lombok.ToString;
  */
 @Getter
 @Setter
-@ToString(callSuper = true)
 public class BnFileVideo extends AbsBnFileInfo {
 	/**
 	 * Represents the MIME type of the file.
@@ -139,4 +140,9 @@ public class BnFileVideo extends AbsBnFileInfo {
 	 * 이미지가 촬영된 위치의 경도를 나타냅니다.
 	 */
 	private double gpsLongitude;
+	
+	@Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
+	}
 }

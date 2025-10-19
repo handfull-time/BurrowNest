@@ -30,9 +30,34 @@
 		DROP TABLE ${tableName}
 	</update>
 	
+	<!-- 바이너리 데이터 VO MAP -->
 	<resultMap id="BinResultVoMap" type="com.utime.burrowNest.common.vo.BinResultVo">
 		<result column="BIN_DATA" property="binary" jdbcType="VARBINARY" />
+		<result column="LAST_DATE" property="lastDate" />
 	</resultMap>
 	
+	<!-- 테이블 컬럼 정보 조회 -->
+    <select id="getColumnInfo" resultType="java.util.Map">
+        SELECT 
+        	COLUMN_NAME, DATA_TYPE
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_NAME = #{tableName}
+    </select>
 	
+	<!-- 컬럼 제거 -->
+    <update id="dropColumn">
+        ALTER TABLE ${tableName} DROP COLUMN ${columnName}
+    </update>
+
+	<!-- 컬럼 추가 -->
+    <update id="addColumn">
+        ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnType}
+        <if test="columnDefault != null">
+            DEFAULT #{columnDefault}
+        </if>
+        <if test="isNullable != null and !isNullable">
+            NOT NULL
+        </if>
+    </update>
+    
 </mapper>

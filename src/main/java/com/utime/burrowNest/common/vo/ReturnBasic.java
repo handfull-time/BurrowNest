@@ -1,5 +1,7 @@
 package com.utime.burrowNest.common.vo;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
+
 public class ReturnBasic {
 
 	protected String code;
@@ -43,6 +45,6 @@ public class ReturnBasic {
 
 	@Override
 	public String toString() {
-		return "ReturnBasic [code=" + code + ", message=" + message + "]";
+		return BurrowUtils.toJson(this);
 	}
 }

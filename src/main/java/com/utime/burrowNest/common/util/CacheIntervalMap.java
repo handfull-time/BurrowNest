@@ -32,6 +32,11 @@ public class CacheIntervalMap<K, V> extends ConcurrentHashMap<K, V>{
 	private final TimeUnit unit;
 	
 	/**
+	 * 삭제 될 때 이벤트 처리
+	 */
+	private final RemoveEventListener<K, V> removelistener;
+	
+	/**
 	 * A task that removes an entry from a `CacheIntervalMap` after a specified delay.
 	 *
 	 * @param <K> the key type
@@ -55,20 +60,35 @@ public class CacheIntervalMap<K, V> extends ConcurrentHashMap<K, V>{
 			
 			// 일단 지우고 
 			this.owner.remove(this.key);
-			
+			final V v = this.owner.remove(this.key);
+			if( this.owner.removelistener != null ) {
+				this.owner.removelistener.removeEvent(key, v);
+			}
+
 			return this.key;
 		}
 	}
 	
 	/**
-	 * 삭제하기
+	 * 캐시 생성
 	 * @param interval 일정시간
 	 * @param unit 시간 단위
 	 */
 	public CacheIntervalMap(long interval, TimeUnit unit) {
+		this(interval, unit, null);
+	}
+	
+	/**
+	 * 캐시 생성
+	 * @param interval 일정시간
+	 * @param unit 시간 단위
+	 * @param event 자동 삭제할때 생기는 이벤트
+	 */
+	public CacheIntervalMap(long interval, TimeUnit unit, RemoveEventListener<K,V> event) {
 		super();
 		this.interval = interval;
 		this.unit = unit;
+		this.removelistener = event;
 	}
 	
 	@Override

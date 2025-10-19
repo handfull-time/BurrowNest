@@ -1,11 +1,12 @@
 <div xmlns:th="http://www.thymeleaf.org" 
 	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-    layout:decorate="~{Common/LayoutModal}">
+    layout:decorate="~{Common/LayoutModal}"
+    th:with="maxHeight='80'">
     
     <th:block layout:fragment="modalTitle">루트 목록</th:block>
 
 	<th:block layout:fragment="modalContent">
-		<ul id="directoryTree" class="space-y-1 max-h-[600px] overflow-auto border rounded p-2 bg-white"></ul>
+		<ul id="directoryTree" class="space-y-1 max-h-[600px] overflow-auto border rounded p-2 bg-white "></ul>
 
 		<template id="dirItemTemplate">
 		  <li>
@@ -20,7 +21,15 @@
 		  </li>
 		</template>
 
-
+    </th:block>
+    
+    <th:block layout:fragment="modalButton">
+    	<button id="saveButton" onclick="saveData(this)" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition">
+            저장
+        </button>
+        <button onclick="closePopup(this)" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition">
+            취소
+        </button>
     </th:block>
     
 	<th:block layout:fragment="modalScript">
@@ -70,9 +79,22 @@
 			const template = document.getElementById("dirItemTemplate");
 			
 		  try {
-		    const baseUrl = /*[[@{/Intro/PathList.json}]]*/ null;
-		    const url = `${baseUrl}?path=${encodeURIComponent(path)}`;
-		    const response = await fetch(url);
+		    const baseUrl = /*[[@{/Admin/Storage/PathList.json}]]*/ null;
+			
+			const params = new URLSearchParams({
+				path: path || ''
+			});
+
+			const options = {
+				method: 'GET',
+			    headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+			    },
+			};
+			        	
+			const urlAddress = baseUrl + '?' + params.toString();
+			
+			const response = await apiRequest(urlAddress, options);
 		    const list = await response.json();
 
 		    list.forEach(item => {
@@ -89,7 +111,7 @@
 		      checkbox.dataset.path = fullPath;
 		      checkbox.dataset.name = item.name;
 
-		      if (item.hasChildren) {
+		      if (item.hasChild) {
 		        toggleBtn.dataset.path = fullPath;
 		        toggleBtn.dataset.loaded = "false";
 		        toggleBtn.textContent = "[+]";
@@ -117,20 +139,18 @@
 
 		// ✅ 저장 후 목록에 추가
 		function saveData(element) {
-		  const names = getCheckedNames();
-
-		  for (let name of names) {
-		    const list = document.getElementById('storageList');
-		    const li = document.createElement('li');
-		    li.className = 'flex justify-between items-center bg-gray-100 p-2 rounded';
-		    li.innerHTML = `<span>${name}</span><button class="text-red-500 hover:text-red-700" onclick="this.closest('li').remove()">삭제</button>`;
-		    list.appendChild(li);
-		  }
-		  
-		  const selectList = getStorageListValues();
-		  buttonStatus( "selectNextBtn", selectList.length > 0);
-
-		  closePopup(element);
+			const names = getCheckedNames();
+			
+			if( names.length < 1 ){
+    			showCustomAlert("저장소 경로를 추가하세요.");
+    			return;
+    		}
+			
+			if (typeof procNames === "function") {
+				procNames( names );
+			}
+			
+			closePopup(element);
 		}
 
 		</script>

@@ -43,10 +43,11 @@ public class AdminUserController {
 	}
 	
 	@GetMapping("Profile.layer")
-    public String getUserProfile(ModelMap model, @RequestParam(name="userNo") int userNo) {
+    public String getUserProfile(ModelMap model, @RequestParam(name="userNo") long userNo) {
 		
 		model.addAttribute("item", userService.getUserFromNo(userNo));
 		model.addAttribute("roles", EJwtRole.values() );
+		model.addAttribute("groups", userService.getUserGroupList() );
         
 		return "Admin/User/UserLayer";
     }

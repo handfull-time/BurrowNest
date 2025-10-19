@@ -1,31 +1,34 @@
 package com.utime.burrowNest.storage.service.impl;
 
-import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.utime.burrowNest.common.util.CommandUtil;
+import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.storage.dao.StorageDao;
+import com.utime.burrowNest.storage.dto.ChildrenResponse;
+import com.utime.burrowNest.storage.dto.DirContextResponse;
+import com.utime.burrowNest.storage.dto.DirNodeDto;
+import com.utime.burrowNest.storage.mapper.DirectoryMapper;
+import com.utime.burrowNest.storage.mapper.row.DirNodeRow;
 import com.utime.burrowNest.storage.service.StorageService;
-import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
+import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
+import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.storage.vo.EBnFileType;
-import com.utime.burrowNest.storage.vo.MessageDataVo;
 import com.utime.burrowNest.user.dao.UserDao;
-import com.utime.burrowNest.user.vo.InitInforReqVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
 import lombok.RequiredArgsConstructor;
@@ -36,21 +39,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class StorageServiceImpl implements StorageService {
 	
-	private final SimpMessagingTemplate messagingTemplate;
-	
-	final static ObjectWriter objMapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
-	
-	private final ExecutorService executor = Executors.newWorkStealingPool();
-	
 	private final UserDao userDao;
 
 	private final StorageDao storageDao;
 	
 	private Map<String, EBnFileType> mapFileType;
 	
-	private void delay() {
-		try {Thread.sleep(200);} catch (InterruptedException e) {e.printStackTrace();}
-	}
+	private final ExecutorService executorThumbnail = Executors.newSingleThreadExecutor();
 	
 	/**
 	 * ApplicationReadyEvent
@@ -60,373 +55,407 @@ public class StorageServiceImpl implements StorageService {
 		this.mapFileType = storageDao.getBnFileType();
 	}
 	
-	@Override
-	public boolean IsInit() {
+	@EventListener(ContextClosedEvent.class)
+	protected void onShutdown() {
+		executorThumbnail.shutdown();
 		
-		return storageDao.IsInit();
+		try {
+			executorThumbnail.awaitTermination(10, TimeUnit.MINUTES);
+		} catch (InterruptedException e) {
+			log.error("", e);
+		}
+		
+		if( ! executorThumbnail.isShutdown() ) {
+			executorThumbnail.shutdownNow();
+		}
+    }
+	
+	/**
+	 * 기본 관리자 계정의 최상위 Root를 생성한다.
+	 */
+	@Override
+	public ReturnBasic saveRootStorage(UserVo user) {
+		final ReturnBasic result = new ReturnBasic();
+		
+		try {
+			// 관련 테이블 생성
+			this.storageDao.initStorageTable();
+		} catch (Exception e) {
+			log.error("", e);
+			result.setCodeMessage("E", "기본 Storage Table 생성 실패");
+			return result;
+		}
+
+		try {
+			storageDao.addRootDirectory(user);
+		} catch (Exception e) {
+			log.error("", e);
+			result.setCodeMessage("E", "루트 생성 실패");
+		}
+		return result;
 	}
 	
-    /**
-     * Front에 웹 소켓 키워드
-     */
-    final String KeyToWsFileRecieveStatus = "/toFront/RecieveStatus";
-    
-    private class InitFileLoad{
-        final AtomicLong counterDir = new AtomicLong(0);
-        final AtomicLong counterFile = new AtomicLong(0);
-        final MessageDataVo message = new MessageDataVo();
-        final String wsUserName;
-        final UserVo owner;
+	@Override
+	public byte[] getThumbnail(UserVo user, String uid) {
+		
+		final byte[] result = storageDao.getThumbnail( uid );
+		
+		if( result == null ) {
+			executorThumbnail.execute( () -> {
+				final BnFile file = storageDao.getFile(user, uid);
+				if( file != null ) {
+					
+				}
+			});
+		}
+				
+		return result;
+	}
+
+//	@Override
+	public List<DirectoryDto> getRootDirectory(UserVo user) {
+		List<DirectoryDto> result = new ArrayList<>();
+		List<BnDirectory> list = storageDao.getAdminRootStorage();
+		for( BnDirectory item : list ) {
+			final DirectoryDto add = new DirectoryDto(item);
+			result.add(add);
+		}
+		
+		return result; //dirManager.getAccessibleDirectoriesForGroup(user.getGroup().getGroupNo());
+		
+//		final BnDirectory result = storageDao.getRootDirectory(user);
+		
+//		storageDao.get
+		/*
+	SELECT 
+		DR.NO 
+		, DR.REG_DATE 
+		, DR.UPDATE_DATE 
+		, DR.UID 
+		, DR.PARENT_NO	
+		, DR.OWNER_NO 
+		, DR.CREATION 
+		, DR.LAST_MODIFIED 
+		, DR.NAME CHARACTER 
+		, DR.ABSOLUTE_PATH	
+		, DA.ACCESS_FLAGS
+	FROM BN_DIRECTORY DR
+	INNER JOIN BN_DIRECTORY_ACCESS DA
+	    ON DR.NO = DA.DIR_NO
+	INNER JOIN BN_USER_GROUP GR
+	    ON GR.NO = DA.GROUP_NO
+	WHERE 1=1
+	    AND GR.NO = 1
+	    AND BITAND( DA.ACCESS_FLAGS, 1) = 1
+		AND DR.ENABLED = TRUE
+		AND GR.ENABLED = TRUE
+	ORDER BY GR.NO
+
+	-- SELECT * FROM BN_USER_GROUP;
+
+	-- SELECT * FROM BN_DIRECTORY_ACCESS ;
+	
+	
+	<select id="selectTopGroup1Nodes" resultType="int">
+  <![CDATA[
+    WITH RECURSIVE data_tree AS (
+        SELECT no, parent_no
+        FROM data
+        WHERE `group` = 1
+
+        UNION ALL
+
+        SELECT d.no, d.parent_no
+        FROM data d
+        INNER JOIN data_tree dt ON dt.parent_no = d.no
+    )
+    SELECT DISTINCT no
+    FROM data_tree
+    WHERE no = parent_no
+  ]]>
+</select>
+
+
+
+H2 DB이다.
+BN_DIRECTORY, BN_DIRECTORY_ACCESS 를 이용해 아래 쿼리를 실행했더니 오류가 난다.
+
+	CREATE TABLE BN_DIRECTORY (
+		NO BIGINT PRIMARY KEY AUTO_INCREMENT
+		, ENABLED BOOLEAN DEFAULT FALSE NOT NULL -- 사용 여부. T:사용, F:미사용
+		, PARENT_NO	BIGINT NOT NULL	-- 부모 번호
+		, NAME CHARACTER VARYING(255) NOT NULL -- 순수  이름
+		, FOREIGN KEY(PARENT_NO) REFERENCES BN_DIRECTORY(NO) ON DELETE CASCADE
+	)
+
+
+	CREATE TABLE BN_DIRECTORY_ACCESS (
+		DIR_NO BIGINT NOT NULL
+		, GROUP_NO INT NOT NULL 
+		, ACCESS_FLAGS TINYINT NOT NULL
+		, PRIMARY KEY (DIR_NO, GROUP_NO)
+		, FOREIGN KEY(DIR_NO) REFERENCES BN_DIRECTORY(NO) ON DELETE CASCADE
+		, FOREIGN KEY(GROUP_NO) REFERENCES BN_USER_GROUP(NO) ON DELETE CASCADE
+	)
+
+BN_DIRECTORY는 PARENT_NO를 이용해 TREE NODE 구조를 갖고 있다.
+그래서 이 쿼리의 목적은 GROUP_NO = 4의 최 상위 노드 번호 NO를 구하는 것이다.
+	
+	
+WITH RECURSIVE DATA_TREE(NO, PARENT_NO, LEVEL) AS (
+    -- 시작: GROUP_NO = 4인 노드들
+    SELECT 
+    	DR.NO
+    	, DR.PARENT_NO
+    	, 1 AS LEVEL
+    FROM BN_DIRECTORY DR
+    	INNER JOIN BN_DIRECTORY_ACCESS DA 
+    		ON DR.NO = DA.DIR_NO
+    WHERE 1=1
+    	AND DR.ENABLED = TRUE 
+    	AND DA.GROUP_NO = 4
+
+    UNION ALL
+
+    -- 부모 방향으로 계속 올라가기
+    SELECT 
+    	D.NO
+    	, D.PARENT_NO
+    	, LEVEL + 1
+    FROM BN_DIRECTORY D
+    	INNER JOIN DATA_TREE DT 
+    		ON D.NO = DT.PARENT_NO
+    WHERE LEVEL < 20
+)
+SELECT DISTINCT NO
+FROM DATA_TREE
+-- WHERE PARENT_NO IS NULL;
+
+
+
+LIMIT 5 OFFSET 0 ;
+OFFSET 0: 1번째 row부터 시작
+LIMIT 5: 5개 row 조회
+
+
+WITH RECURSIVE DATA_TREE(NO, PARENT_NO, NAME LEVEL) AS (
+    -- 시작: GROUP_NO = 4인 노드들
+    SELECT 
+    	DR.NO
+    	, DR.PARENT_NO
+    	, DR.NAME
+    	, 1 AS LEVEL
+    FROM BN_DIRECTORY DR
+    	INNER JOIN BN_DIRECTORY_ACCESS DA 
+    		ON DR.NO = DA.DIR_NO
+    WHERE 1=1
+    	AND DR.ENABLED = TRUE 
+    	AND DA.GROUP_NO = 4
+
+    UNION ALL
+
+    -- 부모 방향으로 계속 올라가기
+    SELECT 
+    	D.NO
+    	, D.PARENT_NO
+    	, D.NAME
+    	, LEVEL + 1
+    FROM BN_DIRECTORY D
+    	INNER JOIN DATA_TREE DT 
+    		ON D.NO = DT.PARENT_NO
+    WHERE LEVEL < 20
+)
+SELECT DISTINCT NAME
+FROM DATA_TREE
+-- WHERE PARENT_NO IS NULL;
+
+
+WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
+	SELECT 
+		D.NO, D.PARENT_NO, D.NAME 
+	FROM BN_DIRECTORY D
+	
+	UNION ALL
+	
+	SELECT 
+		DR.NO, DR.PARENT_NO, DR.NAME 
+	FROM BN_DIRECTORY DR 
+		INNER JOIN DATA_PATH DP ON DR.PARENT_NO = DP.NO 
+	
+) SELECT * FROM DATA_PATH
+
+		*/
+	}
+		
+	@Override
+	public List<DirectoryDto> getDirectory(UserVo user, String uid) {
+		
+		
+		List<DirectoryDto> result = this.getRootDirectory(null);//  dirManager.getAccessibleDirectoriesForGroup(user.getGroup().getGroupNo());
+//		
+//		if( BurrowUtils.isEmpty(uid) ) {
+//			log.info("루트 호출");
+//		}else{
+//			final DirectoryDto dir = dirManager.getDirectoryForGroup(user.getGroup().getGroupNo(), uid);
+//			if( dir != null ) {
+//				dir.setSelected(true);
+//			}
+//		}
+		
+		return result;
+	}
+
+	@Override
+	public List<String> getPaths(UserVo user, BnDirectory dir) {
+		final List<String> result = this.storageDao.getPaths(user, dir);
+		return result;
+	}
+	
+	@Override
+	public BnDirectory getParentDirectory(UserVo user, String uid) {
+		final BnDirectory result = this.storageDao.getParentDirectory(user, uid);
+		
+		return result;
+	}
+
+	@Override
+	public List<AbsPath> getFiles(UserVo user, String uid) {
+		
+		final long groupNo = user.getGroup().getGroupNo();
+		final List<AbsPath> result = new ArrayList<>();
+		
+//		final DirectoryDto dir = dirManager.getDirectoryForGroup(groupNo, uid); //this.storageDao.getDirectory(user, uid);
+//		if( dir == null ) {
+//			return result;
+//		}
+//		
+//		List<DirectoryDto> directories = dirManager.getAccessibleChildren(groupNo, uid);
+//		if( BurrowUtils.isNotEmpty(directories) ) {
+//			for( DirectoryDto dto : directories ) {
+//				result.add(dto.getOwner());
+//			}
+//		}
+//
+//		final List<BnFile> files = this.storageDao.getFiles(user, dir.getOwner());
+//		if( BurrowUtils.isNotEmpty(files) )
+//			result.addAll( files );
+		
+		return result;
+	}
+	
+	@Override
+	public BnFile getFile(UserVo user, String uid) {
+		
+		final BnFile file = this.storageDao.getFile( user, uid );
+		
+		return file;
+	}
+	
+	@Override
+	public List<BnDirectory> getGroupStorageList(long groupNo) {
+		
+		return this.storageDao.getRootDirectory( groupNo );
+	}
+	
+	@Override
+	public List<BnDirectory> getAdminRootStorage() {
+		return this.storageDao.getAdminRootStorage();
+	}
+	
+	@Autowired
+	DirectoryMapper directoryMapper;
+	
+	@Override
+    public DirContextResponse buildContext(UserVo user, String uid) {
+        // 1) 타깃 노드 결정: uid 없으면 사용자 접근 가능한 루트, 있으면 해당 uid
+        DirNodeRow node = (uid == null || uid.isBlank())
+                ? directoryMapper.selectDefaultRootForUser(user.getUserNo()) // 없으면 시스템 루트 반환하도록 쿼리 설계
+                : directoryMapper.selectByUid(uid);
+
+        if (node == null) return null;
+
         
-        public InitFileLoad(String userName, UserVo owner) {
-			this.wsUserName = userName;
-			this.owner = owner;
-		}
-    }
-    
-    /*
-		AtomicLong counter = new AtomicLong(0);
-		counter.incrementAndGet();// 증가
-		counter.decrementAndGet();// 감소
-		long value = counter.get();// 현재 값 읽기
-		counter.set(100L);// 값 설정
-     */
-    
-    private class LoadFile implements Runnable{
-    	private final File file;
-    	private final InitFileLoad ifl;
-    	private final BnDirectory parent;
-    	
-    	public LoadFile(File file, InitFileLoad ifl, BnDirectory parent) {
-			this.file = file;
-			this.ifl = ifl;
-			this.parent = parent;
-		}
-    	
-    	@Override
-    	public void run() {
-    		// 파일 추가 및 확장자 분석.
-    		final long fileCount = this.ifl.counterFile.incrementAndGet();
-    		
-    		{
-    			// 파일 읽을 때도 가끔 메시지 쏘자.
-        		if( fileCount % 10L == 0L ) {
-        			ifl.message.setProgress( fileCount );
-        			messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, ifl.message);
-        		}
-    		}
-    		
-    		final BnFile bnFile;
-    		try {
-				bnFile = StorageUtils.getFileInfo(file);
-			} catch (Exception e) {
-				log.error("", e);
-				return;
-			}
-    		
-    		bnFile.setParentNo(this.parent.getNo());
-    		bnFile.setEnabled(true);
-    		bnFile.setOwnerNo(ifl.owner.getUserNo());
-    		
-    		final EBnFileType fileType = mapFileType.containsKey( bnFile.getExtension() )? mapFileType.get(bnFile.getExtension()):EBnFileType.Basic;
-    		bnFile.setFileType(fileType);
-    		
-    		try {
-				if( storageDao.saveFile(bnFile) < 0 ) {
-					log.warn("파일 저장 실패: " + bnFile);
-					return;
-				}
-			} catch (Exception e) {
-				log.error("", e);
-				return;
-			}
-    		
-    		{
-    			// 파일 섬네일 추출
-    			try {
-    				final byte [] thumbnail = StorageUtils.getFileThumbnail(file, bnFile);
-    				if( thumbnail != null ) {
-    					storageDao.saveThumbnail(bnFile, thumbnail);
-    				}
-				} catch (Exception e) {
-					log.error("섬네일 실패", e);
-				}
-    		}
-    		
-    		{
-    			// 확장 정보 저장
-        		AbsBnFileInfo fileInfo = null;
-        		try {
-            		switch( fileType ) {
-            		case Basic: fileInfo = null; break;
-            		case Document: fileInfo = StorageUtils.getFileInfoDocument(file, bnFile); break;
-            		case Image: fileInfo = StorageUtils.getFileInfoImage(file, bnFile); break;
-            		case Video: fileInfo = StorageUtils.getFileInfoVideo(file, bnFile); break;
-            		case Audio: fileInfo = StorageUtils.getFileInfoAudio(file, bnFile); break;
-            		case Archive: fileInfo = StorageUtils.getFileInfoArchive(file, bnFile); break;
-            		}
-    			} catch (Exception e) {
-    				log.error("확장 정보 추출 실패", e);
-    				fileInfo = null;
-    			}
-        		
-        		if( fileInfo != null ) {
-        			bnFile.setInfo(fileInfo);
-        			try {
-    					storageDao.saveFileInfor(bnFile);
-    				} catch (Exception e) {
-    					log.error("확장 정보 저장 실패", e);
-    				}
-        		}
-    		}
-    		
-    	}
-    }
-    
-    private void procLoadDir(File f, InitFileLoad ifl, BnDirectory parent ) {
-    	
-    	final File [] files = f.listFiles();
-    	if( files == null || files.length < 1 ) {
-    		return;
-    	}
-    	
-		{
-			final File[] tmp = f.listFiles(file -> file.isFile());
-			final int count = tmp != null ? tmp.length : 0;
-			if( count > 0 ) ifl.counterDir.addAndGet( count );
-		}
-    	
-    	ifl.message.setMessage("Loading... [" + f.getName() + "]");
-    	ifl.message.setTotal( ifl.counterDir.get() );
-    	ifl.message.setProgress( ifl.counterFile.get() );
-		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, ifl.message);
+        final long nodeNo = node.getNo();
+        
+        // 2) 조상(루트→부모) 목록
+        List<DirNodeRow> ancestors = directoryMapper.selectAncestorsByNo(nodeNo);
 
-		final long parentDirNo = parent.getNo();
-		final int ownerUserNo = ifl.owner.getUserNo();
-		
-		for( File file : files ) {
-			if( file.isDirectory() ) {
-				// directory 추가.
-				final BnDirectory childDir;
-				
-				try {
-					childDir = StorageUtils.getDirectoryInfo(file);
-					childDir.setEnabled(true);
-					childDir.setPublicAccessible(true);
-					childDir.setParentNo( parentDirNo );
-					childDir.setOwnerNo( ownerUserNo );
-					if( storageDao.saveDirectory( childDir ) < 1 ) {
-						log.warn("Dir 저장 실패: " + childDir);
-					};
-					
-				} catch (Exception e) {
-					log.error("", e);
-					continue;
-				}
+        // 3) 현재 노드 유효 권한 플래그 (Allow 상속 OR-집계)
+        Integer effectiveFlags = directoryMapper.selectEffectiveFlags(user.getUserNo(), nodeNo);
+        if (effectiveFlags == null) effectiveFlags = 0;
 
-				this.procLoadDir( file, ifl, childDir );
-			}else {
-				// 파일 추가.
-				executor.execute( new LoadFile( file, ifl, parent ) );
-			}
-		}
-    }
-    
-    @SuppressWarnings("unused")
-	private class LibDownLoad implements Runnable{
-    	final InitInforReqVo req;
-    	final InitFileLoad ifl;
-    	
-    	public LibDownLoad(InitInforReqVo req, InitFileLoad ifl) {
-			this.req = req;
-			this.ifl = ifl;
-		}
-    	
-    	@Override
-    	public void run() {
-        	final MessageDataVo message = ifl.message;
+        // 4) 자식 목록(읽기 권한 있는 것만) + hasChild 계산 포함
+        List<DirNodeRow> children = directoryMapper.selectChildrenReadable(user.getUserNo(), nodeNo);
 
-        	final String os = System.getProperty("os.name").toLowerCase();
-    		log.info( "현재 OS: " + os );
-            
-            if (os.contains("windows")) {
-            	message.setMessage("파일 로딩 준비");
-        		
-        		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-        		delay();
-            	new Thread( new BeginFileLoad(req, ifl) ).start();
-            	return;
-            }
-            
-            {
-            	// ffmpeg 설치 여부 확인
-                final List<String> result = CommandUtil.workExe("ffmpeg", "-version");
-
-                if (result.isEmpty() || result.get(0).contains("command not found")) {
-            		log.info( "ffmpeg 설치 진행" );
-                    message.setMessage("ffmpeg를 설치합니다...");
-            		
-            		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-            		delay();
-                    
-                    // ffmpeg 설치 명령 실행
-            		final List<String> installResult = CommandUtil.workExe("apt", "install", "-y", "ffmpeg");
-
-                    if (installResult.isEmpty()) {
-                        message.setMessage("ffmpeg를 설치 실패했습니다.");
-                		
-                		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-                		delay();
-                        return;
-                    }else {
-                    	log.info( "ffmpeg 설치: " + result.get(0) );
-                    }
-                }else {
-                	log.info( "ffmpeg 설치된 버전: " + result.get(0) );
-                }
-            }
-    		
-            {
-            	// exiftool 설치 여부 확인
-                final List<String> result = CommandUtil.workExe("exiftool", "-ver");
-                
-                if( result != null && !result.isEmpty() ) {
-                	final String line = result.get(0);
-                	
-                    if ( line.contains("command not found")) {
-                		log.info( "exiftool 설치 진행" );
-                        message.setMessage("exiftool를 설치합니다...");
-                		
-                		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-                		delay();
-                        
-                        // ffmpeg 설치 명령 실행
-                		final List<String> installResult = CommandUtil.workExe("apt", "install", "-y", "exiftool");
-
-                        if (installResult.isEmpty()) {
-                            message.setMessage("exiftool를 설치 실패했습니다.");
-                    		
-                    		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-                    		delay();
-                            return;
-                        }else {
-                        	log.info( "exiftool 설치: " + line );
-                        }
-                    }else {
-                    	log.info( "exiftool 설치된 버전: " + line );
-                    }
-                	
-                }else {
-                	log.info("설치 오류...");
-                }
-
-            }
-            
-            new Thread( new BeginFileLoad(req, ifl) ).start();
-    	}
+        // 5) DTO 변환
+        DirContextResponse resp = new DirContextResponse();
+        resp.setNode(toDto(node, true));
+        resp.setAncestors(ancestors.stream().map(r -> toDto(r, false)).toList());
+        resp.setChildren(children.stream().map(r -> toDto(r, false)).toList());
+        resp.setBreadcrumbs(buildBreadcrumbs(ancestors, node));
+        resp.setEffectiveFlags(effectiveFlags);
+        return resp;
     }
 
-    /**
-     * 최초 시작 파일 로드
-     */
-    private class BeginFileLoad implements Runnable{
-    	
-    	final InitInforReqVo req;
-    	final InitFileLoad ifl;
-    	
-    	public BeginFileLoad(InitInforReqVo req, InitFileLoad ifl) {
-			this.req = req;
-			this.ifl = ifl;
-		}
-    	
-    	@Override
-		public void run() {
-			
-    		final MessageDataVo message = ifl.message;
-    		delay();
-    		
-    		BnDirectory rootDir;
-			try {
-				rootDir = storageDao.InsertRootDirectory();
-			} catch (Exception e) {
-				log.error("", e);
-				message.setMessage(e.getMessage());
-				
-				messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-				delay();
-				return;			
-			}
-			
-			final long parentNo = rootDir.getNo();
-			final int ownerUserNo = ifl.owner.getUserNo();
-			final List<String> list = req.getRoots();
-			for( String s : list ) {
-				log.info("Begin FileLoad : " + s);
-				
-				final File file = new File(s);
-				final BnDirectory parentDir;
-				
-				try {
-					parentDir = StorageUtils.getDirectoryInfo(file);
-					parentDir.setEnabled(true);
-					parentDir.setPublicAccessible(true);
-					parentDir.setParentNo( parentNo );
-					parentDir.setOwnerNo( ownerUserNo );
-					if( storageDao.saveDirectory( parentDir ) < 1 ) {
-						log.warn("Dir 저장 실패: " + parentDir);
-					};
-					
-				} catch (Exception e) {
-					log.error("", e);
-					continue;
-				}
+    private DirNodeDto toDto(DirNodeRow r, boolean selected) {
+        DirNodeDto dto = new DirNodeDto();
+        dto.setOwner(r.getUid(), r.getName());
+        dto.setHasChild(r.isHasChild());
+//        dto.setEffectiveFlags(null); // 필요시 개별 노드에 표시
+        dto.setSelected(selected);
+        dto.setChild(List.of());     // 지연로딩 기본 비움
+        return dto;
+    }
 
-				procLoadDir( file, ifl, parentDir );
-			}
-			
-			log.info("FileLoad Complete.");
-			
-			executor.shutdown(); // 작업 제출 중단 (기존 작업은 계속 실행됨)
+    private List<String> buildBreadcrumbs(List<DirNodeRow> ancestors, DirNodeRow node) {
+        List<String> names = new ArrayList<>();
+        for (DirNodeRow a : ancestors) names.add(a.getName());
+        names.add(node.getName());
+        return names;
+    }
+	
+    @Override
+    @Transactional(readOnly = true)
+    public List<DirNodeDto> findAllowedRoots(UserVo user) {
+        List<DirNodeRow> rows = directoryMapper.selectAllowedRoots(user.getUserNo());
+        return rows.stream()
+                .map(r -> {
+                    DirNodeDto dto = new DirNodeDto();
+                    dto.setOwner(r.getUid(), r.getName());
+                    dto.setHasChild(r.isHasChild());
+//                    dto.setEffectiveFlags(null);     // 원하면 집계 플래그 넣어도 됨
+                    return dto;
+                })
+                .toList();
+    }
 
-			boolean finished = false;
-			try {
-				finished = executor.awaitTermination(10000, TimeUnit.SECONDS);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			
-			log.info("파일 로딩 종료 작업 : " + finished);
-			
-			message.setMessage("작업 완료");
-			message.setDone(finished);
-			
-			messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-		}
-	}
-    
-    
+	
 	@Override
-	public ReturnBasic saveInitStorage(InitInforReqVo req) {
-
-		final InitFileLoad ifl = new InitFileLoad(req.getWsUserName(), userDao.getManageUser());
-		
-		final MessageDataVo message = ifl.message;
-		message.setDone(false);
-		message.setProgress(0);
-		message.setProgress(10);
-		message.setMessage("준비");
-		
-		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
-		delay();
-		
-//		new Thread( new LibDownLoad(req, ifl) ).start();
-		new Thread( new BeginFileLoad(req, ifl) ).start();
-		
-		return new ReturnBasic();
+	public ChildrenResponse findChildren(UserVo user, String uid, int page, int size, Object object) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override
-	public byte[] getThumbnail(String fid) {
-		return storageDao.getThumbnail( fid );
+	public BnDirectory getAdminTopStorage() {
+		return storageDao.getRootDirectory();
+	}
+	@Override
+	public List<BnDirectory> getGroupStorageList(long groupNo, long dirNo) {
+		List<BnDirectory> result = storageDao.getGroupStorageList( groupNo, dirNo );
+		return result;
+	}
+	
+	@Override
+	public ReturnBasic removeGroupStorage(long groupNo, long dirNo) {
+		final ReturnBasic result = new ReturnBasic();
+		
+		try {
+			storageDao.removeGroupStorage( groupNo, dirNo );
+		} catch (Exception e) {
+			result.setCodeMessage("E", e.getMessage());
+		}
+		
+		return result;
 	}
 }

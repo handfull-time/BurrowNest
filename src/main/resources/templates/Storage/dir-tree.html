@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>🐇 BurrowNest</title>
+    <meta charset="UTF-8">
+
+   	<th:block th:replace="~{Common/Favicon :: Favicon}"></th:block>
+
+    <script type="text/javascript" th:src="@{/js/tailwind/tailwind.min.js}"></script>
+    
+    <style>
+	</style>
+		
+</head>
+<body class="h-screen flex flex-col">
+	<div class="p-2 text-sm">
+	  <!-- 좌측 트리 -->
+	  <ul id="tree" class="list-disc pl-4" role="tree"></ul>
+
+	  <script th:inline="javascript">
+	  // ---- 최소 유틸 ----
+	  const API = (uid) => `/Burrow/Test/List.json?uid=${encodeURIComponent(uid||'')}`;
+
+	  // 서버 응답: 배열 또는 {childs:[...]} 둘 다 허용
+	  const parseChildren = (data) => Array.isArray(data) ? data : (data && Array.isArray(data.childs) ? data.childs : []);
+
+	  // li 생성(텍스트만, 클릭 시 OnSelected 호출)
+	  function makeItem(node){
+	    const li = document.createElement('li');
+	    li.dataset.uid = node.uid;
+
+	    const btn = document.createElement('button');
+	    btn.type = 'button';
+	    btn.textContent = node.name || '(이름 없음)';
+	    btn.className = 'hover:underline';
+	    btn.addEventListener('click', (e) => {
+	      e.stopPropagation();
+	      OnSelected(node);
+	    });
+
+	    li.appendChild(btn);
+	    return li;
+	  }
+
+	  // 하위 목록 그리기: li 바로 아래에 <ul> 하나 만들어서 갈아끼움
+	  function renderChildrenUnder(li, children){
+	    let ul = li.querySelector(':scope > ul');
+	    if (!ul) {
+	      ul = document.createElement('ul');
+	      ul.className = 'list-disc pl-4';
+	      li.appendChild(ul);
+	    }
+	    ul.textContent = ''; // 이전 내용 제거
+
+	    if (!children.length) {
+	      const empty = document.createElement('li');
+	      empty.textContent = '(빈 폴더)';
+	      empty.className = 'text-gray-500';
+	      ul.appendChild(empty);
+	      return;
+	    }
+	    for (const ch of children) ul.appendChild(makeItem(ch));
+	  }
+
+	  // 요구사항 함수: OnSelected(node) — API만 호출해서 하위 ul을 다시 그림
+	  async function OnSelected(node){
+	    const uid = node?.uid || node?.owner?.uid || '';
+	    const li = document.querySelector(`li[data-uid="${CSS.escape(uid)}"]`);
+	    if (!uid || !li) return;
+
+	    try {
+	      const res = await fetch(API(uid), { cache: 'no-store' });
+	      if (!res.ok) throw new Error('dir list fetch failed');
+	      const data = await res.json();
+	      const children = parseChildren(data);
+	      renderChildrenUnder(li, children);
+	    } catch (e) {
+	      console.error(e);
+	      // 간단 에러 표기
+	      renderChildrenUnder(li, []);
+	      li.querySelector(':scope > ul > li')?.replaceChildren(document.createTextNode('(로드 실패)'));
+	    }
+	  }
+
+	  // 초기 로드: 컨트롤러가 내려준 uid 기준으로 첫 레벨만 그림
+	  (async function init(){
+	    const rootUid = /*[[${uid}]]*/ null;  // 모델에 있는 쪽 사용
+	    if (!rootUid) return;
+
+	    const tree = document.getElementById('tree');
+	    tree.textContent = ''; // 초기화
+
+	    // 루트 자체를 항목처럼 만든 뒤, 하위 목록을 채우는 방식
+	    const rootLi = makeItem({ uid: rootUid, name: '루트' });
+	    tree.appendChild(rootLi);
+
+	    try {
+	      const res = await fetch(API(rootUid), { cache: 'no-store' });
+	      if (!res.ok) throw new Error('dir list fetch failed');
+	      const data = await res.json();
+	      const children = parseChildren(data);
+
+	      // 루트 하위 그리기
+	      renderChildrenUnder(rootLi, children);
+	    } catch (e) {
+	      console.error(e);
+	      renderChildrenUnder(rootLi, []);
+	      rootLi.querySelector(':scope > ul > li')?.replaceChildren(document.createTextNode('(로드 실패)'));
+	    }
+	  })();
+	  </script>
+	</div>
+
+</body>
+</html>

@@ -1,15 +1,15 @@
 package com.utime.burrowNest.storage.vo;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
+
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
  * Represents metadata and analysis results for an audio file stored in BN_FILE_AUDIO table.
  */
 @Setter
 @Getter
-@ToString( callSuper = true)
 public class BnFileAudio extends AbsBnFileInfo{
 	
 	/**
@@ -101,4 +101,9 @@ public class BnFileAudio extends AbsBnFileInfo{
      * 트랙의 재생 길이(초)
      */
     private String duration;
+    
+    @Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
+	}
 }

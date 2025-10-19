@@ -1,4 +1,4 @@
-package com.utime.burrowNest.storage.service.impl;
+package com.utime.burrowNest.root.service.impl;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -16,7 +17,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.sql.Timestamp;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
@@ -61,11 +61,32 @@ class StorageUtils {
 	private final static String Exiftool;
 	
 	static {
-		if( BurrowDefine.IsLinux ) {
-			Exiftool = "exiftool";
-		}else {
-			Exiftool = new File("D:\\Projects\\OtherTools\\exiftool-13.28_64", "exiftool.exe").getAbsolutePath();
-		}
+        // 애플리케이션 시작 시 DB 설정 파일만 로드 (커넥션 풀 초기화는 지연)
+        try (InputStream input = StorageUtils.class.getClassLoader().getResourceAsStream("env.properties")) {
+            if (input == null) {
+                log.error("Error: db.properties file not found in classpath.");
+                throw new RuntimeException("db.properties file not found.");
+            }
+            
+            final Properties config = new Properties();
+            config.load(input);
+            
+            final InetAddress localHost = InetAddress.getLocalHost();
+            String hostName = localHost.getHostName();
+            log.info("hostName : {}", hostName);
+            
+    		if( BurrowDefine.IsLinux ) {
+    			Exiftool = "exiftool";
+    		}else {
+    			Exiftool = new File(config.getProperty(hostName + ".exiftool")).getAbsolutePath();
+    		}
+
+    		log.info("db.properties loaded successfully.");
+        } catch (Exception ex) {
+            log.error("Fatal error during database configuration loading.", ex);
+            throw new RuntimeException("Failed to load database configuration.", ex);
+        }
+
 	}
 	
 	
@@ -580,8 +601,8 @@ App Version                     : 16.0300
         try {
         	final BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
 
-            result.setCreation( new Timestamp(attrs.creationTime().toMillis()) );
-            result.setLastModified( new Timestamp(attrs.lastModifiedTime().toMillis()) );
+            result.setCreation( BurrowUtils.convertToLocalDateTime(attrs.creationTime()) );
+            result.setLastModified( BurrowUtils.convertToLocalDateTime(attrs.lastModifiedTime()) );
 
         } catch (Exception e) {
         	log.error("dir 오류", e);
@@ -605,8 +626,8 @@ App Version                     : 16.0300
 	        // 기본 정보
 	        final Path path = file.toPath();
 	        final BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
-            result.setCreation( new Timestamp(attrs.creationTime().toMillis()) );
-            result.setLastModified( new Timestamp(attrs.lastModifiedTime().toMillis()) );
+            result.setCreation( BurrowUtils.convertToLocalDateTime(attrs.creationTime()) );
+            result.setLastModified( BurrowUtils.convertToLocalDateTime(attrs.lastModifiedTime()) );
 
 	        // 이름 및 확장자
             final String fullName = file.getName();

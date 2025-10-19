@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFileExtension;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 
@@ -22,13 +23,14 @@ public interface StorageBasicMapper {
 	/**
 	 * 루트 생성
 	 */
-	int InsertRootDirectory();
+	int InsertRootDirectory(BnDirectory dir);
 	
 	/**
 	 * dir 접근 권한 테이블 생성
 	 * @return
 	 */
 	int CreateDirectoryAccess();
+	
 	/**
 	 * 파일 테이블 생성 
 	 * @return

@@ -1,5 +1,8 @@
 package com.utime.burrowNest.user.vo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.utime.burrowNest.common.util.BurrowUtils;
+
 /**
  * 고유 요청 정보
  */
@@ -8,6 +11,7 @@ public class ReqUniqueVo {
 	protected String token;
 	protected String ip;
 	protected String rsaId;
+	@JsonIgnore
 	protected String publicKey;
 	
 	public String getToken() {
@@ -36,6 +40,6 @@ public class ReqUniqueVo {
 	}
 	@Override
 	public String toString() {
-		return "ReqUniqueVo [token=" + token + ", ip=" + ip + ", rsaId=" + rsaId + "]";
+		return BurrowUtils.toJson(this);
 	}
 }

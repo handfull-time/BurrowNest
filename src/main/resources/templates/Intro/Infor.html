@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <title>🐇 BurrowNest 설치 마법사</title>
     
+    <link rel="stylesheet" th:href="@{/css/tailwind/tailwind.min.css}">
     <th:block th:replace="~{Common/Favicon :: Favicon}"></th:block>
 
-    <script type="text/javascript" th:src="@{/js/tailwind/tailwind.min.js}"></script>
+    <!-- <script type="text/javascript" th:src="@{/js/tailwind/tailwind.min.js}"></script> -->
     <script type="text/javascript" th:src="@{/js/jsencrypt/jsencrypt.min.js}"></script>
     
     <script type="text/javascript" th:src="@{/js/websocket/sockjs.min.js}"></script>
@@ -48,8 +49,8 @@
 	            <div id="PageAgree" class="intro-page hidden" th:insert="~{Intro/PageAgree :: content}"></div>
  	            <div id="PagePasswd" class="intro-page hidden" th:insert="~{Intro/PagePasswd :: content}"></div>
 	            <div id="PageStorageLib" class="intro-page hidden" th:insert="~{Intro/PageStorageLib:: content}"></div>
-	            <div id="PageStorageSelect" class="intro-page hidden" th:insert="~{Intro/PageStorageSelect :: content}"></div>
-	            <div id="PageStorageLoad" class="intro-page hidden" th:insert="~{Intro/PageStorageLoad :: content}"></div>
+	            <!-- <div id="PageStorageSelect" class="intro-page hidden" th:insert="~{Intro/PageStorageSelect :: content}"></div>
+	            <div id="PageStorageLoad" class="intro-page hidden" th:insert="~{Intro/PageStorageLoad :: content}"></div> -->
 	            <div id="PageComplete" class="intro-page hidden" th:insert="~{Intro/PageComplete :: content}"></div>
             </form>
         </div>

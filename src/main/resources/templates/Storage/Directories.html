@@ -1,136 +1,259 @@
-<div th:fragment="directories" xmlns:th="http://www.thymeleaf.org" class="p-2 text-sm bg-white text-black select-none">
-  <ul id="directoryTree" class="space-y-1">
-    <li th:replace="~{this :: directoryNode(dir=${directoryTree})}"></li>
-  </ul>
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="directories"
+	class="p-2 text-sm bg-white text-black select-none">
 
-  <!-- 템플릿은 자바스크립트에서만 사용 -->
-  <template id="dirItemTemplate">
-    <li>
-      <div class="flex items-center gap-1">
-        <button class="toggle-btn text-blue-600" data-path="" data-loaded="false">[+]</button>
-        <span class="grow text-black cursor-pointer" data-path="">폴더명</span>
-      </div>
-      <ul class="pl-4 hidden" data-children-for=""></ul>
-    </li>
-  </template>
-</div>
+	<div id="tree"
+		class="max-w-xl mx-auto bg-white shadow rounded-lg p-4 font-mono text-sm"
+		role="tree"></div>
 
-<li xmlns:th="http://www.thymeleaf.org"  th:fragment="directoryNode(dir)">
-  <div class="flex items-center gap-1">
-    <button th:if="${dir.hasChildren}" class="toggle-btn text-blue-600" th:attr="data-path=${dir.path}" data-loaded="false">[+]</button>
-    <span class="grow text-black cursor-pointer"
-          th:attr="data-path=${dir.path}"
-          th:classappend="${dir.selected} ? ' bg-blue-100' : ''"
-          th:text="${dir.name}">폴더명</span>
-  </div>
-  
-  <th:block th:if="${dir.subDirectories != null and !dir.subDirectories.isEmpty()}">
-  	<th:block th:each="sub : ${dir.subDirectories}">
-	  	<ul class="pl-4" th:data-children-for="${sub.path}" >
-	    	<li th:replace="~{this :: directoryNode(dir=${sub})}"></li>
-	  	</ul>
-  	</th:block> 
-  </th:block>
-  <th:block th:unless="${dir.subDirectories == null or dir.subDirectories.isEmpty()}">
-  	<ul class="pl-4 hidden" data-children-for="" ></ul>
-  </th:block>
-</li>
+	<template id="treeNodeTemplate">
+		<li class="mb-1" role="treeitem">
+			<div class="flex items-center space-x-1 cursor-pointer group"
+				data-node="true">
+				<svg class="chevron w-4 h-4 text-gray-500 transition-transform"
+					viewBox="0 0 24 24" fill="none" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+				</svg>
+				<svg class="folder-icon w-5 h-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+					<!-- 아이콘은 JS에서 open/close 교체 -->
+				</svg>
+				<span class="folder-label"></span>
+			</div>
+		</li>
+	</template>
 
-<script xmlns:th="http://www.thymeleaf.org" th:fragment="script" th:inline="javascript">
+	<th:script th:replace="~{Storage/StorageScript :: script}" />
+	<th:div th:replace="~{Storage/CustomSubMenu :: customMenu}" />
+	<script th:inline="javascript">
 
-async function innerLoad(template, toggleBtn, container, parentPath){
-	try {
-		let urlAddress = /*[[@{/Dir/List.json}]]*/ null;
-		urlAddress += '?path=' + encodeURIComponent(parentPath);
-		
-		console.info('urlAddress', urlAddress);
-		
-		const response = await fetch(`${urlAddress}`, {
-			 method: "GET",
-			 credentials: "include"
-		});
-		const list = await response.json();
-		
-		list.forEach(item => {
-			const clone = template.content.cloneNode(true);
-			const btn = clone.querySelector('.toggle-btn');
-			const label = clone.querySelector('span[data-path]');
-			const ul = clone.querySelector('ul');
-			
-			const fullPath = `${parentPath.replace(/\/$/, "")}/${item.name}`;
-			
-			// 라벨 설정
-			label.textContent = item.name;
-			label.dataset.path = fullPath;
-			
-			// 버튼 설정
-			if (item.hasChildren) {
-				btn.dataset.path = fullPath;
-				btn.dataset.loaded = "false";
-				btn.textContent = "[+]";
-			} else {
-				btn.remove();
-			}
-
-			// 하위 디렉토리 컨테이너 설정
-			if (ul) {
-				ul.dataset.childrenFor = fullPath;
-				ul.classList.remove("hidden"); // 또는 기본은 hidden 유지
-			}
-			
-			container.appendChild(clone);
-		});
-		
-		toggleBtn.dataset.loaded = "true";
-	} catch (err) {
-		console.error("디렉토리 로딩 실패:", err);
-	}
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-	const treeRoot = document.getElementById("directoryTree");
-	const template = document.getElementById("dirItemTemplate");
+	const closedFolder = `
+		  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v1H2V6z"/>
+		  <path d="M2 9h16v5a2 2 0 01-2 2H4a2 2 0 01-2-2V9z"/>
+		`;
 	
-	treeRoot.addEventListener("click", async (e) => {
-		const toggleBtn = e.target.closest(".toggle-btn");
-		if (toggleBtn) {
-			const parentPath = toggleBtn.dataset.path;
-			const li = toggleBtn.closest("li");
-			let container = li.querySelector(`ul[data-children-for="${parentPath}"]`);
+	const openFolder = `
+		  <path d="M3 4a2 2 0 012-2h4l2 2h6a2 2 0 012 2v1H3V4z"/>
+		  <path d="M2 8h17l-1.5 6.5a2 2 0 01-2 1.5H5a2 2 0 01-2-2V8z"/>
+		`;
 
-			// 없으면 새로 생성
-			if (!container) {
-				container = document.createElement("ul");
-				container.classList.add("pl-4");
-				container.dataset.childrenFor = parentPath;
-				li.appendChild(container);
-			}
-			
-			// 펼치기/접기 토글
-			if (toggleBtn.textContent === "[+]") {
-				toggleBtn.textContent = "[-]";
-				
-				if (! (toggleBtn.dataset.loaded === "true")) {
-					await innerLoad(template, toggleBtn, container, parentPath );
-				}
-			} else {
-				container.classList.add("hidden");
-				toggleBtn.textContent = "[+]";
-			}
-			
-			return;
-		}
+	function createTree(directories, container) {
+	  const rootUl = document.createElement("ul");
+	  rootUl.setAttribute("role", "tree");
+	  directories.forEach(dir => {
+	    rootUl.appendChild(createTreeNode(dir, false));
+	  });
+	  container.innerHTML = '';
+	  container.appendChild(rootUl);
+	}
+	
+	function createTreeNode(node, parentOpened = false) {
+	  const template = document.getElementById("treeNodeTemplate");
+	  const clone = template.content.cloneNode(true);
+	  const li = clone.querySelector('li');
+	  const row = clone.querySelector('[data-node]');
+	  const chevron = clone.querySelector('.chevron');
+	  const folderIcon = clone.querySelector('.folder-icon');
+	  const label = clone.querySelector('.folder-label');
+
+	  row._nodeData = node;
+	  node.row = row;
+	  label.textContent = node.owner.name;
+
+	  let isOpen = false;
+
+	  if (node.child && node.child.length > 0) {
+	    const ul = document.createElement('ul');
+	    ul.className = "ml-6 mt-1 space-y-1 hidden";
+	    ul.dataset.childDirectories = "";
+
+	    node.child.forEach(child => {
+	      const childNode = createTreeNode(child, false);
+	      if (childNode?.dataset?.containsSelected === "true") {
+	        isOpen = true;
+	      }
+	      ul.appendChild(childNode);
+	    });
+
+	    if (isOpen || node.selected || parentOpened) {
+	      row.classList.add("open");
+	      ul.classList.remove("hidden");
+	      chevron.classList.add("rotate-90");
+	      folderIcon.innerHTML = openFolder;
+	      folderIcon.setAttribute("aria-expanded", "true");
+
+	      if (node.selected) {
+	        label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+	      }
+
+	      li.dataset.containsSelected = "true";
+	    } else {
+	      folderIcon.innerHTML = closedFolder;
+	      folderIcon.setAttribute("aria-expanded", "false");
+	    }
+
+	    li.appendChild(ul);
+
+	    row.addEventListener("click", (e) => {
+	      e.stopPropagation();
+	      row.classList.toggle("open");
+	      ul.classList.toggle("hidden");
+	      chevron.classList.toggle("rotate-90");
+	      const isNowOpen = row.classList.contains("open");
+	      folderIcon.innerHTML = isNowOpen ? openFolder : closedFolder;
+	      folderIcon.setAttribute("aria-expanded", isNowOpen);
+
+	      document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
+	      label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+
+		  renderBreadcrumbTrail(row); 
+		  onSelected(node);
+	    });
+	  } else {
+	    chevron.classList.add("opacity-0");
+	    folderIcon.innerHTML = closedFolder;
+	    folderIcon.setAttribute("aria-expanded", "false");
+
+	    if (node.selected) {
+	      label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+	      li.dataset.containsSelected = "true";
+	    }
+
+	    row.addEventListener("click", (e) => {
+	      e.stopPropagation();
+	      document.querySelectorAll(".folder-label").forEach(el => el.classList.remove("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded"));
+	      label.classList.add("text-blue-600", "font-bold", "bg-blue-100", "px-1", "rounded");
+
+		  renderBreadcrumbTrail(row); 
+		  onSelected(node);
+	    });
+	  }
+
+	  if (node.selected) {
+		  setTimeout(() => {
+		    renderBreadcrumbTrail(row); 
+		    onSelected(node);
+		  }, 0);
+	  }
+
+	  return li;
+	}
+
+    const storage = new BnStorage();
+
+    function highlightTreeSelection(uid) {
+   	  // 트리에서 선택된 항목만 강조
+   	  document.querySelectorAll('#tree .folder-label').forEach(label => {
+   	    label.classList.remove('text-blue-600', 'font-bold', 'bg-blue-100', 'px-1', 'rounded');
+   	  });
+
+   	  const selectedEl = Array.from(document.querySelectorAll('#tree [data-node="true"]'))
+   	    .find(el => el._nodeData?.owner?.uid === uid);
+
+   	  if (selectedEl) {
+   	    const label = selectedEl.querySelector('.folder-label');
+   	    if (label) {
+   	      label.classList.add('text-blue-600', 'font-bold', 'bg-blue-100', 'px-1', 'rounded');
+   	    }
+   	  }
+   	}
+    
+    function onSelected( node ){
+    	console.info( 'selected', node.owner.name );
+    	
+    	const uid = node.owner.uid;
+    	
+    	const params = new URLSearchParams({
+    		uid : uid || ''
+    	});
+    	
+    	const url = /*[[@{/Dir/Path.html}]]*/ null;
+    	const urlValue = url + '?' + params.toString();
+    	
+    	// 이건 사용 기록 덮어쓰기
+    	window.history.replaceState(null, null, urlValue);
 		
-		// 폴더 이름 클릭 시
-		const label = e.target.closest("span[data-path]");
-		if (label) {
-			const clickedPath = label.dataset.path;
-			console.log("Clicked folder:", clickedPath);
-			
-			// ✅ 선택된 경로로 이동
-			const baseUrl = /*[[@{/Dir/Path.html}]]*/ null;
-			window.location.href = `${baseUrl}?path=${encodeURIComponent(clickedPath)}`;
-		}
-	});
-});
+		storage.selectDirectory(node);
+		updatePasteButton();
+		loadFileList( uid );
+		highlightTreeSelection(uid); 
+    }
+    
+    
+ 	// 컨텍스트 응답 → 기존 트리 노드 구조(owner/child)로 변환
+	function buildTreeFromContext(ctx){
+ 		// owner/child 구조로 래핑
+ 		const wrap = (n, selected=false) => ({
+ 			owner: { uid: n.uid, name: n.name },
+ 			hasChild: !!n.hasChild,
+ 			selected,
+ 			child: []
+ 		});
+ 		
+ 		// 조상 체인(root→parent) 연결
+ 		let roots = [];
+ 		let current = null;
+ 		if (ctx.ancestors && ctx.ancestors.length > 0) {
+ 			roots = [ wrap(ctx.ancestors[0]) ];
+ 			current = roots[0];
+ 			
+ 			for (let i=1; i<ctx.ancestors.length; i++){
+ 				const next = wrap(ctx.ancestors[i]);
+ 				current.child = [ next ];
+ 				current = next;
+ 			}
+ 		} else {
+ 			// 조상이 없으면 단일 루트(=node)가 시작점
+ 			roots = [ wrap(ctx.node, true) ];
+ 			current = roots[0];
+ 		}
+ 		
+ 		// node 붙이기 (조상 끝 아래에)
+ 		const selectedNode = wrap(ctx.node, true);
+ 		if (current.owner.uid !== selectedNode.owner.uid) {
+ 			current.child = [ selectedNode ];
+ 		} else {
+ 			// 이미 current가 node라면 selected 유지
+ 			current.selected = true;
+ 		}
+ 		
+ 		// node의 children 연결
+ 		const children = (ctx.children || []).map(c => wrap(c));
+ 		const attachTo = (current.owner.uid === selectedNode.owner.uid) ? current : selectedNode;
+ 		attachTo.child = children;
+
+ 		return roots;
+    }
+
+    
+    async function loadAndRenderContext( initialUid ){
+    	
+        const url = new URL(/*[[@{/api/dir/context}]]*/ '/api/dir/context', window.location.origin);
+        
+        if (initialUid) 
+        	url.searchParams.set('uid', initialUid);
+        
+        const res = await fetch(url);
+        if (!res.ok) 
+        	throw new Error('context load failed');
+        
+        const ctx = await res.json();
+
+        const roots = buildTreeFromContext(ctx);
+        createTree(roots, document.getElementById("tree")); // 기존 함수 그대로 활용
+
+        // 빵크럼/선택 상태도 기존 로직(onSelected)과 연동됨
+        const selectedUid = ctx.node?.uid;
+        if (selectedUid) {
+        	highlightTreeSelection(selectedUid);
+        }
+    }
+    
+	document.addEventListener('DOMContentLoaded', function() {
+		console.info( "여기가 시작이다." );
+		
+		const initialUid = /*[[${selectedUid}]]*/ null;
+	    loadAndRenderContext( initialUid ).catch(console.error);
+		
+  });
+
 </script>
+</div>

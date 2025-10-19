@@ -1,0 +1,60 @@
+<script xmlns:th="http://www.thymeleaf.org" 
+	th:fragment="script" 
+	th:inline="javascript" >
+
+class BnStorage extends EventTarget {
+	static #API_BASE_DIR = "/Burrow/Dir/";
+	static #SESSION_KEY = "bn_clipboard";
+	#selectedDirectory = null;
+	
+	selectDirectory(dir) {
+		this.#selectedDirectory = dir;
+		this.dispatchEvent(new CustomEvent("selected", { detail: dir }));
+	}
+	
+	getSelectedDirectory() {
+		return this.#selectedDirectory;
+	}
+	
+	copyDirectory() {
+		this.#saveToSession("copy");
+	}
+	
+	cutDirectory() {
+		this.#saveToSession("cut");
+	}
+	
+	isClipboardAvailable() {
+		return !!sessionStorage.getItem(BnStorage.#SESSION_KEY);
+	}
+	
+	getClipboardData() {
+		const data = sessionStorage.getItem(BnStorage.#SESSION_KEY);
+		return data ? JSON.parse(data) : null;
+	}
+	
+	clearClipboard() {
+		sessionStorage.removeItem(BnStorage.#SESSION_KEY);
+	}
+	
+	async pasteDirectory(targetUid) {
+		const data = this.getClipboardData();
+		if (!data) throw new Error("클립보드가 비어 있습니다.");
+		
+		const endpoint = data.type === "cut" ? "move" : "copy";
+		const response = await fetch(BnStorage.#API_BASE_DIR + endpoint, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ sourceUid: data.directory.owner.uid, targetParentUid: targetUid }),
+		});
+		
+		return await response.json();
+	}
+	
+	#saveToSession(type) {
+		if (!this.#selectedDirectory) throw new Error("선택된 디렉토리가 없습니다.");
+		const data = { type, directory: this.#selectedDirectory };
+		sessionStorage.setItem(BnStorage.#SESSION_KEY, JSON.stringify(data));
+	}
+}
+</script>

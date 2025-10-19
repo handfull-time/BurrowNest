@@ -1,6 +1,7 @@
 <div xmlns:th="http://www.thymeleaf.org" 
 	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-    layout:decorate="~{Common/LayoutModal}">
+    layout:decorate="~{Common/LayoutModal}"
+    th:with="maxHeight='120'">
     
     <th:block layout:fragment="modalTitle">
         회원 상세
@@ -22,56 +23,56 @@
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="nickname">사용여부</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="enabled">사용여부</label></td>
 	                <td class="w-3/4 p-2">
 	                    <div class="flex items-center space-x-4">
 				            <div>
 				                <input type="radio" id="enabledTrue" name="enabled" value="true" class="form-radio h-5 w-5 text-green-500 focus:ring-green-500" th:checked="${item.enabled}">
-				                <label for="yes" class="ml-2 text-gray-700">예</label>
+				                <label for="enabledTrue" class="ml-2 text-gray-700">예</label>
 				            </div>
 				            <div>
 				                <input type="radio" id="enabledFalse" name="enabled" value="false" class="form-radio h-5 w-5 text-red-500 focus:ring-red-500"  th:checked="${! item.enabled}">
-				                <label for="no" class="ml-2 text-gray-700">아니오</label>
+				                <label for="enabledFalse" class="ml-2 text-gray-700">아니오</label>
 				            </div>
 				        </div>
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="nickname">역할</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="group.groupNo">소속 그룹</label></td>
 	                <td class="w-3/4 p-2">
-	                    <select id="role" name="role" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
+	                    <select id="group.groupNo" name="group.groupNo" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" required>
 	                        <option value="">선택하세요</option>
-						    <option th:each="role : ${roles}" 
-						            th:value="${role}" 
-						            th:text="${role.getDscr()}"
-						            th:selected="${item.role eq role}">
+						    <option th:each="group : ${groups}" 
+						            th:value="${group.groupNo}" 
+						            th:text="|${group.name} - ${group.accType}|"
+						            th:selected="${item.group.groupNo eq group.groupNo}">
 						    </option>
 	                    </select>
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="id">비고</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="note">비고</label></td>
 	                <td class="w-3/4 p-2">
 	                    <input type="text" th:field="*{note}" maxlength="255" 
 	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" >
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="id">하루 업로드 제한</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="dailyUploadLimit">하루 업로드 제한</label></td>
 	                <td class="w-3/4 p-2">
 	                    <input type="number" th:field="*{dailyUploadLimit}"  
 	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" >
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="id">일일 최대 다운로드</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="dailyDownloadLimit">일일 최대 다운로드</label></td>
 	                <td class="w-3/4 p-2">
 	                    <input type="number" th:field="*{dailyDownloadLimit}"  
 	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" >
 	                </td>
 	            </tr>
 	            <tr>
-	                <td class="w-1/4 font-medium p-2"><label for="id">저장공간 최대 사용</label></td>
+	                <td class="w-1/4 font-medium p-2"><label for="maxStorageUsage">저장공간 최대 사용</label></td>
 	                <td class="w-3/4 p-2">
 	                    <input type="number" th:field="*{maxStorageUsage}"  
 	                    	class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400" >
@@ -81,30 +82,30 @@
 	    </table>
     </form>
     <!-- 회원 삭제 버튼 -->
-    <div class="flex justify-end mt-4 space-x-2">
-        <button type="button"
-                onclick="deleteUser(this)"
-                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400">
-            회원 삭제
-        </button>
-    </div>
+<!--     <div class="flex justify-end mt-4 space-x-2">
+    </div> -->
     </th:block>
     
+    <th:block layout:fragment="modalButton">
+        <button type="button"
+                onclick="deleteUser(this)"
+                class="bg-red-500 text-white px-4 py-2 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 transition">
+            회원 삭제
+        </button>
+    	<button id="saveButton" onclick="saveData(this)" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition">
+            저장
+        </button>
+        <button onclick="closePopup(this)" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition">
+            취소
+        </button>
+    </th:block>
     
 	<th:block layout:fragment="modalScript">
 					
 		<script th:inline="javascript">
 		
 		function getUserInfo(){
-			const form = document.getElementById('updateUserForm');
-        	const formData = new FormData(form);
-        	const jsonData = {};
-        	 
-        	formData.forEach((value, key) => {
-        		jsonData[key] = value;
-			});
-        	
-        	return jsonData;
+        	return getFormObject('updateUserForm');
 		}
 		
 		function deleteUser(ele) {
@@ -144,7 +145,7 @@
                     }
                 } else {
                 	console.error('삭제 오류:', response.status);
-                	showCustomAlert( '삭제 오류:', response.status , function(){
+                	showCustomAlert( '삭제 오류:' + response.status , function(){
                 		closePopup(ele);
                 	} );
                 }
@@ -181,7 +182,7 @@
                 }
             } else {
             	console.error('저장 오류:', response.status);
-            	showCustomAlert( '저장 오류:', response.status , function(){
+            	showCustomAlert( '저장 오류:' + response.status , function(){
             		closePopup(ele);
             	} );
             }

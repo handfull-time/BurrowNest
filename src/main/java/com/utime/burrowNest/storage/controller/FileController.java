@@ -1,6 +1,7 @@
 package com.utime.burrowNest.storage.controller;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,10 +12,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Base64;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -38,6 +41,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utime.burrowNest.common.util.FileUtils;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.storage.service.StorageService;
+import com.utime.burrowNest.storage.vo.BnFile;
 import com.utime.burrowNest.storage.vo.FileDto;
 import com.utime.burrowNest.storage.vo.PasteItem;
 import com.utime.burrowNest.storage.vo.PasteRequest;
@@ -47,25 +51,99 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Controller
-@RequestMapping("File")
+@RequestMapping("Files")
 public class FileController {
 	
-	StorageService storageService;
+	@Autowired
+	private StorageService storageService;
 	
-	@GetMapping("Open")
-	public ResponseEntity<Resource> openFile(UserVo user, HttpServletRequest request, @RequestParam String path) {
-	    Path file = Paths.get("F:\\WorkData\\Burrow", path);
-	    if (!Files.exists(file)) {
+	@GetMapping("Open/{uid}")
+	public Object openOrPreviewFile(UserVo user, HttpServletRequest request, Model model, @PathVariable("uid") String uid)  {
+	    uid = URLEncoder.encode(uid, StandardCharsets.UTF_8);
+	    final BnFile bnFile = storageService.getFile(user, uid);
+	    if (bnFile == null) {
 	        return ResponseEntity.notFound().build();
 	    }
 
+	    final Path file = new File(bnFile.getFullName()).toPath();
+	    if (!Files.exists(file)) {
+	        return ResponseEntity.notFound().build();
+	    }
+	    
+	    String mimeType;
+		try {
+			mimeType = Files.probeContentType(file);
+		} catch (IOException e) {
+			mimeType = null;
+		}
+	    
+	    switch( bnFile.getFileType() ) {
+	    case Basic:
+	    case Document:
+	    case Archive:{
+	    	
+	        if (mimeType == null) {
+	            mimeType = "application/octet-stream";
+	        }
+	    	
+	        if( mimeType.startsWith("text/") ) {
+	        	model.addAttribute("mimeType", mimeType);
+	        }else {
+	        	try {
+	        		// 그 외 일반 다운로드
+		        	final Resource resource = new InputStreamResource(Files.newInputStream(file));
+		        	final String transName = URLEncoder.encode(file.getFileName().toString(), "utf-8").replaceAll("\\+", "%20");
+
+			        return ResponseEntity.ok()
+			            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + transName + "\"")
+			            .contentType(MediaType.parseMediaType(mimeType))
+			            .body(resource);
+				} catch (IOException e) {
+					return ResponseEntity.internalServerError().build();
+				}
+	        }
+	    	break;
+	    }
+	    case Image:
+	    case Video:
+	    case Audio:{
+	    	break;
+	    }
+	    }
+
+        model.addAttribute("uid", uid);
+        model.addAttribute("fileName", file.getFileName().toString());
+        model.addAttribute("mimeType", mimeType);
+
+        // 배경용 썸네일 base64
+        final byte [] thumbnail = storageService.getThumbnail(user, uid);
+        final String base64Thumbnail = thumbnail == null? "":Base64.getEncoder().encodeToString( thumbnail );
+        model.addAttribute("base64Thumbnail", base64Thumbnail);
+
+        return "Common/Streaming";
+	}
+
+	
+	//@GetMapping("Open/{uid}")
+	public ResponseEntity<Resource> openFile(UserVo user, HttpServletRequest request, @PathVariable("uid") String uid) {
+
+		uid = URLEncoder.encode(uid, StandardCharsets.UTF_8);
+		final BnFile bnFile = storageService.getFile(user, uid);
+		if( bnFile == null ) {
+			return ResponseEntity.notFound().build();
+		}
+		
+		final Path file = new File(bnFile.getFullName()).toPath();
+	    if (!Files.exists(file)) {
+	        return ResponseEntity.notFound().build();
+	    }
+	    
 	    try {
 	        String mimeType = Files.probeContentType(file);
 	        
 	        if (mimeType != null && (mimeType.startsWith("video/") || mimeType.startsWith("audio/"))) {
 	            // redirect to streaming page
-	            String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
-	            final URI uri = URI.create(request.getContextPath() + "/File/Streaming.html?path=" + encodedPath);
+	            final URI uri = URI.create(request.getContextPath() + "/Files/Streaming/" + uid);
 	            return ResponseEntity.status(HttpStatus.FOUND).location(uri).build();
 	        }
 	        
@@ -88,29 +166,31 @@ public class FileController {
 	    }
 	}
 	
-	@GetMapping("Streaming.html")
-	public String streamPage(Model model, UserVo user, @RequestParam String path) throws IOException {
-	    Path filePath = Paths.get("F:\\WorkData\\Burrow", path).normalize();
-	    
-	    if (!Files.exists(filePath)) {
-	        throw new FileNotFoundException("File not found: " + path);
+	//@GetMapping("Streaming/{uid}")
+	public String streamPage(Model model, UserVo user, @PathVariable("uid") String uid) throws IOException {
+		uid = URLEncoder.encode(uid, StandardCharsets.UTF_8);
+		final BnFile bnFile = storageService.getFile(user, uid);
+		if( bnFile == null ) {
+			return "";
+		}
+		
+		Path file = new File(bnFile.getFullName()).toPath();
+	    if (!Files.exists(file)) {
+	        return "";
 	    }
 
-	    String mimeType = Files.probeContentType(filePath);
+	    String mimeType = Files.probeContentType(file);
 	    if (mimeType == null) {
 	        mimeType = "application/octet-stream";
 	    }
 
-	    model.addAttribute("path", path);
-	    model.addAttribute("fileName", filePath.getFileName().toString());
 	    model.addAttribute("mimeType", mimeType);
 
 	    return "Common/Streaming";
 	}
 	
 	@GetMapping("Stream")
-	public ResponseEntity<StreamingResponseBody> openStreamingFile(UserVo user, @RequestParam String path,
-	                                                       HttpServletRequest request) throws IOException {
+	public ResponseEntity<StreamingResponseBody> openStreamingFile(HttpServletRequest request, UserVo user, @RequestParam String path ) throws IOException {
 		System.out.println("Stream User : " + user);
 		
 	    Path filePath = Paths.get("F:/WorkData/Burrow", path).normalize();
@@ -413,8 +493,8 @@ public class FileController {
 	}
 	
 	@GetMapping("Thumbnail/{fid}")
-	public ResponseEntity<byte[]> getThumbnail(@PathVariable String fid) {
-	    final byte[] image = storageService.getThumbnail(fid);
+	public ResponseEntity<byte[]> getThumbnail(UserVo user, @PathVariable String fid) {
+	    final byte[] image = storageService.getThumbnail(user, fid);
 	    
 	    if( image == null ) {
 	    	return ResponseEntity.notFound().build();

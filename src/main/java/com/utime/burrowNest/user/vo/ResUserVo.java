@@ -1,5 +1,6 @@
 package com.utime.burrowNest.user.vo;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 
 public class ResUserVo extends ReturnBasic {
@@ -24,7 +25,7 @@ public class ResUserVo extends ReturnBasic {
 
 	@Override
 	public String toString() {
-		return "ResUserVo [user=" + user + ", code=" + code + ", message=" + message + "]";
+		return BurrowUtils.toJson(this);
 	}
 	
 }

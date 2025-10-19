@@ -1,0 +1,210 @@
+<div xmlns:th="http://www.thymeleaf.org">	
+	
+<div class="bg-white shadow p-6 rounded-md">
+    <h2 class="text-xl font-bold text-gray-700 mb-4"> [[${group.name}]] 접근 Directory</h2>
+    <!-- 접근 디렉토리 목록 -->
+  	<div class="col-span-4 border rounded shadow">
+        <ul id="directoryList" class="space-y-1"></ul>
+	</div>
+    <!--
+	<div class="flex justify-end space-x-4 pt-4">
+	    <button type="button" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition" onclick="save()">저장</button>
+	    <button type="button" class="bg-gray-500 text-black px-6 py-2 rounded-lg hover:bg-gray-600 transition" onclick="cancel()">취소</button>
+	</div>
+	-->
+	<input type="hidden" id="groupNo" th:value="${group.groupNo}">
+</div>
+
+<div class="hidden">
+
+	<template id="directoryItemTemplate">
+	  <li class="flex items-center justify-between px-4 py-2">
+	    <span class="dir-path flex-1 truncate"></span>
+	    <button class="remove-dir ml-2 bg-red-500 hover:bg-red-600 text-white text-sm px-2 py-1 rounded">-</button>
+	  </li>
+	</template>
+	
+	<template id="directoryAddTemplate">
+	  <li class="flex items-center justify-between px-4 py-2">
+	    <!-- <input type="text" class="dir-input border px-2 py-1 flex-1 text-sm" placeholder="경로 입력..." /> -->
+	    <span class=""></span>
+	    <button id="GroupDirAdd" class="add-dir ml-2 bg-blue-500 hover:bg-blue-600 text-white text-sm px-2 py-1 rounded">+</button>
+	  </li>
+	</template>
+</div>
+        
+
+    <script th:inline="javascript">
+		
+	
+    
+    function appendDirectoryItem(dirObj) {
+    	
+    	const dir = dirObj.owner ? dirObj.owner:dirObj;
+    	console.info( 'dir', dir );
+    	
+		const dirTemplate = document.getElementById("directoryItemTemplate");
+		const directoryListEl = document.getElementById("directoryList");
+		
+		const li = dirTemplate.content.cloneNode(true);
+		const dirPath = li.querySelector(".dir-path");
+		dirPath.textContent = dir.absolutePath;
+		dirPath.dataset.no = dir.no;
+		
+		li.querySelector(".remove-dir").addEventListener("click", async () => {
+			const message = `[ ${dir.absolutePath} ] 삭제하시겠습니까?`;
+			
+			const ok = await confirmP(message);
+			if (!ok) return;
+			
+			const url = /*[[@{/Admin/Group/RemoveGroupUserStorage.json}]]*/ null;
+			const groupNo = document.getElementById("groupNo").value;
+			 	
+			 	const params = new URLSearchParams({
+			 		groupNo: groupNo,
+				dirNo: dir.no
+			});
+			
+			const urlAddress = url + '?' + params.toString();
+			 	
+			const options = {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+			    };
+			
+			const response = await apiRequest(urlAddress, options);
+			if (!response.ok) {
+			      throw new Error(`HTTP 오류 발생: ${response.status} ${response.statusText}`);
+			}
+			
+			const result = await response.json();
+			console.log('삭제 결과:', result);
+			if( result.code == '0' ){
+				await alertP('삭제 완료되었습니다.');
+				dirPath.closest("li").remove();
+			} else {
+				await alertP('삭제 실패 ' + result.code + ':' + result.message);
+				location.reload();
+			}
+		});
+		
+		directoryListEl.appendChild(li);
+	}
+
+	function handleRemoveDirectory(dir) {
+		
+		const rows = document.querySelectorAll(".dir-path");
+		rows.forEach(row => {
+			if (row.dataset.no === String(dir.no)) {
+				row.closest("li").remove();
+			}
+     	});
+    }
+    
+    function openSelectDir(){
+		console.log("openSelectDir click");
+
+        const sendValue = {
+		        url: /*[[@{/Admin/Group/AdminGroupSelectPath.layer}]]*/ null,
+				method: MethodType.Get, 
+				NotCheck:true,
+				popupId:'AdminGroupSelectPath',
+		        width: '600px',
+		        onLoadFunction: 'loadFunction'
+		    };
+		
+		openPopup(sendValue);
+	}
+
+    function cancel(){
+    	document.getElementById("PathList").innerHTML = "";
+    }
+    
+//    function save() {
+//        const directoryList = document.querySelectorAll(".dir-path");
+//        const data = [];
+//
+//        directoryList.forEach(item => {
+//            const no = item.dataset.no;
+//            if (no) {
+//                data.push({ no: Number(no) });
+//            }
+//        });
+//
+//        if (data.length === 0) {
+//            showCustomAlert("저장할 디렉토리가 없습니다.");
+//            return;
+//        }
+//        
+//        showCustomConfirm("저장하시겠습니까?", async (isConfirm) => {
+//        	
+//        	if( ! isConfirm ){
+//        		return;
+//        	}
+//        	
+//           	const url = /*[[@{/Admin/Group/SaveGroupUserStorageList.json}]]*/ null;
+//           	
+//           	const params = new URLSearchParams({
+//           		groupNo: /*[[${group.groupNo}]]*/ 0
+//        	});
+//
+//        	const urlAddress = url + '?' + params.toString();
+//           	
+//        	const options = {
+//        			method: 'POST',
+//        			headers: {
+//        				'Content-Type': 'application/json',
+//        			},
+//        			body: JSON.stringify( data ),
+//        	    };
+//        	
+//        	const response = await apiRequest(urlAddress, options);
+//            if (!response.ok) {
+//                throw new Error(`HTTP 오류 발생: ${response.status} ${response.statusText}`);
+//            } else {
+//            	console.error('저장 오류:', response.status);
+//            	showCustomAlert( '저장 오류:' + response.status , function(){
+//            		location.reload();
+//            	} );
+//            }
+//            
+//            const result = await response.json();
+//            console.log('저장 결과:', result);
+//            if( result.code == '0' ){
+//            	showCustomAlert( '저장됐습니다.', function(){
+//                    location.reload(); 
+//            	} );
+//            }else{
+//            	showCustomAlert( '저장 실패 ' + result.code + ':' + result.message, function(){
+//            		location.reload();
+//            	} );
+//            }
+//        });
+//    }
+
+    
+    /**
+     * 최초 렌더링
+     */
+    function renderDirectoryList(dirs) {
+		const directoryListEl = document.getElementById("directoryList");
+		const addTemplate = document.getElementById("directoryAddTemplate");
+		
+		directoryListEl.innerHTML = "";
+		
+		dirs.forEach(dir => {
+			appendDirectoryItem(dir);
+		});
+		
+		const addLi = addTemplate.content.cloneNode(true);
+		addLi.querySelector(".add-dir").addEventListener("click", openSelectDir);
+		directoryListEl.appendChild(addLi);
+	}
+
+    renderDirectoryList(/*[[${list}]]*/ null);
+    
+    </script>
+
+</div>

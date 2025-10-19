@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>🐇 BurrowNest</title>
+    <meta charset="UTF-8">
+
+   	<th:block th:replace="~{Common/Favicon :: Favicon}"></th:block>
+
+    <script type="text/javascript" th:src="@{/js/tailwind/tailwind.min.js}"></script>
+    
+    <style>
+	</style>
+		
+</head>
+<body class="h-screen flex flex-col">
+    <!-- Explorer Layout Template -->
+<div class="w-full h-screen flex flex-col bg-white text-black select-none">
+
+  <!-- ===== Top Toolbar ===== -->
+  <div class="flex flex-wrap items-center gap-2 p-2 border-b bg-gray-50">
+    <a th:href="@{/Dir/Index.html}">
+      <img th:src="@{/images/favicon/favicon-96x96.png}" alt="Burrow Nest" class="w-8 h-8">
+    </a>
+
+    <!-- 구분선 -->
+    <div class="w-px h-6 bg-gray-400 mx-2"></div>
+
+    <!-- 편집 -->
+    <button id="copyBtn"  class="px-2 py-1 bg-white border rounded hover:bg-gray-100">📄 복사</button>
+    <button id="cutBtn"   class="px-2 py-1 bg-white border rounded hover:bg-gray-100">✂️ 자르기</button>
+    <button id="pasteBtn" class="px-2 py-1 bg-white border rounded hover:bg-gray-100" disabled>📋 붙여넣기</button>
+
+    <!-- 구분선 -->
+    <div class="w-px h-6 bg-gray-400 mx-2"></div>
+
+    <!-- 파일 -->
+    <button id="uploadBtn"    class="px-2 py-1 bg-white border rounded hover:bg-gray-100">⬆️ 업로드</button>
+    <button id="downloadBtn"  class="px-2 py-1 bg-white border rounded hover:bg-gray-100">⬇️ 다운로드</button>
+    <button id="deleteBtn"    class="px-2 py-1 bg-white border rounded hover:bg-gray-100">🗑️ 삭제</button>
+    <button id="renameBtn"    class="px-2 py-1 bg-white border rounded hover:bg-gray-100">✏️ 이름 변경</button>
+    <button id="newFolderBtn" class="px-2 py-1 bg-white border rounded hover:bg-gray-100">📁➕ 새 폴더</button>
+
+    <!-- 구분선 -->
+    <div class="w-px h-6 bg-gray-400 mx-2"></div>
+
+    <!-- 보기 -->
+    <button id="detailViewBtn" class="px-2 py-1 bg-white border rounded hover:bg-gray-100">상세 보기</button>
+    <button id="iconViewBtn"   class="px-2 py-1 bg-white border rounded hover:bg-gray-100">아이콘 보기</button>
+
+    <!-- 구분선 -->
+    <div class="w-px h-6 bg-gray-400 mx-2"></div>
+
+    <!-- 검색 -->
+    <div class="flex items-center gap-2">
+      <label class="flex items-center gap-2 px-2 py-1 bg-white border rounded">
+        <i class="fa-solid fa-magnifying-glass text-gray-500"></i>
+        <input id="searchInputTop" type="text" placeholder="검색" class="outline-none text-sm" />
+      </label>
+      <select id="searchScope" class="text-sm border rounded px-2 py-1">
+        <option value="filter">현재 목록 필터</option>
+        <option value="recursive">하위 폴더 포함 검색</option>
+        <option value="all">전체 검색</option>
+      </select>
+      <select id="searchTarget" class="text-sm border rounded px-2 py-1">
+        <option value="all">파일+폴더</option>
+        <option value="file">파일만</option>
+        <option value="dir">폴더만</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ===== Main Split (Left: Files / Right: Directory Tree) ===== -->
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- Left: File Area -->
+    <section id="resizable-left"  class="flex-1 flex flex-col overflow-hidden">
+      <!-- (선택) 현재 경로 표시 -->
+      <div id="breadcrumb" class="px-3 py-2 text-xs text-gray-600 border-b truncate">Root</div>
+
+      <!-- 파일/폴더 목록 -->
+      <div class="flex-1 overflow-auto p-3">
+        <div id="fileGrid" class="grid grid-cols-10 gap-4"><!-- items render here --></div>
+      </div>
+    </section>
+
+    <!-- Right: Directory / Tree -->
+    <aside class="w-80 border-l overflow-auto p-4">
+      <div id="tree" class="bg-white rounded-lg font-mono text-sm" role="tree"><!-- tree render here --></div>
+    </aside>
+  </div>
+
+  <!-- ===== Templates: File Items (Icon/Detail) ===== -->
+  <!-- 아이콘 보기용 -->
+  <template id="fileItemIconTemplate">
+    <div class="file-item flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer select-none">
+      <div class="thumb w-16 h-16 bg-gray-100 rounded overflow-hidden not-italic flex items-center justify-center">
+        <img class="thumb-img w-full h-full object-cover hidden" loading="lazy" />
+        <i class="icon fa-solid text-gray-400 text-2xl"></i>
+      </div>
+      <div class="file-name text-xs text-center mt-2 truncate w-24"></div>
+    </div>
+  </template>
+
+  <!-- 상세 보기용 (행) -->
+  <template id="fileItemDetailTemplate">
+    <tr class="file-item select-none hover:bg-blue-50">
+      <td class="border p-2 text-center w-10"><i class="icon fa-solid"></i></td>
+      <td class="border p-2 text-left file-name"></td>
+      <td class="border p-2 text-center file-date"></td>
+      <td class="border p-2 text-center file-type"></td>
+      <td class="border p-2 text-right file-size"></td>
+    </tr>
+  </template>
+
+  <!-- 상세 보기용 (테이블) -->
+  <template id="fileItemDetailTableTemplate">
+    <table class="table-auto w-full border-collapse border border-gray-200 text-sm">
+      <thead>
+        <tr class="bg-gray-100 text-xs">
+          <th class="border p-2 text-center w-10"></th>
+          <th class="border p-2 text-left">이름</th>
+          <th class="border p-2 text-center">수정날짜</th>
+          <th class="border p-2 text-center">유형</th>
+          <th class="border p-2 text-right">크기</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </template>
+
+  <!-- ===== Template: Tree Node ===== -->
+  <template id="treeNodeTemplate">
+    <li class="mb-1" role="treeitem">
+      <div class="flex items-center space-x-1 cursor-pointer group" data-node="true">
+        <svg class="chevron w-4 h-4 text-gray-500 transition-transform"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 5l7 7-7 7"/>
+        </svg>
+        <svg class="folder-icon w-5 h-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+          <!-- 아이콘은 JS에서 open/close 교체 -->
+        </svg>
+        <span class="folder-label"></span>
+      </div>
+    </li>
+  </template>
+
+  <!-- ===== Context Menus ===== -->
+  <!-- 1) Folder (Tree) Context Menu — 기존 소스 사용 -->
+  <ul id="contextMenuFolder" class="absolute hidden bg-white border border-gray-300 shadow-lg rounded-md w-56 text-sm z-50">
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="open">
+      <span class="mr-2">📂</span> 열기
+    </li>
+    <hr class="my-1 border-gray-200">
+
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="cut">
+      <span class="mr-2">✂️</span> 잘라내기
+    </li>
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="copy">
+      <span class="mr-2">📄</span> 복사
+    </li>
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 text-gray-400 cursor-not-allowed" data-action="paste">
+      <span class="mr-2">📋</span> 붙여넣기
+    </li>
+
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="rename">
+      <span class="mr-2">📄</span> 이름변경
+    </li>
+
+    <hr class="my-1 border-gray-200">
+
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="detail">
+      <span class="mr-2">⚙️</span> 속성
+    </li>
+  </ul>
+
+  <!-- 2) File Area Context Menu — 통합(아이템/배경) -->
+  <ul id="contextMenuFile"
+      class="absolute hidden bg-white border border-gray-300 shadow-lg rounded-md w-56 text-sm z-50">
+    <li class="px-4 py-2 text-gray-500 text-xs">파일 메뉴</li>
+    <hr class="my-1 border-gray-200">
+
+    <li class="file-only flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="open">
+      <span class="mr-2">📄</span> 열기
+    </li>
+    <li class="file-only flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="download">
+      <span class="mr-2">⬇️</span> 다운로드
+    </li>
+
+    <li class="item-only flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="rename">
+      <span class="mr-2">✏️</span> 이름변경
+    </li>
+    <li class="item-only flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="delete">
+      <span class="mr-2">🗑️</span> 삭제
+    </li>
+
+    <hr class="my-1 border-gray-200">
+
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="copy">
+      <span class="mr-2">📄</span> 복사
+    </li>
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="cut">
+      <span class="mr-2">✂️</span> 자르기
+    </li>
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 text-gray-400 cursor-not-allowed" data-action="paste">
+      <span class="mr-2">📋</span> 붙여넣기
+    </li>
+
+    <hr class="my-1 border-gray-200">
+
+    <li class="bg-only flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="new-folder">
+      <span class="mr-2">📁➕</span> 새 폴더
+    </li>
+    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="properties">
+      <span class="mr-2">⚙️</span> 속성
+    </li>
+  </ul>
+
+  <!-- (선택) 커스텀 스크립트/서브메뉴 주입 -->
+  <th:script th:replace="~{Storage/StorageScript :: script}"/>
+  <th:div th:replace="~{Storage/CustomSubMenu :: customMenu}"/>
+</div>
+
+
+    <!-- Footer -->
+    <div th:replace="~{Storage/Footer :: footer}" class="flex-none border-t border-gray-300 text-sm px-2 py-1"></div>
+
+    <!-- Optional: Add a simple resizable script -->
+    <th:script th:replace="~{Common/Script :: script}"/>
+    
+    <script th:inline="javascript">
+        const resizable = document.getElementById('resizable-left');
+        
+        let isResizing = false;
+
+        resizable.addEventListener('mousedown', function(e) {
+            if (e.offsetX > resizable.offsetWidth - 10) {
+                isResizing = true;
+                document.body.style.cursor = 'col-resize';
+            }
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isResizing) return;
+            const newWidth = e.clientX;
+            resizable.style.width = newWidth + 'px';
+        });
+
+        document.addEventListener('mouseup', function() {
+            isResizing = false;
+            document.body.style.cursor = 'default';
+        });
+    </script>
+    
+    <!-- alert confirm prompt -->
+	<div th:replace="~{Common/alertView :: alertView}"></div>
+    <!-- 모달창 -->
+    <div th:replace="~{Common/modalView :: modalView}"></div>
+    
+    <th:script th:replace="~{Common/Script :: CommonScript}"/>
+    
+    <script th:inline="javascript">
+/** =========================================================
+ *  전역 가정(이미 존재):
+ *   - storage: BnStorage 인스턴스 (copy/cut/paste/selectDirectory/isClipboardAvailable 등)
+ *   - loadFileList(uid): 현재 폴더 uid로 파일 리스트 로드
+ *   - renderFileList(list): 우측 그리드 렌더 (내부에서 .file-item 요소 생성)
+ *   - #tree: 트리 루트, #fileGrid: 파일 그리드 루트
+ *   - lastFetchedList: 최근 로드 목록 ([{ uid, name, isFile, extension, fileLength, lastModified, ... }])
+ *   - highlightTreeSelection(uid): 트리 하이라이트
+ * ========================================================= */
+
+(function() {
+	const storage = new BnStorage();
+  // ===== 전역 상태/유틸 =====
+  const fileGrid = document.getElementById('fileGrid');
+  const tree = document.getElementById('tree');
+  const menuFile = document.getElementById('contextMenuFile');
+  const menuFolder = document.getElementById('contextMenuFolder'); // (좌측 트리용, 기존)
+  const pasteBtn = document.getElementById('pasteBtn');
+
+  // 현재 폴더 uid(좌측 onSelected 호출 시 업데이트 권장)
+  window.currentFolderUid = window.currentFolderUid || '';
+
+  // 간단 디바운스
+  function debounce(fn, wait = 250) {
+    let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+  }
+
+  // 파일 영역에서 선택된 항목 uid[]
+  function getSelectedFileUids() {
+    return Array.from(document.querySelectorAll('#fileGrid .file-item.bg-blue-100'))
+      .map(el => el.dataset.uid)
+      .filter(Boolean);
+  }
+
+  // uid -> item 빠른 조회
+  function getItemByUid(uid) {
+    if (!Array.isArray(window.lastFetchedList)) return null;
+    return window.lastFetchedList.find(x => x.uid === uid) || null;
+  }
+
+  // 컨텍스트 만들기
+  function buildContext(overrides = {}) {
+    const selectionUids = getSelectedFileUids();
+    const selection = selectionUids.map(getItemByUid).filter(Boolean);
+    const destinationUid = overrides.destinationUid ?? window.currentFolderUid;
+    const target = overrides.target || null; // 단일 타겟(아이템 우클릭 등)
+    return {
+      selectionUids,
+      selection,
+      destinationUid,
+      target,
+      hasClipboard: !!storage?.isClipboardAvailable?.(),
+      currentFolderUid: window.currentFolderUid
+    };
+  }
+
+  // ===== 커맨드 레지스트리 =====
+  const commands = {
+    copy: {
+      canExecute(ctx){ return ctx.selection.length > 0; },
+      run(ctx){ storage?.copyItems ? storage.copyItems(ctx.selection) : storage?.copyDirectory?.(); }
+    },
+    cut: {
+      canExecute(ctx){ return ctx.selection.length > 0; },
+      run(ctx){ storage?.cutItems ? storage.cutItems(ctx.selection) : storage?.cutDirectory?.(); }
+    },
+    paste: {
+      canExecute(ctx){ return ctx.hasClipboard && !!ctx.destinationUid; },
+      async run(ctx){
+        await storage?.pasteDirectory?.(ctx.destinationUid);
+        // storage?.clearClipboard?.(); // 정책에 따라 유지/삭제 선택
+        refreshPasteEnabled();
+        loadFileList(ctx.destinationUid);
+      }
+    },
+    delete: {
+      canExecute(ctx){ return ctx.selection.length > 0; },
+      async run(ctx){
+        if (!confirm(`${ctx.selection.length}개 항목을 삭제할까요?`)) return;
+        if (storage?.deleteItems) await storage.deleteItems(ctx.selection);
+        loadFileList(ctx.currentFolderUid);
+      }
+    },
+    rename: {
+      canExecute(ctx){ return ctx.selection.length === 1; },
+      async run(ctx){
+        const item = ctx.selection[0];
+        const next = prompt('새 이름을 입력하세요', item?.name ?? '');
+        if (!next || next === item.name) return;
+        if (item.isFile) {
+          if (storage?.renameFile) await storage.renameFile(item.uid, next);
+        } else {
+          if (storage?.renameDirectory) await storage.renameDirectory(item.uid, next);
+        }
+        loadFileList(ctx.currentFolderUid);
+      }
+    },
+    newFolder: {
+      canExecute(ctx){ return !!ctx.destinationUid; },
+      async run(ctx){
+        const name = prompt('새 폴더 이름', '새 폴더');
+        if (!name) return;
+        if (storage?.createDirectory) await storage.createDirectory(ctx.destinationUid, name);
+        loadFileList(ctx.destinationUid);
+      }
+    },
+    download: {
+      canExecute(ctx){ return ctx.selection.length >= 1; },
+      run(ctx){
+        // 단일/복수 모두 처리(복수는 서버에서 zip 등으로 처리)
+        if (storage?.downloadItems) storage.downloadItems(ctx.selection);
+        else {
+          // fallback: 단일 파일 새 창
+          ctx.selection.forEach(it => {
+            if (it.isFile) {
+              const FILE_OPEN_URL  = /*[[@{/Files/Open/}]]*/ '/Files/Open/';
+              window.open(`${FILE_OPEN_URL}${encodeURIComponent(it.uid)}`, '_blank');
+            }
+          });
+        }
+      }
+    },
+    open: {
+      canExecute(ctx){ return !!ctx.target; },
+      run(ctx){
+        const it = ctx.target;
+        if (it.isFile) {
+          const FILE_OPEN_URL  = /*[[@{/Files/Open/}]]*/ '/Files/Open/';
+          window.open(`${FILE_OPEN_URL}${encodeURIComponent(it.uid)}`, '_blank');
+        } else {
+          // 폴더 이동
+          window.currentFolderUid = it.uid;
+          loadFileList(it.uid);
+          highlightTreeSelection?.(it.uid);
+        }
+      }
+    },
+    properties: {
+      canExecute(ctx){ return (ctx.selection.length === 1) || !!ctx.target || !!ctx.destinationUid; },
+      run(ctx){
+        const it = ctx.selection[0] || ctx.target || { name: '(현재 폴더)', uid: ctx.destinationUid };
+        alert([
+          `이름: ${it.name ?? ''}`,
+          `UID: ${it.uid ?? ''}`,
+          `유형: ${it.isFile ? '파일' : '폴더'}`
+        ].join('\n'));
+      }
+    },
+    upload: {
+      canExecute(ctx){ return !!ctx.destinationUid; },
+      run(ctx){
+        if (storage?.uploadTo) storage.uploadTo(ctx.destinationUid);
+        else alert('업로드 기능은 구현 대상입니다.');
+      }
+    },
+    // 검색(상단 검색창과 연결)
+    search: {
+      canExecute(){ return true; },
+      run({ query, scope, target }){
+        // 1) 클라이언트 필터 모드(현재 목록)
+        if (scope === 'filter') {
+          // 오른쪽 영역에 searchInput이 이미 있다면 이벤트만 전달
+          const sink = document.getElementById('searchInput') || document.getElementById('searchInputTop');
+          if (sink) {
+            sink.value = query || '';
+            sink.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          return;
+        }
+        // 2) 서버 검색 (재귀/전체)
+        const url = /*[[@{/Dir/Search.json}]]*/ '/Dir/Search.json'; // 구현 시 서버 API에 맞춰 교체
+        const params = new URLSearchParams({
+          q: query || '',
+          scope: scope,     // recursive | all
+          target: target,   // all | file | dir
+          base: window.currentFolderUid || ''
+        });
+        fetch(`${url}?${params.toString()}`)
+          .then(r => r.json())
+          .then(list => {
+            window.lastFetchedList = Array.isArray(list) ? list : [];
+            renderFileList(window.lastFetchedList);
+          })
+          .catch(err => console.error('search error', err));
+      }
+    }
+  };
+
+  // ===== 툴바 바인딩 =====
+  function refreshPasteEnabled() {
+    const ctx = buildContext();
+    const enabled = commands.paste.canExecute(ctx);
+    if (pasteBtn) pasteBtn.disabled = !enabled;
+    // 파일 영역 우클릭 메뉴의 붙여넣기 항목은 열 때마다 갱신
+  }
+
+  document.getElementById('copyBtn')?.addEventListener('click', () => {
+    const ctx = buildContext(); if (commands.copy.canExecute(ctx)) commands.copy.run(ctx);
+  });
+  document.getElementById('cutBtn')?.addEventListener('click', () => {
+    const ctx = buildContext(); if (commands.cut.canExecute(ctx)) commands.cut.run(ctx);
+    refreshPasteEnabled();
+  });
+  document.getElementById('pasteBtn')?.addEventListener('click', () => {
+    const ctx = buildContext(); if (commands.paste.canExecute(ctx)) commands.paste.run(ctx);
+  });
+
+  document.getElementById('deleteBtn')?.addEventListener('click', () => {
+    const ctx = buildContext(); if (commands.delete.canExecute(ctx)) commands.delete.run(ctx);
+  });
+  document.getElementById('renameBtn')?.addEventListener('click', () => {
+    const ctx = buildContext(); if (commands.rename.canExecute(ctx)) commands.rename.run(ctx);
+  });
+  document.getElementById('downloadBtn')?.addEventListener('click', () => {
+    const ctx = buildContext(); if (commands.download.canExecute(ctx)) commands.download.run(ctx);
+  });
+  document.getElementById('newFolderBtn')?.addEventListener('click', () => {
+    const ctx = buildContext(); if (commands.newFolder.canExecute(ctx)) commands.newFolder.run(ctx);
+  });
+  document.getElementById('uploadBtn')?.addEventListener('click', () => {
+    const ctx = buildContext(); if (commands.upload.canExecute(ctx)) commands.upload.run(ctx);
+  });
+
+  // ===== 검색 바인딩 =====
+  const searchInputTop = document.getElementById('searchInputTop');
+  const searchScope = document.getElementById('searchScope');
+  const searchTarget = document.getElementById('searchTarget');
+
+  const fireSearch = debounce(() => {
+    const query = searchInputTop?.value ?? '';
+    const scope = searchScope?.value ?? 'filter';
+    const target = searchTarget?.value ?? 'all';
+    commands.search.run({ query, scope, target });
+  }, 300);
+
+  searchInputTop?.addEventListener('input', fireSearch);
+  searchScope?.addEventListener('change', fireSearch);
+  searchTarget?.addEventListener('change', fireSearch);
+
+  // 단축키: Ctrl/Cmd+F 포커스
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+      e.preventDefault();
+      searchInputTop?.focus();
+      searchInputTop?.select();
+    }
+  });
+
+  // ===== 파일 영역 우클릭 메뉴 =====
+  let ctxTargetItem = null; // 아이템 우클릭 시 대상
+
+  function hideContextMenu(menu) {
+    menu.classList.add('hidden');
+  }
+  function placeMenu(menu, x, y) {
+    menu.style.position = 'fixed';
+    const vw = window.innerWidth, vh = window.innerHeight;
+    // 먼저 보이게 해서 크기 계산
+    menu.classList.remove('hidden');
+    const rect = menu.getBoundingClientRect();
+    let left = x, top = y;
+    if (left + rect.width > vw) left = Math.max(0, vw - rect.width - 2);
+    if (top + rect.height > vh) top = Math.max(0, vh - rect.height - 2);
+    menu.style.left = left + 'px';
+    menu.style.top = top + 'px';
+  }
+  function updateFileMenuState({ isBackground, isFolderItem, hasSelection }) {
+    // 붙여넣기 활성화
+    const pasteLi = menuFile.querySelector('[data-action="paste"]');
+    const canPaste = storage?.isClipboardAvailable?.();
+    pasteLi.classList.toggle('text-gray-400', !canPaste);
+    pasteLi.classList.toggle('cursor-not-allowed', !canPaste);
+    pasteLi.classList.toggle('cursor-pointer', !!canPaste);
+
+    // 아이템 전용/배경 전용 표시
+    menuFile.querySelectorAll('.file-only,.item-only,.bg-only').forEach(el => el.classList.remove('hidden'));
+    // 배경 클릭: item-only 숨김, open/download 숨김, new-folder 표시
+    if (isBackground) {
+      menuFile.querySelectorAll('.item-only,.file-only').forEach(el => el.classList.add('hidden'));
+      menuFile.querySelectorAll('.bg-only').forEach(el => el.classList.remove('hidden'));
+    } else {
+      menuFile.querySelectorAll('.bg-only').forEach(el => el.classList.add('hidden'));
+      // 폴더 아이템일 때 open 가능 / 파일일 때 open+download 가능
+      if (!isFolderItem) {
+        // 파일이 아닌데 file-only 보이는 건 유지(다운로드/열기)
+      }
+      // 다중 선택 시: rename/open은 비활성화하는 대신 숨김
+      if (!hasSelection || getSelectedFileUids().length !== 1) {
+        menuFile.querySelector('[data-action="rename"]')?.classList.add('hidden');
+        menuFile.querySelector('[data-action="open"]')?.classList.add('hidden');
+        menuFile.querySelector('[data-action="download"]')?.classList.remove('hidden'); // 복수 다운로드 허용 시 표시 유지
+      }
+    }
+  }
+
+  fileGrid?.addEventListener('contextmenu', (e) => {
+    const itemEl = e.target.closest('.file-item');
+    ctxTargetItem = null;
+
+    // 배경 or 아이템
+    const isBackground = !itemEl;
+    const item = isBackground ? null : getItemByUid(itemEl.dataset.uid);
+
+    // 선택 싱크: 아이템 우클릭인데 선택에 없다면 그 아이템만 단일 선택으로
+    if (itemEl) {
+      const alreadySelected = itemEl.classList.contains('bg-blue-100');
+      if (!alreadySelected) {
+        // 기존 선택 해제 후 단일 선택
+        document.querySelectorAll('#fileGrid .file-item.bg-blue-100').forEach(el => el.classList.remove('bg-blue-100'));
+        itemEl.classList.add('bg-blue-100');
+      }
+      ctxTargetItem = item;
+    }
+
+    e.preventDefault();
+    placeMenu(menuFile, e.clientX, e.clientY);
+    updateFileMenuState({
+      isBackground,
+      isFolderItem: !!item && !item.isFile,
+      hasSelection: getSelectedFileUids().length > 0
+    });
+  });
+
+  // 파일 메뉴 클릭 처리
+  menuFile.addEventListener('click', async (e) => {
+    const li = e.target.closest('li[data-action]');
+    if (!li) return;
+    const action = li.dataset.action;
+
+    // 비활성 붙여넣기 방지
+    if (action === 'paste' && (li.classList.contains('text-gray-400') || li.classList.contains('cursor-not-allowed'))) {
+      return;
+    }
+    hideContextMenu(menuFile);
+
+    const baseCtx = buildContext({ target: ctxTargetItem });
+    switch (action) {
+      case 'open':        if (commands.open.canExecute(baseCtx)) commands.open.run(baseCtx); break;
+      case 'download':    if (commands.download.canExecute(baseCtx)) commands.download.run(baseCtx); break;
+      case 'rename':      if (commands.rename.canExecute(baseCtx)) commands.rename.run(baseCtx); break;
+      case 'delete':      if (commands.delete.canExecute(baseCtx)) commands.delete.run(baseCtx); break;
+      case 'copy':        if (commands.copy.canExecute(baseCtx)) commands.copy.run(baseCtx); refreshPasteEnabled(); break;
+      case 'cut':         if (commands.cut.canExecute(baseCtx)) commands.cut.run(baseCtx);  refreshPasteEnabled(); break;
+      case 'paste':       if (commands.paste.canExecute(baseCtx)) commands.paste.run(baseCtx); break;
+      case 'new-folder':  if (commands.newFolder.canExecute(baseCtx)) commands.newFolder.run(baseCtx); break;
+      case 'properties':  if (commands.properties.canExecute(baseCtx)) commands.properties.run(baseCtx); break;
+    }
+    ctxTargetItem = null;
+  });
+
+  // 바깥 클릭/ESC/스크롤로 닫기
+  document.addEventListener('click', (e) => {
+    if (!menuFile.classList.contains('hidden') && !menuFile.contains(e.target)) hideContextMenu(menuFile);
+  }, true);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (!menuFile.classList.contains('hidden')) hideContextMenu(menuFile);
+      if (!menuFolder.classList.contains('hidden')) hideContextMenu(menuFolder);
+    }
+  }, true);
+  document.addEventListener('scroll', () => {
+    if (!menuFile.classList.contains('hidden')) hideContextMenu(menuFile);
+  }, true);
+
+  // ===== 좌측 트리 onSelected 훅을 한 줄만 보강 (현재 폴더 동기화) =====
+  // onSelected(node) 내부(좌측 코드)에 아래 한 줄만 추가하면, 붙여넣기/검색의 목적지 동작이 정확해집니다.
+  // window.currentFolderUid = node.owner.uid;
+
+  // ===== 초기 진입 시 붙여넣기 버튼 상태 갱신 =====
+  refreshPasteEnabled();
+
+})();
+</script>
+    
+    
+</body>
+</html>

@@ -1,8 +1,9 @@
 package com.utime.burrowNest.storage.vo;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
+
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
  * Represents a directory entity with various properties such as name, creation date,
@@ -10,22 +11,27 @@ import lombok.ToString;
  */
 @Setter
 @Getter
-@ToString( callSuper = true )
 public class BnDirectory extends AbsPath{
     
     /**
      * Indicates whether this directory is publicly accessible by all users.
      */
-    private boolean publicAccessible;
+    protected boolean publicAccessible;
 
     /**
      * Indicates whether the directory has child directories.
      * True for having children, false otherwise.
      */
-    private boolean hasChild;
+    protected boolean hasChild;
 
     /**
      * The absolute path of the directory in the file system.
+     * 반드시 끝 문자열은 '/' 로 끝날 것.
      */
-    private String absolutePath;
+    protected String absolutePath;
+    
+    @Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
+	}
 }

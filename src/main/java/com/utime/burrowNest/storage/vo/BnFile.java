@@ -1,8 +1,9 @@
 package com.utime.burrowNest.storage.vo;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
+
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
  * Represents a basic file entity in the system. This class encapsulates common properties
@@ -11,33 +12,37 @@ import lombok.ToString;
  */
 @Setter
 @Getter
-@ToString(callSuper = true)
 public class BnFile extends AbsPath {
  
     /**
      * The size of the file in bytes.
      */
-    private long fileLength;
+    protected long fileLength;
 
     /**
      * The type of the file, as defined in the {@link EBnFileType} enumeration.
      */
-    private EBnFileType fileType;
+    protected EBnFileType fileType;
 
     /**
      * The full name of the file, including its extension.
      * For example, "document.txt" or "photo.jpeg".
      */
-    private String fullName;
+    protected String fullName;
 
     /**
      * The file extension (e.g., ".txt", ".jpg").
      */
-    private String extension;
+    protected String extension;
 
     /**
      * extends file information
      */
-    private AbsBnFileInfo info;
+    protected AbsBnFileInfo info;
+    
+    @Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
+	}
 
 }

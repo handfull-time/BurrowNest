@@ -1,0 +1,264 @@
+<div xmlns:th="http://www.thymeleaf.org"
+     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+     layout:decorate="~{Admin/Common/AdminLayout}">
+
+    <th:block layout:fragment="title">관리자 저장소</th:block>
+
+    <th:block layout:fragment="css"></th:block>
+
+    <div layout:fragment="content">
+    	<div class="bg-white shadow p-6 rounded-md mb-6">
+            <h2 class="text-xl font-bold text-gray-700 mb-4">저장소 관리</h2>
+            <div class="flex space-x-4">
+                <button type="button" class="bg-green-600 text-white p-2 rounded hover:bg-green-700" onclick="openSelectDir()">추가</button>
+            </div>
+        </div>
+
+        <!-- 그룹 목록 -->
+        <div class="bg-white shadow p-6 rounded-md">
+		    <h2 class="text-xl font-bold text-gray-700 mb-4">저장소 목록</h2>
+		    <table class="w-full border-collapse border border-gray-200">
+		        <thead>
+		            <tr class="bg-gray-100">
+		                <th class="border p-2 text-center">생성일</th>
+		                <th class="border p-2 text-center">이름</th>
+		                <th class="border p-2 text-center">전체 경로</th>
+		                <th class="border p-2 text-center">권한</th>
+		                <th class="border p-2 text-center"></th>
+		            </tr>
+		        </thead>
+		        <tbody>
+		            <tr th:unless="${#lists.isEmpty(directories)}"
+		            	th:each="item : ${directories}" th:data-no="${item.no}">
+		                <td class="border p-2 text-center" th:text="${#temporals.format(item.regDate,'yyyy.MM.dd HH:mm')}"></td>
+		                <td class="border p-2" th:text="${item.name}"></td>
+		                <td class="border p-2" th:text="${item.absolutePath}"></td>
+		                <td class="border p-2" th:text="${item.accType?.dscr}"></td>
+		                <td class="border p-2">
+		                	<button class="remove-dir ml-2 bg-red-500 hover:bg-red-600 text-white text-sm px-2 py-1 rounded">삭제</button>
+		                </td>
+		            </tr>
+		        </tbody>
+		    </table>
+		</div>
+    	
+    	<div class="bg-gray-50 p-6 font-sans hidden" id="progressContainer">
+        	<div class="max-w-xl mx-auto bg-white shadow-lg rounded-xl p-6 space-y-4">
+			    <div id="progressView">
+				    <div id="message" class="text-gray-700 text-center text-base font-medium">메시지</div>
+				
+				    <div class="relative w-full h-6 bg-gray-200 rounded-full overflow-hidden">
+				    	<div id="progressBar" class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-300 ease-in-out" style="width: 0%;"></div>
+				    </div>
+				
+				    <div class="flex justify-between text-sm text-gray-600">
+				      	<span id="progressText">0 / 0</span>
+				      	<span id="progressPercent">0%</span>
+				    </div>
+			    </div>
+		  	</div>
+		</div>
+		
+    </div>
+
+    <th:block layout:fragment="script">
+    <script type="text/javascript" th:src="@{/js/websocket/sockjs.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/websocket/stomp.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/websocket/BurrowSocket.js}"></script>
+    
+    <script th:inline="javascript">
+    
+    document.addEventListener('DOMContentLoaded', function () {
+    	document.querySelectorAll('.remove-dir').forEach(function (button) {
+    		button.addEventListener('click', function () {
+    			const row = this.closest('tr');
+    			const no = row.getAttribute('data-no');
+    			
+    			showCustomConfirm('정말 삭제하시겠습니까?', async (isConfirm) => {
+                	
+                	if( ! isConfirm ){
+                		return;
+                	}
+                	
+                	const url = /*[[@{/Admin/Storage/DeleteRootStorage.json}]]*/ null;
+                   	
+                   	const params = new URLSearchParams({
+                   		no: no
+                	});
+
+                	const urlAddress = url + '?' + params.toString();
+                	
+                	const options = {
+               	        method: "DELETE",
+               	        headers: {
+               	            "Content-Type": "application/json"
+               	        }
+               	    };
+                	
+                	const response = await apiRequest( urlAddress, options );
+                	
+                	if (response.ok) {
+    		            const data = await response.json();
+    		            if( data.code === '0' ){
+    		            	showCustomAlert('삭제 성공했습니다.', () => {
+    		            		});
+    		            }else{
+    		            	showCustomAlert(data.code + " - " + data.message);
+    		            }
+    		        } else {
+    		        	showCustomAlert('삭제 실패');
+    		        }
+    			});
+    		});
+    	});
+    });
+    
+    /**
+     * 폴더 선택 팝업 화면 생성.
+     */
+	function openSelectDir(){
+		console.log("openSelectDir click");
+
+        const sendValue = {
+		        url: /*[[@{/Admin/Storage/Dir.layer}]]*/ null,
+				method: MethodType.Get, 
+				NotCheck:true,
+				popupId:'SelectDir',
+		        width: '600px'
+		    };
+		
+		openPopup(sendValue);
+	}
+	
+	/**
+	 * 팝업창에서 선택한 목록들 화면 처리.
+	 */
+	function procNames(storageList){
+		
+		const length = storageList.length;
+		let message;
+		if( length < 1 ){
+			showCustomAlert( "추가할 Directory를 선택하세요.");
+			return;
+		}else if( length == 1 ){
+			const name  = storageList[0];
+			message = '[' + name + '] 추가 하시겠습니까?';
+		}else{
+			const name  = storageList[0];
+			message ='[' + name + ']외 ' + (length - 1) + '개 추가 하시겠습니까?';
+		}
+		
+		showCustomConfirm(message, async (isConfirm) => {
+        	
+        	if( ! isConfirm ){
+        		return;
+        	}
+        	
+        	apply( storageList );
+		});
+	}
+	
+	const eleMessage = document.getElementById("message");
+    const eleProgressText = document.getElementById("progressText");
+    const eleProgressBar = document.getElementById("progressBar");
+    const eleProgressPercent = document.getElementById("progressPercent");
+
+    // 4. 저장 상태가 전달됨.
+    function updateProgress(receiveData) {
+    	
+    	console.log("User 소켓 데이터 수신 " + receiveData.body);
+    	const json = JSON.parse(receiveData.body);
+    	
+    	if( Boolean(json.done) ){
+    		// 작업 완료.
+    		eleMessage.textContent = "✅ 완료";
+    		
+    		socketScript.disconnect();
+    		
+    		showCustomAlert( "정보 읽기 완료.", () => {
+    			location.reload();
+    		});
+    		return;
+    	}
+
+    	const total = Number(json.total);
+    	const progress = Number(json.progress);
+    	const message  = json.message;
+    	
+    	const percent = total > 0 ? Math.floor((progress / total) * 100) : 0;
+    	
+    	eleMessage.textContent = message || "";
+    	eleProgressText.textContent = `${progress} / ${total}`;
+    	eleProgressBar.style.width = `${percent}%`;
+    	eleProgressPercent.textContent = `${percent}%`;
+    }
+    
+    let socketScript = null;
+    
+    function apply( storageList ){
+    	
+    	buttonStatus( "applyBtn", false);
+    	
+    	// 1. 웹 소켓 접속.
+    	const wsUrl = /*[[@{/BackEvent}]]*/ null;
+    	const connectionInfo = new ConnectionInfo(wsUrl, { service: 'Burrow' });
+    	
+    	connectionInfo.setOpenHandler((frame) => {
+    		
+    		// 2. 접속 성공 하면 user-name 획득
+    		const currentUserKey = frame.headers['user-name'];
+    		console.log("연결됨", currentUserKey );
+    		
+    		saveRootStoreage( currentUserKey, storageList );
+    	});
+    	
+    	connectionInfo.setCloseHandler(() => {
+    		console.log("연결 해제");
+    		const progressContainer = document.getElementById('progressContainer');
+        	progressContainer.classList.add('hidden');
+    	});
+
+    	socketScript = new SocketScript(connectionInfo);
+    	
+    	socketScript.addReceiveInfo(new ReceiveInfo('/user/toFront/RecieveStatus', updateProgress));
+    	
+    	socketScript.connect();
+    }
+    
+    
+    // 3. SaveStorage 호출
+	async function saveRootStoreage(wsUser, storageList){
+		
+    	const progressContainer = document.getElementById('progressContainer');
+    	progressContainer.classList.remove('hidden');
+    	
+        const data = new Object();
+        data.roots = storageList;
+        data.wsUserName = wsUser;
+        
+		try {
+	        const res = await fetch(/*[[@{/Admin/Storage/SaveRootStorage.json}]]*/ null, {
+                method: "POST",
+                headers: {
+    				'Content-Type': 'application/json',
+    			},
+    			body: JSON.stringify( data ),
+                credentials: "include"
+            });
+	        
+	        console.info('✅ response', res);
+
+	        if (res.ok) {
+	        	console.info('작업 진행 중');
+	        }
+	        return true;
+	    } catch (err) {
+	        console.error("refreshToken 실패:", err);
+	        progressContainer.classList.add('hidden');
+	        return false;
+	    }
+	}
+    </script>
+    </th:block>
+
+</div>

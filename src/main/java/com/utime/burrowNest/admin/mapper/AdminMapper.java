@@ -5,7 +5,9 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.utime.burrowNest.admin.vo.BnAccessVo;
 import com.utime.burrowNest.admin.vo.ManageUserVo;
+import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
 /**
@@ -20,8 +22,7 @@ public interface AdminMapper {
 	 * @return
 	 */
 	int updateUser( UserVo user );
-
-
+	
 	/**
 	 * 사용자 목록 조회
 	 * @return
@@ -33,13 +34,80 @@ public interface AdminMapper {
 	 * @param userNo
 	 * @return
 	 */
-	UserVo getUserDetail( @Param("userNo") int userNo);
+	UserVo getUserDetail( @Param("userNo") long userNo);
 
 	/**
 	 * 회원 삭제
 	 * @param userNo
 	 * @return
 	 */
-	int deleteUser(int userNo);
+	int deleteUser(long userNo);
+
+	/**
+	 * 사용자 그룹 정보 조회
+	 * @return
+	 */
+	List<GroupVo> selectUserGroupList(@Param("enabled") Boolean enabled, @Param("grName") String grName);
+
+	/**
+	 * 사용자 그룹 정보 수정
+	 * @param vo
+	 * @return
+	 */
+	int updateGroup(GroupVo vo);
+
+	/**
+	 * 그룹 삭제
+	 * @param groupNo
+	 * @return
+	 */
+	int deleteGroup(long groupNo);
+
+	/**
+	 * Directory Access 그룹 추가
+	 * @param groupNo
+	 * @param accType
+	 * @return
+	 */
+	int insertDirectoryAccessGroup(BnAccessVo vo);
+	
+	/**
+	 * Directory access 조회
+	 * @param groupNo
+	 * @return
+	 */
+	List<BnAccessVo> selectDirectoryAccessGroup(@Param("groupNo") long groupNo);
+
+	/**
+	 * File Access 그룹 추가
+	 * @param groupNo
+	 * @param accType
+	 * @return
+	 */
+	int insertFileAccessGroup(@Param("groupNo") long groupNo, @Param("accType") int accType);
+
+	/**
+	 * Directory Access 그룹 수정
+	 * @param groupNo
+	 * @param accType
+	 * @return
+	 */
+	int updateDirectoryAccessGroup(BnAccessVo vo);
+
+	/**
+	 * File Access 그룹 수정
+	 * @param groupNo
+	 * @param accType
+	 * @return
+	 */
+	int updateFileAccessGroup(@Param("groupNo") long groupNo, @Param("accType") int accType);
+
+	/**
+	 * Directory Access 그룹 삭제
+	 * @param groupNo
+	 * @param accType
+	 * @return
+	 */
+	int deleteDirectoryAccessGroup(BnAccessVo vo);
 
 }

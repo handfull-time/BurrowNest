@@ -2,29 +2,31 @@ package com.utime.burrowNest.user.vo;
 
 import java.time.LocalDateTime;
 
-import com.utime.burrowNest.common.vo.EJwtRole;
+import com.utime.burrowNest.common.util.BurrowUtils;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 사용자 정보
  */
-@Data
+@Setter
+@Getter
 public class UserVo {
 	/** 회원 번호 */
-	int userNo;
+	long userNo;
 	/** 생성일 */
 	LocalDateTime regDate;
 	/** 수정일 */
 	LocalDateTime updateDate;
 	/** 사용 여부 */
 	boolean enabled;
+	/** 속한 그룹 */
+	GroupVo group;
 	/** id */
 	String id;
 	/** 닉네임 */
 	String nickname;
-	/** 권한 */
-	EJwtRole role;
 	/** 비고 */
 	String note;
 	/** 암호 찾기 값 */
@@ -35,4 +37,9 @@ public class UserVo {
 	long dailyDownloadLimit;
 	/** 저장공간 최대 사용 용량전체 저장소 제한 (사용자별 quota 등) */
 	long maxStorageUsage;
+	
+	@Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
+	}
 }

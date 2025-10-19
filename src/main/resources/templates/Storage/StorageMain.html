@@ -25,7 +25,6 @@
 		<div id="resizable-left"
 		     class="w-1/4 min-w-[150px] max-w-[500px] resize-x overflow-auto border-r border-gray-300">
 		  <div th:insert="~{Storage/Directories :: directories}"></div>
-		  <script th:replace="~{Storage/Directories :: script}"></script>
 		</div>
 
         <!-- Files List -->
@@ -36,7 +35,8 @@
     <div th:replace="~{Storage/Footer :: footer}" class="flex-none border-t border-gray-300 text-sm px-2 py-1"></div>
 
     <!-- Optional: Add a simple resizable script -->
-    <script>
+    <th:script th:replace="~{Common/Script :: script}"/>
+    <script th:inline="javascript">
         const resizable = document.getElementById('resizable-left');
         
         let isResizing = false;

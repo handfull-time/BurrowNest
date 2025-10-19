@@ -1,0 +1,453 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="files"
+     class="p-2 text-sm bg-white text-black select-none h-full w-full overflow-hidden">
+<div class="w-full h-screen flex flex-col">
+
+  <!-- 툴바 -->
+  <div class="border-b p-2 flex items-center gap-2">
+    <div id="breadcrumb" class="text-sm text-gray-600 flex-1 truncate">
+      <!-- ex) Root / Projects / ... -->
+    </div>
+
+    <div class="flex items-center gap-2">
+      <!-- 검색 -->
+      <label class="input input-sm input-bordered flex items-center gap-2 px-2 py-1 rounded border border-gray-300">
+        <i class="fa-solid fa-magnifying-glass text-gray-500"></i>
+        <input id="searchInput" type="text" placeholder="검색" class="outline-none text-sm" />
+      </label>
+
+      <!-- 정렬 -->
+      <select id="sortSelect" class="text-sm border rounded px-2 py-1">
+        <option value="name,asc">이름 ↑</option>
+        <option value="name,desc">이름 ↓</option>
+        <option value="date,desc">수정날짜 ↓</option>
+        <option value="date,asc">수정날짜 ↑</option>
+        <option value="type,asc">유형 ↑</option>
+        <option value="type,desc">유형 ↓</option>
+        <option value="size,desc">크기 ↓</option>
+        <option value="size,asc">크기 ↑</option>
+      </select>
+
+      <!-- 보기 전환 -->
+      <button id="iconViewBtn" class="px-2 py-1 border rounded hover:bg-gray-50" title="아이콘 보기">
+        <i class="fa-solid fa-grip text-gray-700"></i>
+      </button>
+      <button id="detailViewBtn" class="px-2 py-1 border rounded hover:bg-gray-50" title="상세 보기">
+        <i class="fa-solid fa-list text-gray-700"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- 리스트 영역 -->
+  <div class="flex-1 overflow-auto p-3">
+    <div id="fileGrid" class="grid grid-cols-10 gap-4">
+      <!-- 항목 렌더링 -->
+    </div>
+  </div>
+</div>
+
+<!-- 아이콘 보기용 템플릿 -->
+<template id="fileItemIconTemplate">
+  <div class="file-item flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer select-none">
+    <div class="thumb w-16 h-16 bg-gray-100 rounded overflow-hidden not-italic flex items-center justify-center">
+      <img class="thumb-img w-full h-full object-cover hidden" loading="lazy" />
+      <i class="icon fa-solid text-gray-400 text-2xl"></i>
+    </div>
+    <div class="file-name text-xs text-center mt-2 truncate w-24"></div>
+  </div>
+</template>
+
+<!-- 상세 보기: 테이블 행 -->
+<template id="fileItemDetailTemplate">
+  <tr class="file-item select-none hover:bg-blue-50">
+    <td class="border p-2 text-center w-10"><i class="icon fa-solid"></i></td>
+    <td class="border p-2 text-left file-name"></td>
+    <td class="border p-2 text-center file-date"></td>
+    <td class="border p-2 text-center file-type"></td>
+    <td class="border p-2 text-right file-size"></td>
+  </tr>
+</template>
+
+<!-- 상세 보기: 테이블 -->
+<template id="fileItemDetailTableTemplate">
+  <table class="table-auto w-full border-collapse border border-gray-200 text-sm">
+    <thead>
+      <tr class="bg-gray-100 text-xs">
+        <th class="border p-2 text-center w-10"></th>
+        <th class="border p-2 text-left">이름</th>
+        <th class="border p-2 text-center">수정날짜</th>
+        <th class="border p-2 text-center">유형</th>
+        <th class="border p-2 text-right">크기</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</template>
+
+
+<script>
+  // ====== 설정 ======
+  const THUMBNAIL_URL = /*[[@{/Files/Thumbnail}]]*/ '/Files/Thumbnail';
+  const FILE_OPEN_URL  = /*[[@{/Files/Open/}]]*/ '/Files/Open/'; // 뒤에 uid 붙임
+
+  // 상태
+  let currentView = 'icon'; // 'icon' | 'detail'
+  let lastFetchedList = [];
+  let filteredSortedList = [];
+  const selectedUids = new Set();
+  let lastSelectedIndex = null;
+  let currentPathUids = []; // 브레드크럼 표시용 (선택사항)
+
+  // 초기 이벤트 바인딩 (여러번 붙는 것 방지)
+  const fileGrid = document.getElementById('fileGrid');
+  const searchInput = document.getElementById('searchInput');
+  const sortSelect = document.getElementById('sortSelect');
+
+  document.getElementById('detailViewBtn').addEventListener('click', () => {
+    currentView = 'detail';
+    renderFileList(lastFetchedList);
+  });
+  document.getElementById('iconViewBtn').addEventListener('click', () => {
+    currentView = 'icon';
+    renderFileList(lastFetchedList);
+  });
+  searchInput.addEventListener('input', () => applyFilterAndSort());
+  sortSelect.addEventListener('change', () => applyFilterAndSort());
+
+  // 파일 리스트 가져오기
+  async function loadFileList(uid) {
+    try {
+      const url = /*[[@{/Dir/Files.json}]]*/ '/Dir/Files.json';
+      const params = new URLSearchParams({ uid: uid || '' });
+      const fileListUrl = url + '?' + params.toString();
+
+      const res = await fetch(fileListUrl);
+      const list = await res.json();
+      // console.info('loadFileList', uid, list);
+      renderFileList(list);
+    } catch (err) {
+      console.error("파일 목록 불러오기 실패:", err);
+    }
+  }
+
+  // 리스트 렌더
+  function renderFileList(list) {
+    lastFetchedList = Array.isArray(list) ? list : [];
+    lastSelectedIndex = null;
+    selectedUids.clear();
+
+    applyFilterAndSort(true);
+    renderBreadcrumb();
+  }
+
+  // 필터 + 정렬 적용
+  function applyFilterAndSort(renderNow = false) {
+    const q = (searchInput.value || '').trim().toLowerCase();
+    const [key, dir] = (sortSelect.value || 'name,asc').split(',');
+
+    // 필터
+    let arr = lastFetchedList.filter(item => {
+      const name = (item.name || '').toLowerCase();
+      return q === '' || name.includes(q);
+    });
+
+    // 정렬 키 생성
+    arr.sort((a, b) => {
+      let va, vb;
+      switch (key) {
+        case 'name':
+          va = (a.name || '').toLowerCase();
+          vb = (b.name || '').toLowerCase();
+          break;
+        case 'date':
+          va = a.lastModified || a.creation || a.updateDate || a.regDate || '';
+          vb = b.lastModified || b.creation || b.updateDate || b.regDate || '';
+          // 문자열 ISO라면 비교 가능
+          break;
+        case 'type':
+          va = a.isFile ? (a.extension || '').toLowerCase() : 'folder';
+          vb = b.isFile ? (b.extension || '').toLowerCase() : 'folder';
+          break;
+        case 'size':
+          va = a.isFile ? (a.fileLength || 0) : -1;
+          vb = b.isFile ? (b.fileLength || 0) : -1;
+          break;
+        default:
+          va = (a.name || '').toLowerCase();
+          vb = (b.name || '').toLowerCase();
+      }
+      if (va < vb) return dir === 'asc' ? -1 : 1;
+      if (va > vb) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    filteredSortedList = arr;
+    if (renderNow) paint();
+    else paint();
+  }
+
+  // 실제 DOM 그리기
+  function paint() {
+    // 뷰 모드에 따라 컨테이너 클래스
+    if (currentView === 'icon') {
+      fileGrid.className = 'grid grid-cols-10 gap-4';
+      fileGrid.innerHTML = '';
+    } else {
+      fileGrid.className = '';
+      fileGrid.innerHTML = '';
+      const tableTemplate = document.getElementById('fileItemDetailTableTemplate');
+      const tableClone = tableTemplate.content.cloneNode(true);
+      fileGrid.appendChild(tableClone);
+    }
+
+    const isIconView = currentView === 'icon';
+    const parentEl = isIconView ? fileGrid : fileGrid.querySelector('tbody');
+
+    // 썸네일 Lazy 관찰자
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          const src = img.dataset.src;
+          if (src) {
+            img.src = src;
+            img.removeAttribute('data-src');
+          }
+          io.unobserve(img);
+        }
+      });
+    }, { root: document.querySelector('.flex-1.overflow-auto'), threshold: 0.1 });
+
+    filteredSortedList.forEach((item, index) => {
+      const tpl = document.getElementById(isIconView ? 'fileItemIconTemplate' : 'fileItemDetailTemplate');
+      const frag = tpl.content.cloneNode(true);
+      const el = frag.querySelector('.file-item');
+      const icon = frag.querySelector('.icon');
+      const img = frag.querySelector('.thumb-img');
+
+      el.dataset.uid = item.uid;
+      el.dataset.index = String(index);
+
+      if (isIconView) {
+        frag.querySelector('.file-name').textContent = item.name || '';
+      } else {
+        const nameTd = frag.querySelector('.file-name');
+        const dateTd = frag.querySelector('.file-date');
+        const typeTd = frag.querySelector('.file-type');
+        const sizeTd = frag.querySelector('.file-size');
+
+        nameTd.textContent = item.name || '';
+        dateTd.textContent = formatDate(item.lastModified || item.updateDate || item.creation || item.regDate);
+        typeTd.textContent = item.isFile ? (item.extension || (item.fileType || '파일')) : '폴더';
+        sizeTd.textContent = item.isFile ? formatFileSize(item.fileLength || 0) : '';
+      }
+
+      // 아이콘/썸네일
+      if (item.isFile && (item.fileType === 'Image' || looksLikeImage(item.extension))) {
+        if (img) {
+          img.classList.remove('hidden');
+          // lazy: 실제 src는 data-src에 두고, 교차 시 주입
+          img.dataset.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
+          io.observe(img);
+        }
+        if (icon) icon.remove();
+      } else {
+        if (icon) {
+          // 폴더/파일 아이콘 결정
+          const iconClass = item.isFile ? pickFileIconClass(item.extension) : 'fa-folder';
+          icon.classList.add(iconClass);
+          // 아이콘 보기일 때 좀 더 크게
+          if (isIconView) {
+            icon.classList.add('text-2xl');
+          }
+        }
+      }
+
+      parentEl.appendChild(frag);
+    });
+
+    // 이벤트 위임 (중복 방지 위해 once 바인딩 전략: 기존 리스너 제거 후 새로 등록)
+    fileGrid.onclick = onGridClick;
+    fileGrid.ondblclick = onGridDblClick;
+  }
+
+  // 클릭 선택
+  function onGridClick(e) {
+    const itemEl = e.target.closest('.file-item');
+    if (!itemEl) return;
+
+    const index = parseInt(itemEl.dataset.index, 10);
+    const uid = itemEl.dataset.uid;
+
+    if (e.shiftKey && lastSelectedIndex != null) {
+      selectRange(Math.min(lastSelectedIndex, index), Math.max(lastSelectedIndex, index));
+    } else if (e.ctrlKey || e.metaKey) {
+      toggleSelection(uid, itemEl);
+      lastSelectedIndex = index;
+    } else {
+      clearSelection();
+      addSelection(uid, itemEl);
+      lastSelectedIndex = index;
+    }
+  }
+
+  // 더블클릭: 파일 열기 / 폴더 진입
+  function onGridDblClick(e) {
+    const itemEl = e.target.closest('.file-item');
+    if (!itemEl) return;
+
+    const index = parseInt(itemEl.dataset.index, 10);
+    const item = filteredSortedList[index];
+    if (!item) return;
+
+    if (item.isFile) {
+      window.open(`${FILE_OPEN_URL}${encodeURIComponent(item.uid)}`, '_blank');
+    } else {
+      // 폴더: 외부 onSelected 사용 중이면 호출해줌
+      if (typeof onSelected === 'function') {
+        clearSelectedExcept(item.uid); // 트리 하이라이트 정리
+        onSelected({ owner: item, selected: true });
+      } else {
+        // 혹시 단독 동작 시에는 해당 폴더로 재조회
+        loadFileList(item.uid);
+        pushPath(item.uid);
+      }
+    }
+  }
+
+  // 선택 도우미
+  function clearSelection() {
+    selectedUids.clear();
+    document.querySelectorAll('.file-item.bg-blue-100').forEach(el => el.classList.remove('bg-blue-100'));
+  }
+  function addSelection(uid, el) {
+    selectedUids.add(uid);
+    el.classList.add('bg-blue-100');
+  }
+  function toggleSelection(uid, el) {
+    if (selectedUids.has(uid)) {
+      selectedUids.delete(uid);
+      el.classList.remove('bg-blue-100');
+    } else {
+      selectedUids.add(uid);
+      el.classList.add('bg-blue-100');
+    }
+  }
+  function selectRange(from, to) {
+    clearSelection();
+    const items = Array.from(document.querySelectorAll('.file-item'));
+    for (let i = from; i <= to; i++) {
+      const el = items[i];
+      if (!el) continue;
+      addSelection(el.dataset.uid, el);
+    }
+  }
+
+  // 트리 선택 해제(이미 있으니 유지)
+  function clearSelectedExcept(uid) {
+    const root = document.getElementById("tree");
+    if (!root) return;
+    root.querySelectorAll('[data-node="true"]').forEach(el => {
+      if (el._nodeData?.owner.uid !== uid) {
+        el._nodeData.selected = false;
+      }
+    });
+  }
+
+  // 브레드크럼 (선택)
+  function pushPath(uid) {
+    // 필요한 경우 현재 경로 uid 스택 관리
+    currentPathUids.push(uid);
+    renderBreadcrumb();
+  }
+  function popTo(uid) {
+    const idx = currentPathUids.indexOf(uid);
+    if (idx >= 0) {
+      currentPathUids = currentPathUids.slice(0, idx + 1);
+    }
+    renderBreadcrumb();
+  }
+  function renderBreadcrumb() {
+    const el = document.getElementById('breadcrumb');
+    if (!el) return;
+    if (!currentPathUids.length) {
+      el.textContent = 'Root';
+      return;
+    }
+    el.innerHTML = '';
+    const wrap = document.createElement('div');
+    wrap.className = 'flex items-center gap-1';
+    let first = true;
+    const addCrumb = (label, uid) => {
+      if (!first) {
+        const sep = document.createElement('span');
+        sep.textContent = '/';
+        sep.className = 'text-gray-400';
+        wrap.appendChild(sep);
+      }
+      first = false;
+      const a = document.createElement('button');
+      a.textContent = label;
+      a.className = 'text-blue-600 hover:underline';
+      a.onclick = () => { popTo(uid); loadFileList(uid); };
+      wrap.appendChild(a);
+    };
+    // 여기서는 uid만 관리했지만, 실제라면 uid → 이름 매핑 필요
+    currentPathUids.forEach((uid, i) => addCrumb(`Folder ${i+1}`, uid));
+    el.appendChild(wrap);
+  }
+
+  // 유틸
+  function formatFileSize(bytes) {
+    if (!bytes || bytes < 0) return '';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+    return (bytes / 1024 / 1024 / 1024).toFixed(1) + ' GB';
+  }
+  
+  function formatDate(isoLike) {
+    if (!isoLike) return '';
+    // LocalDateTime -> ISO 문자열로 온다고 가정
+    // 예: "2025-08-14T10:12:34.123"
+    try {
+      const d = new Date(isoLike);
+      if (isNaN(d.getTime())) return isoLike;
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mi = String(d.getMinutes()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+    } catch {
+      return isoLike;
+    }
+  }
+  
+  function looksLikeImage(ext) {
+    if (!ext) return false;
+    const e = ext.replace('.', '').toLowerCase();
+    return ['jpg','jpeg','png','gif','bmp','webp','svg','heif','heic','avif'].includes(e);
+  }
+  
+  function pickFileIconClass(ext) {
+    if (!ext) return 'fa-file';
+    const e = ext.replace('.', '').toLowerCase();
+    if (['zip','rar','7z','tar','gz'].includes(e)) return 'fa-file-zipper';
+    if (['pdf'].includes(e)) return 'fa-file-pdf';
+    if (['doc','docx'].includes(e)) return 'fa-file-word';
+    if (['xls','xlsx','csv'].includes(e)) return 'fa-file-excel';
+    if (['ppt','pptx'].includes(e)) return 'fa-file-powerpoint';
+    if (['mp4','mkv','mov','avi','webm'].includes(e)) return 'fa-file-video';
+    if (['mp3','wav','flac','m4a','ogg'].includes(e)) return 'fa-file-audio';
+    if (looksLikeImage(e)) return 'fa-file-image';
+    if (['txt','md','log'].includes(e)) return 'fa-file-lines';
+    return 'fa-file';
+  }
+
+  // 초기 진입 시 목록 로드
+  // 필요하면 최초 uid 전달
+  // loadFileList('');
+</script>
+
+
+</div>

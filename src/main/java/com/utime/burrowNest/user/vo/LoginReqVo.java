@@ -1,15 +1,15 @@
 package com.utime.burrowNest.user.vo;
 
+import com.utime.burrowNest.common.util.BurrowUtils;
+
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
  * 로그인 요청 정보
  */
 @Setter
 @Getter
-@ToString(callSuper = true)
 public class LoginReqVo extends ReqUniqueVo{
 	
 	/**
@@ -26,5 +26,10 @@ public class LoginReqVo extends ReqUniqueVo{
 	 * 접속 브라우져 정보
 	 */
 	private String userAgent;
+	
+	@Override
+	public String toString() {
+		return BurrowUtils.toJson(this);
+	}
 	
 }

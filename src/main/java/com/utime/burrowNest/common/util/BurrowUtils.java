@@ -2,12 +2,19 @@ package com.utime.burrowNest.common.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.attribute.FileTime;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 import org.springframework.http.MediaType;
 import org.springframework.util.StreamUtils;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -188,6 +195,28 @@ public class BurrowUtils {
         return result;
     }
     
+    public static Date convertToDate(String input) {
+    	
+    	final LocalDateTime dt = convertToLocalDateTime( input );
+    	if( dt == null ) {
+    		return null;
+    	}
+    	
+        return Date.from(dt.atZone(ZoneId.systemDefault()).toInstant());
+    }
+    
+    public static LocalDateTime convertToLocalDateTime(FileTime fileTime) {
+    	// 변환 과정: FileTime → Instant → LocalDateTime
+        final LocalDateTime result = fileTime.toInstant()
+                                              .atZone(ZoneId.systemDefault()) // 시스템 시간대 적용
+                                              .toLocalDateTime();
+        
+        return result;
+    }
+    	
+    	
+
+
     public static byte [] encodeImageToByteArray(InputStream inputStream) throws IOException {
         if (inputStream == null || inputStream.available() < 1) {
             return null; 
@@ -225,5 +254,33 @@ public class BurrowUtils {
         }
 
         return null;
+    }
+    
+    
+    private final static ObjectWriter objWirter;
+    static {
+    	final ObjectMapper objMapper = new ObjectMapper();
+    	objMapper.registerModule(new JavaTimeModule()); // Java 8 날짜/시간 타입 지원 추가
+    	objWirter = objMapper.writerWithDefaultPrettyPrinter();
+    }
+
+    /**
+     * json 형태 출력
+     * @param obj
+     * @return
+     */
+    public static String toJson( Object obj ) {
+    	
+    	if( obj == null ) {
+    		return "Is null.";
+    	}
+    	
+		try {
+			return obj.getClass().getSimpleName() + ": " + objWirter.writeValueAsString(obj) + "\n";
+		} catch (Exception e) {
+			log.error("", e);
+			return "{}";
+		}
+
     }
 }

@@ -3,18 +3,22 @@
 <!--//네임스페이스에는 mapper 가 있는 풀 패키지명과 매퍼명을 등록 한다. -->
 <mapper namespace="com.utime.burrowNest.admin.mapper.AdminMapper">
 
+	<resultMap id="ManageUserVoMap" 
+		type="com.utime.burrowNest.admin.vo.ManageUserVo" 
+		extends="com.utime.burrowNest.user.mapper.UserMapper.UserVoMap">
+		
+	    <result property="LOGIN_COUNT" column="loginCount"/>
+	    <result property="LAST_LOGIN_TIME" column="lastLoginTime"/>
+	    <result property="FAIL_COUNT" column="loginFailCount"/>
+	</resultMap>
+
 	<!-- 사용자 목록 조회 -->
-	<select id="getUserList" parameterType="map" resultType="com.utime.burrowNest.admin.vo.ManageUserVo">
+	<select id="getUserList" parameterType="map" resultMap="ManageUserVoMap">
 		SELECT
-			UR.NO AS "userNo"
-			, UR.REG_DATE
-			, UR.ENABLED
-			, UR.ID 
-			, UR.NICK_NAME 
-			, UR.ROLE
+			<include refid="com.utime.burrowNest.user.mapper.UserMapper.UserColumn" /> 
 			, NVL(LR.LOGIN_COUNT, 0) AS LOGIN_COUNT
 			, LR.LAST_LOGIN_TIME
-			, PW.FAIL_COUNT AS "loginFailCount"
+			, PW.FAIL_COUNT
 		FROM BN_USER UR
 			LEFT OUTER JOIN (
 				 SELECT
@@ -34,11 +38,11 @@
 	</select>
 	
 	
-	<select id="getUserDetail" parameterType="map" resultType="com.utime.burrowNest.user.vo.UserVo">
+	<select id="getUserDetail" parameterType="map" resultMap="com.utime.burrowNest.user.mapper.UserMapper.UserVoMap">
 		SELECT
 			<include refid="com.utime.burrowNest.user.mapper.UserMapper.UserAllColumn" /> 
-		FROM BN_USER
-		WHERE NO = #{userNo}
+		FROM BN_USER UR
+		WHERE UR.NO = #{userNo}
 	</select>
 	
 	<!-- 사용자 정보 갱신 -->
@@ -46,7 +50,7 @@
 		UPDATE BN_USER SET
 			UPDATE_DATE = CURRENT_TIMESTAMP
 			, ENABLED = #{enabled}
-			, ROLE = #{role}
+			, GROUP_NO = #{group.groupNo}
 			, NOTE = <choose> <when test="note != null and note != '' ">#{note}</when> <otherwise>NULL</otherwise> </choose>
 			, DAILY_UPLOAD_LIMIT = #{dailyUploadLimit} 
 			, DAILY_DOWNLOAD_LIMIT = #{dailyDownloadLimit}
@@ -56,8 +60,107 @@
 	
 	<!-- 회원 삭제 -->
 	<delete id="deleteUser" parameterType="integer">
-		DELETE FROM BN_USER
-		WHERE NO = #{userNo}
+		DELETE FROM BN_USER UR
+		WHERE UR.NO = #{userNo}
 	</delete>
+	
+	<!-- 사용자 그룹 정보 조회 -->
+	<select id="selectUserGroupList" resultMap="com.utime.burrowNest.user.mapper.UserMapper.GroupVoMap">
+		SELECT
+			<include refid="com.utime.burrowNest.user.mapper.UserMapper.GroupColumn"/>
+		FROM BN_USER_GROUP GR
+		WHERE 1=1
+			<if test="enabled != null">
+			AND GR.ENABLED = #{enabled}
+			</if>
+			<if test="grName != null and grName != '' ">
+			AND GR.NAME LIKE '%${grName}%'
+			</if>
+		ORDER BY
+        CASE
+            WHEN GR.NO IN (1, 2) THEN 0
+            ELSE 1
+        END, GR.NAME ASC
+	</select>
+	
+	<!-- 사용자 그룹 정보 수정 -->
+	<update id="updateGroup" parameterType="com.utime.burrowNest.user.vo.GroupVo">
+		UPDATE BN_USER_GROUP SET 
+			UPDATE_DATE = CURRENT_TIMESTAMP
+			, ENABLED = #{enabled}
+			, NAME = #{name}
+			, ROLE = #{role}
+			, ACCESS_FLAGS = #{accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler}
+			<if test="note != null and note != '' "> 
+			, NOTE = #{note}
+			</if>
+			, DAILY_UPLOAD_LIMIT  = #{dailyUploadLimit}
+			, DAILY_DOWNLOAD_LIMIT = #{dailyDownloadLimit}
+			, MAX_STORAGE_USAGE = #{maxStorageUsage}
+		WHERE NO = #{groupNo}
+	</update>
+	
+	<!-- 그룹 삭제 -->
+	<delete id="deleteGroup" parameterType="integer">
+		DELETE FROM BN_USER_GROUP GR
+		WHERE GR.NO = #{groupNo}
+	</delete>
+	
+	<!-- Directory Access 그룹 추가 -->
+	<insert id="insertDirectoryAccessGroup" parameterType="com.utime.burrowNest.admin.vo.BnAccessVo">
+		INSERT INTO BN_DIRECTORY_ACCESS ( 
+			DIR_NO
+			, GROUP_NO
+			, ACCESS_FLAGS
+		) VALUES (
+			#{no}
+			, #{groupNo} 
+			, #{accType}
+		)
+	</insert>
+	
+	<!-- 조회 -->
+	<select id="selectDirectoryAccessGroup" parameterType="map" resultType="com.utime.burrowNest.admin.vo.BnAccessVo">
+		SELECT
+			DIR_NO AS "no"
+			, GROUP_NO AS "groupNo"
+			, ACCESS_FLAGS AS "accType"
+		FROM BN_DIRECTORY_ACCESS
+		WHERE GROUP_NO = #{groupNo}
+	</select>
+
+	<!-- File Access 그룹 추가 -->
+	<insert id="insertFileAccessGroup" parameterType="map">
+		INSERT INTO BN_FILE_ACCESS ( 
+			FILE_NO
+			, GROUP_NO
+			, ACCESS_FLAGS
+		) SELECT 
+			FILE_NO
+			, #{groupNo} 
+			, #{accType}
+		FROM BN_FILE_ACCESS WHERE GROUP_NO = 1;
+	</insert>
+
+	<!-- Directory Access 그룹 수정 -->
+	<update id="updateDirectoryAccessGroup" parameterType="com.utime.burrowNest.admin.vo.BnAccessVo">
+		UPDATE BN_DIRECTORY_ACCESS SET
+			ACCESS_FLAGS = #{accType}
+		WHERE DIR_NO = #{dirNo} AND GROUP_NO = #{groupNo} 
+	</update>
+
+	<!-- File Access 그룹 수정 -->
+	<update id="updateFileAccessGroup" parameterType="map">
+		UPDATE BN_FILE_ACCESS SET
+			ACCESS_FLAGS = #{accType}
+		WHERE GROUP_NO = #{groupNo}
+	</update>
+	
+	<!-- Directory Access 그룹 삭제 -->
+	<delete id="deleteDirectoryAccessGroup" parameterType="com.utime.burrowNest.admin.vo.BnAccessVo">
+		DELETE FROM BN_DIRECTORY_ACCESS 
+		WHERE DIR_NO = #{dirNo} AND GROUP_NO = #{groupNo} 
+	</delete>
+	
 	
 </mapper>
