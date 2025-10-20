@@ -29,7 +29,7 @@
 	<script th:inline="javascript">
 
 	// 초기 로딩 (root)
-	loadDirectory(null, document.getElementById("directoryTree"));
+	loadDirectory(/*[[${selectedUid}]]*/ null, document.getElementById("directoryTree"));
 	
 	// 클릭 위임: 라벨/토글 모두로 열고 닫기
 	document.getElementById("directoryTree").addEventListener("click", async (e) => {
