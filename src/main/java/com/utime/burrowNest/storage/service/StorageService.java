@@ -94,12 +94,20 @@ public interface StorageService {
 	BnDirectory getAdminTopStorage();
 
 	/**
-	 * 
+	 * Path 목록 조회 - 이미 지정된 건 제외
 	 * @param groupNo
 	 * @param dirNo
 	 * @return
 	 */
 	List<BnDirectory> getGroupStorageList(long groupNo, long dirNo);
+	
+	/**
+	 * Path 목록 조회
+	 * @param user
+	 * @param uid
+	 * @return
+	 */
+	List<BnDirectory> getGroupStorageList(UserVo user, String uid);
 	
 	/**
 	 * 그룹 저장소 삭제
@@ -108,4 +116,5 @@ public interface StorageService {
 	 * @return
 	 */
 	ReturnBasic removeGroupStorage(long groupNo, long dirNo);
+
 }

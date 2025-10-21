@@ -32,7 +32,7 @@ public class DirectoryController {
 	 * @return
 	 */
 	@GetMapping(path = { "/", "Index.html" })
-    public String noneAuthMetaPage(ModelMap model) throws Exception{
+    public String dirRootView(ModelMap model) throws Exception{
 		
 		return this.path(model, null);
     }
@@ -53,6 +53,19 @@ public class DirectoryController {
 		
 		if( result == null ) {
 			throw new Exception("폴더 없음.");
+		}
+	    
+	    return result;
+	}
+	
+	@ResponseBody
+	@GetMapping("PathList.json")
+    public List<BnDirectory> getPathList(UserVo user, @RequestParam("uid") String uid) throws Exception {
+		
+		final List<BnDirectory> result = storageService.getGroupStorageList(user, uid );
+		
+		if( result == null ) {
+			return Collections.emptyList();
 		}
 	    
 	    return result;

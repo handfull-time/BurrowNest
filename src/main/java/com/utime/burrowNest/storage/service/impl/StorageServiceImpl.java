@@ -445,12 +445,25 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 	public BnDirectory getAdminTopStorage() {
 		return storageDao.getRootDirectory();
 	}
+
 	@Override
 	public List<BnDirectory> getGroupStorageList(long groupNo, long dirNo) {
 		List<BnDirectory> result = storageDao.getGroupStorageList( groupNo, dirNo );
 		return result;
 	}
 	
+	@Override
+	public List<BnDirectory> getGroupStorageList(UserVo user, String uid) {
+		
+		if( BurrowUtils.isEmpty(uid) ) {
+			log.info("루트 호출");
+			return this.storageDao.getRootDirectory( user.getGroup().getGroupNo() );	
+		}
+		
+		List<BnDirectory> result = storageDao.getGroupStorageList( user.getGroup().getGroupNo(), 0 );
+		return result;
+	}
+
 	@Override
 	public ReturnBasic removeGroupStorage(long groupNo, long dirNo) {
 		final ReturnBasic result = new ReturnBasic();
