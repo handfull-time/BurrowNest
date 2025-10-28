@@ -6,6 +6,8 @@
     <meta charset="UTF-8">
 
 	<link rel="stylesheet" th:href="@{/css/tailwind/tailwind.min.css}">
+	<th:script th:replace="~{Common/Script :: CommonScript}"/>
+
    	<th:block th:replace="~{Common/Favicon :: Favicon}"></th:block>
 
     <!-- <script type="text/javascript" th:src="@{/js/tailwind/tailwind.min.js}"></script> -->
@@ -63,8 +65,6 @@
   	<div th:replace="~{Common/alertView :: alertView}"></div>
     <div th:replace="~{Common/modalView :: modalView}"></div>
 
-    <th:script th:replace="~{Common/Script :: CommonScript}"/>
-    
     <script th:inline="javascript">
     		
     const userMenuButton = document.getElementById("userMenuButton");

@@ -746,14 +746,22 @@
 
 <!-- 루트 directory 조회 -->
 <select id="selectRootDirectories" parameterType="map" resultMap="BnDirectoryMap">
-	SELECT 
-		<include refid="BnDirectoryColumn" />
-		, DA.ACCESS_FLAGS
-	FROM BN_DIRECTORY DR
-	    INNER JOIN BN_DIRECTORY_ACCESS DA 
-	    	ON DR.NO = DA.DIR_NO
-    WHERE 1=1
-    	AND DA.GROUP_NO = #{groupNo}
+	SELECT
+	    d.NO
+	    , d.PARENT_NO
+	    , CAST(d.UID AS VARCHAR) AS UID
+	    , d.NAME
+	    , EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d.NO) AS HAS_CHILD
+	FROM BN_DIRECTORY d
+	WHERE 1=1
+		AND d.PARENT_NO = 1
+	AND NOT EXISTS (
+	    SELECT 1
+	    FROM BN_DIRECTORY_ACCESS da
+	    WHERE da.DIR_NO   = d.NO
+	      AND da.GROUP_NO = #{groupNo}
+	)
+	ORDER BY d.NAME
 </select>
 <!-- LIMIT 1 OFFSET 0 -->
 

@@ -13,6 +13,8 @@
     <script type="text/javascript" th:src="@{/js/websocket/sockjs.min.js}"></script>
     <script type="text/javascript" th:src="@{/js/websocket/stomp.min.js}"></script>
     <script type="text/javascript" th:src="@{/js/websocket/BurrowSocket.js}"></script>
+
+	<th:script th:replace="~{Common/Script :: CommonScript}"/>
     
     <script>
         function showPage(id) {
@@ -60,7 +62,5 @@
 	<div th:replace="~{Common/alertView :: alertView}"></div>
     <!-- 모달창 -->
     <div th:replace="~{Common/modalView :: modalView}"></div>
-    
-    <th:script th:replace="~{Common/Script :: CommonScript}"/>
 </body>
 </html>

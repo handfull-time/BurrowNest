@@ -67,8 +67,16 @@ public class BurrowUtils {
 		if( obj == null )
 			return true;
 		
-		if( obj instanceof String )
-			return ((String)obj).trim().length() == 0;
+		if( obj instanceof String ) {
+			final String str = ((String)obj).trim();
+			if( str.length() == 0 ) {
+				return true;
+			}
+			if( str.equalsIgnoreCase("null") ) {
+				return true;
+			}
+			return false;
+		}
 		
 		if( obj instanceof java.lang.Iterable ) 
 			return !((java.lang.Iterable)obj).iterator().hasNext();

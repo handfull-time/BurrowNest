@@ -71,9 +71,10 @@
 
 	// 디렉터리 로딩 (디렉터리만 반환된다고 가정)
 	async function loadDirectory(uid, container) {
+		
 		const template = document.getElementById("dirItemTemplate");
 		try {
-			const baseUrl = /*[[@{/Storage/Dir/PathList.json}]]*/ null;
+			const baseUrl = /*[[@{/Dir/PathList.json}]]*/ null;
 			
 			const params = new URLSearchParams({ uid: uid });
 			const options = {
