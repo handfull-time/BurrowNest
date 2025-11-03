@@ -152,6 +152,13 @@ public interface StorageDao {
 	 * @param groupNo
 	 * @return
 	 */
+	List<BnDirectory> selectUnIncludeRootDirectories(long groupNo);
+	
+	/**
+	 * 루트 Dir 조회.
+	 * @param groupNo
+	 * @return
+	 */
 	List<BnDirectory> getRootDirectory(long groupNo);
 
 	/**
@@ -201,13 +208,21 @@ public interface StorageDao {
 	List<BnDirectory> getAdminRootStorage();
 
 	/**
-	 * 
+	 * 접근 가능 dir 목록 조회
 	 * @param groupNo
-	 * @param uid
+	 * @param parentDirNo
 	 * @return
 	 */
-	List<BnDirectory> getGroupStorageList(long groupNo, long dirNo);
+	List<BnDirectory> getGroupStorageList(long groupNo, long parentDirNo);
 	
+	/**
+	 * 접근 가능 dir 목록 조회
+	 * @param groupNo
+	 * @param parentUid
+	 * @return
+	 */
+	List<BnDirectory> getGroupStorageList(long groupNo, String parentUid);
+
 	/**
 	 * 그룹 저장소 삭제
 	 * @param groupNo
@@ -215,7 +230,4 @@ public interface StorageDao {
 	 * @return
 	 */
 	int removeGroupStorage(long groupNo, long dirNo)throws Exception;
-
-	
-
 }

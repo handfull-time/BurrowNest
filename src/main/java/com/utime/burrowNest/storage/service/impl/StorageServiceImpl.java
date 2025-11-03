@@ -359,7 +359,7 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 	@Override
 	public List<BnDirectory> getGroupStorageList(long groupNo) {
 		
-		return this.storageDao.getRootDirectory( groupNo );
+		return this.storageDao.selectUnIncludeRootDirectories( groupNo );
 	}
 	
 	@Override
@@ -460,7 +460,7 @@ WITH RECURSIVE DATA_PATH(NO, PARENT_NO, NAME ) AS (
 			return this.storageDao.getRootDirectory( user.getGroup().getGroupNo() );	
 		}
 		
-		List<BnDirectory> result = storageDao.getGroupStorageList( user.getGroup().getGroupNo(), 0 );
+		List<BnDirectory> result = storageDao.getGroupStorageList( user.getGroup().getGroupNo(), uid );
 		return result;
 	}
 

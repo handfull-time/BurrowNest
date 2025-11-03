@@ -287,6 +287,13 @@ public interface StorageMapper {
 	BinResultVo selectThumbnail( @Param("fid") String uid );
 
 	/**
+	 *  루트 비포함 directory 조회
+	 * @param groupNo
+	 * @return
+	 */
+	List<BnDirectory> selectUnIncludeRootDirectories(@Param("groupNo") long groupNo);
+	
+	/**
 	 * 루트 directory 조회
 	 * @param user
 	 * @return
@@ -333,12 +340,21 @@ public interface StorageMapper {
 	List<BnDirectory> getGroupStorageList(@Param("groupNo") long groupNo, @Param("dirNo") long dirNo);
 
 	/**
+	 * 
+	 * @param groupNo
+	 * @param parentUid
+	 * @return
+	 */
+	List<BnDirectory> getGroupStorageListUid(@Param("groupNo") long groupNo, @Param("parentUid") String parentUid);
+
+	/**
 	 * 그룹 저장소 삭제
 	 * @param groupNo
 	 * @param dirNo
 	 * @return
 	 */
 	int removeGroupStorage(@Param("groupNo") long groupNo, @Param("dirNo") long dirNo)throws Exception;
+
 
 }
 

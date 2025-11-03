@@ -462,6 +462,12 @@ class StorageDaoImpl implements StorageDao{
 //		
 //		return result;
 //	}
+	@Override
+	public List<BnDirectory> selectUnIncludeRootDirectories(long groupNo) {
+		final List<BnDirectory> directories = mapper.selectUnIncludeRootDirectories( groupNo );
+		
+		return directories;
+	}
 	
 	@Override
 	public List<BnDirectory> getRootDirectory(long groupNo) {
@@ -522,7 +528,14 @@ class StorageDaoImpl implements StorageDao{
 	}
 	
 	@Override
+	public List<BnDirectory> getGroupStorageList(long groupNo, String parentUid) {
+		
+		return mapper.getGroupStorageListUid(groupNo, parentUid);
+	}
+
+	@Override
 	public int removeGroupStorage(long groupNo, long dirNo) throws Exception {
 		return mapper.removeGroupStorage(groupNo, dirNo);
 	}
+
 }
