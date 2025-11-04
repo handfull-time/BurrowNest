@@ -334,6 +334,12 @@ class AuthServiceImpl implements AuthService {
 	 * @return
 	 */
 	private String genUserUniqueHashing( UserReqVo user ) {
+		if( BurrowUtils.isEmpty(user.getMyNumber()) || 
+				BurrowUtils.isEmpty(user.getMyRainbow()) ||
+				BurrowUtils.isEmpty(user.getMySeason()) ) {
+			return null;
+		}
+		
 		return Sha256.encrypt(user.getId() + saltKey + user.getMyNumber() + user.getMyRainbow() + user.getMySeason());
 	}
 	

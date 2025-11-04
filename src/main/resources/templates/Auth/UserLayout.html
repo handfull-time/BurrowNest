@@ -50,6 +50,11 @@
     
     <script th:inline="javascript">
 	    function encryptPassword( value ) {
+	    	
+	    	if( value == null || value.trim() === '' ){
+	    		return null;
+	    	}
+	    	
 	        const encrypt = new JSEncrypt();
 	        encrypt.setPublicKey(/*[[${unique.publicKey}]]*/ null);
 
