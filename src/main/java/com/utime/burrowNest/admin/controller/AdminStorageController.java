@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
@@ -23,26 +22,26 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.utime.burrowNest.admin.service.AdminStorageService;
 import com.utime.burrowNest.admin.vo.SaveSotrageReqVo;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.root.service.LoadStorageService;
-import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.user.vo.UserVo;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Controller
+@RequiredArgsConstructor
 @RequestMapping("Admin/Storage")
 public class AdminStorageController {
 	
-	@Autowired
-	private LoadStorageService loadStorageService;
+	private final LoadStorageService loadStorageService;
 	
-	@Autowired
-	private StorageService storageService;
+	private final AdminStorageService storageService;
 	
 	/**
 	 *  Storeage 목록

@@ -20,21 +20,21 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TestViewController {
 
-    final StorageService ss;
-    
-    final UserDao userDao;
-
-    @GetMapping("drive")
-    public String drive(@RequestParam(required=false) String uid, Model model) {
-    	List<DirectoryDto> dir = ss.getDirectory(null, uid);
-        model.addAttribute("uid", dir.get(0).getUid());
-        return "Storage/dir-tree";
-    }
-
-    @ResponseBody
-    @GetMapping("List.json")
-    public List<DirectoryDto> list(@RequestParam(required=false) String uid) {
-    	List<DirectoryDto> dir = ss.getDirectory(null, uid);
-        return dir;
-    }
+//    final StorageService ss;
+//    
+//    final UserDao userDao;
+//
+//    @GetMapping("drive")
+//    public String drive(@RequestParam(required=false) String uid, Model model) {
+//    	List<DirectoryDto> dir = ss.getDirectory(null, uid);
+//        model.addAttribute("uid", dir.get(0).getUid());
+//        return "Storage/dir-tree";
+//    }
+//
+//    @ResponseBody
+//    @GetMapping("List.json")
+//    public List<DirectoryDto> list(@RequestParam(required=false) String uid) {
+//    	List<DirectoryDto> dir = ss.getDirectory(null, uid);
+//        return dir;
+//    }
 }

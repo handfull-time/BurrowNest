@@ -7,12 +7,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.utime.burrowNest.admin.service.AdminStorageService;
 import com.utime.burrowNest.common.mapper.CommonMapper;
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.util.CacheIntervalMap;
 import com.utime.burrowNest.common.util.Sha256;
 import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.common.vo.EJwtRole;
+import com.utime.burrowNest.root.service.LoadStorageService;
 import com.utime.burrowNest.storage.vo.EAccessType;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.mapper.UserMapper;
@@ -22,20 +24,20 @@ import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.ResUserVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Repository
+@RequiredArgsConstructor
 class UserDaoImpl implements UserDao {
 	
 	private final String KeyGroupAdmin = "Admin";
 	private final String KeyGroupUnsel = "Unselected";
 	
-	@Autowired
-	private CommonMapper common;
+	private final CommonMapper common;
 	
-	@Autowired
-	private UserMapper userMapper;
+	private final UserMapper userMapper;
 	
 	@Value("${security.pwSaltKey}")
     private String saltKey;

@@ -18,13 +18,7 @@ import com.utime.burrowNest.user.vo.GroupVo;
 
 @Mapper
 public interface StorageMapper {
-	
-	/**
-	 * 관리자 초기화 했는지 여부 
-	 * @return true:했음.
-	 */
-	boolean IsInit();
-	
+
 	/**
 	 * dir 추가
 	 * @param dir
@@ -38,18 +32,6 @@ public interface StorageMapper {
 	 * @return
 	 */
 	int updateDirectory( BnDirectory dir );
-
-	/**
-	 * 전체 목록 조회
-	 * @return
-	 */
-	List<BnDirectory> selectAllDirectory();
-
-	/**
-	 * 루트 Dir 조회
-	 * @return
-	 */
-	BnDirectory selectRootDirectory();
 
 	/**
 	 * dir 조회
@@ -127,12 +109,6 @@ public interface StorageMapper {
 	 */
 	int updateDirectoryAccess(@Param("dirNo") long dirNo, @Param("groupNo") long groupNo, @Param("accType") int accType);
 	
-	/**
-	 * 전체 엑세스 목록
-	 * @return
-	 */
-	List<BnPathAccess> selectBnDirectoryAccess();
-
 	/**
 	 * 파일 권한 추가하기
 	 * @param dirNo
@@ -286,13 +262,13 @@ public interface StorageMapper {
 	 */
 	BinResultVo selectThumbnail( @Param("fid") String uid );
 
-	/**
-	 *  루트 비포함 directory 조회
-	 * @param groupNo
-	 * @return
-	 */
-	List<BnDirectory> selectUnIncludeRootDirectories(@Param("groupNo") long groupNo);
-	
+//	/**
+//	 *  루트 비포함 directory 조회
+//	 * @param groupNo
+//	 * @return
+//	 */
+//	List<BnDirectory> selectUnIncludeRootDirectories(@Param("groupNo") long groupNo);
+
 	/**
 	 * 루트 directory 조회
 	 * @param user
@@ -316,28 +292,28 @@ public interface StorageMapper {
 	 */
 	List<BnDirectory> selectDirectories(@Param("group") GroupVo group, @Param("dirNo") long no);
 
-	/**
-	 * Directory의 경로 목록 조회
-	 * @param group
-	 * @param no
-	 * @return
-	 */
-	List<String> selectPaths(@Param("group") GroupVo group, @Param("dirNo") long no);
+//	/**
+//	 * Directory의 경로 목록 조회
+//	 * @param group
+//	 * @param no
+//	 * @return
+//	 */
+//	List<String> selectPaths(@Param("group") GroupVo group, @Param("dirNo") long no);
 
-	/**
-	 * parentNo 기준 조회
-	 * @param parentNo
-	 * @return
-	 */
-	List<BnDirectory> selectBnDirectoryParentNo(@Param("parentNo") long parentNo);
+//	/**
+//	 * parentNo 기준 조회
+//	 * @param parentNo
+//	 * @return
+//	 */
+//	List<BnDirectory> selectBnDirectoryParentNo(@Param("parentNo") long parentNo);
 	
-	/**
-	 * 
-	 * @param groupNo
-	 * @param uid
-	 * @return
-	 */
-	List<BnDirectory> getGroupStorageList(@Param("groupNo") long groupNo, @Param("dirNo") long dirNo);
+//	/**
+//	 * 
+//	 * @param groupNo
+//	 * @param uid
+//	 * @return
+//	 */
+//	List<BnDirectory> getGroupStorageList(@Param("groupNo") long groupNo, @Param("dirNo") long dirNo);
 
 	/**
 	 * 
@@ -347,13 +323,13 @@ public interface StorageMapper {
 	 */
 	List<BnDirectory> getGroupStorageListUid(@Param("groupNo") long groupNo, @Param("parentUid") String parentUid);
 
-	/**
-	 * 그룹 저장소 삭제
-	 * @param groupNo
-	 * @param dirNo
-	 * @return
-	 */
-	int removeGroupStorage(@Param("groupNo") long groupNo, @Param("dirNo") long dirNo)throws Exception;
+//	/**
+//	 * 그룹 저장소 삭제
+//	 * @param groupNo
+//	 * @param dirNo
+//	 * @return
+//	 */
+//	int removeGroupStorage(@Param("groupNo") long groupNo, @Param("dirNo") long dirNo)throws Exception;
 
 
 }

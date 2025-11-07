@@ -2,7 +2,6 @@ package com.utime.burrowNest.admin.service.impl;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.utime.burrowNest.admin.dao.AdminUserDao;
@@ -14,11 +13,13 @@ import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 class AdminUserServiceImpl implements AdminUserService{
 
-	@Autowired
-	private AdminUserDao adminUserDao;
+	private final AdminUserDao adminUserDao;
 
 	@Override
 	public List<ManageUserVo> userList(String id) {

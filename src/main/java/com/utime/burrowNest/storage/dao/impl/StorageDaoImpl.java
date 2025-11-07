@@ -4,12 +4,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.utime.burrowNest.common.mapper.CommonMapper;
-import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.storage.dao.StorageDao;
 import com.utime.burrowNest.storage.mapper.StorageBasicMapper;
@@ -24,25 +22,23 @@ import com.utime.burrowNest.storage.vo.BnFileDocument;
 import com.utime.burrowNest.storage.vo.BnFileExtension;
 import com.utime.burrowNest.storage.vo.BnFileImage;
 import com.utime.burrowNest.storage.vo.BnFileVideo;
-import com.utime.burrowNest.storage.vo.BnPathAccess;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.user.vo.UserVo;
 
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Repository
+@RequiredArgsConstructor
 class StorageDaoImpl implements StorageDao{
 	
-	@Autowired
-	private CommonMapper common;
+	private final CommonMapper common;
 	
-	@Autowired
-	private StorageBasicMapper basic;
+	private final StorageBasicMapper basic;
 	
-	@Autowired
-	private StorageMapper mapper;
+	private final StorageMapper mapper;
 	
 	@PostConstruct
 	private void postCunstruct() {
@@ -200,16 +196,6 @@ class StorageDaoImpl implements StorageDao{
 	}
 	
 	@Override
-	public boolean IsInit() {
-		
-		if( ! common.existTable("BN_DIRECTORY") ) {
-			return false;
-		}
-		
-		return mapper.IsInit();
-	}
-	
-	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public void addRootDirectory(UserVo owner ) throws Exception {
 		
@@ -221,11 +207,6 @@ class StorageDaoImpl implements StorageDao{
 		}
 		
 		this.insertAccess(owner, dir);
-	}
-	
-	@Override
-	public BnDirectory getRootDirectory() {
-		return mapper.selectRootDirectory();
 	}
 	
 	@Override
@@ -395,12 +376,6 @@ class StorageDaoImpl implements StorageDao{
 	public BnDirectory getDirectory(long dirNo) {
 		return mapper.selectDirectoryByNo(dirNo);
 	}
-	
-	@Override
-	public BnDirectory getDirectory(UserVo user, String uid) {
-		final BnDirectory result = mapper.selectDirectoryByGuid(user.getGroup(), uid);
-		return result;
-	}
 
 	@Override
 	public BnFile getFile(long fileNo) {
@@ -462,12 +437,12 @@ class StorageDaoImpl implements StorageDao{
 //		
 //		return result;
 //	}
-	@Override
-	public List<BnDirectory> selectUnIncludeRootDirectories(long groupNo) {
-		final List<BnDirectory> directories = mapper.selectUnIncludeRootDirectories( groupNo );
-		
-		return directories;
-	}
+//	@Override
+//	public List<BnDirectory> selectUnIncludeRootDirectories(long groupNo) {
+//		final List<BnDirectory> directories = mapper.selectUnIncludeRootDirectories( groupNo );
+//		
+//		return directories;
+//	}
 	
 	@Override
 	public List<BnDirectory> getRootDirectory(long groupNo) {
@@ -476,56 +451,45 @@ class StorageDaoImpl implements StorageDao{
 		return directories;
 	}
 
-	@Override
-	public List<BnFile> getFiles(UserVo user, BnDirectory dir) {
-		return mapper.selectFiles(user.getGroup(), dir.getNo());
-	}
+//	@Override
+//	public List<BnFile> getFiles(UserVo user, BnDirectory dir) {
+//		return mapper.selectFiles(user.getGroup(), dir.getNo());
+//	}
+//	
+//	@Override
+//	public List<BnDirectory> getDirectories(UserVo user, BnDirectory dir) {
+//		
+//		return mapper.selectDirectories(user.getGroup(), dir.getNo());
+//	}
 	
-	@Override
-	public List<BnDirectory> getDirectories(UserVo user, BnDirectory dir) {
-		
-		return mapper.selectDirectories(user.getGroup(), dir.getNo());
-	}
-	
-	@Override
-	public List<String> getPaths(UserVo user, BnDirectory dir) {
-		return mapper.selectPaths(user.getGroup(), dir.getNo());
-	}
+//	@Override
+//	public List<String> getPaths(UserVo user, BnDirectory dir) {
+//		return mapper.selectPaths(user.getGroup(), dir.getNo());
+//	}
 	
 	@Override
 	public BnDirectory getParentDirectory(UserVo user, String uid) {
 		
 		return null;
 	}
+
 	
-	@Override
-	public List<BnDirectory> getAllDirectory() {
-		
-		return mapper.selectAllDirectory();
-	}
+//	@Override
+//	public List<BnDirectory> getAdminRootStorage() {
+//		
+//		return mapper.selectBnDirectoryParentNo(1L);
+//	}
 	
-	@Override
-	public List<BnPathAccess> getAllDirectoryAccess() {
-		
-		return mapper.selectBnDirectoryAccess();
-	}
-	
-	@Override
-	public List<BnDirectory> getAdminRootStorage() {
-		
-		return mapper.selectBnDirectoryParentNo(1L);
-	}
-	
-	@Override
-	public List<BnDirectory> getGroupStorageList(long groupNo, long dirNo) {
-		
-		if( dirNo < 1L ) {
-			BnDirectory dir = this.getRootDirectory();
-			dirNo = dir.getNo();
-		}
-		
-		return mapper.getGroupStorageList(groupNo, dirNo);
-	}
+//	@Override
+//	public List<BnDirectory> getGroupStorageList(long groupNo, long dirNo) {
+//		
+//		if( dirNo < 1L ) {
+//			BnDirectory dir = this.getRootDirectory();
+//			dirNo = dir.getNo();
+//		}
+//		
+//		return mapper.getGroupStorageList(groupNo, dirNo);
+//	}
 	
 	@Override
 	public List<BnDirectory> getGroupStorageList(long groupNo, String parentUid) {
@@ -533,9 +497,9 @@ class StorageDaoImpl implements StorageDao{
 		return mapper.getGroupStorageListUid(groupNo, parentUid);
 	}
 
-	@Override
-	public int removeGroupStorage(long groupNo, long dirNo) throws Exception {
-		return mapper.removeGroupStorage(groupNo, dirNo);
-	}
+//	@Override
+//	public int removeGroupStorage(long groupNo, long dirNo) throws Exception {
+//		return mapper.removeGroupStorage(groupNo, dirNo);
+//	}
 
 }

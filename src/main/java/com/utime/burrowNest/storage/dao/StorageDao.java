@@ -6,12 +6,11 @@ import java.util.Map;
 import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
-import com.utime.burrowNest.storage.vo.BnPathAccess;
 import com.utime.burrowNest.storage.vo.EBnFileType;
 import com.utime.burrowNest.user.vo.UserVo;
 
 public interface StorageDao {
-
+	
 	/**
 	 * 초기화 처리
 	 * @return
@@ -20,31 +19,68 @@ public interface StorageDao {
 	int initStorageTable()throws Exception;
 	
 	/**
-	 * 관리자 초기화 했는지 여부 
-	 * @return true:했음.
-	 */
-	boolean IsInit();
-	
-	/**
 	 * 최초 Root dir 생성
 	 * @param owner
 	 * @return
 	 * @throws Exception
 	 */
 	void addRootDirectory(UserVo owner ) throws Exception;
-	
-	/**
-	 * 루트 Dir 조회
-	 * @param owner
-	 * @return
-	 */
-	BnDirectory getRootDirectory();
-	
+
 	/**
 	 * 확장자 별 파일 종류
 	 * @return
 	 */
 	Map<String, EBnFileType> getBnFileType();
+	
+	/**
+	 * 섬네일 조회
+	 * @param uid
+	 * @return
+	 */
+	byte[] getThumbnail(String uid);
+
+	/**
+	 *  정보 조회
+	 * @param fileNo
+	 * @return
+	 */
+	BnFile getFile( long fileNo );
+	
+	/**
+	 * 파일 정보 조회
+	 * @param fileNo
+	 * @return
+	 */
+	BnFile getFile( UserVo user, String uid );
+
+	/**
+	 * 파일 확장 조회
+	 * @param file
+	 * @return
+	 */
+	AbsBnFileInfo getFileInfor( BnFile file );
+
+	/**
+	 * 부모 directory 조회
+	 * @param user
+	 * @param uid
+	 * @return
+	 */
+	BnDirectory getParentDirectory(UserVo user, String uid);
+
+	/**
+	 * directory 정보 조회
+	 * @param dirNo
+	 * @return
+	 */
+	BnDirectory getDirectory( long dirNo );
+	
+	/**
+	 * 루트 Dir 조회.
+	 * @param groupNo
+	 * @return
+	 */
+	List<BnDirectory> getRootDirectory(long groupNo);
 
 
 	/**
@@ -56,7 +92,6 @@ public interface StorageDao {
 	 */
 	int saveRootDirectory(BnDirectory dir, UserVo owner) throws Exception;
 
-	
 	/**
 	 * Dir 저장
 	 * @param dir
@@ -89,7 +124,7 @@ public interface StorageDao {
 	 * @return
 	 */
 	int saveThumbnail( BnFile file, byte [] bArray);
-	
+
 	/**
 	 * Dierctory 삭제
 	 * @param dir
@@ -105,129 +140,11 @@ public interface StorageDao {
 	int deleteFile( BnFile file )throws Exception;
 	
 	/**
-	 * directory 정보 조회
-	 * @param dirNo
-	 * @return
-	 */
-	BnDirectory getDirectory( long dirNo );
-	
-	/**
-	 * directory 정보 조회
-	 * @param user
-	 * @param uid
-	 * @return
-	 */
-	BnDirectory getDirectory(UserVo user, String uid);
-	
-	/**
-	 *  정보 조회
-	 * @param fileNo
-	 * @return
-	 */
-	BnFile getFile( long fileNo );
-	
-	/**
-	 * 파일 정보 조회
-	 * @param fileNo
-	 * @return
-	 */
-	BnFile getFile( UserVo user, String uid );
-	
-	/**
-	 * 파일 확장 조회
-	 * @param file
-	 * @return
-	 */
-	AbsBnFileInfo getFileInfor( BnFile file );
-
-	/**
-	 * 섬네일 조회
-	 * @param uid
-	 * @return
-	 */
-	byte[] getThumbnail(String uid);
-
-	/**
-	 * 루트 Dir 조회.
-	 * @param groupNo
-	 * @return
-	 */
-	List<BnDirectory> selectUnIncludeRootDirectories(long groupNo);
-	
-	/**
-	 * 루트 Dir 조회.
-	 * @param groupNo
-	 * @return
-	 */
-	List<BnDirectory> getRootDirectory(long groupNo);
-
-	/**
-	 * dir의 파일 목록
-	 * @param user
-	 * @param dir
-	 * @return
-	 */
-	List<BnFile> getFiles(UserVo user, BnDirectory dir);
-
-	/**
-	 * dir의 Directory 목록 
-	 * @param user
-	 * @param dir
-	 * @return
-	 */
-	List<BnDirectory> getDirectories(UserVo user, BnDirectory dir);
-
-	/**
-	 * Path 목록
-	 * @param user
-	 * @param dir
-	 * @return
-	 */
-	List<String> getPaths(UserVo user, BnDirectory dir);
-	
-	/**
-	 * 부모 directory 조회
-	 * @param user
-	 * @param uid
-	 * @return
-	 */
-	BnDirectory getParentDirectory(UserVo user, String uid);
-
-	/**
-	 * 디랙터리 전체 조회
-	 * @return
-	 */
-	List<BnDirectory> getAllDirectory();
-
-	List<BnPathAccess> getAllDirectoryAccess();
-
-	/**
-	 * 최상위 폴더 목록 전달
-	 * @return
-	 */
-	List<BnDirectory> getAdminRootStorage();
-
-	/**
-	 * 접근 가능 dir 목록 조회
-	 * @param groupNo
-	 * @param parentDirNo
-	 * @return
-	 */
-	List<BnDirectory> getGroupStorageList(long groupNo, long parentDirNo);
-	
-	/**
 	 * 접근 가능 dir 목록 조회
 	 * @param groupNo
 	 * @param parentUid
 	 * @return
 	 */
 	List<BnDirectory> getGroupStorageList(long groupNo, String parentUid);
-
-	/**
-	 * 그룹 저장소 삭제
-	 * @param groupNo
-	 * @param dirNo
-	 * @return
-	 */
-	int removeGroupStorage(long groupNo, long dirNo)throws Exception;
+	
 }

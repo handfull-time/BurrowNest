@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.utime.burrowNest.admin.service.AdminStorageService;
+import com.utime.burrowNest.admin.service.AdminUserService;
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.storage.vo.AbsPath;
@@ -18,13 +20,14 @@ import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.user.vo.UserVo;
 
 import io.jsonwebtoken.lang.Collections;
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("Dir")
+@RequiredArgsConstructor
 public class DirectoryController {
 	
-	@Autowired
-	private StorageService storageService;
+	private final StorageService storageService;
 	
 	/**
 	 * Root 

@@ -12,13 +12,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.utime.burrowNest.admin.service.AdminStorageService;
 import com.utime.burrowNest.admin.service.AdminUserService;
-import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.common.vo.ReturnBasic;
-import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.storage.vo.BnDirectory;
-import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.storage.vo.EAccessType;
 import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.UserVo;
@@ -32,7 +30,7 @@ public class AdminGroupUserController {
 	
 	private final AdminUserService userService;
 	
-	private final StorageService storageService;
+	private final AdminStorageService storageService;
 	
 	/**
 	 * 그룹 관리 페이지

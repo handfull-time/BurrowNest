@@ -1,6 +1,5 @@
 package com.utime.burrowNest.admin.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
@@ -16,12 +15,14 @@ import com.utime.burrowNest.common.vo.EJwtRole;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.user.vo.UserVo;
 
+import lombok.RequiredArgsConstructor;
+
 @Controller
+@RequiredArgsConstructor
 @RequestMapping("Admin/User")
 public class AdminUserController {
 	
-	@Autowired
-	private AdminUserService userService;
+	private final AdminUserService userService;
 	
 	/**
 	 * 어드민 관리 페이지

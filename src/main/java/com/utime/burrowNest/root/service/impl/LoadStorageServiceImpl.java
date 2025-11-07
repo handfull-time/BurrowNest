@@ -13,6 +13,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.utime.burrowNest.admin.dao.AdminStorageDao;
 import com.utime.burrowNest.admin.vo.SaveSotrageReqVo;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.root.service.LoadStorageService;
@@ -31,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class LoadStorageServiceImpl implements LoadStorageService {
+class LoadStorageServiceImpl implements LoadStorageService {
 	
 	private final SimpMessagingTemplate messagingTemplate;
 	
@@ -40,6 +41,8 @@ public class LoadStorageServiceImpl implements LoadStorageService {
 	private final UserDao userDao;
 
 	private final StorageDao storageDao;
+	
+	private final AdminStorageDao adminStorageDao;
 	
 	private void delay() {
 		try {Thread.sleep(200);} catch (InterruptedException e) {e.printStackTrace();}
@@ -338,7 +341,7 @@ public class LoadStorageServiceImpl implements LoadStorageService {
     		
     		final UserVo owner = ifl.owner;
     		
-    		BnDirectory rootDir = storageDao.getRootDirectory();
+    		BnDirectory rootDir = adminStorageDao.getRootDirectory();
 			
 			final long parentNo = rootDir.getNo();
 			final long ownerUserNo = ifl.owner.getUserNo();

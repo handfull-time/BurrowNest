@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<!--//네임스페이스에는 mapper 가 있는 풀 패키지명과 매퍼명을 등록 한다. -->
+<mapper namespace="com.utime.burrowNest.admin.mapper.AdminStorageMapper">
+
+<!-- Select: Root 디렉토리 검색 -->
+<select id="selectRootDirectory" parameterType="long" resultMap="com.utime.burrowNest.storage.mapper.StorageMapper.BnDirectoryMap">
+    SELECT 
+    	<include refid="com.utime.burrowNest.storage.mapper.StorageMapper.BnDirectoryColumn" /> 
+    	, NULL AS PARENT_UID
+    FROM BN_DIRECTORY DR
+    WHERE DR.NO = 1
+</select>
+
+<!-- parentNo 기준 조회 -->
+<select id="selectBnDirectoryParentNo" parameterType="map" resultMap="com.utime.burrowNest.storage.mapper.StorageMapper.BnDirectoryMap">
+	SELECT 
+    	<include refid="com.utime.burrowNest.storage.mapper.StorageMapper.BnDirectoryColumn" />
+    	, P.UID AS PARENT_UID
+    FROM BN_DIRECTORY DR
+    	INNER JOIN BN_DIRECTORY P ON DR.PARENT_NO = P.NO
+    WHERE DR.PARENT_NO = #{parentNo}
+    ORDER BY NO
+</select>
+
+<!-- 루트 directory 조회 -->
+<select id="selectUnIncludeRootDirectories" parameterType="map" resultMap="com.utime.burrowNest.storage.mapper.StorageMapper.BnDirectoryMap">
+	SELECT
+	    d.NO
+	    , d.PARENT_NO
+	    , CAST(d.UID AS VARCHAR) AS UID
+	    , d.NAME
+	    , d.ABSOLUTE_PATH 
+	    , EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d.NO) AS HAS_CHILD
+	FROM BN_DIRECTORY d
+	WHERE 1=1
+		AND d.PARENT_NO = 1
+	AND NOT EXISTS (
+	    SELECT 1
+	    FROM BN_DIRECTORY_ACCESS da
+	    WHERE da.DIR_NO   = d.NO
+	      AND da.GROUP_NO = #{groupNo}
+	)
+	ORDER BY d.NAME
+</select>
+
+<!-- 루트 directory 조회 -->
+<select id="selectRootDirectories" parameterType="map" resultMap="com.utime.burrowNest.storage.mapper.StorageMapper.BnDirectoryMap">
+	SELECT
+	    d.NO
+	    , d.PARENT_NO
+	    , CAST(d.UID AS VARCHAR) AS UID
+	    , d.NAME
+	    , EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d.NO) AS HAS_CHILD
+	FROM BN_DIRECTORY d
+	WHERE 1=1
+		AND d.PARENT_NO = 1
+	AND EXISTS (
+	    SELECT 1
+	    FROM BN_DIRECTORY_ACCESS da
+	    WHERE da.DIR_NO   = d.NO
+	      AND da.GROUP_NO = #{groupNo}
+	)
+	ORDER BY d.NAME
+</select>
+
+<select id="getGroupStorageList" parameterType="map" resultMap="com.utime.burrowNest.storage.mapper.StorageMapper.BnDirectoryMap">
+	SELECT
+	    d.NO
+	    , d.PARENT_NO
+	    , CAST(d.UID AS VARCHAR) AS UID
+	    , d.NAME
+	    , EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d.NO) AS HAS_CHILD
+	FROM BN_DIRECTORY d
+	WHERE 1=1
+		AND d.PARENT_NO = #{dirNo}
+	AND NOT EXISTS (
+	    SELECT 1
+	    FROM BN_DIRECTORY_ACCESS da
+	    WHERE da.DIR_NO   = d.NO
+	      AND da.GROUP_NO = #{groupNo}
+	)
+	ORDER BY d.NAME
+</select>
+
+
+<select id="getGroupStorageListUid" parameterType="map" resultMap="com.utime.burrowNest.storage.mapper.StorageMapper.BnDirectoryMap">
+	SELECT
+	    d.NO
+	    , d.PARENT_NO
+	    , CAST(d.UID AS VARCHAR) AS UID
+	    , d.NAME
+	    , EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d.NO) AS HAS_CHILD
+	FROM BN_DIRECTORY d
+		INNER JOIN BN_DIRECTORY p ON d.PARENT_NO = p.NO
+	WHERE 1=1
+		AND d.UID = #{parentUid}
+	ORDER BY d.NAME
+</select>
+
+<!--그룹 저장소 삭제-->
+<delete id="removeGroupStorage">
+	DELETE FROM BN_DIRECTORY_ACCESS 
+	WHERE 1=1
+		AND DIR_NO = #{dirNo}
+		AND GROUP_NO = #{groupNo}
+</delete>
+
+</mapper>
