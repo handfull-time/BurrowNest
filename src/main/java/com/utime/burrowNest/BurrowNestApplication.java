@@ -9,8 +9,26 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class BurrowNestApplication {
 
 	// 콘솔 접속 jdbc:h2:file:D://Projects/Burrow/BurrowNest/data/burrownest.h2;AUTO_SERVER=TRUE
+	//           jdbc:h2:file:D:/Projects/Burrow/BurrowNest/data/burrownest.h2;AUTO_SERVER=TRUE
 	// http://localhost:9709/Burrow/DbConsoleH2/
 	// https://www.h2database.com/html/datatypes.html
+	
+/*
+{
+  "servers": {
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "scope": "workspace",
+      "requestInit": {
+        "headers": {
+          "Authorization": "Bearer ghp_......."
+        }
+      }
+    }
+  }
+} 
+
+ */
 	
 	public static void main(String[] args) throws InterruptedException, IOException {
 		
