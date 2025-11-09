@@ -198,7 +198,7 @@ class StorageDaoImpl implements StorageDao{
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public void addRootDirectory(UserVo owner ) throws Exception {
-		
+
 		final BnDirectory dir = new BnDirectory();
 		dir.setOwnerNo(owner.getUserNo());
 		if( basic.InsertRootDirectory(dir) < 1 ) {

@@ -155,7 +155,8 @@
 			
 			element.dataset.uid = item.uid;
 			element.dataset.index = index;
-			
+			element.dataset.file = item.file;
+            			
 			if (isIconView) {
 				const nameDiv = clone.querySelector('.file-name');
 				nameDiv.textContent = item.name;
@@ -187,6 +188,7 @@
 		fileGrid.addEventListener('click', (e) => {
 			const itemEl = e.target.closest('.file-item');
 			if (!itemEl) return;
+			console.log('Clicked item:', itemEl.dataset.uid);
 			
 			const uid = itemEl.dataset.uid;
 			const index = parseInt(itemEl.dataset.index);

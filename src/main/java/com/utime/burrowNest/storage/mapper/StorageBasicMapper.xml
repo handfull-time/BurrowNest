@@ -265,10 +265,10 @@
 <insert id="insertDeniedFileExtension" parameterType="map" >
 	INSERT INTO BN_FILE_DENIED_EXTENSION (
 		EXTENSION
-		<if test="memo != null and memo != '' ">, MEMO</if>
+		<if test="memo != null and memo.trim() != '' ">, MEMO</if>
 	) VALUES (
 		#{extension}
-		<if test="memo != null and memo != '' ">, #{memo}</if>		
+		<if test="memo != null and memo.trim() != '' ">, #{memo}</if>		
 	)
 </insert>
 

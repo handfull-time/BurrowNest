@@ -31,7 +31,7 @@
 			)LR ON UR.NO = LR.USER_NO
 			INNER JOIN BN_USER_PW PW
 				ON UR.NO = PW.USER_NO
-		<if test="id != null and id != '' ">
+		<if test="id != null and id.trim() != '' ">
 		WHERE UR.ID LIKE '%${id}%'
 		</if>
 		ORDER BY UR.NO DESC
@@ -51,7 +51,7 @@
 			UPDATE_DATE = CURRENT_TIMESTAMP
 			, ENABLED = #{enabled}
 			, GROUP_NO = #{group.groupNo}
-			, NOTE = <choose> <when test="note != null and note != '' ">#{note}</when> <otherwise>NULL</otherwise> </choose>
+			, NOTE = <choose> <when test="note != null and note.trim() != '' ">#{note}</when> <otherwise>NULL</otherwise> </choose>
 			, DAILY_UPLOAD_LIMIT = #{dailyUploadLimit} 
 			, DAILY_DOWNLOAD_LIMIT = #{dailyDownloadLimit}
 			, MAX_STORAGE_USAGE = #{maxStorageUsage}
@@ -73,7 +73,7 @@
 			<if test="enabled != null">
 			AND GR.ENABLED = #{enabled}
 			</if>
-			<if test="grName != null and grName != '' ">
+			<if test="grName != null and grName.trim() != '' ">
 			AND GR.NAME LIKE '%${grName}%'
 			</if>
 		ORDER BY
@@ -91,7 +91,7 @@
 			, NAME = #{name}
 			, ROLE = #{role}
 			, ACCESS_FLAGS = #{accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler}
-			<if test="note != null and note != '' "> 
+			<if test="note != null and note.trim() != '' "> 
 			, NOTE = #{note}
 			</if>
 			, DAILY_UPLOAD_LIMIT  = #{dailyUploadLimit}

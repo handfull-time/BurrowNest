@@ -23,8 +23,8 @@ class AdminStorageDaoImpl implements AdminStorageDao{
 	
 	@Override
 	public List<BnDirectory> getAdminRootStorage() {
-		
-		return mapper.selectBnDirectoryParentNo(1L);
+		final BnDirectory root = this.getRootDirectory();
+		return mapper.selectBnDirectoryParentNo(root.getNo());
 	}
 	
 	@Override

@@ -342,6 +342,15 @@ class LoadStorageServiceImpl implements LoadStorageService {
     		final UserVo owner = ifl.owner;
     		
     		BnDirectory rootDir = adminStorageDao.getRootDirectory();
+    		if( rootDir == null ) {
+				log.error("루트 디렉토리 정보 없음.");
+				try {
+					storageDao.addRootDirectory(owner);
+				} catch (Exception e) {
+					log.error("", e);
+				}
+				rootDir = adminStorageDao.getRootDirectory();
+			}
 			
 			final long parentNo = rootDir.getNo();
 			final long ownerUserNo = ifl.owner.getUserNo();

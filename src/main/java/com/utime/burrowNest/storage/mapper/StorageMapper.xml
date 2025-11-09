@@ -201,7 +201,7 @@
     	, FILE_TYPE
     	, CREATION
     	, LAST_MODIFIED
-    	<if test="extension != null and extension != '' ">
+    	<if test="extension != null and extension.trim() != '' ">
     	, EXTENSION
     	</if>
     	, NAME
@@ -215,7 +215,7 @@
     	, #{fileType}
     	, #{creation}
     	, #{lastModified}
-    	<if test="extension != null and extension != '' ">
+    	<if test="extension != null and extension.trim() != '' ">
     	, #{extension}
     	</if>
     	, #{name}
@@ -247,7 +247,7 @@
         , FILE_TYPE = #{fileType}
         , CREATION = #{creation}
         , LAST_MODIFIED = #{lastModified}
-        <if test="extension != null and extension != '' ">
+        <if test="extension != null and extension.trim() != '' ">
         , EXTENSION = #{extension}
         </if>
         , NAME = #{name}
@@ -276,29 +276,29 @@
     INSERT INTO BN_FILE_DOCUMENT (
     	FILE_NO
     	, UPDATE_DATE
-    	<if test="title != null and title != '' ">, TITLE</if>
-		<if test="subject != null and subject != '' ">, SUBJECT</if>
-		<if test="creator != null and creator != '' ">, CREATOR</if>
-		<if test="lastModifiedBy != null and lastModifiedBy != '' ">, LAST_MODIFIED_BY</if>
+    	<if test="title != null and title.trim() != '' ">, TITLE</if>
+		<if test="subject != null and subject.trim() != '' ">, SUBJECT</if>
+		<if test="creator != null and creator.trim() != '' ">, CREATOR</if>
+		<if test="lastModifiedBy != null and lastModifiedBy.trim() != '' ">, LAST_MODIFIED_BY</if>
 		<if test="createDate != null ">, CREATE_DATE</if>
 		<if test="modifyDate != null ">, MODIFY_DATE</if>
-		<if test="keywords != null and keywords != '' ">, KEYWORDS</if>
-		<if test="description != null and description != '' ">, DESCRIPTION</if>
-		<if test="headingPairs != null and headingPairs != '' ">, HEADING_PAIRS</if>
-		<if test="company != null and company != '' ">, COMPANY</if>
+		<if test="keywords != null and keywords.trim() != '' ">, KEYWORDS</if>
+		<if test="description != null and description.trim() != '' ">, DESCRIPTION</if>
+		<if test="headingPairs != null and headingPairs.trim() != '' ">, HEADING_PAIRS</if>
+		<if test="company != null and company.trim() != '' ">, COMPANY</if>
     ) VALUES (
     	#{fileNo}
     	, CURRENT_TIMESTAMP
-    	<if test="title != null and title != '' ">, #{title}</if>
-		<if test="subject != null and subject != '' ">, #{subject}</if>
-		<if test="creator != null and creator != '' ">, #{creator}</if>
-		<if test="lastModifiedBy != null and lastModifiedBy != '' ">, #{lastModifiedBy}</if>
+    	<if test="title != null and title.trim() != '' ">, #{title}</if>
+		<if test="subject != null and subject.trim() != '' ">, #{subject}</if>
+		<if test="creator != null and creator.trim() != '' ">, #{creator}</if>
+		<if test="lastModifiedBy != null and lastModifiedBy.trim() != '' ">, #{lastModifiedBy}</if>
 		<if test="createDate != null ">, #{createDate}</if>
 		<if test="modifyDate != null ">, #{modifyDate}</if>
-		<if test="keywords != null and keywords != '' ">, #{keywords}</if>
-		<if test="description != null and description != '' ">, #{description}</if>
-		<if test="headingPairs != null and headingPairs != '' ">, #{headingPairs}</if>
-		<if test="company != null and company != '' ">, #{company}</if>
+		<if test="keywords != null and keywords.trim() != '' ">, #{keywords}</if>
+		<if test="description != null and description.trim() != '' ">, #{description}</if>
+		<if test="headingPairs != null and headingPairs.trim() != '' ">, #{headingPairs}</if>
+		<if test="company != null and company.trim() != '' ">, #{company}</if>
     )
 </insert>
 
@@ -325,16 +325,16 @@
 <update id="updateFileDocument" parameterType="com.utime.burrowNest.storage.vo.BnFileDocument">
     UPDATE BN_FILE_DOCUMENT
     SET UPDATE_DATE = CURRENT_TIMESTAMP
-    	, TITLE = <choose> <when test="title != null and title != '' ">#{title}</when> <otherwise>NULL</otherwise> </choose>
-		, SUBJECT = <choose> <when test="subject != null and subject != '' ">#{subject}</when> <otherwise>NULL</otherwise> </choose>
-		, CREATOR = <choose> <when test="creator != null and creator != '' ">#{creator}</when> <otherwise>NULL</otherwise> </choose>
-		, LAST_MODIFIED_BY = <choose> <when test="lastModifiedBy != null and lastModifiedBy != '' ">#{lastModifiedBy}</when> <otherwise>NULL</otherwise> </choose>
+    	, TITLE = <choose> <when test="title != null and title.trim() != '' ">#{title}</when> <otherwise>NULL</otherwise> </choose>
+		, SUBJECT = <choose> <when test="subject != null and subject.trim() != '' ">#{subject}</when> <otherwise>NULL</otherwise> </choose>
+		, CREATOR = <choose> <when test="creator != null and creator.trim() != '' ">#{creator}</when> <otherwise>NULL</otherwise> </choose>
+		, LAST_MODIFIED_BY = <choose> <when test="lastModifiedBy != null and lastModifiedBy.trim() != '' ">#{lastModifiedBy}</when> <otherwise>NULL</otherwise> </choose>
 		, CREATE_DATE = <choose> <when test="createDate != null ">#{createDate}</when> <otherwise>NULL</otherwise> </choose>
 		, MODIFY_DATE = <choose> <when test="modifyDate != null ">#{modifyDate}</when> <otherwise>NULL</otherwise> </choose>
-		, KEYWORDS = <choose> <when test="keywords != null and keywords != '' ">#{keywords}</when> <otherwise>NULL</otherwise> </choose>
-		, DESCRIPTION = <choose> <when test="description != null and description != '' ">#{description}</when> <otherwise>NULL</otherwise> </choose>
-		, HEADING_PAIRS = <choose> <when test="headingPairs != null and headingPairs != '' ">#{headingPairs}</when> <otherwise>NULL</otherwise> </choose>
-		, COMPANY = <choose> <when test="company != null and company != '' ">#{company}</when> <otherwise>NULL</otherwise> </choose>
+		, KEYWORDS = <choose> <when test="keywords != null and keywords.trim() != '' ">#{keywords}</when> <otherwise>NULL</otherwise> </choose>
+		, DESCRIPTION = <choose> <when test="description != null and description.trim() != '' ">#{description}</when> <otherwise>NULL</otherwise> </choose>
+		, HEADING_PAIRS = <choose> <when test="headingPairs != null and headingPairs.trim() != '' ">#{headingPairs}</when> <otherwise>NULL</otherwise> </choose>
+		, COMPANY = <choose> <when test="company != null and company.trim() != '' ">#{company}</when> <otherwise>NULL</otherwise> </choose>
     WHERE FILE_NO = #{fileNo}
 </update>
 
@@ -342,16 +342,16 @@
     INSERT INTO BN_FILE_IMAGE (
         FILE_NO
         , UPDATE_DATE
-        <if test="make != null and make != '' ">, MAKE</if>
-		<if test="cameraModelName != null and cameraModelName != '' ">, CAMERA_MODEL_NAME</if> 
-		<if test="orientation != null and orientation != '' ">, ORIENTATION</if>
+        <if test="make != null and make.trim() != '' ">, MAKE</if>
+		<if test="cameraModelName != null and cameraModelName.trim() != '' ">, CAMERA_MODEL_NAME</if> 
+		<if test="orientation != null and orientation.trim() != '' ">, ORIENTATION</if>
 		, F_NUMBER
-		<if test="exposureTime != null and exposureTime != '' ">, EXPOSURE_TIME</if>
-		<if test="sensingMethod != null and sensingMethod != '' ">, SENSING_METHOD</if>
-		<if test="flash != null and flash != '' ">, FLASH</if>
-		<if test="lightSource != null and lightSource != '' ">, LIGHT_SOURCE</if> 
-		<if test="whiteBalance != null and whiteBalance != '' ">, WHITE_BALANCE</if>
-		<if test="shutterSpeed != null and shutterSpeed != '' ">, SHUTTER_SPEED</if>
+		<if test="exposureTime != null and exposureTime.trim() != '' ">, EXPOSURE_TIME</if>
+		<if test="sensingMethod != null and sensingMethod.trim() != '' ">, SENSING_METHOD</if>
+		<if test="flash != null and flash.trim() != '' ">, FLASH</if>
+		<if test="lightSource != null and lightSource.trim() != '' ">, LIGHT_SOURCE</if> 
+		<if test="whiteBalance != null and whiteBalance.trim() != '' ">, WHITE_BALANCE</if>
+		<if test="shutterSpeed != null and shutterSpeed.trim() != '' ">, SHUTTER_SPEED</if>
 		, ISO 
 		, IMAGE_WIDTH 
 		, IMAGE_HEIGHT
@@ -362,16 +362,16 @@
     ) VALUES (
         #{fileNo}
         , CURRENT_TIMESTAMP
-        <if test="make != null and make != '' ">, #{make}</if>
-		<if test="cameraModelName != null and cameraModelName != '' ">, #{cameraModelName}</if> 
-		<if test="orientation != null and orientation != '' ">, #{orientation}</if>
+        <if test="make != null and make.trim() != '' ">, #{make}</if>
+		<if test="cameraModelName != null and cameraModelName.trim() != '' ">, #{cameraModelName}</if> 
+		<if test="orientation != null and orientation.trim() != '' ">, #{orientation}</if>
 		, #{fNumber}
-		<if test="exposureTime != null and exposureTime != '' ">, #{exposureTime}</if>
-		<if test="sensingMethod != null and sensingMethod != '' ">, #{sensingMethod}</if>
-		<if test="flash != null and flash != '' ">, #{flash}</if>
-		<if test="lightSource != null and lightSource != '' ">, #{lightSource}</if> 
-		<if test="whiteBalance != null and whiteBalance != '' ">, #{whiteBalance}</if>
-		<if test="shutterSpeed != null and shutterSpeed != '' ">, #{shutterSpeed}</if>
+		<if test="exposureTime != null and exposureTime.trim() != '' ">, #{exposureTime}</if>
+		<if test="sensingMethod != null and sensingMethod.trim() != '' ">, #{sensingMethod}</if>
+		<if test="flash != null and flash.trim() != '' ">, #{flash}</if>
+		<if test="lightSource != null and lightSource.trim() != '' ">, #{lightSource}</if> 
+		<if test="whiteBalance != null and whiteBalance.trim() != '' ">, #{whiteBalance}</if>
+		<if test="shutterSpeed != null and shutterSpeed.trim() != '' ">, #{shutterSpeed}</if>
 		, #{iso} 
 		, #{imageWidth} 
 		, #{imageHeight}
@@ -385,16 +385,16 @@
 <update id="updateFileImage" parameterType="com.utime.burrowNest.storage.vo.BnFileImage">
     UPDATE BN_FILE_IMAGE
     SET UPDATE_DATE = CURRENT_TIMESTAMP
-        , MAKE = <choose> <when test="make != null and make != '' ">#{make}</when> <otherwise>NULL</otherwise> </choose>
-		, CAMERA_MODEL_NAME = <choose> <when test="cameraModelName != null and cameraModelName != '' ">#{cameraModelName}</when> <otherwise>NULL</otherwise> </choose>
-		, ORIENTATION  = <choose> <when test="orientation != null and orientation != '' ">#{orientation}</when> <otherwise>NULL</otherwise> </choose>
+        , MAKE = <choose> <when test="make != null and make.trim() != '' ">#{make}</when> <otherwise>NULL</otherwise> </choose>
+		, CAMERA_MODEL_NAME = <choose> <when test="cameraModelName != null and cameraModelName.trim() != '' ">#{cameraModelName}</when> <otherwise>NULL</otherwise> </choose>
+		, ORIENTATION  = <choose> <when test="orientation != null and orientation.trim() != '' ">#{orientation}</when> <otherwise>NULL</otherwise> </choose>
 		, F_NUMBER = #{fNumber}
-		, EXPOSURE_TIME = <choose> <when test="exposureTime != null and exposureTime != '' ">#{exposureTime}</when> <otherwise>NULL</otherwise> </choose> 
-		, SENSING_METHOD  = <choose> <when test="sensingMethod != null and sensingMethod != '' ">#{sensingMethod}</when> <otherwise>NULL</otherwise> </choose>
-		, FLASH  = <choose> <when test="flash != null and flash != '' ">#{flash}</when> <otherwise>NULL</otherwise> </choose>
-		, LIGHT_SOURCE  = <choose> <when test="lightSource != null and lightSource != '' ">#{lightSource}</when> <otherwise>NULL</otherwise> </choose>
-		, WHITE_BALANCE = <choose> <when test="whiteBalance != null and whiteBalance != '' ">#{whiteBalance}</when> <otherwise>NULL</otherwise> </choose>
-		, SHUTTER_SPEED  = <choose> <when test="shutterSpeed != null and shutterSpeed != '' ">#{shutterSpeed}</when> <otherwise>NULL</otherwise> </choose>
+		, EXPOSURE_TIME = <choose> <when test="exposureTime != null and exposureTime.trim() != '' ">#{exposureTime}</when> <otherwise>NULL</otherwise> </choose> 
+		, SENSING_METHOD  = <choose> <when test="sensingMethod != null and sensingMethod.trim() != '' ">#{sensingMethod}</when> <otherwise>NULL</otherwise> </choose>
+		, FLASH  = <choose> <when test="flash != null and flash.trim() != '' ">#{flash}</when> <otherwise>NULL</otherwise> </choose>
+		, LIGHT_SOURCE  = <choose> <when test="lightSource != null and lightSource.trim() != '' ">#{lightSource}</when> <otherwise>NULL</otherwise> </choose>
+		, WHITE_BALANCE = <choose> <when test="whiteBalance != null and whiteBalance.trim() != '' ">#{whiteBalance}</when> <otherwise>NULL</otherwise> </choose>
+		, SHUTTER_SPEED  = <choose> <when test="shutterSpeed != null and shutterSpeed.trim() != '' ">#{shutterSpeed}</when> <otherwise>NULL</otherwise> </choose>
 		, ISO = #{iso}
 		, IMAGE_WIDTH = #{imageWidth} 
 		, IMAGE_HEIGHT = #{imageHeight}
@@ -434,20 +434,20 @@
     INSERT INTO BN_FILE_VIDEO (
         FILE_NO
         , UPDATE_DATE
-        <if test="mimeType != null and mimeType != '' ">, MIME_TYPE</if>
-		<if test="author != null and author != '' ">, AUTHOR</if>
-		<if test="duration != null and duration != '' ">, DURATION</if>
+        <if test="mimeType != null and mimeType.trim() != '' ">, MIME_TYPE</if>
+		<if test="author != null and author.trim() != '' ">, AUTHOR</if>
+		<if test="duration != null and duration.trim() != '' ">, DURATION</if>
 		, PREFERRED_RATE 
-		<if test="preferredVolume != null and preferredVolume != '' ">, PREFERRED_VOLUME</if>
-		<if test="audioFormat != null and audioFormat != '' ">, AUDIO_FORMAT</if>
+		<if test="preferredVolume != null and preferredVolume.trim() != '' ">, PREFERRED_VOLUME</if>
+		<if test="audioFormat != null and audioFormat.trim() != '' ">, AUDIO_FORMAT</if>
 		, AUDIO_BITS_PER_SAMPLE 
 		, AUDIO_SAMPLE_RATE 
-		<if test="layoutFlags != null and layoutFlags != '' ">, LAYOUT_FLAGS</if>
+		<if test="layoutFlags != null and layoutFlags.trim() != '' ">, LAYOUT_FLAGS</if>
 		, AUDIO_CHANNELS
-		<if test="compressorVersion != null and compressorVersion != '' ">, COMPRESSOR_VERSION</if>
-		<if test="cameraModelName != null and cameraModelName != '' ">, CAMERA_MODEL_NAME</if>
-		<if test="firmwareVersion != null and firmwareVersion != '' ">, FIRMWARE_VERSION</if>
-		<if test="avgBitrate != null and avgBitrate != '' ">, AVG_BITRATE</if>
+		<if test="compressorVersion != null and compressorVersion.trim() != '' ">, COMPRESSOR_VERSION</if>
+		<if test="cameraModelName != null and cameraModelName.trim() != '' ">, CAMERA_MODEL_NAME</if>
+		<if test="firmwareVersion != null and firmwareVersion.trim() != '' ">, FIRMWARE_VERSION</if>
+		<if test="avgBitrate != null and avgBitrate.trim() != '' ">, AVG_BITRATE</if>
 		, ROTATION 
 		, IMAGE_WIDTH 
 		, IMAGE_HEIGHT 
@@ -458,20 +458,20 @@
     ) VALUES (
         #{fileNo}
         , CURRENT_TIMESTAMP
-        <if test="mimeType != null and mimeType != '' ">, #{mimeType}</if>
-		<if test="author != null and author != '' ">, #{author}</if>
-		<if test="duration != null and duration != '' ">, #{duration}</if>
+        <if test="mimeType != null and mimeType.trim() != '' ">, #{mimeType}</if>
+		<if test="author != null and author.trim() != '' ">, #{author}</if>
+		<if test="duration != null and duration.trim() != '' ">, #{duration}</if>
 		, #{preferredRate} 
-		<if test="preferredVolume != null and preferredVolume != '' ">, #{preferredVolume}</if>
-		<if test="audioFormat != null and audioFormat != '' ">, #{audioFormat}</if>
+		<if test="preferredVolume != null and preferredVolume.trim() != '' ">, #{preferredVolume}</if>
+		<if test="audioFormat != null and audioFormat.trim() != '' ">, #{audioFormat}</if>
 		, #{audioBitsPerSample} 
 		, #{audioSampleRate} 
-		<if test="layoutFlags != null and layoutFlags != '' ">, #{layoutFlags}</if>
+		<if test="layoutFlags != null and layoutFlags.trim() != '' ">, #{layoutFlags}</if>
 		, #{audioChannels}
-		<if test="compressorVersion != null and compressorVersion != '' ">, #{compressorVersion}</if>
-		<if test="cameraModelName != null and cameraModelName != '' ">, #{cameraModelName}</if>
-		<if test="firmwareVersion != null and firmwareVersion != '' ">, #{firmwareVersion}</if>
-		<if test="avgBitrate != null and avgBitrate != '' ">, #{avgBitrate}</if>
+		<if test="compressorVersion != null and compressorVersion.trim() != '' ">, #{compressorVersion}</if>
+		<if test="cameraModelName != null and cameraModelName.trim() != '' ">, #{cameraModelName}</if>
+		<if test="firmwareVersion != null and firmwareVersion.trim() != '' ">, #{firmwareVersion}</if>
+		<if test="avgBitrate != null and avgBitrate.trim() != '' ">, #{avgBitrate}</if>
 		, #{rotation} 
 		, #{imageWidth} 
 		, #{imageHeight} 
@@ -485,20 +485,20 @@
 <update id="updateFileVideo" parameterType="com.utime.burrowNest.storage.vo.BnFileVideo">
     UPDATE BN_FILE_VIDEO
     SET UPDATE_DATE = CURRENT_TIMESTAMP
-        , MIME_TYPE = <choose> <when test="mimeType != null and mimeType != '' ">#{mimeType}</when> <otherwise>NULL</otherwise> </choose>
-		, AUTHOR = <choose> <when test="author != null and author != '' ">#{author}</when> <otherwise>NULL</otherwise> </choose>
-		, DURATION = <choose> <when test="duration != null and duration != '' ">#{duration}</when> <otherwise>NULL</otherwise> </choose>
+        , MIME_TYPE = <choose> <when test="mimeType != null and mimeType.trim() != '' ">#{mimeType}</when> <otherwise>NULL</otherwise> </choose>
+		, AUTHOR = <choose> <when test="author != null and author.trim() != '' ">#{author}</when> <otherwise>NULL</otherwise> </choose>
+		, DURATION = <choose> <when test="duration != null and duration.trim() != '' ">#{duration}</when> <otherwise>NULL</otherwise> </choose>
 		, PREFERRED_RATE = #{preferredRate}
-		, PREFERRED_VOLUME = <choose> <when test="preferredVolume != null and preferredVolume != '' ">#{preferredVolume}</when> <otherwise>NULL</otherwise> </choose>
-		, AUDIO_FORMAT = <choose> <when test="audioFormat != null and audioFormat != '' ">#{audioFormat}</when> <otherwise>NULL</otherwise> </choose>
+		, PREFERRED_VOLUME = <choose> <when test="preferredVolume != null and preferredVolume.trim() != '' ">#{preferredVolume}</when> <otherwise>NULL</otherwise> </choose>
+		, AUDIO_FORMAT = <choose> <when test="audioFormat != null and audioFormat.trim() != '' ">#{audioFormat}</when> <otherwise>NULL</otherwise> </choose>
 		, AUDIO_BITS_PER_SAMPLE = #{audioBitsPerSample}
 		, AUDIO_SAMPLE_RATE = #{audioSampleRate}   
-		, LAYOUT_FLAGS = <choose> <when test="layoutFlags != null and layoutFlags != '' ">#{layoutFlags}</when> <otherwise>NULL</otherwise> </choose>
+		, LAYOUT_FLAGS = <choose> <when test="layoutFlags != null and layoutFlags.trim() != '' ">#{layoutFlags}</when> <otherwise>NULL</otherwise> </choose>
 		, AUDIO_CHANNELS = #{audioChannels}
-		, COMPRESSOR_VERSION = <choose> <when test="compressorVersion != null and compressorVersion != '' ">#{compressorVersion}</when> <otherwise>NULL</otherwise> </choose> 
-		, CAMERA_MODEL_NAME = <choose> <when test="cameraModelName != null and cameraModelName != '' ">#{cameraModelName}</when> <otherwise>NULL</otherwise> </choose>
-		, FIRMWARE_VERSION = <choose> <when test="firmwareVersion != null and firmwareVersion != '' ">#{firmwareVersion}</when> <otherwise>NULL</otherwise> </choose>
-		, AVG_BITRATE = <choose> <when test="avgBitrate != null and avgBitrate != '' ">#{avgBitrate}</when> <otherwise>NULL</otherwise> </choose>
+		, COMPRESSOR_VERSION = <choose> <when test="compressorVersion != null and compressorVersion.trim() != '' ">#{compressorVersion}</when> <otherwise>NULL</otherwise> </choose> 
+		, CAMERA_MODEL_NAME = <choose> <when test="cameraModelName != null and cameraModelName.trim() != '' ">#{cameraModelName}</when> <otherwise>NULL</otherwise> </choose>
+		, FIRMWARE_VERSION = <choose> <when test="firmwareVersion != null and firmwareVersion.trim() != '' ">#{firmwareVersion}</when> <otherwise>NULL</otherwise> </choose>
+		, AVG_BITRATE = <choose> <when test="avgBitrate != null and avgBitrate.trim() != '' ">#{avgBitrate}</when> <otherwise>NULL</otherwise> </choose>
 		, ROTATION = #{rotation}   
 		, IMAGE_WIDTH = #{imageWidth} 
 		, IMAGE_HEIGHT = #{imageHeight}
@@ -546,39 +546,39 @@
     INSERT INTO BN_FILE_AUDIO (
         FILE_NO
         , UPDATE_DATE
-        <if test="mimeType != null and mimeType != '' ">, MIME_TYPE</if>
+        <if test="mimeType != null and mimeType.trim() != '' ">, MIME_TYPE</if>
 		, SAMPLE_RATE  
 		, CHANNELS
 		, BITS_PER_SAMPLE
 		, TOTAL_SAMPLES
-		<if test="title != null and title != '' ">, TITLE</if>
-		<if test="artist != null and artist != '' ">, ARTIST</if>
-		<if test="album != null and album != '' ">, ALBUM</if>
-		<if test="genre != null and genre != '' ">, GENRE</if>
-		<if test="albumArtist != null and albumArtist != '' ">, ALBUM_ARTIST</if>
+		<if test="title != null and title.trim() != '' ">, TITLE</if>
+		<if test="artist != null and artist.trim() != '' ">, ARTIST</if>
+		<if test="album != null and album.trim() != '' ">, ALBUM</if>
+		<if test="genre != null and genre.trim() != '' ">, GENRE</if>
+		<if test="albumArtist != null and albumArtist.trim() != '' ">, ALBUM_ARTIST</if>
 		, DISCNUMBER
-		<if test="albumDate != null and albumDate != '' ">, ALBUM_DATE</if>
-		<if test="organization != null and organization != '' ">, ORGANIZATION</if>
+		<if test="albumDate != null and albumDate.trim() != '' ">, ALBUM_DATE</if>
+		<if test="organization != null and organization.trim() != '' ">, ORGANIZATION</if>
 		, TRACK_NUMBER
-		<if test="duration != null and duration != '' ">, DURATION</if>
+		<if test="duration != null and duration.trim() != '' ">, DURATION</if>
     ) VALUES (
         #{fileNo}
         , CURRENT_TIMESTAMP
-        <if test="mimeType != null and mimeType != '' ">, #{mimeType}</if>
+        <if test="mimeType != null and mimeType.trim() != '' ">, #{mimeType}</if>
 		, #{sampleRate}
 		, #{channels}
 		, #{bitsPerSample}
 		, #{totalSamples}
-		<if test="title != null and title != '' ">, #{title}</if>
-		<if test="artist != null and artist != '' ">, #{artist}</if>
-		<if test="album != null and album != '' ">, #{album}</if>
-		<if test="genre != null and genre != '' ">, #{genre}</if>
-		<if test="albumArtist != null and albumArtist != '' ">, #{albumArtist}</if>
+		<if test="title != null and title.trim() != '' ">, #{title}</if>
+		<if test="artist != null and artist.trim() != '' ">, #{artist}</if>
+		<if test="album != null and album.trim() != '' ">, #{album}</if>
+		<if test="genre != null and genre.trim() != '' ">, #{genre}</if>
+		<if test="albumArtist != null and albumArtist.trim() != '' ">, #{albumArtist}</if>
 		, #{discNumber}  
-		<if test="albumDate != null and albumDate != '' ">, #{albumDate}</if>
-		<if test="organization != null and organization != '' ">, #{organization}</if>
+		<if test="albumDate != null and albumDate.trim() != '' ">, #{albumDate}</if>
+		<if test="organization != null and organization.trim() != '' ">, #{organization}</if>
 		, #{trackNumber}
-		<if test="duration != null and duration != '' ">, #{duration}</if>
+		<if test="duration != null and duration.trim() != '' ">, #{duration}</if>
     )
 </insert>
 
@@ -586,21 +586,21 @@
 <update id="updateFileAudio" parameterType="com.utime.burrowNest.storage.vo.BnFileAudio">
     UPDATE BN_FILE_AUDIO
     SET UPDATE_DATE = CURRENT_TIMESTAMP
-        , MIME_TYPE = <choose> <when test="mimeType != null and mimeType != '' ">#{mimeType}</when> <otherwise>NULL</otherwise> </choose>
+        , MIME_TYPE = <choose> <when test="mimeType != null and mimeType.trim() != '' ">#{mimeType}</when> <otherwise>NULL</otherwise> </choose>
 		, SAMPLE_RATE = #{sampleRate}
 		, CHANNELS = #{channels}
 		, BITS_PER_SAMPLE = #{bitsPerSample}
 		, TOTAL_SAMPLES = #{totalSamples}
-		, TITLE = <choose> <when test="title != null and title != '' ">#{title}</when> <otherwise>NULL</otherwise> </choose>
-		, ARTIST = <choose> <when test="artist != null and artist != '' ">#{artist}</when> <otherwise>NULL</otherwise> </choose>
-		, ALBUM = <choose> <when test="album != null and album != '' ">#{album}</when> <otherwise>NULL</otherwise> </choose>
-		, GENRE = <choose> <when test="genre != null and genre != '' ">#{genre}</when> <otherwise>NULL</otherwise> </choose>
-		, ALBUM_ARTIST = <choose> <when test="albumArtist != null and albumArtist != '' ">#{albumArtist}</when> <otherwise>NULL</otherwise> </choose>
+		, TITLE = <choose> <when test="title != null and title.trim() != '' ">#{title}</when> <otherwise>NULL</otherwise> </choose>
+		, ARTIST = <choose> <when test="artist != null and artist.trim() != '' ">#{artist}</when> <otherwise>NULL</otherwise> </choose>
+		, ALBUM = <choose> <when test="album != null and album.trim() != '' ">#{album}</when> <otherwise>NULL</otherwise> </choose>
+		, GENRE = <choose> <when test="genre != null and genre.trim() != '' ">#{genre}</when> <otherwise>NULL</otherwise> </choose>
+		, ALBUM_ARTIST = <choose> <when test="albumArtist != null and albumArtist.trim() != '' ">#{albumArtist}</when> <otherwise>NULL</otherwise> </choose>
 		, DISCNUMBER = #{discNumber}
-		, ALBUM_DATE = <choose> <when test="albumDate != null and albumDate != '' ">#{albumDate}</when> <otherwise>NULL</otherwise> </choose>
-		, ORGANIZATION = <choose> <when test="organization != null and organization != '' ">#{organization}</when> <otherwise>NULL</otherwise> </choose>
+		, ALBUM_DATE = <choose> <when test="albumDate != null and albumDate.trim() != '' ">#{albumDate}</when> <otherwise>NULL</otherwise> </choose>
+		, ORGANIZATION = <choose> <when test="organization != null and organization.trim() != '' ">#{organization}</when> <otherwise>NULL</otherwise> </choose>
 		, TRACK_NUMBER = #{trackNumber}
-		, DURATION = <choose> <when test="duration != null and duration != '' ">#{duration}</when> <otherwise>NULL</otherwise> </choose>
+		, DURATION = <choose> <when test="duration != null and duration.trim() != '' ">#{duration}</when> <otherwise>NULL</otherwise> </choose>
     WHERE FILE_NO = #{fileNo}
 </update>
 
@@ -639,7 +639,7 @@
         , COMPRESSION_RATIO
         , ENCRYPTED
         , PASSWORD_PROTECTED
-        <if test="comment != null and comment != '' ">, COMMENT</if>
+        <if test="comment != null and comment.trim() != '' ">, COMMENT</if>
     ) VALUES (
         #{fileNo}
         , CURRENT_TIMESTAMP
@@ -649,7 +649,7 @@
         , #{compressionRatio}
         , #{encrypted}
         , #{passwordProtected}
-        <if test="comment != null and comment != '' ">, #{comment}</if>
+        <if test="comment != null and comment.trim() != '' ">, #{comment}</if>
     )
 </insert>
 
@@ -679,7 +679,7 @@
         , COMPRESSION_RATIO = #{compressionRatio}
         , ENCRYPTED = #{encrypted}
         , PASSWORD_PROTECTED = #{passwordProtected}
-        , COMMENT = <choose> <when test="comment != null and comment != '' ">#{comment}</when> <otherwise>NULL</otherwise> </choose>
+        , COMMENT = <choose> <when test="comment != null and comment.trim() != '' ">#{comment}</when> <otherwise>NULL</otherwise> </choose>
     WHERE FILE_NO = #{fileNo}
 </update>
 
