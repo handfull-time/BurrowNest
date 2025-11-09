@@ -106,4 +106,27 @@
 		AND GROUP_NO = #{groupNo}
 </delete>
 
+<!--그룹 소유자 저장소 목록 전달-->
+<select id="getOwnerGroupStorageList" parameterType="map" resultMap="com.utime.burrowNest.storage.mapper.StorageMapper.BnDirectoryMap">
+	SELECT
+    	DR.NO
+    	,CAST(DR.UID AS VARCHAR) AS UID
+    	, DR.NAME
+    	, DR.ABSOLUTE_PATH 
+    	, EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = DR.NO) AS HAS_CHILD
+    FROM
+    	BN_DIRECTORY DR
+    		INNER JOIN BN_DIRECTORY_ACCESS DA ON DR.NO = DA.DIR_NO
+	WHERE
+    	DA.GROUP_NO = #{groupNo}
+	    AND (
+	        DR.PARENT_NO IS NULL
+	        OR DR.PARENT_NO NOT IN (
+	            SELECT DIR_NO
+	            FROM BN_DIRECTORY_ACCESS
+	            WHERE GROUP_NO = #{groupNo}
+	        )
+	    )
+     ORDER BY DR.NAME
+</select>
 </mapper>

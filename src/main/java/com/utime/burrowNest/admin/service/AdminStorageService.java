@@ -51,4 +51,11 @@ public interface AdminStorageService {
 	 * @return
 	 */
 	ReturnBasic removeGroupStorage(long groupNo, long dirNo);
+
+	/**
+	 * 그룹 소유자 저장소 목록 전달
+	 * @param groupNo
+	 * @return
+	 */
+	List<BnDirectory> getOwnerGroupStorageList(long groupNo);
 }

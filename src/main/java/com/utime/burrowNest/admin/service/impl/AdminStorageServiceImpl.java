@@ -68,4 +68,10 @@ class AdminStorageServiceImpl implements AdminStorageService{
 		List<BnDirectory> result = storageDao.getGroupStorageList( user.getGroup().getGroupNo(), uid );
 		return result;
 	}
+	
+	@Override
+	public List<BnDirectory> getOwnerGroupStorageList(long groupNo) {
+		
+		return storageDao.getOwnerGroupStorageList( groupNo );
+	}
 }

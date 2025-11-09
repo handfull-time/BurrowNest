@@ -56,4 +56,11 @@ public interface AdminStorageDao {
 	 * @return
 	 */
 	int removeGroupStorage(long groupNo, long dirNo)throws Exception;
+	
+	/**
+	 * 그룹 소유자 저장소 목록 전달
+	 * @param groupNo
+	 * @return
+	 */
+	List<BnDirectory> getOwnerGroupStorageList(long groupNo);
 }

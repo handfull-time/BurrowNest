@@ -110,7 +110,7 @@ public class AdminGroupUserController {
 		final GroupVo group = userService.getGroupByNo(groupNo);
 		model.addAttribute("group", group);
 		
-		final List<BnDirectory> list = storageService.getGroupStorageList(groupNo);
+		final List<BnDirectory> list = storageService.getOwnerGroupStorageList(groupNo);
 		model.addAttribute("list", list);
         
 		return "Admin/Group/AdminGroupStorageList";

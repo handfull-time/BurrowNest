@@ -64,5 +64,10 @@ public interface AdminStorageMapper {
 	 */
 	int removeGroupStorage(@Param("groupNo") long groupNo, @Param("dirNo") long dirNo)throws Exception;
 
-
+	/**
+	 * 그룹 소유자 저장소 목록 전달
+	 * @param groupNo
+	 * @return
+	 */
+	List<BnDirectory> getOwnerGroupStorageList(@Param("groupNo") long groupNo);
 }

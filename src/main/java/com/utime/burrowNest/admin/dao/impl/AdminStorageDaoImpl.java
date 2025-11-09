@@ -61,4 +61,10 @@ class AdminStorageDaoImpl implements AdminStorageDao{
 	public int removeGroupStorage(long groupNo, long dirNo) throws Exception {
 		return mapper.removeGroupStorage(groupNo, dirNo);
 	}
+	
+	@Override
+	public List<BnDirectory> getOwnerGroupStorageList(long groupNo) {
+		
+		return mapper.getOwnerGroupStorageList(groupNo);
+	}
 }
