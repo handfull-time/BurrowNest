@@ -101,7 +101,8 @@
     		            const data = await response.json();
     		            if( data.code === '0' ){
     		            	showCustomAlert('삭제 성공했습니다.', () => {
-    		            		});
+								location.reload();
+    		            	});
     		            }else{
     		            	showCustomAlert(data.code + " - " + data.message);
     		            }

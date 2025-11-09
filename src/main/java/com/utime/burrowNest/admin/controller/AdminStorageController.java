@@ -153,8 +153,7 @@ public class AdminStorageController {
 	@ResponseBody
 	@DeleteMapping(path = { "DeleteRootStorage.json" })
     public ReturnBasic DeleteInitinfor(HttpServletRequest request, @RequestParam("no") long no) {
-//		return loadStorageService.saveInitStorage(req);
-		return null;
+		return loadStorageService.deleteRootStorage(no);
 	}
 }
 

@@ -77,7 +77,14 @@ public class CommandUtil {
             log.info("CommandUtil Exception: " + err.getMessage());
 			return errorList;
 		}
-
+		// Warning 은 에러로 간주하지 않는다.
+		if (errorList.size() > 0 ) {
+			final String errMsg = errorList.get(0).toLowerCase();
+			if (errMsg.contains("warning")) {
+				errorList.clear();
+			}
+		}
+		
         if (!errorList.isEmpty()) {
 			log.info( "Error : " + errorList.get(0));
 			return errorList;

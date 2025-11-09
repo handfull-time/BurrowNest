@@ -33,21 +33,30 @@
 	
 	// 클릭 위임: 라벨/토글 모두로 열고 닫기
 	document.getElementById("directoryTree").addEventListener("click", async (e) => {
-		const label = e.target.closest(".dir-label");
-		const toggleBtn = e.target.closest(".toggle-btn");
 		
+		const label = e.target.closest(".dir-label");
 		if (label) {
+			console.log("디렉터리 라벨 클릭:", label.dataset.uid);
+			
 			const li = label.closest("li");
 			const btn = li.querySelector(".toggle-btn");
 			if (btn) await toggleNode(btn);
-				return;
+			
+			loadFileList(label.dataset.uid);
+			return;
 		}
+		
+		const toggleBtn = e.target.closest(".toggle-btn");
 		if (toggleBtn) {
+			console.log("토글 버튼 클릭:", toggleBtn.dataset.uid);
 			await toggleNode(toggleBtn);
+			
+			loadFileList(toggleBtn.dataset.uid);
 		}
 	});
 	
 	async function toggleNode(toggleBtn) {
+		
 		const uid = toggleBtn.dataset.uid;
 		const li = toggleBtn.closest("li");
 		const container = li.querySelector("ul");

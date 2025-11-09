@@ -523,7 +523,7 @@ App Version                     : 16.0300
 		
 		final String line = cmdRes.get(0).toLowerCase();
 		
-		return line.indexOf("error") > -1 || line.indexOf("exception") > -1 || line.indexOf("warning") > -1;
+		return line.indexOf("error") > -1 || line.indexOf("exception") > -1;
 	}
 
 
@@ -988,11 +988,13 @@ App Version                     : 16.0300
 					,StorageUtils.Exiftool + " -ThumbnailImage -b \"" + file.getAbsolutePath() + "\" > " + temp.toAbsolutePath()
 					);
 
-			if( StorageUtils.isExifToolError(cmdRes) ) {
+			if( StorageUtils.isExifToolError(cmdRes) && !Files.exists(temp) ) {
+				
+				
 				temp.toFile().delete();
 				return result;
 			}
-						
+
 			result = Files.readAllBytes(temp);
 			
 			temp.toFile().delete();

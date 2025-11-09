@@ -11,4 +11,11 @@ public interface LoadStorageService {
 	 * @return
 	 */
 	ReturnBasic saveRootStorage(SaveSotrageReqVo req);
+
+	/**
+	 * 루트 저장소 삭제
+	 * @param no
+	 * @return
+	 */
+	ReturnBasic deleteRootStorage(long no);
 }

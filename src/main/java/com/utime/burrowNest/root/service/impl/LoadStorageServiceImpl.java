@@ -411,4 +411,15 @@ class LoadStorageServiceImpl implements LoadStorageService {
 		return new ReturnBasic();
 	}
 
+	@Override
+	public ReturnBasic deleteRootStorage(long no) {
+		final ReturnBasic result = new ReturnBasic();
+		try {
+			adminStorageDao.deleteRootDirectory(no);
+		} catch (Exception e) {
+			log.error("", e);
+			result.setCodeMessage("E", "루트 저장소 삭제 실패");
+		}
+		return result;
+	}
 }

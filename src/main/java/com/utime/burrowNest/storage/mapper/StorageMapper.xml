@@ -685,14 +685,14 @@
 
 <!-- INSERT -->
 <insert id="insertThumbnail" parameterType="map">
-    INSERT INTO BN_FILE_THUMBNAIL (
+   INSERT INTO BN_FILE_THUMBNAIL (
         FILE_NO
         , UPDATE_DATE
         , THUMBNAIL
     ) VALUES (
-        #{fileNo},
-        ,CURRENT_TIMESTAMP
-        ,#{thumbnail, jdbcType=VARBINARY}
+        #{fileNo}
+        , CURRENT_TIMESTAMP
+        , #{thumbnail, jdbcType=VARBINARY}
     )
 </insert>
 
@@ -883,4 +883,28 @@
 		AND GROUP_NO = #{groupNo}
 </delete> -->
 
+<!--groupNo, directoryUid 로 파일 목록 조회-->
+<select id="selectFilesByParentUid" resultMap="BnFileMap">
+    SELECT
+        <include refid="BnFileColumn"/>
+    FROM BN_FILE FL 
+    	INNER JOIN BN_DIRECTORY DR ON FL.PARENT_NO = DR.NO
+    WHERE 1=1
+   		AND DR.UID = #{dirUid}
+   	    AND FL.ENABLED = TRUE
+   	ORDER BY FL.NAME
+</select>
+	 
+ <!--groupNo, directoryUid 로 Directory 목록 조회-->
+ <select id="selectDirectoriesByParentUid" resultMap="BnDirectoryMap">
+    SELECT
+    	<include refid="BnDirectoryColumn" />
+    FROM BN_DIRECTORY DR
+    	INNER JOIN BN_DIRECTORY PR ON DR.PARENT_NO = PR.NO
+    WHERE 1=1
+		AND PR.UID = #{uid}
+    	AND DR.ENABLED = TRUE
+    ORDER BY DR.NAME
+ </select>
+ 
 </mapper>

@@ -63,4 +63,11 @@ public interface AdminStorageDao {
 	 * @return
 	 */
 	List<BnDirectory> getOwnerGroupStorageList(long groupNo);
+
+	/**
+	 * 루트 디렉토리 삭제
+	 * @param no
+	 * @return
+	 */
+	int deleteRootDirectory(long no);
 }

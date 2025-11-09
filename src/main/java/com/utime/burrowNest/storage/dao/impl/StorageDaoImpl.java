@@ -351,9 +351,9 @@ class StorageDaoImpl implements StorageDao{
 		
 		int result;
 		if( mapper.existFileInfo( "BN_FILE_THUMBNAIL", file.getNo() ) ) {
-			result = mapper.insertThumbnail( file.getNo(), bArray );
-		}else {
 			result = mapper.updateThumbnail( file.getNo(), bArray );
+		}else {
+			result = mapper.insertThumbnail( file.getNo(), bArray );
 		}
 		return result;
 	}
@@ -501,5 +501,17 @@ class StorageDaoImpl implements StorageDao{
 //	public int removeGroupStorage(long groupNo, long dirNo) throws Exception {
 //		return mapper.removeGroupStorage(groupNo, dirNo);
 //	}
+	
+	@Override
+	public List<BnFile> getFiles(long groupNo, String uid) {
+		
+		return mapper.selectFilesByParentUid(groupNo, uid);
+	}
+	
+	@Override
+	public List<BnDirectory> getDirectories(long groupNo, String uid) {
+		
+		return mapper.selectDirectoriesByParentUid(groupNo, uid);
+	}
 
 }

@@ -146,5 +146,21 @@ public interface StorageDao {
 	 * @return
 	 */
 	List<BnDirectory> getGroupStorageList(long groupNo, String parentUid);
+
+	/**
+	 * 디렉토리 내 파일 목록 조회
+	 * @param groupNo
+	 * @param uid
+	 * @return
+	 */
+	List<BnFile> getFiles(long groupNo, String uid);
+	
+	/**
+	 * 디렉토리 목록 조회
+	 * @param groupNo
+	 * @param uid
+	 * @return
+	 */
+	List<BnDirectory> getDirectories(long groupNo, String uid);
 	
 }

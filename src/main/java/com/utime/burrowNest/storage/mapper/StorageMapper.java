@@ -323,6 +323,22 @@ public interface StorageMapper {
 	 */
 	List<BnDirectory> getGroupStorageListUid(@Param("groupNo") long groupNo, @Param("parentUid") String parentUid);
 
+	/**
+	 * groupNo, directoryUid 로 파일 목록 조회
+	 * @param groupNo
+	 * @param uid
+	 * @return
+	 */
+	List<BnFile> selectFilesByParentUid(@Param("groupNo") long groupNo, @Param("dirUid") String dirUid);
+
+	/**
+	 * groupNo, directoryUid 로 Directory 목록 조회
+	 * @param groupNo
+	 * @param uid
+	 * @return
+	 */
+	List<BnDirectory> selectDirectoriesByParentUid(@Param("groupNo") long groupNo, @Param("uid") String uid);
+
 //	/**
 //	 * 그룹 저장소 삭제
 //	 * @param groupNo

@@ -70,4 +70,18 @@ public interface AdminStorageMapper {
 	 * @return
 	 */
 	List<BnDirectory> getOwnerGroupStorageList(@Param("groupNo") long groupNo);
+
+	/**
+	 * 루트 디렉토리 삭제
+	 * @param dirNo
+	 * @return
+	 */
+	int deleteRootDirectory(@Param("dirNo") long dirNo);
+
+	/**
+	 * 디렉토리 접근 권한 삭제
+	 * @param dirNo
+	 * @return
+	 */
+	int deleteDirectoryAccess(@Param("dirNo") long dirNo);
 }

@@ -129,4 +129,15 @@
 	    )
      ORDER BY DR.NAME
 </select>
+
+<!--디렉토리 접근 권한 삭제-->
+<delete id="deleteDirectoryAccess">
+    DELETE FROM BN_DIRECTORY_ACCESS WHERE DIR_NO = #{dirNo}
+</delete>
+
+<!--루트 디렉토리 삭제-->
+<delete id="deleteRootDirectory">
+    DELETE FROM BN_DIRECTORY WHERE NO = #{dirNo}
+</delete>
+
 </mapper>

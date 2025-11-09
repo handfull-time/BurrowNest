@@ -135,6 +135,14 @@ class StorageServiceImpl implements StorageService {
 		final long groupNo = user.getGroup().getGroupNo();
 		final List<AbsPath> result = new ArrayList<>();
 		
+		// groupNo, directoryUid 로 Directory 목록 조회
+		final List<BnDirectory> dirList = this.storageDao.getDirectories( groupNo, uid );
+		result.addAll( dirList );
+		
+		// groupNo, directoryUid 로 파일 목록 조회
+		final List<BnFile> fileList = this.storageDao.getFiles( groupNo, uid );
+		result.addAll( fileList );
+		
 		return result;
 	}
 	
