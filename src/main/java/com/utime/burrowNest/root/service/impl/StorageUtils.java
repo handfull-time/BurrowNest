@@ -56,7 +56,7 @@ import net.coobird.thumbnailator.Thumbnails;
 class StorageUtils {
 	
 	private final static int width = 320, height = 320;
-	private final static String ThumFormat = "jpeg";
+	private final static String ThumFormat = "jpg";
 	
 	private final static String Exiftool;
 	
@@ -950,6 +950,31 @@ App Version                     : 16.0300
         byte [] result = baos.toByteArray();
         baos.close();
         
+        if( result != null && result.length < 1 ) {
+			result = resizeImageTypeRaw(file);
+		}
+        
+        return result;
+	}
+
+	public static byte[] resizeImageTypeRaw(File file) throws IOException {
+	    BufferedImage originalImage = ImageIO.read(file);
+	    BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+	    Graphics2D g = resizedImage.createGraphics();
+	    g.drawImage(originalImage, 0, 0, width, height, null);
+	    g.dispose();
+
+	    byte [] result = null;
+	    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+	        ImageIO.write(resizedImage, ThumFormat, baos); // PNG preserves transparency
+	        result = baos.toByteArray();
+	    }
+	    
+	    if( result != null && result.length < 1 ) {
+			result = null;
+		}
+        
         return result;
 	}
 	
@@ -989,8 +1014,6 @@ App Version                     : 16.0300
 					);
 
 			if( StorageUtils.isExifToolError(cmdRes) && !Files.exists(temp) ) {
-				
-				
 				temp.toFile().delete();
 				return result;
 			}
@@ -998,6 +1021,10 @@ App Version                     : 16.0300
 			result = Files.readAllBytes(temp);
 			
 			temp.toFile().delete();
+		}
+		
+		if( result != null && result.length < 1 ) {
+			result = null;
 		}
 		
 		return result;
@@ -1076,6 +1103,10 @@ App Version                     : 16.0300
 		            ImageIO.write(img, ThumFormat, baos); // "jpeg" 또는 "png" 등
 		            result = baos.toByteArray();
 		            baos.close();
+		            
+		            if( result != null && result.length < 1 ) {
+		            	result = null;
+		            }
 		        }
 			break;
 		}

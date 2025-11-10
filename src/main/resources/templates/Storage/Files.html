@@ -13,8 +13,9 @@
 <!-- 아이콘 보기용 템플릿 -->
 <template id="fileItemIconTemplate">
   <div class="file-item flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer">
-    <div class="thumb w-16 h-16 bg-gray-100 rounded overflow-hidden not-italic">
+    <div class="thumb w-16 h-16 bg-gray-100 rounded overflow-hidden not-italic flex items-center justify-center">
       <img class="thumb-img w-full h-full object-cover hidden" loading="lazy" />
+      <img class="icon-img hidden w-8 h-8 object-contain" alt="icon" />
       <i class="icon fa-solid fa-file text-gray-400 text-xl flex items-center justify-center h-full"></i>
     </div>
     <div class="file-name text-sm text-center mt-2 truncate w-20"></div>
@@ -88,6 +89,7 @@
 	}
 
 	const THUMBNAIL_URL = /*[[@{/Files/Thumbnail}]]*/ '/Files/Thumbnail';
+	const ICON_BASE = /*[[@{/images/storage/ext}]]*/ '/images/storage/ext';
 	let lastFetchedList = [];
 
 	document.getElementById('detailViewBtn').addEventListener('click', () => {
@@ -150,16 +152,64 @@
 			const template = document.getElementById(isIconView ? 'fileItemIconTemplate' : 'fileItemDetailTemplate');
 			const clone = template.content.cloneNode(true);
 			const element = clone.querySelector('.file-item');
-			const icon = clone.querySelector('.icon');
-			const img = clone.querySelector('.thumb-img');
 			
 			element.dataset.uid = item.uid;
 			element.dataset.index = index;
 			element.dataset.file = item.file;
-            			
+		            		
 			if (isIconView) {
 				const nameDiv = clone.querySelector('.file-name');
 				nameDiv.textContent = item.name;
+				
+				const icon = clone.querySelector('.icon');
+				const iconImg = clone.querySelector('.icon-img');
+				const thumbImg = clone.querySelector('.thumb-img');
+				
+				if (item.file && item.fileType === 'Image') {
+					const img = thumbImg;
+					img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
+					img.loading = 'lazy';
+					img.classList.remove('hidden');
+					// hide the file-type icon element
+					if (icon) icon.classList.add('hidden');
+					if (iconImg) iconImg.classList.add('hidden');
+				} else {
+					// Use icon images from /images/storage based on extension with fallbacks
+					const rawExt = (item.extension || (item.name && item.name.split('.').pop()) || 'file');
+					const ext = rawExt.toLowerCase();
+					const candidates = [
+						`${ICON_BASE}/${encodeURIComponent(ext)}.svg`,
+						`${ICON_BASE}/file.svg`
+					];
+					let tryIndex = 0;
+					
+					if (icon) icon.classList.add('hidden');
+					if (iconImg) {
+						iconImg.classList.remove('hidden');
+						iconImg.alt = ext + ' icon';
+						iconImg.onerror = function() {
+							tryIndex++;
+							if (tryIndex < candidates.length) {
+								iconImg.src = candidates[tryIndex];
+							} else {
+								// all attempts failed: hide img and show emoji fallback
+								iconImg.classList.add('hidden');
+								if (icon) {
+									icon.textContent = '📄';
+									icon.className = 'icon text-4xl flex items-center justify-center h-16';
+									icon.classList.remove('hidden');
+								}
+							}
+						};
+						// start with first candidate
+						iconImg.src = candidates[0];
+					} else {
+						// fallback to emoji if no icon-img element
+						icon.textContent = item.file ? '📄' : '📁';
+						icon.className = isIconView ? 'icon text-4xl flex items-center justify-center h-16' : 'icon';
+					}
+				}
+				
 			} else {
 				const nameTd = clone.querySelector('.file-name');
 				const dateTd = clone.querySelector('.file-date');
@@ -172,43 +222,45 @@
 				sizeTd.textContent = item.file ? formatFileSize(item.fileLength) : '';
 			}
 			
-			if (item.file && item.fileType === 'Image') {
-				img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
-				img.loading = 'lazy';
-				img.classList.remove('hidden');
-				icon.remove();
-			} else {
-				icon.textContent = item.file ? '📄' : '📁';
-				icon.className = isIconView ? 'icon text-4xl flex items-center justify-center h-16' : 'icon';
-			}
-			
 			(table?.querySelector('tbody') ?? fileGrid).appendChild(clone);
 		});
+		
+		
+		let clickTimer = null;
 		
 		fileGrid.addEventListener('click', (e) => {
 			const itemEl = e.target.closest('.file-item');
 			if (!itemEl) return;
-			console.log('Clicked item:', itemEl.dataset.uid);
 			
-			const uid = itemEl.dataset.uid;
-			const index = parseInt(itemEl.dataset.index);
 			
-			if (e.shiftKey && lastSelectedIndex != null) {
-			  selectRange(lastSelectedIndex, index);
-			} else if (e.ctrlKey || e.metaKey) {
-			  toggleSelection(uid, itemEl);
-			} else {
-			  clearSelection();
-			  selectedUids.add(uid);
-			  itemEl.classList.add('bg-blue-100');
-			}
-			
-			lastSelectedIndex = index;
+			clickTimer = setTimeout(() => {
+				if( clickTimer == null ) return; // 더블클릭 시 타이머 클리어됨
+				
+		        console.log('Clicked item:', itemEl.dataset.uid);
+				const uid = itemEl.dataset.uid;
+				const index = parseInt(itemEl.dataset.index);
+				
+				if (e.shiftKey && lastSelectedIndex != null) {
+				  selectRange(lastSelectedIndex, index);
+				} else if (e.ctrlKey || e.metaKey) {
+				  toggleSelection(uid, itemEl);
+				} else {
+				  clearSelection();
+				  selectedUids.add(uid);
+				  itemEl.classList.add('bg-blue-100');
+				}
+				
+				lastSelectedIndex = index;
+		    }, 200); // 200ms는 일반적인 더블클릭 인식 시간
 		});
 		
 		fileGrid.addEventListener('dblclick', (e) => {
 			const itemEl = e.target.closest('.file-item');
 			if (!itemEl) return;
+			
+			clearTimeout(clickTimer);
+			clickTimer = null;
+			console.log('Double-clicked item:', itemEl.dataset.uid);
 	
 			const uid = itemEl.dataset.uid;
 			const item = lastFetchedList.find(f => f.uid === uid);
@@ -236,7 +288,7 @@
 		
 		if (rootNode.child) {
 			rootNode.child.forEach(clearSelected);
-		}
+			}
 	}
 
 	function clearSelectedExcept(uid) {

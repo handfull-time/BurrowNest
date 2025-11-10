@@ -36,7 +36,7 @@ class LoadStorageServiceImpl implements LoadStorageService {
 	
 	private final SimpMessagingTemplate messagingTemplate;
 	
-	private final ExecutorService executor = Executors.newWorkStealingPool();
+	private ExecutorService executor = null;
 	
 	private final UserDao userDao;
 
@@ -387,10 +387,11 @@ class LoadStorageServiceImpl implements LoadStorageService {
 			try {
 				finished = executor.awaitTermination(10000, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				log.error("", e);
 			}
 			
 			log.info("파일 로딩 종료 작업 : " + finished);
+			executor = null;
 			
 			message.setMessage("작업 완료");
 			message.setDone(finished);
@@ -403,6 +404,12 @@ class LoadStorageServiceImpl implements LoadStorageService {
 	@Override
 	public ReturnBasic saveRootStorage(SaveSotrageReqVo req) {
 		
+		if( this.executor != null && !this.executor.isTerminated() ) {
+			final ReturnBasic result = new ReturnBasic();
+			result.setCodeMessage("E", "이전 작업이 아직 완료되지 않았습니다.");
+			return result;
+		}
+		
 		final InitFileLoad ifl = new InitFileLoad(req.getWsUserName(), userDao.getManageUser());
 		
 		final MessageDataVo message = ifl.message;
@@ -410,6 +417,8 @@ class LoadStorageServiceImpl implements LoadStorageService {
 		message.setProgress(0);
 		message.setProgress(10);
 		message.setMessage("준비");
+		
+		this.executor = Executors.newWorkStealingPool();
 		
 		messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
 		delay();
