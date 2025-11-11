@@ -78,6 +78,40 @@
 		}
 	}
 
+	/**
+	 * Find the <li> node in the directory tree that has a .dir-label with the given uid.
+	 * Returns the <li> element or null if not found. This only searches already-loaded nodes.
+	 * Usage: const li = getNodeByUid("some-uid");
+	 */
+	function getNodeByUid(uid) {
+	    if (!uid) return null;
+	    const root = document.getElementById("directoryTree");
+	    if (!root) return null;
+
+	    // Avoid complex CSS escaping by iterating labels and matching dataset directly.
+	    const labels = root.querySelectorAll('.dir-label');
+	    for (let i = 0; i < labels.length; i++) {
+	        const label = labels[i];
+	        if (label.dataset && label.dataset.uid === uid) {
+	            return label.closest('li');
+	        }
+	    }
+	    return null;
+	}
+
+	/**
+	 * Convenience helper that returns the main components for a node: { li, label, toggleBtn, childrenContainer }
+	 * Returns null if the node is not found.
+	 */
+	function getNodeComponents(uid) {
+	    const li = getNodeByUid(uid);
+	    if (!li) return null;
+	    const label = li.querySelector('.dir-label');
+	    const toggleBtn = li.querySelector('.toggle-btn');
+	    const childrenContainer = li.querySelector('ul');
+	    return { li, label, toggleBtn, childrenContainer };
+	}
+
 	// 디렉터리 로딩 (디렉터리만 반환된다고 가정)
 	async function loadDirectory(uid, container) {
 		

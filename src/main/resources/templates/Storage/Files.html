@@ -255,54 +255,63 @@
 				const nameDiv = clone.querySelector('.file-name');
 				nameDiv.textContent = item.name;
 				
-				const icon = clone.querySelector('.icon');
+				//const icon = clone.querySelector('.icon');
 				const iconImg = clone.querySelector('.icon-img');
 				const thumbImg = clone.querySelector('.thumb-img');
 				
-				if (item.file && item.fileType === 'Image') {
-					const img = thumbImg;
-					img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
-					img.loading = 'lazy';
-					img.classList.remove('hidden');
-					// hide the file-type icon element
-					if (icon) icon.classList.add('hidden');
-					if (iconImg) iconImg.classList.add('hidden');
-				} else {
-					// Use icon images from /images/storage based on extension with fallbacks
-					const rawExt = (item.extension || (item.name && item.name.split('.').pop()) || 'file');
-					const ext = rawExt.toLowerCase();
-					const candidates = [
-						`${ICON_BASE}/${encodeURIComponent(ext)}.svg`,
-						`${ICON_BASE}/file.svg`
-					];
-					let tryIndex = 0;
-					
-					if (icon) icon.classList.add('hidden');
-					if (iconImg) {
-						iconImg.classList.remove('hidden');
-						iconImg.alt = ext + ' icon';
-						iconImg.onerror = function() {
-							tryIndex++;
-							if (tryIndex < candidates.length) {
-								iconImg.src = candidates[tryIndex];
-							} else {
-								// all attempts failed: hide img and show emoji fallback
-								iconImg.classList.add('hidden');
-								if (icon) {
-									icon.textContent = '📄';
-									icon.className = 'icon text-4xl flex items-center justify-center h-16';
-									icon.classList.remove('hidden');
-								}
-							}
-						};
-						// start with first candidate
-						iconImg.src = candidates[0];
+				if (item.file){
+					if (item.fileType === 'Image') {
+						const img = thumbImg;
+						img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
+						img.loading = 'lazy';
+						img.classList.remove('hidden');
+						// hide the file-type icon element
+						//if (icon) icon.classList.add('hidden');
+						if (iconImg) iconImg.classList.add('hidden');
 					} else {
-						// fallback to emoji if no icon-img element
-						icon.textContent = item.file ? '📄' : '📁';
-						icon.className = isIconView ? 'icon text-4xl flex items-center justify-center h-16' : 'icon';
+						// Use icon images from /images/storage based on extension with fallbacks
+						const rawExt = (item.extension || (item.name && item.name.split('.').pop()) || 'file');
+						const ext = rawExt.toLowerCase();
+						const candidates = [
+							`${ICON_BASE}/${encodeURIComponent(ext)}.svg`,
+							`${ICON_BASE}/file.svg`
+						];
+						let tryIndex = 0;
+						
+						//if (icon) icon.classList.add('hidden');
+//						if (iconImg) {
+							iconImg.classList.remove('hidden');
+							iconImg.alt = item.name;
+							iconImg.onerror = function() {
+								tryIndex++;
+								if (tryIndex < candidates.length) {
+									iconImg.src = candidates[tryIndex];
+								} else {
+									// all attempts failed: hide img and show emoji fallback
+									iconImg.classList.add('hidden');
+									if (icon) {
+										icon.textContent = '📄';
+										icon.className = 'icon text-4xl flex items-center justify-center h-16';
+										icon.classList.remove('hidden');
+									}
+								}
+							};
+							// start with first candidate
+							iconImg.src = candidates[0];
+//						} else {
+//							// fallback to emoji if no icon-img element
+//							icon.textContent = item.file ? '📄' : '📁';
+//							icon.className = isIconView ? 'icon text-4xl flex items-center justify-center h-16' : 'icon';
+//						}
 					}
+				}else{
+		            // 폴더 아이콘
+					iconImg.classList.remove('hidden');
+					iconImg.alt = item.name;
+					// start with first candidate
+					iconImg.src = `${ICON_BASE}/folder.svg`
 				}
+				
 				
 			} else {
 				const nameTd = clone.querySelector('.file-name');
@@ -355,15 +364,14 @@
 			  const url = /*[[@{/Files/Open/}]]*/ null;
 			  window.open(`${url}${encodeURIComponent(uid)}`, '_blank');
 			} else {
-			  // 폴더일 경우 onSelected 호출
-			  const folderNode = { owner: item, selected: true }; // node 구조에 맞게 조정
-			  if (typeof onSelected === 'function') {
-			    clearSelectedExcept(uid);
-			    onSelected(folderNode);
-			  }
+				if (typeof loadDirectory === 'function') {
+					const targetNode = getNodeByUid(uid);
+					if (targetNode) {
+						loadDirectory(uid, targetNode);
+					}
+				}
 			}
 		});
-
 	}
 
 	function clearSelected(rootNode) {
@@ -372,7 +380,7 @@
 		
 		if (rootNode.child) {
 			rootNode.child.forEach(clearSelected);
-			}
+		}
 	}
 
 	function clearSelectedExcept(uid) {
