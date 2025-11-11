@@ -4,7 +4,8 @@
 
   <!-- 파일/폴더 목록 -->
   <div class="flex-1 overflow-auto p-4">
-    <div class="grid grid-cols-10 gap-4" id="fileGrid">
+    <div class="grid gap-4" 
+         style="grid-template-columns: repeat(auto-fit, 96px);" id="fileGrid">
       <!-- 항목이 여기에 렌더링됨 -->
     </div>
   </div>
@@ -12,7 +13,7 @@
 
 <!-- 아이콘 보기용 템플릿 -->
 <template id="fileItemIconTemplate">
-  <div class="file-item relative flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer">
+  <div class="file-item relative flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer w-24">
     
     <input type="checkbox" 
            class="file-select-checkbox absolute top-2 left-2 w-4 h-4 text-blue-400 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" 
@@ -32,7 +33,7 @@
   <tr class="file-item hover:bg-blue-50">
 	<td class="border p-2 text-center align-middle">
       <input type="checkbox" 
-             class="file-select-checkbox w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+             class="file-select-checkbox w-4 h-4 text-blue-400 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
     </td>
     <td class="border p-2 text-center"><i class="icon fa-solid"></i></td>
     <td class="border p-2 text-left file-name"></td>
@@ -62,22 +63,92 @@
 
 <script th:inline="javascript">
 
-	let currentView = 'icon'; // 'icon' or 'detail'
-	
-	document.getElementById('detailViewBtn').addEventListener('click', () => {
-	  currentView = 'detail';
-	  renderFileList(lastFetchedList);
-	});
-	
-	document.getElementById('iconViewBtn').addEventListener('click', () => {
-	  currentView = 'icon';
-	  renderFileList(lastFetchedList);
-	});
-
-
-	
 	//let selectedItems = new Set();
-	
+	/**
+	 * ViewType: 순수한 상수 정의 (Enum 역할)
+	 * Object.freeze로 런타임에서 변경되는 것을 방지합니다.
+	 */
+	const ViewType = Object.freeze({
+		ICON: 'icon',
+		DETAIL: 'detail',
+	});
+
+
+	class ViewManager {
+		// 1. Private Static 필드 정의 (클래스 내부에서만 접근 가능)
+		// LocalStorage 키와 기본값을 내부에서 관리합니다.
+		static #STORAGE_KEY = 'viewType';
+		static #DEFAULT_VIEW = ViewType.ICON;
+
+		// 2. 외부에서 상수(ICON, DETAIL)에 접근할 수 있도록 Getter 제공
+		//		(자바의 public static final 필드와 유사한 역할)
+		static get ICON() {
+			return ViewType.ICON;
+		}
+		static get DETAIL() {
+			return ViewType.DETAIL;
+		}
+
+		/**
+		 * 유효한 뷰 타입 값들만 배열로 반환하는 내부 헬퍼 메서드
+		 * @returns {string[]} 유효한 뷰 타입 값들의 배열
+		 */
+		static #getValidValues() {
+			// ViewType 객체의 모든 값(value)을 배열로 반환: ['icon', 'detail']
+			return Object.values(ViewType);
+		}
+
+		/**
+		 * 현재 뷰 타입을 LocalStorage에서 가져오거나, 유효하지 않으면 기본값을 반환합니다.
+		 * @returns {string} 현재 뷰 타입 ('icon' 또는 'detail')
+		 */
+		static getCurrentView() {
+			const storedView = localStorage.getItem(ViewManager.#STORAGE_KEY);
+			const validValues = ViewManager.#getValidValues();
+					
+			// 🚨 유효성 검사: 저장된 값이 존재하고 유효한 값 목록에 포함되는지 확인
+			if (storedView && validValues.includes(storedView)) {
+				return storedView;
+			}
+
+			// 유효하지 않거나 값이 없으면 내부에서 정의된 기본값 반환
+			console.warn(`[ViewManager] LocalStorage 값(${storedView})이 유효하지 않아 기본값(${ViewManager.#DEFAULT_VIEW}) 사용`);
+			localStorage.setItem(ViewManager.#STORAGE_KEY, ViewManager.#DEFAULT_VIEW);
+			return ViewManager.#DEFAULT_VIEW;
+		}
+
+		/**
+		 * 새로운 뷰 타입을 LocalStorage에 저장합니다.
+		 * @param {string} newView - 새로 설정할 뷰 타입 (ViewManager.ICON 또는 ViewManager.DETAIL)
+		 * @returns {string} 새로 설정된 뷰 타입 (유효성 검사 실패 시 기존 값)
+		 */
+		static setView(newView) {
+			const validValues = ViewManager.#getValidValues();
+			
+			// 🚨 유효성 검사: 설정하려는 값이 유효한 값 중 하나인지 확인
+			if (validValues.includes(newView)) {
+				localStorage.setItem(ViewManager.#STORAGE_KEY, newView);
+				console.log(`[ViewManager] 뷰 타입을 ${newView}로 저장했습니다.`);
+				return newView;
+			}
+			
+			console.error(`[ViewManager] 유효하지 않은 뷰 타입(${newView})입니다. 저장이 거부됩니다.`);
+			// 유효하지 않은 값이라면, 변경하지 않고 현재 값을 반환
+			return ViewManager.getCurrentView(); 
+		}
+		
+		// 뷰 타입이 상세 보기인지 확인하는 헬퍼 메서드
+        static isDetailView() {
+            return ViewManager.getCurrentView() === ViewType.DETAIL;
+        }
+
+        // 뷰 타입이 아이콘 보기인지 확인하는 헬퍼 메서드
+		static isIconView() {
+            return ViewManager.getCurrentView() === ViewType.ICON;
+        }
+	}
+		
+		
 	// 파일 리스트 가져오기
 	async function loadFileList(uid) {
 		
@@ -103,12 +174,12 @@
 	let lastFetchedList = [];
 
 	document.getElementById('detailViewBtn').addEventListener('click', () => {
-	  currentView = 'detail';
+	  ViewManager.setView(ViewManager.DETAIL); 
 	  renderFileList(lastFetchedList);
 	});
-
+	
 	document.getElementById('iconViewBtn').addEventListener('click', () => {
-	  currentView = 'icon';
+	  ViewManager.setView(ViewManager.ICON); 
 	  renderFileList(lastFetchedList);
 	});
 	
@@ -139,7 +210,7 @@
 		    }
 		}
 
-		const isIconView = currentView === 'icon';
+		const isIconView = ViewManager.isIconView();
 		fileGrid.className = isIconView ? 'grid grid-cols-10 gap-4' : '';
 		
 		let table;
@@ -255,7 +326,6 @@
 			const itemEl = e.target.closest('.file-item');
 			if (!itemEl) return;
 			
-			
 			clickTimer = setTimeout(() => {
 				if( clickTimer == null ) return; // 더블클릭 시 타이머 클리어됨
 				
@@ -263,15 +333,8 @@
 				const uid = itemEl.dataset.uid;
 				const index = parseInt(itemEl.dataset.index);
 				
-				if (e.shiftKey && lastSelectedIndex != null) {
-				  selectRange(lastSelectedIndex, index);
-				} else if (e.ctrlKey || e.metaKey) {
-				  toggleSelection(uid, itemEl);
-				} else {
-				  itemEl.classList.add('bg-blue-100');
-				}
+				toggleSelection(uid, itemEl);
 				
-				lastSelectedIndex = index;
 		    }, 200); // 200ms는 일반적인 더블클릭 인식 시간
 		});
 		
