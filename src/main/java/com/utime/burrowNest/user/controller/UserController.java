@@ -48,7 +48,7 @@ public class UserController {
 	 * @return
 	 */
 	@GetMapping("{userNo}/Profile.img")
-    public ResponseEntity<byte[]> getUserThumbnail( @PathVariable long userNo, 
+    public ResponseEntity<byte[]> getUserThumbnail( @PathVariable("userNo") long userNo, 
     		WebRequest webRequest ) {
     	
         final ThumbnailData data = authService.getThumbnail(userNo); // bytes + lastModified
@@ -71,7 +71,7 @@ public class UserController {
                 .lastModified(lastModified)
                 // 바뀔 수 있으니 재검증 중심. (정말 드물게 바뀐다면 maxAge도 고려)
 //                .cacheControl(CacheControl.noCache().cachePublic())
-                .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePublic())
+                .cacheControl(CacheControl.maxAge(Duration.ofHours(1)).cachePublic())
                 .contentType(mediaType)
                 .contentLength(dataBytes.length)
                 .body(dataBytes);

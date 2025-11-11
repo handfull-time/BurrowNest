@@ -12,19 +12,28 @@
 
 <!-- 아이콘 보기용 템플릿 -->
 <template id="fileItemIconTemplate">
-  <div class="file-item flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer">
-    <div class="thumb w-16 h-16 bg-gray-100 rounded overflow-hidden not-italic flex items-center justify-center">
-      <img class="thumb-img w-full h-full object-cover hidden" loading="lazy" />
-      <img class="icon-img hidden w-8 h-8 object-contain" alt="icon" />
-      <i class="icon fa-solid fa-file text-gray-400 text-xl flex items-center justify-center h-full"></i>
+  <div class="file-item relative flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer">
+    
+    <input type="checkbox" 
+           class="file-select-checkbox absolute top-2 left-2 w-4 h-4 text-blue-400 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" 
+           onclick="event.stopPropagation();"> 
+	<div class="thumb w-16 h-16 bg-gray-100 rounded overflow-hidden not-italic flex items-center justify-center">
+    	<img class="thumb-img w-full h-full object-cover hidden" loading="lazy" />
+    	<img class="icon-img hidden w-8 h-8 object-contain" alt="icon" />
+    	<i class="icon fa-solid fa-file text-gray-400 text-xl flex items-center justify-center h-full"></i>
     </div>
     <div class="file-name text-sm text-center mt-2 truncate w-20"></div>
   </div>
 </template>
 
+
 <!-- 상세 보기용 템플릿 (table row) -->
 <template id="fileItemDetailTemplate">
-  <tr class="file-item">
+  <tr class="file-item hover:bg-blue-50">
+	<td class="border p-2 text-center align-middle">
+      <input type="checkbox" 
+             class="file-select-checkbox w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+    </td>
     <td class="border p-2 text-center"><i class="icon fa-solid"></i></td>
     <td class="border p-2 text-left file-name"></td>
     <td class="border p-2 text-center file-date"></td>
@@ -38,6 +47,7 @@
 	<table class="table-auto w-full border-collapse border border-gray-200 text-sm">
         <thead>
             <tr class="bg-gray-100">
+				<th class="border p-2 text-center">선택</th>
                 <th class="border p-2 text-center"></th>
                 <th class="border p-2 text-center">이름</th>
                 <th class="border p-2 text-center">수정날짜</th>
@@ -102,6 +112,8 @@
 	  renderFileList(lastFetchedList);
 	});
 	
+	
+	
 	function renderFileList(list) {
 		lastFetchedList = list;
 		const fileGrid = document.getElementById('fileGrid');
@@ -110,31 +122,21 @@
 		let lastSelectedIndex = null;
 		const selectedUids = new Set();
 		
-		function clearSelection() {
-		  selectedUids.clear();
-		  fileGrid.querySelectorAll('.file-item').forEach(el => el.classList.remove('bg-blue-100'));
-		}
-		
 		function toggleSelection(uid, element) {
-			if (selectedUids.has(uid)) {
-			  selectedUids.delete(uid);
-			  element.classList.remove('bg-blue-100');
-			} else {
-			  selectedUids.add(uid);
-			  element.classList.add('bg-blue-100');
-			}
-		}
-
-		function selectRange(start, end) {
-			clearSelection();
-			const items = Array.from(fileGrid.querySelectorAll('.file-item'));
-			const [from, to] = [start, end].sort((a, b) => a - b);
-			for (let i = from; i <= to; i++) {
-				const el = items[i];
-				const uid = el.dataset.uid;
-				selectedUids.add(uid);
-				el.classList.add('bg-blue-100');
-			}
+		    // [수정] 체크박스 참조
+		    const checkbox = element.querySelector('.file-select-checkbox');
+		    
+		    if (selectedUids.has(uid)) {
+		      selectedUids.delete(uid);
+		      element.classList.remove('bg-blue-100');
+		      // [수정] 체크박스 상태 동기화
+		      if (checkbox) checkbox.checked = false;
+		    } else {
+		      selectedUids.add(uid);
+		      element.classList.add('bg-blue-100');
+		      // [수정] 체크박스 상태 동기화
+		      if (checkbox) checkbox.checked = true;
+		    }
 		}
 
 		const isIconView = currentView === 'icon';
@@ -156,7 +158,28 @@
 			element.dataset.uid = item.uid;
 			element.dataset.index = index;
 			element.dataset.file = item.file;
-		            		
+			
+			// [수정] 렌더링 시, selectedUids에 따라 상태 복원
+	        if (selectedUids.has(item.uid)) {
+	            element.classList.add('bg-blue-100');
+	        }
+
+	        // [수정] 체크박스 로직 추가
+	        const checkbox = clone.querySelector('.file-select-checkbox');
+	        if (checkbox) {
+	            // 1. 렌더링 시 상태 복원
+	            if (selectedUids.has(item.uid)) {
+	                checkbox.checked = true;
+	            }
+	            
+	            // 2. 체크박스 클릭 이벤트 핸들러
+	            checkbox.addEventListener('change', (e) => {
+	                e.stopPropagation(); // element의 클릭 이벤트 전파 중지
+	                // 체크박스 변경 시에도 동일한 toggleSelection 함수 사용
+	                toggleSelection(item.uid, element);
+	            });
+	        }
+	        
 			if (isIconView) {
 				const nameDiv = clone.querySelector('.file-name');
 				nameDiv.textContent = item.name;
@@ -245,8 +268,6 @@
 				} else if (e.ctrlKey || e.metaKey) {
 				  toggleSelection(uid, itemEl);
 				} else {
-				  clearSelection();
-				  selectedUids.add(uid);
 				  itemEl.classList.add('bg-blue-100');
 				}
 				

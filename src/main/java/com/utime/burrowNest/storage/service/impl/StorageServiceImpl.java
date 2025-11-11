@@ -3,32 +3,19 @@ package com.utime.burrowNest.storage.service.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.storage.dao.StorageDao;
-import com.utime.burrowNest.storage.dto.ChildrenResponse;
-import com.utime.burrowNest.storage.dto.DirContextResponse;
-import com.utime.burrowNest.storage.dto.DirNodeDto;
-import com.utime.burrowNest.storage.mapper.DirectoryMapper;
-import com.utime.burrowNest.storage.mapper.row.DirNodeRow;
 import com.utime.burrowNest.storage.service.StorageService;
 import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
-import com.utime.burrowNest.storage.vo.DirectoryDto;
 import com.utime.burrowNest.storage.vo.EBnFileType;
-import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.vo.UserVo;
 
 import lombok.RequiredArgsConstructor;
@@ -43,8 +30,6 @@ class StorageServiceImpl implements StorageService {
 	
 	private Map<String, EBnFileType> mapFileType;
 	
-	private final ExecutorService executorThumbnail = Executors.newSingleThreadExecutor();
-	
 	/**
 	 * ApplicationReadyEvent
 	 */
@@ -52,21 +37,6 @@ class StorageServiceImpl implements StorageService {
 	protected void handleApplicationReadyEvent() {
 		this.mapFileType = storageDao.getBnFileType();
 	}
-	
-	@EventListener(ContextClosedEvent.class)
-	protected void onShutdown() {
-		executorThumbnail.shutdown();
-		
-		try {
-			executorThumbnail.awaitTermination(10, TimeUnit.MINUTES);
-		} catch (InterruptedException e) {
-			log.error("", e);
-		}
-		
-		if( ! executorThumbnail.isShutdown() ) {
-			executorThumbnail.shutdownNow();
-		}
-    }
 	
 	/**
 	 * 기본 관리자 계정의 최상위 Root를 생성한다.
@@ -97,15 +67,6 @@ class StorageServiceImpl implements StorageService {
 	public byte[] getThumbnail(UserVo user, String uid) {
 		
 		final byte[] result = storageDao.getThumbnail( uid );
-		
-		if( result == null ) {
-			executorThumbnail.execute( () -> {
-				final BnFile file = storageDao.getFile(user, uid);
-				if( file != null ) {
-					
-				}
-			});
-		}
 				
 		return result;
 	}

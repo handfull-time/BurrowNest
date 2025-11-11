@@ -492,7 +492,7 @@ public class FileController {
 	}
 	
 	@GetMapping("Thumbnail/{fid}")
-	public ResponseEntity<byte[]> getThumbnail(UserVo user, @PathVariable String fid) {
+	public ResponseEntity<byte[]> getThumbnail(UserVo user, @PathVariable("fid") String fid) {
 	    final byte[] image = storageService.getThumbnail(user, fid);
 	    
 	    if( image == null ) {
