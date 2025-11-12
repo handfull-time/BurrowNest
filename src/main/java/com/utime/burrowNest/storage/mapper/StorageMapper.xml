@@ -48,6 +48,7 @@
 	<result column="NAME" property="name"/>
 	<result column="IS_FILE" property="isFile"/>
 	<result column="ACCESS_FLAGS" property="accType" typeHandler="com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler"/>
+	<result column="HAS_THUMBNAIL" property="hasThumb"/>
 </resultMap>
 
 <resultMap id="BnDirectoryMap" type="com.utime.burrowNest.storage.vo.BnDirectory"
@@ -893,8 +894,10 @@
 <select id="selectFilesByParentUid" resultMap="BnFileMap">
     SELECT
         <include refid="BnFileColumn"/>
+        , CASE WHEN THM.FILE_NO IS NOT NULL THEN TRUE ELSE FALSE END AS HAS_THUMBNAIL
     FROM BN_FILE FL 
     	INNER JOIN BN_DIRECTORY DR ON FL.PARENT_NO = DR.NO
+    	LEFT OUTER JOIN BN_FILE_THUMBNAIL THM ON FL.NO = THM.FILE_NO
     WHERE 1=1
    		AND DR.UID = #{dirUid}
    	    AND FL.ENABLED = TRUE

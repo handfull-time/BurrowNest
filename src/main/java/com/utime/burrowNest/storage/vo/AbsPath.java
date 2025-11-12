@@ -81,6 +81,11 @@ public abstract class AbsPath {
      */
     protected EAccessType accType;
     
+    /**
+	 * 썸네일 존재 여부. true: 존재한다. false: 존재하지 않는다.
+	 */
+    protected boolean hasThumb;
+    
     @Override
 	public String toString() {
 		return BurrowUtils.toJson(this);

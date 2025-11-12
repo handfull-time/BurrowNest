@@ -20,7 +20,7 @@
            onclick="event.stopPropagation();"> 
 	<div class="thumb w-16 h-16 bg-gray-100 rounded overflow-hidden not-italic flex items-center justify-center">
     	<img class="thumb-img w-full h-full object-cover hidden" loading="lazy" />
-    	<img class="icon-img hidden w-8 h-8 object-contain" alt="icon" />
+    	<img class="icon-img hidden w-full h-full object-contain" alt="icon" />
     	<i class="icon fa-solid fa-file text-gray-400 text-xl flex items-center justify-center h-full"></i>
     </div>
     <div class="file-name text-sm text-center mt-2 truncate w-20"></div>
@@ -297,7 +297,7 @@
 				const thumbImg = clone.querySelector('.thumb-img');
 				
 				if (item.file){
-					if (item.fileType === 'Image') {
+					if (item.hasThumb) {
 						const img = thumbImg;
 						img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
 						img.loading = 'lazy';
