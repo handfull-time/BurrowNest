@@ -64,7 +64,7 @@ public class FileController {
 	        return ResponseEntity.notFound().build();
 	    }
 
-	    final Path file = new File(bnFile.getFullName()).toPath();
+	    final Path file = new File(bnFile.getDirectoryPath(), bnFile.getFullName()).toPath();
 	    if (!Files.exists(file)) {
 	        return ResponseEntity.notFound().build();
 	    }
@@ -132,7 +132,7 @@ public class FileController {
 			return ResponseEntity.notFound().build();
 		}
 		
-		final Path file = new File(bnFile.getFullName()).toPath();
+		final Path file = new File(bnFile.getDirectoryPath(), bnFile.getFullName()).toPath();
 	    if (!Files.exists(file)) {
 	        return ResponseEntity.notFound().build();
 	    }
@@ -173,7 +173,7 @@ public class FileController {
 			return "";
 		}
 		
-		Path file = new File(bnFile.getFullName()).toPath();
+		Path file = new File(bnFile.getDirectoryPath(), bnFile.getFullName()).toPath();
 	    if (!Files.exists(file)) {
 	        return "";
 	    }

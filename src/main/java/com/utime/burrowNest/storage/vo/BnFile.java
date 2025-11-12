@@ -25,6 +25,12 @@ public class BnFile extends AbsPath {
     protected EBnFileType fileType;
 
     /**
+	 * The path of the directory containing the file.
+	 * For example, "/home/user/documents".
+	 */
+    protected String directoryPath;
+    
+    /**
      * The full name of the file, including its extension.
      * For example, "document.txt" or "photo.jpeg".
      */

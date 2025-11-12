@@ -33,7 +33,8 @@
   <tr class="file-item hover:bg-blue-50">
 	<td class="border p-2 text-center align-middle">
       <input type="checkbox" 
-             class="file-select-checkbox w-4 h-4 text-blue-400 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+             class="file-select-checkbox w-4 h-4 text-blue-400 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+			 onclick="event.stopPropagation();">
     </td>
     <td class="border p-2 text-center"><i class="icon fa-solid"></i></td>
     <td class="border p-2 text-left file-name"></td>
@@ -183,33 +184,26 @@
 	  renderFileList(lastFetchedList);
 	});
 	
+	const selectedUids = new Set();
+
+	function setSelected(uid, element, checked) {
+	  if (checked) {
+	    selectedUids.add(uid);
+	    element?.classList.add('bg-blue-100');
+	  } else {
+	    selectedUids.delete(uid);
+	    element?.classList.remove('bg-blue-100');
+	  }
+	}
 	
 	
 	function renderFileList(list) {
 		lastFetchedList = list;
+		selectedUids.clear();
+		
 		const fileGrid = document.getElementById('fileGrid');
 		fileGrid.innerHTML = '';
 		
-		let lastSelectedIndex = null;
-		const selectedUids = new Set();
-		
-		function toggleSelection(uid, element) {
-		    // [수정] 체크박스 참조
-		    const checkbox = element.querySelector('.file-select-checkbox');
-		    
-		    if (selectedUids.has(uid)) {
-		      selectedUids.delete(uid);
-		      element.classList.remove('bg-blue-100');
-		      // [수정] 체크박스 상태 동기화
-		      if (checkbox) checkbox.checked = false;
-		    } else {
-		      selectedUids.add(uid);
-		      element.classList.add('bg-blue-100');
-		      // [수정] 체크박스 상태 동기화
-		      if (checkbox) checkbox.checked = true;
-		    }
-		}
-
 		const isIconView = ViewManager.isIconView();
 		fileGrid.className = isIconView ? 'grid grid-cols-10 gap-4' : '';
 		
@@ -230,16 +224,12 @@
 			element.dataset.index = index;
 			element.dataset.file = item.file;
 			
-			// [수정] 렌더링 시, selectedUids에 따라 상태 복원
-	        if (selectedUids.has(item.uid)) {
-	            element.classList.add('bg-blue-100');
-	        }
-
 	        // [수정] 체크박스 로직 추가
 	        const checkbox = clone.querySelector('.file-select-checkbox');
 	        if (checkbox) {
 	            // 1. 렌더링 시 상태 복원
 	            if (selectedUids.has(item.uid)) {
+					element.classList.add('bg-blue-100');
 	                checkbox.checked = true;
 	            }
 	            
@@ -247,7 +237,7 @@
 	            checkbox.addEventListener('change', (e) => {
 	                e.stopPropagation(); // element의 클릭 이벤트 전파 중지
 	                // 체크박스 변경 시에도 동일한 toggleSelection 함수 사용
-	                toggleSelection(item.uid, element);
+	                setSelected(item.uid, element, e.target.checked);
 	            });
 	        }
 	        
@@ -328,31 +318,59 @@
 			(table?.querySelector('tbody') ?? fileGrid).appendChild(clone);
 		});
 		
+		if (fileGrid._evtCtrl) fileGrid._evtCtrl.abort();
+		 const ctrl = new AbortController();
+		 fileGrid._evtCtrl = ctrl;
+		 const { signal } = ctrl;
 		
 		let clickTimer = null;
+		let suppressClick = false;
 		
 		fileGrid.addEventListener('click', (e) => {
 			const itemEl = e.target.closest('.file-item');
 			if (!itemEl) return;
 			
+			if (clickTimer) clearTimeout(clickTimer);
 			clickTimer = setTimeout(() => {
 				if( clickTimer == null ) return; // 더블클릭 시 타이머 클리어됨
+				clickTimer = null;
 				
 		        console.log('Clicked item:', itemEl.dataset.uid);
 				const uid = itemEl.dataset.uid;
-				const index = parseInt(itemEl.dataset.index);
 				
-				toggleSelection(uid, itemEl);
+				  const item = lastFetchedList.find(f => f.uid === uid);
+				  if (!item) return;
+
+				  if (item.file) {
+				    console.log(
+				      `[파일] 이름: ${item.name}, 크기: ${formatFileSize(item.fileLength)}, 확장자: ${item.extension || '없음'}`
+				    );
+				  } else {
+				    console.log(`[폴더] 이름: ${item.name}`);
+				  }
 				
 		    }, 200); // 200ms는 일반적인 더블클릭 인식 시간
-		});
+		}, { signal });
 		
 		fileGrid.addEventListener('dblclick', (e) => {
+			// 버블링으로 중복 호출 방지
+			e.stopPropagation();
+			   
+			if (clickTimer) {
+				// 예정된 클릭 핸들러 취소
+				clearTimeout(clickTimer);    
+				clickTimer = null;
+			}
+			// 이 프레임에서 클릭 무시
+			suppressClick = true;
+			queueMicrotask(() => { 
+				// 다음 마이크로태스크에서 해제
+				suppressClick = false; 
+			}); 
+			
 			const itemEl = e.target.closest('.file-item');
 			if (!itemEl) return;
 			
-			clearTimeout(clickTimer);
-			clickTimer = null;
 			console.log('Double-clicked item:', itemEl.dataset.uid);
 	
 			const uid = itemEl.dataset.uid;
@@ -364,14 +382,11 @@
 			  const url = /*[[@{/Files/Open/}]]*/ null;
 			  window.open(`${url}${encodeURIComponent(uid)}`, '_blank');
 			} else {
-				if (typeof loadDirectory === 'function') {
-					const targetNode = getNodeByUid(uid);
-					if (targetNode) {
-						loadDirectory(uid, targetNode);
-					}
+				if (typeof selectDirectory === 'function') {
+					selectDirectory(uid);
 				}
 			}
-		});
+		}, { signal });
 	}
 
 	function clearSelected(rootNode) {

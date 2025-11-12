@@ -79,37 +79,44 @@
 	}
 
 	/**
-	 * Find the <li> node in the directory tree that has a .dir-label with the given uid.
-	 * Returns the <li> element or null if not found. This only searches already-loaded nodes.
-	 * Usage: const li = getNodeByUid("some-uid");
+	 * 특정 uid의 폴더를 선택(클릭 시뮬레이션)한다.
+	 * - 트리에 해당 노드가 이미 렌더되어 있다면: toggleNode → loadFileList 수행
+	 * - 루트가 아직 비어있다면 먼저 루트를 로드
+	 * @param {string|null} uid
+	 * @returns {Promise<boolean>} 선택 성공 여부
 	 */
-	function getNodeByUid(uid) {
-	    if (!uid) return null;
-	    const root = document.getElementById("directoryTree");
-	    if (!root) return null;
+	async function selectDirectory(uid) {
+		const tree = document.getElementById("directoryTree");
+		if (!tree) return false;
 
-	    // Avoid complex CSS escaping by iterating labels and matching dataset directly.
-	    const labels = root.querySelectorAll('.dir-label');
-	    for (let i = 0; i < labels.length; i++) {
-	        const label = labels[i];
-	        if (label.dataset && label.dataset.uid === uid) {
-	            return label.closest('li');
-	        }
-	    }
-	    return null;
-	}
+		// 트리가 비어있으면 루트 먼저 로드
+		if (!tree.children.length) {
+			await loadDirectory(null, tree);
+		}
 
-	/**
-	 * Convenience helper that returns the main components for a node: { li, label, toggleBtn, childrenContainer }
-	 * Returns null if the node is not found.
-	 */
-	function getNodeComponents(uid) {
-	    const li = getNodeByUid(uid);
-	    if (!li) return null;
-	    const label = li.querySelector('.dir-label');
-	    const toggleBtn = li.querySelector('.toggle-btn');
-	    const childrenContainer = li.querySelector('ul');
-	    return { li, label, toggleBtn, childrenContainer };
+		// 현재 렌더된 영역에서 대상 라벨 찾기
+		let label = tree.querySelector(`.dir-label[data-uid="${CSS.escape(uid ?? "")}"]`);
+
+		// 못 찾으면 실패(이미 렌더된 부모가 없으므로 탐색 중단)
+		if (!label) return false;
+
+		const li = label.closest("li");
+		const btn = li?.querySelector(".toggle-btn");
+
+		// 클릭 시와 동일하게 동작: 토글 열기(필요시 자식 loadDirectory 호출됨) + 파일목록 로드
+		if (btn) {
+			await toggleNode(btn);
+		}
+		loadFileList(uid);
+
+		// 가시 영역으로 스크롤
+		label.scrollIntoView({ block: "nearest" });
+
+		// 시각적 포커스 표시(선택 효과가 필요하다면)
+		label.classList.add("ring-2", "ring-blue-400", "rounded-sm");
+		setTimeout(() => label.classList.remove("ring-2", "ring-blue-400", "rounded-sm"), 800);
+
+		return true;
 	}
 
 	// 디렉터리 로딩 (디렉터리만 반환된다고 가정)

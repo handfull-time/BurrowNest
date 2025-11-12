@@ -56,6 +56,8 @@
 	<result column="ABSOLUTE_PATH" property="absolutePath"/>
 	<result column="PARENT_UID" property="parentUid"/>
 	<result column="HAS_CHILD" property="hasChild"/>
+	<result column="DIRECTORY_PATH" property="directoryPath"/>
+	<result column="FULL_NAME" property="fullName"/>
 	
 <!-- 	
 	<association 
@@ -231,10 +233,14 @@
 </select>
 
 <!-- SELECT -->
-<select id="selectFileByUid" parameterType="map" resultType="com.utime.burrowNest.storage.vo.BnFile">
+<select id="selectFileByUid" parameterType="map" resultMap="BnFileMap">
     SELECT 
     	<include refid="BnFileColumn" /> 
-    FROM BN_FILE FL
+    	,DR.UID AS PARENT_UID
+    	,DR.ABSOLUTE_PATH AS DIRECTORY_PATH
+    	,FL.NAME || '.' || FL.EXTENSION AS FULL_NAME
+    FROM BN_FILE FL 
+    	INNER JOIN BN_DIRECTORY DR ON FL.PARENT_NO = DR.NO
     WHERE FL.UID = #{uid}
 </select>
 
