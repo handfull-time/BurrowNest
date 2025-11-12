@@ -3,101 +3,294 @@
 	th:fragment="customMenu"> 
 
    <!-- 커스텀 우클릭 메뉴 -->
-  <ul id="contextMenuFolder" class="absolute hidden bg-white border border-gray-300 shadow-lg rounded-md w-56 text-sm z-50">
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="open">
-      <span class="mr-2">📂</span> 열기
-    </li>
-    <hr class="my-1 border-gray-200">
+   <!-- 이미 제공한 메뉴 DOM 사용 -->
+   <ul id="contextMenuFolder" class="absolute hidden bg-white border border-gray-300 shadow-lg rounded-md w-56 text-sm z-50">
+     <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="open">
+       <span class="mr-2">📂</span> 열기
+     </li>
+     <hr class="my-1 border-gray-200">
 
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="cut">
-      <span class="mr-2">✂️</span> 잘라내기
-    </li>
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="copy">
-      <span class="mr-2">📄</span> 복사
-    </li>
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 text-gray-400 cursor-not-allowed" data-action="paste">
-      <span class="mr-2">📋</span> 붙여넣기
-    </li>
+     <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="cut">
+       <span class="mr-2">✂️</span> 잘라내기
+     </li>
+     <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="copy">
+       <span class="mr-2">📄</span> 복사
+     </li>
+     <li class="flex items-center px-4 py-2 hover:bg-gray-100 text-gray-400 cursor-not-allowed" data-action="paste" data-disabled="true">
+       <span class="mr-2">📋</span> 붙여넣기
+     </li>
 
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="rename">
-      <span class="mr-2">📄</span> 이름변경
-    </li>
+     <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="rename">
+       <span class="mr-2">📄</span> 이름변경
+     </li>
 
-    <hr class="my-1 border-gray-200">
+     <hr class="my-1 border-gray-200">
 
-    <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="detail">
-      <span class="mr-2">⚙️</span> 속성
-    </li>
-  </ul>
+     <li class="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer" data-action="detail">
+       <span class="mr-2">⚙️</span> 속성
+     </li>
+   </ul>
 
-  <script>
-  
-  const contextMenuFolder = document.getElementById("contextMenuFolder");
 
-//우클릭 메뉴 표시
-  document.addEventListener("contextMenu", function (e) {
-    const targetRow = e.target.closest("[data-node]");
-    if (!targetRow) return contextMenuFolder.classList.add("hidden");
+  <script th:inline="javascript">
+	// ===== 전역 선택 상태(이미 사용 중이면 생략 가능) =====
+	const selectedUids = window.selectedUids ?? new Set();
+	window.selectedUids = selectedUids;
 
-    e.preventDefault();
-    const rect = targetRow.getBoundingClientRect();
+	// ===== 컨텍스트 메뉴 매니저 =====
+	class FileContextMenu {
+	  /**
+	   * @param {Object} options
+	   * @param {HTMLElement} options.containerEl   // fileGrid 컨테이너
+	   * @param {HTMLElement} options.menuEl        // 우클릭 메뉴 UL
+	   * @param {Function} options.getItemByUid     // uid -> item 조회 (lastFetchedList 사용)
+	   * @param {Function} options.isFolder         // item -> boolean
+	   * @param {Function} options.openFolder       // (uid) => void | Promise
+	   * @param {Function} options.openFile         // (uid) => void | Promise
+	   * @param {Function} options.getSelection     // () => string[] (선택된 uid 목록)
+	   * @param {Function} [options.onCut]          // (uids) => void (선택을 잘라내기 버퍼에 저장)
+	   * @param {Function} [options.onCopy]         // (uids) => void (선택을 복사 버퍼에 저장)
+	   * @param {Function} [options.onPaste]        // (targetFolderUid, clipboard) => Promise
+	   * @param {Function} [options.onRename]       // (uid, newName) => Promise
+	   * @param {Function} [options.onDetail]       // (uid, item) => void
+	   * @param {Function} [options.refresh]        // () => Promise (붙여넣기, 이름변경 후 갱신)
+	   */
+	  constructor(options) {
+	    this.opt = options;
+	    this.container = options.containerEl;
+	    this.menu = options.menuEl;
 
-    storage.selectDirectory(targetRow._nodeData);
-    contextMenuFolder.style.top = `${e.clientY}px`;
-    contextMenuFolder.style.left = `${e.clientX}px`;
-    contextMenuFolder.classList.remove("hidden");
-  });
-  
-//우클릭 메뉴 이벤트 처리 예시
-  document.getElementById("contextMenuFolder").addEventListener("click", async (e) => {
-    const action = e.target.closest("[data-action]")?.dataset?.action;
-    if (!action) return;
+	    /** @type {{mode:'cut'|'copy'|null, items:string[]}} */
+	    this.clipboard = { mode: null, items: [] };
+	    this.targetUid = null;
 
-    const current = storage.getSelectedDirectory();
-    if (!current) return;
+	    // 중복 리스너 방지
+	    if (this.container._ctxCtrl) this.container._ctxCtrl.abort();
+	    this.ctrl = new AbortController();
+	    this.container._ctxCtrl = this.ctrl;
+	    const { signal } = this.ctrl;
 
-    switch (action) {
-      case "copy": storage.copyDirectory(); break;
-      case "cut": storage.cutDirectory(); break;
-      case "paste":
-        if (storage.isClipboardAvailable()) {
-          await storage.pasteDirectory(current.owner.uid);
-          alert("붙여넣기 완료!");
-          storage.clearClipboard();
-        }
-        break;
-      case "rename":
-        const newName = prompt("새 이름을 입력하세요:", current.owner.name);
-        if (newName) alert(`이름을 '${newName}' 으로 바꿔야 합니다 (API 필요)`);
-        break;
-      case "detail":
-        alert(JSON.stringify(current.owner, null, 2));
-        break;
-      case "open":
-        alert("열기 기능은 사용자 정의에 따라 구현");
-        break;
-    }
-    updatePasteButton();
-  });
-  
-	function contextMenuFolderHide(){
-		if (!contextMenuFolder.classList.contains("hidden")) {
-			contextMenuFolder.classList.add("hidden");
-		}
-  	}
-  
-  	document.addEventListener("click", (e) => {
-	  	e.preventDefault();
-	  	
-		const isInsideMenu = e.target.closest("#contextMenuFolder");
-		if (!isInsideMenu) {
-			contextMenuFolderHide();
-		}
-    });
-  	
-  	function updatePasteButton(){
-  		console.info('updatePasteButton');
-  	}
+	    // 우클릭(컨텍스트) 열기
+	    this.container.addEventListener('contextmenu', (e) => this.onContextMenu(e), { signal });
+
+	    // 메뉴 아이템 클릭
+	    this.menu.addEventListener('click', (e) => this.onMenuClick(e), { signal });
+
+	    // 메뉴 닫기 트리거
+	    window.addEventListener('click', (e) => this.hide(), { signal });
+	    window.addEventListener('scroll', () => this.hide(), { signal, passive: true });
+	    window.addEventListener('resize', () => this.hide(), { signal });
+	    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.hide(); }, { signal });
+	  }
+
+	  destroy() {
+	    this.ctrl?.abort();
+	  }
+
+	  // ====== 우클릭 열기 ======
+	  onContextMenu(e) {
+	    // 체크박스 우클릭은 무시
+	    if (e.target.closest('.file-select-checkbox')) return;
+
+	    const itemEl = e.target.closest('.file-item');
+	    if (!itemEl) return; // 빈 공간 우클릭 시 폴더 메뉴는 열지 않음
+
+	    e.preventDefault();
+
+	    const uid = itemEl.dataset.uid;
+	    const item = this.opt.getItemByUid(uid);
+	    if (!item) return;
+
+	    // 폴더에서만 메뉴 활성
+	    if (!this.opt.isFolder(item)) {
+	      this.hide();
+	      return;
+	    }
+
+	    this.targetUid = uid;
+
+	    // 붙여넣기 활성/비활성 업데이트
+	    this.updatePasteState();
+
+	    // 위치 계산 & 표시
+	    this.showAt(e.clientX, e.clientY);
+	  }
+
+	  // ====== 메뉴 액션 처리 ======
+	  async onMenuClick(e) {
+	    const li = e.target.closest('li[data-action]');
+	    if (!li) return;
+
+	    // 비활성 메뉴
+	    if (li.dataset.disabled === 'true') return;
+
+	    const action = li.dataset.action;
+	    const uid = this.targetUid;
+	    if (!uid) return;
+
+	    const item = this.opt.getItemByUid(uid);
+	    if (!item) return;
+
+	    try {
+	      switch (action) {
+	        case 'open': {
+	          // 폴더 열기
+	          await this.opt.openFolder(uid);
+	          break;
+	        }
+	        case 'cut': {
+	          const uids = this.pickSelection(uid);
+	          this.setClipboard('cut', uids);
+	          break;
+	        }
+	        case 'copy': {
+	          const uids = this.pickSelection(uid);
+	          this.setClipboard('copy', uids);
+	          break;
+	        }
+	        case 'paste': {
+	          if (!this.canPaste()) break;
+	          await (this.opt.onPaste?.(uid, { ...this.clipboard }) ?? Promise.resolve());
+	          // cut의 경우 일반적으로 원본 제거 -> 서버에서 처리 가정
+	          this.clearClipboardAfterPaste();
+	          await (this.opt.refresh?.() ?? Promise.resolve());
+	          break;
+	        }
+	        case 'rename': {
+	          const current = item.name ?? '';
+	          const newName = prompt('새 이름을 입력하세요', current);
+	          if (newName && newName.trim() && newName !== current) {
+	            await (this.opt.onRename?.(uid, newName.trim()) ?? Promise.resolve());
+	            await (this.opt.refresh?.() ?? Promise.resolve());
+	          }
+	          break;
+	        }
+	        case 'detail': {
+	          this.opt.onDetail?.(uid, item);
+	          break;
+	        }
+	        default:
+	          console.warn('Unknown action:', action);
+	      }
+	    } finally {
+	      this.hide();
+	    }
+	  }
+
+	  // 현재 선택(여러 개) 또는 우클릭한 단일 항목
+	  pickSelection(fallbackUid) {
+	    const selection = (this.opt.getSelection?.() ?? []).filter(Boolean);
+	    return selection.length ? selection : [fallbackUid];
+	  }
+
+	  // ====== 클립보드 ======
+	  setClipboard(mode, items) {
+	    this.clipboard.mode = mode; // 'cut' | 'copy'
+	    this.clipboard.items = Array.from(new Set(items));
+	    this.updatePasteState();
+	    console.info(`[${mode}]`, this.clipboard.items);
+	    this.toast(`${mode === 'cut' ? '잘라내기' : '복사'}: ${this.clipboard.items.length}개`);
+	  }
+
+	  clearClipboardAfterPaste() {
+	    // 요구사항에 맞게: 붙여넣기 이후 cut은 비우고, copy는 유지하고 싶다면 아래 분기
+	    if (this.clipboard.mode === 'cut') {
+	      this.clipboard.mode = null;
+	      this.clipboard.items = [];
+	    }
+	    this.updatePasteState();
+	  }
+
+	  canPaste() {
+	    return this.clipboard.items.length > 0 && !!this.clipboard.mode;
+	  }
+
+	  updatePasteState() {
+	    const pasteLi = this.menu.querySelector('[data-action="paste"]');
+	    if (!pasteLi) return;
+	    if (this.canPaste()) {
+	      pasteLi.classList.remove('text-gray-400', 'cursor-not-allowed');
+	      pasteLi.dataset.disabled = 'false';
+	    } else {
+	      pasteLi.classList.add('text-gray-400', 'cursor-not-allowed');
+	      pasteLi.dataset.disabled = 'true';
+	    }
+	  }
+
+	  // ====== 메뉴 표시/숨김 ======
+	  showAt(clientX, clientY) {
+	    this.menu.classList.remove('hidden');
+
+	    // 기본 위치
+	    let x = clientX;
+	    let y = clientY;
+
+	    // 뷰포트 경계 안으로 보정
+	    const rect = this.menu.getBoundingClientRect();
+	    const vw = document.documentElement.clientWidth;
+	    const vh = document.documentElement.clientHeight;
+
+	    if (x + rect.width > vw) x = Math.max(0, vw - rect.width - 8);
+	    if (y + rect.height > vh) y = Math.max(0, vh - rect.height - 8);
+
+	    // 스크롤 고려해서 page 좌표로 변환
+	    const pageX = x + window.scrollX;
+	    const pageY = y + window.scrollY;
+
+	    this.menu.style.left = `${pageX}px`;
+	    this.menu.style.top = `${pageY}px`;
+	  }
+
+	  hide() {
+	    this.menu.classList.add('hidden');
+	    this.targetUid = null;
+	  }
+
+	  // 선택적: 간단 토스트
+	  toast(msg) {
+	    console.log('[ContextMenu]', msg);
+	  }
+	}
+
+	// ===== 사용 예시 바인딩 =====
+	// Files 렌더 이후 1회만 생성하세요.
+	const ctxMenu = new FileContextMenu({
+	  containerEl: document.getElementById('fileGrid'),
+	  menuEl: document.getElementById('contextMenuFolder'),
+	  getItemByUid: (uid) => (lastFetchedList || []).find(f => f.uid === uid),
+	  isFolder: (item) => !item.file,
+	  openFolder: async (uid) => {
+	    // 디렉터리 진입
+	    if (typeof selectDirectory === 'function') await selectDirectory(uid);
+	  },
+	  openFile: (uid) => {
+	    // 필요시 파일용 우클릭 메뉴도 만들 때 사용
+	    const url = /*[[@{/Files/Open/}]]*/ null;
+	    if (url) window.open(`${url}${encodeURIComponent(uid)}`, '_blank');
+	  },
+	  getSelection: () => Array.from(selectedUids),
+	  // 선택 콜백들 (실제 API는 프로젝트에 맞게 교체)
+	  onPaste: async (targetFolderUid, clipboard) => {
+	    // 예: /Files/Paste  { targetUid, mode, items[] }
+	    console.info('paste ->', { targetFolderUid, clipboard });
+	    // await apiRequest('/Files/Paste', { method:'POST', body: JSON.stringify({ ... }) });
+	  },
+	  onRename: async (uid, newName) => {
+	    console.info('rename ->', { uid, newName });
+	    // await apiRequest('/Files/Rename', { method:'POST', body: JSON.stringify({ uid, name:newName }) });
+	  },
+	  onDetail: (uid, item) => {
+	    const label = !item.file ? '폴더' : '파일';
+	    const extra = item.file ? `, 크기: ${formatFileSize(item.fileLength)}, 확장자: ${item.extension || '없음'}` : '';
+	    console.log(`[${label}] 이름: ${item.name}${extra}`);
+	  },
+	  refresh: async () => {
+	    // 현재 위치 기준으로 새로고침
+	    // 폴더 클릭 시 loadFileList(uid)가 호출되는 구조라면, 현재 열려있는 폴더 uid를 별도 보관해 사용하세요.
+	    // 예시로 마지막 선택된 폴더를 targetUid로
+	    if (ctxMenu.targetUid) await loadFileList(ctxMenu.targetUid);
+	  }
+	});
   
  	</script>
 </div>

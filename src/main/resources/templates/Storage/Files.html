@@ -148,6 +148,48 @@
             return ViewManager.getCurrentView() === ViewType.ICON;
         }
 	}
+	
+	// 이미 전역에 있다면 재사용
+	const selectedUids = window.selectedUids ?? new Set();
+	window.selectedUids = selectedUids;
+
+	function formatItemDetail(item) {
+	  if (!item) return '';
+	  if (item.file) {
+	    const size = formatFileSize(item.fileLength);
+	    const ext  = item.extension || '없음';
+	    return `파일 | 이름: ${item.name} · 크기: ${size} · 확장자: ${ext}`;
+	  }
+	  return `폴더 | 이름: ${item.name}`;
+	}
+
+	function updateDetail(item) {
+	  const el = document.getElementById('detailPane');
+	  if (!el) return;
+	  el.textContent = item ? formatItemDetail(item) : 'Detail';
+	}
+
+	function updateSelectedDetail() {
+	  const el = document.getElementById('selectedDetailPane');
+	  if (!el) return;
+
+	  if (!lastFetchedList || selectedUids.size === 0) {
+	    el.textContent = '선택: 없음';
+	    return;
+	  }
+
+	  const selected = lastFetchedList.filter(i => selectedUids.has(i.uid));
+	  const count = selected.length;
+	  const files = selected.filter(i => i.file).length;
+	  const folders = count - files;
+
+	  // 필요하면 이름 2~3개만 미리보기
+	  const previewNames = selected.slice(0, 3).map(i => i.name).join(', ');
+	  const more = count > 3 ? ` 외 ${count - 3}개` : '';
+
+	  el.textContent = `선택: ${count}개 (폴더 ${folders}, 파일 ${files}) · ${previewNames}${more}`;
+	}
+
 		
 		
 	// 파일 리스트 가져오기
@@ -184,8 +226,6 @@
 	  renderFileList(lastFetchedList);
 	});
 	
-	const selectedUids = new Set();
-
 	function setSelected(uid, element, checked) {
 	  if (checked) {
 	    selectedUids.add(uid);
@@ -236,8 +276,15 @@
 	            // 2. 체크박스 클릭 이벤트 핸들러
 	            checkbox.addEventListener('change', (e) => {
 	                e.stopPropagation(); // element의 클릭 이벤트 전파 중지
-	                // 체크박스 변경 시에도 동일한 toggleSelection 함수 사용
-	                setSelected(item.uid, element, e.target.checked);
+			        const checked = e.target.checked;
+			        if (checked) {
+			          selectedUids.add(item.uid);
+			          element.classList.add('bg-blue-100');
+			        } else {
+			          selectedUids.delete(item.uid);
+			          element.classList.remove('bg-blue-100');
+			        }
+			        updateSelectedDetail();  // ✅ 선택 상세 갱신
 	            });
 	        }
 	        
@@ -341,13 +388,7 @@
 				  const item = lastFetchedList.find(f => f.uid === uid);
 				  if (!item) return;
 
-				  if (item.file) {
-				    console.log(
-				      `[파일] 이름: ${item.name}, 크기: ${formatFileSize(item.fileLength)}, 확장자: ${item.extension || '없음'}`
-				    );
-				  } else {
-				    console.log(`[폴더] 이름: ${item.name}`);
-				  }
+				  updateDetail(item);
 				
 		    }, 200); // 200ms는 일반적인 더블클릭 인식 시간
 		}, { signal });
@@ -386,7 +427,13 @@
 					selectDirectory(uid);
 				}
 			}
+			updateDetail(item);
 		}, { signal });
+		
+		// 리스트 렌더 후 현재 선택 정보 반영
+	  	updateSelectedDetail();
+	  	// 상세 패널은 초기화
+	  	updateDetail(null);
 	}
 
 	function clearSelected(rootNode) {

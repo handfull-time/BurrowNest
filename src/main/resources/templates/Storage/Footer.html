@@ -1,3 +1,7 @@
-<div xmlns:th="http://www.thymeleaf.org" th:fragment="footer" class="px-4 py-2 bg-gray-50 text-gray-600 text-sm">
-    선택한 파일 3개
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="footer"
+     class="px-4 py-2 bg-gray-50 text-gray-600 text-sm">
+  <div class="w-full flex items-center justify-between gap-4">
+    <div id="detailPane" class="truncate text-left">Detail</div>
+    <div id="selectedDetailPane" class="truncate text-right">Selected Detail</div>
+  </div>
 </div>
