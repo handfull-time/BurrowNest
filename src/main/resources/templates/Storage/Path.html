@@ -1,137 +1,269 @@
-<div xmlns:th="http://www.thymeleaf.org" th:fragment="path" class="flex items-center justify-between bg-gray-50 px-4 py-2 text-sm">
-    <!-- 현재 경로 -->
-    <div class="pl-2 truncate text-gray-700">
-    	<!-- 현재 경로 출력 -->
-		<div id="breadcrumb" class="flex items-center space-x-1"></div>
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="path"
+     class="flex items-center justify-between bg-gray-50 px-4 py-2 text-sm">
+
+  <!-- 현재 경로 -->
+  <div class="pl-2 truncate text-gray-700">
+    <div id="breadcrumb" class="flex items-center space-x-1"></div>
+  </div>
+
+  <!-- 검색 영역 (동작은 이후 구현) -->
+  <div>
+    <input type="text" placeholder="검색"
+           class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400" />
+    <button class="ml-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">검색</button>
+  </div>
+
+  <!-- 드롭다운 템플릿 -->
+  <template id="DropDownTemplate">
+    <div class="dropdown absolute bg-white border border-gray-300 rounded shadow z-50 hidden">
+      <ul class="py-2 text-sm text-gray-700"></ul>
     </div>
+  </template>
 
-    <!-- 검색 입력창 -->
-    <div>
-        <input type="text" placeholder="검색" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400" />
-        <button class="ml-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">검색</button>
-    </div>
-    
-    <template id="DropDownTemplate">
-	  <div class="dropdown absolute bg-white border border-gray-300 rounded shadow z-50 hidden">
-	    <ul class="py-2 text-sm text-gray-700"></ul>
-	  </div>
-	</template>
+  <script>
+    (function () {
+      const breadcrumbEl = document.getElementById("breadcrumb");
 
+      if (!breadcrumbEl) return;
 
-<script>
-function renderBreadcrumbTrail(row) {
-	
-	function _getParentNodes(nodeEl) {
-		const parents = [];
-		let current = nodeEl.parentElement;
-		while (current && current.id !== 'tree') {
-			const treeItem = current.querySelector('[data-node="true"]');
-			if (treeItem && treeItem._nodeData) {
-				parents.unshift(treeItem._nodeData);
-			}
-			current = current.parentElement?.closest('li');
-		}
-		return parents;
-	} 
-	
-	function _createDropdown(node, nextNodeName) {
-		  const template = document.getElementById("DropDownTemplate");
-		  const clone = template.content.cloneNode(true);
-		  const dropdown = clone.querySelector("div.dropdown");
-		  const ul = dropdown.querySelector("ul");
-		  
-		  if (!ul) {
-		    console.warn("Dropdown ul not found");
-		    return null;
-		  }
+      // ------- 헬퍼들 -------
 
-		  if (node.child) {
-		    node.child.forEach(child => {
-		      const li = document.createElement("li");
-		      const btn = document.createElement("button");
-		      btn.className = "block px-4 py-2 hover:bg-gray-100 w-full text-left";
-		      btn.textContent = child.owner.name;
-		      console.info(node.owner.name, child.owner.name, node.owner.name === child.owner.name);
-		      if (nextNodeName === child.owner.name) {
-		          btn.classList.add("font-bold", "text-blue-600");
-		      }
-		      
-		      btn.addEventListener("click", () => {
-		        clearSelectedExcept(child.owner.uid);
-		        child.selected = true;
-				renderBreadcrumbTrail(child.row);
-	            onSelected(child);
-	            dropdown.remove(); // 닫기
-		      });
-		      li.appendChild(btn);
-		      ul.appendChild(li);
-		    });
-		  }
+      function getTreeRoot() {
+        return document.getElementById("directoryTree");
+      }
 
-		  return dropdown;
-		}
+      function findLabelByUid(uid) {
+        const tree = getTreeRoot();
+        if (!tree || !uid) return null;
+        return tree.querySelector(`.dir-label[data-uid="${CSS.escape(uid)}"]`);
+      }
 
-	
-	  const breadcrumb = document.getElementById("breadcrumb");
-	  breadcrumb.innerHTML = "";
+      // uid 기준으로 ROOT → ... → 현재 폴더까지 경로 구성
+      function buildPath(uid) {
+        const path = [];
+        const tree = getTreeRoot();
+        if (!tree || !uid) return path;
 
-	  const currentNode = row?._nodeData;
-	  if (!currentNode) return;
+        let label = findLabelByUid(uid);
+        if (!label) return path;
 
-	  const nodes = _getParentNodes(row);
+        while (label) {
+          const li = label.closest("li");
+          if (!li) break;
 
-	  nodes.forEach((node, idx) => {
-	    const container = document.createElement("div");
-	    container.className = "relative inline-block";
+          path.unshift({
+            uid: label.dataset.uid,
+            name: label.textContent.trim(),
+            labelEl: label,
+            liEl: li
+          });
 
-	    const button = document.createElement("button");
-	    button.className = "text-blue-700 hover:underline font-medium px-1";
-	    button.textContent = node.owner.name;
-	    container.appendChild(button);
-	    
-	 	// 다음 노드 이름 (breadcrumb에서 현재 node 다음 위치)
-	    const nextNodeName = nodes[idx + 1]?.owner?.name;
+          const parentUl = li.parentElement;
+          if (!parentUl || !parentUl.dataset.childrenFor) break;
 
-	    // 화살표 아이콘
-	    if (idx < nodes.length - 1) {
-	      const sep = document.createElement("span");
-	      sep.textContent = " ▸ ";
-	      sep.className = "mx-1 text-gray-400 cursor-pointer";
-	      sep.addEventListener("click", (e) => {
-	    	  e.stopPropagation();
+          const parentUid = parentUl.dataset.childrenFor;
+          const parentLabel = findLabelByUid(parentUid);
+          label = parentLabel;
+        }
 
-	    	  // 기존 드롭다운 제거
-	    	  const existing = document.querySelector(".dropdown");
-	    	  if (existing) existing.remove();
+        return path;
+      }
 
-	    	  const dropdown = _createDropdown(node, nextNodeName);
-	    	  
-	    	// sep 위치 기준으로 절대 위치 설정
-	    	  const rect = sep.getBoundingClientRect();
-	    	  dropdown.style.position = "absolute";
-	    	  dropdown.style.left = `${rect.left}px`;
-	    	  dropdown.style.top = `${rect.bottom}px`;
+      // 해당 단계의 children UL 확보 (필요 시 loadDirectory 호출)
+      async function ensureChildrenLoaded(segment) {
+        const li = segment.liEl || segment.labelEl.closest("li");
+        if (!li) return null;
 
-	    	  // 부모가 relative이므로 container에 append (body 말고!)
-	    	  document.body.appendChild(dropdown);
-	    	  dropdown.classList.remove("hidden");
+        const childUl = li.querySelector("ul[data-children-for]");
+        if (!childUl) return null;
 
-	    	  // 외부 클릭 시 드롭다운 닫기
-	    	  const closeDropdown = (event) => {
-	    	    if (!dropdown.contains(event.target)) {
-	    	      dropdown.remove();
-	    	      document.removeEventListener("click", closeDropdown);
-	    	    }
-	    	  };
-	    	  document.addEventListener("click", closeDropdown);
-	    	});
+        const toggleBtn = li.querySelector(".toggle-btn");
+        if (toggleBtn && toggleBtn.dataset.loaded !== "true" && typeof loadDirectory === "function") {
+          await loadDirectory(segment.uid, childUl);
+          toggleBtn.dataset.loaded = "true";
+        }
 
-	      container.appendChild(sep);
-	    }
+        return childUl;
+      }
 
-	    breadcrumb.appendChild(container);
-	  });
-}
+      function closeExistingDropdown() {
+        document.querySelectorAll(".path-dropdown").forEach(d => d.remove());
+      }
 
-</script>
+      // 화살표 클릭 시 하위 폴더 드롭다운
+      async function openDropdownForSegment(segment, anchorEl) {
+        closeExistingDropdown();
+
+        const template = document.getElementById("DropDownTemplate");
+        if (!template) return;
+
+        const clone = template.content.cloneNode(true);
+        const dropdown = clone.querySelector(".dropdown");
+        if (!dropdown) return;
+        dropdown.classList.add("path-dropdown");
+
+        const ul = dropdown.querySelector("ul");
+        const childUl = await ensureChildrenLoaded(segment);
+        if (!childUl) return;
+
+        const childLis = Array.from(childUl.children);
+
+        childLis.forEach(li => {
+          const lbl = li.querySelector(".dir-label");
+          if (!lbl) return;
+
+          const uid = lbl.dataset.uid;
+          const name = lbl.textContent.trim();
+
+          const liEl = document.createElement("li");
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "block px-4 py-1 hover:bg-gray-100 w-full text-left text-xs";
+          btn.textContent = name;
+
+          if (uid === segment.nextUid) {
+            btn.classList.add("font-semibold", "text-blue-600");
+          }
+
+          btn.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            closeExistingDropdown();
+
+            if (typeof window.selectDirectory === "function") {
+              await window.selectDirectory(uid);
+            } else if (typeof window.loadFileList === "function") {
+              window.loadFileList(uid);
+            }
+
+            updateBreadcrumbByUid(uid);
+          });
+
+          liEl.appendChild(btn);
+          ul.appendChild(liEl);
+        });
+
+        document.body.appendChild(dropdown);
+        const rect = anchorEl.getBoundingClientRect();
+        dropdown.style.position = "absolute";
+        dropdown.style.left = `${rect.left + window.scrollX}px`;
+        dropdown.style.top = `${rect.bottom + window.scrollY}px`;
+        dropdown.classList.remove("hidden");
+
+        const closeOnClick = (evt) => {
+          if (!dropdown.contains(evt.target)) {
+            closeExistingDropdown();
+            document.removeEventListener("click", closeOnClick);
+          }
+        };
+        // setTimeout으로 현재 클릭 이벤트 이후에 등록
+        setTimeout(() => document.addEventListener("click", closeOnClick), 0);
+      }
+
+      // 실제 breadcrumb DOM 렌더
+      function renderBreadcrumbForPath(path) {
+        breadcrumbEl.innerHTML = "";
+
+        if (!path.length) {
+          const span = document.createElement("span");
+          span.textContent = "/";
+          span.className = "text-gray-800";
+          breadcrumbEl.appendChild(span);
+          return;
+        }
+
+        path.forEach((segment, idx) => {
+          const container = document.createElement("div");
+          container.className = "relative inline-flex items-center";
+
+          // 경로 조각 버튼 (이름)
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "px-1 text-blue-700 hover:underline text-xs md:text-sm";
+          btn.textContent = segment.name;
+          btn.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            if (typeof window.selectDirectory === "function") {
+              await window.selectDirectory(segment.uid);
+            } else if (typeof window.loadFileList === "function") {
+              window.loadFileList(segment.uid);
+            }
+            updateBreadcrumbByUid(segment.uid);
+          });
+          container.appendChild(btn);
+
+          // 마지막이 아니면 화살표(▾) → 드롭다운
+          if (idx < path.length - 1) {
+            const arrow = document.createElement("button");
+            arrow.type = "button";
+            arrow.className = "mx-0.5 text-gray-500 hover:bg-gray-100 rounded px-0.5";
+            arrow.textContent = "▾";
+            arrow.addEventListener("click", (e) => {
+              e.stopPropagation();
+              openDropdownForSegment(
+                {
+                  uid: segment.uid,
+                  labelEl: segment.labelEl,
+                  liEl: segment.liEl,
+                  nextUid: path[idx + 1].uid
+                },
+                arrow
+              );
+            });
+            container.appendChild(arrow);
+          }
+
+          breadcrumbEl.appendChild(container);
+        });
+      }
+
+      // 외부에서 호출할 수 있게 공개
+      function updateBreadcrumbByUid(uid) {
+        const path = buildPath(uid);
+        renderBreadcrumbForPath(path);
+      }
+      window.updateBreadcrumbByUid = updateBreadcrumbByUid;
+
+      // ------- Directory.html 과 연동 -------
+
+      // 1) 디렉터리 트리에서 클릭 시 자동 갱신
+      const tree = getTreeRoot();
+      if (tree) {
+        tree.addEventListener("click", (e) => {
+          const label = e.target.closest(".dir-label");
+          if (label && label.dataset.uid) {
+            updateBreadcrumbByUid(label.dataset.uid);
+            return;
+          }
+          const toggleBtn = e.target.closest(".toggle-btn");
+          if (toggleBtn && toggleBtn.dataset.uid) {
+            updateBreadcrumbByUid(toggleBtn.dataset.uid);
+          }
+        });
+      }
+
+      // 2) selectDirectory가 이미 정의되어 있으면 감싸서 호출 후 breadcrumb 갱신
+      if (typeof window.selectDirectory === "function") {
+        const originalSelectDirectory = window.selectDirectory;
+        window.selectDirectory = async function (uid) {
+          const result = await originalSelectDirectory(uid);
+          if (uid != null) {
+            updateBreadcrumbByUid(uid);
+          }
+          return result;
+        };
+      }
+
+      // 3) 최초 진입 시 URL ?uid= 파라미터 기준으로 초기 breadcrumb 렌더
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const currentUid = params.get("uid");
+        if (currentUid) {
+          // 트리가 그려지는 시간 고려해 약간 딜레이
+          setTimeout(() => updateBreadcrumbByUid(currentUid), 300);
+        }
+      } catch (e) {
+        console.warn("breadcrumb init error:", e);
+      }
+    })();
+  </script>
 </div>

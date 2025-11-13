@@ -514,4 +514,9 @@ class StorageDaoImpl implements StorageDao{
 		return mapper.selectDirectoriesByParentUid(groupNo, uid);
 	}
 
+	@Override
+	public List<BnDirectory> getParentDirectoryList(String uid) {
+		
+		return mapper.selectParentDirectoryListByUid(uid);
+	}
 }

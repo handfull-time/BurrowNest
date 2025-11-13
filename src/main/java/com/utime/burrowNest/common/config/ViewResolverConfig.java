@@ -59,7 +59,8 @@ public class ViewResolverConfig implements WebMvcConfigurer {
 		
     	final List<String> patterns = Arrays.stream(WhiteAddressList.AddressList).map(path -> path.endsWith("/") ? path + "**" : path ).toList();
 		
-		registry.addInterceptor( this.viewInterceptor ).excludePathPatterns(patterns).addPathPatterns("/**/*.html");
+//		registry.addInterceptor( this.viewInterceptor ).excludePathPatterns(patterns).addPathPatterns("/**/*.html");
+		registry.addInterceptor( this.viewInterceptor ).excludePathPatterns(patterns).addPathPatterns("/**");
     }
     
 	@Bean

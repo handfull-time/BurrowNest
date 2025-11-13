@@ -1,24 +1,22 @@
-<div xmlns:th="http://www.thymeleaf.org" th:fragment="directories"
-	class="p-2 text-sm bg-white text-black select-none">
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="directories" class="p-2 text-sm bg-white text-black select-none">
 
-	<ul id="directoryTree"
-	       class="space-y-1 max-h-[600px] overflow-auto border rounded p-2 bg-white"></ul>
+	<ul id="directoryTree" class="space-y-1 max-h-[600px] overflow-auto border rounded p-2 bg-white"></ul>
 
 	<!-- 디렉터리 전용 템플릿 -->
 	<template id="dirItemTemplate">
 		<li>
 			<div class="flex items-center gap-1 select-none">
 				<!-- 토글 버튼(폴더만 존재) -->
-				<button class="toggle-btn text-gray-500 w-4 h-4 flex items-center justify-center"
-				    data-uid="" data-loaded="false" aria-label="toggle" title="toggle">
-				  ▶
+				<button class="toggle-btn text-gray-500 w-4 h-4 flex items-center justify-center" data-uid=""
+					data-loaded="false" aria-label="toggle" title="toggle">
+					▶
 				</button>
-				
+
 				<!-- 폴더 아이콘 + 이름 -->
 				<span class="icon text-gray-600">📁</span>
 				<span class="text-sm text-gray-800 cursor-pointer dir-label" data-uid="">폴더명</span>
 			</div>
-			
+
 			<!-- 하위 디렉터리 컨테이너 -->
 			<ul class="pl-5 hidden" data-children-for=""></ul>
 		</li>
@@ -27,147 +25,169 @@
 	<th:script th:replace="~{Storage/StorageScript :: script}" />
 	<script th:inline="javascript">
 
-	// 초기 로딩 (root)
-	loadDirectory(/*[[${selectedUid}]]*/ null, document.getElementById("directoryTree"));
-	
-	// 클릭 위임: 라벨/토글 모두로 열고 닫기
-	document.getElementById("directoryTree").addEventListener("click", async (e) => {
-		
-		const label = e.target.closest(".dir-label");
-		if (label) {
-			console.log("디렉터리 라벨 클릭:", label.dataset.uid);
-			
-			const li = label.closest("li");
-			const btn = li.querySelector(".toggle-btn");
-			if (btn) await toggleNode(btn);
-			
-			loadFileList(label.dataset.uid);
-			return;
-		}
-		
-		const toggleBtn = e.target.closest(".toggle-btn");
-		if (toggleBtn) {
-			console.log("토글 버튼 클릭:", toggleBtn.dataset.uid);
-			await toggleNode(toggleBtn);
-			
-			loadFileList(toggleBtn.dataset.uid);
-		}
-	});
-	
-	async function toggleNode(toggleBtn) {
-		
-		const uid = toggleBtn.dataset.uid;
-		const li = toggleBtn.closest("li");
-		const container = li.querySelector("ul");
-		const icon = li.querySelector(".icon");
-		
-		const isClosed = toggleBtn.textContent.trim() === "▶";
-		if (isClosed) {
-			toggleBtn.textContent = "▼";
-			if (icon) icon.textContent = "📂";
-			if (toggleBtn.dataset.loaded !== "true") {
-				await loadDirectory(uid, container);
-				toggleBtn.dataset.loaded = "true";
-			}
-			container.classList.remove("hidden");
-		} else {
-		  toggleBtn.textContent = "▶";
-		  if (icon) icon.textContent = "📁";
-		  container.classList.add("hidden");
-		}
-	}
+		// 초기 로딩 (root)
+		loadDirectory(/*[[${selectedUid}]]*/ null, document.getElementById("directoryTree"));
 
-	/**
-	 * 특정 uid의 폴더를 선택(클릭 시뮬레이션)한다.
-	 * - 트리에 해당 노드가 이미 렌더되어 있다면: toggleNode → loadFileList 수행
-	 * - 루트가 아직 비어있다면 먼저 루트를 로드
-	 * @param {string|null} uid
-	 * @returns {Promise<boolean>} 선택 성공 여부
-	 */
-	async function selectDirectory(uid) {
-		const tree = document.getElementById("directoryTree");
-		if (!tree) return false;
+		// 클릭 위임: 라벨/토글 모두로 열고 닫기
+		document.getElementById("directoryTree").addEventListener("click", async (e) => {
 
-		// 트리가 비어있으면 루트 먼저 로드
-		if (!tree.children.length) {
-			await loadDirectory(null, tree);
-		}
+			const label = e.target.closest(".dir-label");
+			if (label) {
+				const uid = label.dataset.uid;
+				console.log("디렉터리 라벨 클릭:", uid);
 
-		// 현재 렌더된 영역에서 대상 라벨 찾기
-		let label = tree.querySelector(`.dir-label[data-uid="${CSS.escape(uid ?? "")}"]`);
+				const li = label.closest("li");
+				const btn = li.querySelector(".toggle-btn");
+				if (btn) await toggleNode(btn);
 
-		// 못 찾으면 실패(이미 렌더된 부모가 없으므로 탐색 중단)
-		if (!label) return false;
-
-		const li = label.closest("li");
-		const btn = li?.querySelector(".toggle-btn");
-
-		// 클릭 시와 동일하게 동작: 토글 열기(필요시 자식 loadDirectory 호출됨) + 파일목록 로드
-		if (btn) {
-			await toggleNode(btn);
-		}
-		loadFileList(uid);
-
-		// 가시 영역으로 스크롤
-		label.scrollIntoView({ block: "nearest" });
-
-		// 시각적 포커스 표시(선택 효과가 필요하다면)
-		label.classList.add("ring-2", "ring-blue-400", "rounded-sm");
-		setTimeout(() => label.classList.remove("ring-2", "ring-blue-400", "rounded-sm"), 800);
-
-		return true;
-	}
-
-	// 디렉터리 로딩 (디렉터리만 반환된다고 가정)
-	async function loadDirectory(uid, container) {
-		
-		const template = document.getElementById("dirItemTemplate");
-		try {
-			const baseUrl = /*[[@{/Dir/PathList.json}]]*/ null;
-			
-			const params = new URLSearchParams({ uid: uid });
-			const options = {
-				method: "GET",
-				headers: { "Content-Type": "application/x-www-form-urlencoded" },
-			};
-			
-			const urlAddress = baseUrl + "?" + params.toString();
-			const response = await apiRequest(urlAddress, options);
-			const list = await response.json();
-			// 기대 응답 예시(디렉터리만):
-			// [{ uid:"...", name:"admin", hasChild:true }, { uid:"...", name:"common", hasChild:true }, ...]
-			
-			list.forEach(item => {
-				const frag = template.content.cloneNode(true);
+				loadFileList(uid);
 				
-				const toggleBtn = frag.querySelector(".toggle-btn");
-				const label = frag.querySelector(".dir-label");
-				const icon = frag.querySelector(".icon");
-				const ul = frag.querySelector("ul");
-				
-				label.textContent = item.name;
-				label.dataset.uid = item.uid;
-				
-				ul.dataset.childrenFor = item.uid;
-				ul.classList.add("hidden");
-				
-				if (item.hasChild) {
-					toggleBtn.dataset.uid = item.uid;
-					toggleBtn.dataset.loaded = "false";
-					toggleBtn.textContent = "▶";
-					icon.textContent = "📁";
-				} else {
-					// 하위가 없으면 토글 버튼 감춤, 아이콘은 닫힌 폴더로 유지
-					toggleBtn.remove();
-					icon.textContent = "📁";
+				if (typeof window.updateBreadcrumbByUid === "function") {
+					window.updateBreadcrumbByUid(uid);
 				}
-				
-				container.appendChild(frag);
-			});
-		} catch (err) {
-			console.error("디렉터리 로딩 오류:", err);
-		}
-	}
+				return;
+			}
 
-</script>
+			const toggleBtn = e.target.closest(".toggle-btn");
+			if (toggleBtn) {
+				const uid = toggleBtn.dataset.uid;
+				console.log("토글 버튼 클릭:", uid);
+				
+				await toggleNode(toggleBtn);
+
+				loadFileList(uid);
+				
+				if (typeof window.updateBreadcrumbByUid === "function") {
+					window.updateBreadcrumbByUid(uid);
+				}
+			}
+		});
+
+		async function toggleNode(toggleBtn) {
+
+			const uid = toggleBtn.dataset.uid;
+			const li = toggleBtn.closest("li");
+			const container = li.querySelector("ul");
+			const icon = li.querySelector(".icon");
+			
+			//브라우저 타이틀 변경
+			const dirName = li.querySelector(".dir-label").textContent;
+			document.title = "BurrowNest - " + dirName;
+
+			const isClosed = toggleBtn.textContent.trim() === "▶";
+			if (isClosed) {
+				toggleBtn.textContent = "▼";
+				if (icon) icon.textContent = "📂";
+				if (toggleBtn.dataset.loaded !== "true") {
+					await loadDirectory(uid, container);
+					toggleBtn.dataset.loaded = "true";
+				}
+				container.classList.remove("hidden");
+			} else {
+				toggleBtn.textContent = "▶";
+				if (icon) icon.textContent = "📁";
+				container.classList.add("hidden");
+			}
+		}
+
+		/**
+		 * 특정 uid의 폴더를 선택(클릭 시뮬레이션)한다.
+		 * - 트리에 해당 노드가 이미 렌더되어 있다면: toggleNode → loadFileList 수행
+		 * - 루트가 아직 비어있다면 먼저 루트를 로드
+		 * @param {string|null} uid
+		 * @returns {Promise<boolean>} 선택 성공 여부
+		 */
+		async function selectDirectory(uid) {
+			const tree = document.getElementById("directoryTree");
+			if (!tree) return false;
+
+			// 트리가 비어있으면 루트 먼저 로드
+			if (!tree.children.length) {
+				await loadDirectory(null, tree);
+			}
+
+			// 현재 렌더된 영역에서 대상 라벨 찾기
+			let label = tree.querySelector(`.dir-label[data-uid="${CSS.escape(uid ?? "")}"]`);
+
+			// 못 찾으면 실패(이미 렌더된 부모가 없으므로 탐색 중단)
+			if (!label) return false;
+
+			const li = label.closest("li");
+			const btn = li?.querySelector(".toggle-btn");
+
+			// 클릭 시와 동일하게 동작: 토글 열기(필요시 자식 loadDirectory 호출됨) + 파일목록 로드
+			if (btn) {
+				await toggleNode(btn);
+			}
+			loadFileList(uid);
+			
+			if (typeof window.updateBreadcrumbByUid === "function") {
+				window.updateBreadcrumbByUid(uid);
+			}
+
+			// 가시 영역으로 스크롤
+			label.scrollIntoView({block: "nearest"});
+
+			// 시각적 포커스 표시(선택 효과가 필요하다면)
+			label.classList.add("ring-2", "ring-blue-400", "rounded-sm");
+			setTimeout(() => label.classList.remove("ring-2", "ring-blue-400", "rounded-sm"), 800);
+
+			return true;
+		}
+
+		// 디렉터리 로딩 (디렉터리만 반환된다고 가정)
+		async function loadDirectory(uid, container) {
+
+			const template = document.getElementById("dirItemTemplate");
+			try {
+				const baseUrl = /*[[@{/Dir/PathList.json}]]*/ null;
+
+				const params = new URLSearchParams({uid: uid});
+				const options = {
+					method: "GET",
+					headers: {"Content-Type": "application/x-www-form-urlencoded"},
+				};
+				
+				const address = /*[[@{/Dir/Path.html}]]*/ null;
+				history.pushState({}, "", address + "?uid=" + encodeURIComponent(uid));
+
+				const urlAddress = baseUrl + "?" + params.toString();
+				const response = await apiRequest(urlAddress, options);
+				const list = await response.json();
+				// 기대 응답 예시(디렉터리만):
+				// [{ uid:"...", name:"admin", hasChild:true }, { uid:"...", name:"common", hasChild:true }, ...]
+
+				list.forEach(item => {
+					const frag = template.content.cloneNode(true);
+
+					const toggleBtn = frag.querySelector(".toggle-btn");
+					const label = frag.querySelector(".dir-label");
+					const icon = frag.querySelector(".icon");
+					const ul = frag.querySelector("ul");
+
+					label.textContent = item.name;
+					label.dataset.uid = item.uid;
+
+					ul.dataset.childrenFor = item.uid;
+					ul.classList.add("hidden");
+
+					if (item.hasChild) {
+						toggleBtn.dataset.uid = item.uid;
+						toggleBtn.dataset.loaded = "false";
+						toggleBtn.textContent = "▶";
+						icon.textContent = "📁";
+					} else {
+						// 하위가 없으면 토글 버튼 감춤, 아이콘은 닫힌 폴더로 유지
+						toggleBtn.remove();
+						icon.textContent = "📁";
+					}
+
+					container.appendChild(frag);
+				});
+			} catch (err) {
+				console.error("디렉터리 로딩 오류:", err);
+			}
+		}
+
+	</script>
 </div>

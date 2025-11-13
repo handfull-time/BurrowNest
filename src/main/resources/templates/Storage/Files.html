@@ -1,325 +1,320 @@
 <div xmlns:th="http://www.thymeleaf.org" th:fragment="files"
-     class="p-2 text-sm bg-white text-black select-none h-full w-full overflow-hidden">
-<div class="w-full h-screen flex flex-col">
+	class="p-2 text-sm bg-white text-black select-none h-full w-full overflow-hidden">
+	<div class="w-full h-screen flex flex-col">
 
-  <!-- 파일/폴더 목록 -->
-  <div class="flex-1 overflow-auto p-4">
-    <div class="grid gap-4" 
-         style="grid-template-columns: repeat(auto-fit, 96px);" id="fileGrid">
-      <!-- 항목이 여기에 렌더링됨 -->
-    </div>
-  </div>
-</div>
+		<!-- 파일/폴더 목록 -->
+		<div class="flex-1 overflow-auto p-4">
+			<div class="grid gap-4" style="grid-template-columns: repeat(auto-fit, 96px);" id="fileGrid">
+				<!-- 항목이 여기에 렌더링됨 -->
+			</div>
+		</div>
+	</div>
 
-<!-- 아이콘 보기용 템플릿 -->
-<template id="fileItemIconTemplate">
-  <div class="file-item relative flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer w-24">
-    
-    <input type="checkbox" 
-           class="file-select-checkbox absolute top-2 left-2 w-4 h-4 text-blue-400 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" 
-           onclick="event.stopPropagation();"> 
-	<div class="thumb w-16 h-16 bg-gray-100 rounded overflow-hidden not-italic flex items-center justify-center">
-    	<img class="thumb-img w-full h-full object-cover hidden" loading="lazy" />
-    	<img class="icon-img hidden w-full h-full object-contain" alt="icon" />
-    	<i class="icon fa-solid fa-file text-gray-400 text-xl flex items-center justify-center h-full"></i>
-    </div>
-    <div class="file-name text-sm text-center mt-2 truncate w-20"></div>
-  </div>
-</template>
+	<!-- 아이콘 보기용 템플릿 -->
+	<template id="fileItemIconTemplate">
+		<div
+			class="file-item relative flex flex-col items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer w-24">
 
-
-<!-- 상세 보기용 템플릿 (table row) -->
-<template id="fileItemDetailTemplate">
-  <tr class="file-item hover:bg-blue-50">
-	<td class="border p-2 text-center align-middle">
-      <input type="checkbox" 
-             class="file-select-checkbox w-4 h-4 text-blue-400 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-			 onclick="event.stopPropagation();">
-    </td>
-    <td class="border p-2 text-center"><i class="icon fa-solid"></i></td>
-    <td class="border p-2 text-left file-name"></td>
-    <td class="border p-2 text-center file-date"></td>
-    <td class="border p-2 text-center file-type"></td>
-    <td class="border p-2 text-right file-size"></td>
-  </tr>
-</template>
-
-<!-- 상세 보기용 템플릿 (table row) -->
-<template id="fileItemDetailTableTemplate">
-	<table class="table-auto w-full border-collapse border border-gray-200 text-sm">
-        <thead>
-            <tr class="bg-gray-100">
-				<th class="border p-2 text-center">선택</th>
-                <th class="border p-2 text-center"></th>
-                <th class="border p-2 text-center">이름</th>
-                <th class="border p-2 text-center">수정날짜</th>
-                <th class="border p-2 text-center">유형</th>
-                <th class="border p-2 text-center">크기</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-</template>
-
-<script th:inline="javascript">
-
-	//let selectedItems = new Set();
-	/**
-	 * ViewType: 순수한 상수 정의 (Enum 역할)
-	 * Object.freeze로 런타임에서 변경되는 것을 방지합니다.
-	 */
-	const ViewType = Object.freeze({
-		ICON: 'icon',
-		DETAIL: 'detail',
-	});
+			<input type="checkbox"
+				class="file-select-checkbox absolute top-2 left-2 w-4 h-4 text-blue-400 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+				onclick="event.stopPropagation();">
+			<div
+				class="thumb w-16 h-16 bg-gray-100 rounded overflow-hidden not-italic flex items-center justify-center">
+				<img class="thumb-img w-full h-full object-cover hidden" loading="lazy" />
+				<img class="icon-img hidden w-full h-full object-contain" alt="icon" />
+			</div>
+			<div class="file-name text-sm text-center mt-2 truncate w-20"></div>
+		</div>
+	</template>
 
 
-	class ViewManager {
-		// 1. Private Static 필드 정의 (클래스 내부에서만 접근 가능)
-		// LocalStorage 키와 기본값을 내부에서 관리합니다.
-		static #STORAGE_KEY = 'viewType';
-		static #DEFAULT_VIEW = ViewType.ICON;
+	<!-- 상세 보기용 템플릿 (table row) -->
+	<template id="fileItemDetailTemplate">
+		<tr class="file-item hover:bg-blue-50">
+			<td class="border p-2 text-center align-middle">
+				<input type="checkbox"
+					class="file-select-checkbox w-4 h-4 text-blue-400 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+					onclick="event.stopPropagation();">
+			</td>
+			<td class="border p-2 text-center"><i class="icon fa-solid"></i></td>
+			<td class="border p-2 text-left file-name"></td>
+			<td class="border p-2 text-center file-date"></td>
+			<td class="border p-2 text-center file-type"></td>
+			<td class="border p-2 text-right file-size"></td>
+		</tr>
+	</template>
 
-		// 2. 외부에서 상수(ICON, DETAIL)에 접근할 수 있도록 Getter 제공
-		//		(자바의 public static final 필드와 유사한 역할)
-		static get ICON() {
-			return ViewType.ICON;
-		}
-		static get DETAIL() {
-			return ViewType.DETAIL;
-		}
+	<!-- 상세 보기용 템플릿 (table row) -->
+	<template id="fileItemDetailTableTemplate">
+		<table class="table-auto w-full border-collapse border border-gray-200 text-sm">
+			<thead>
+				<tr class="bg-gray-100">
+					<th class="border p-2 text-center">선택</th>
+					<th class="border p-2 text-center"></th>
+					<th class="border p-2 text-center">이름</th>
+					<th class="border p-2 text-center">수정날짜</th>
+					<th class="border p-2 text-center">유형</th>
+					<th class="border p-2 text-center">크기</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+	</template>
 
+	<script th:inline="javascript">
+
+		//let selectedItems = new Set();
 		/**
-		 * 유효한 뷰 타입 값들만 배열로 반환하는 내부 헬퍼 메서드
-		 * @returns {string[]} 유효한 뷰 타입 값들의 배열
+		 * ViewType: 순수한 상수 정의 (Enum 역할)
+		 * Object.freeze로 런타임에서 변경되는 것을 방지합니다.
 		 */
-		static #getValidValues() {
-			// ViewType 객체의 모든 값(value)을 배열로 반환: ['icon', 'detail']
-			return Object.values(ViewType);
-		}
+		const ViewType = Object.freeze({
+			ICON: 'icon',
+			DETAIL: 'detail',
+		});
 
-		/**
-		 * 현재 뷰 타입을 LocalStorage에서 가져오거나, 유효하지 않으면 기본값을 반환합니다.
-		 * @returns {string} 현재 뷰 타입 ('icon' 또는 'detail')
-		 */
-		static getCurrentView() {
-			const storedView = localStorage.getItem(ViewManager.#STORAGE_KEY);
-			const validValues = ViewManager.#getValidValues();
-					
-			// 🚨 유효성 검사: 저장된 값이 존재하고 유효한 값 목록에 포함되는지 확인
-			if (storedView && validValues.includes(storedView)) {
-				return storedView;
+
+		class ViewManager {
+			// 1. Private Static 필드 정의 (클래스 내부에서만 접근 가능)
+			// LocalStorage 키와 기본값을 내부에서 관리합니다.
+			static #STORAGE_KEY = 'viewType';
+			static #DEFAULT_VIEW = ViewType.ICON;
+
+			// 2. 외부에서 상수(ICON, DETAIL)에 접근할 수 있도록 Getter 제공
+			//		(자바의 public static final 필드와 유사한 역할)
+			static get ICON() {
+				return ViewType.ICON;
+			}
+			static get DETAIL() {
+				return ViewType.DETAIL;
 			}
 
-			// 유효하지 않거나 값이 없으면 내부에서 정의된 기본값 반환
-			console.warn(`[ViewManager] LocalStorage 값(${storedView})이 유효하지 않아 기본값(${ViewManager.#DEFAULT_VIEW}) 사용`);
-			localStorage.setItem(ViewManager.#STORAGE_KEY, ViewManager.#DEFAULT_VIEW);
-			return ViewManager.#DEFAULT_VIEW;
-		}
-
-		/**
-		 * 새로운 뷰 타입을 LocalStorage에 저장합니다.
-		 * @param {string} newView - 새로 설정할 뷰 타입 (ViewManager.ICON 또는 ViewManager.DETAIL)
-		 * @returns {string} 새로 설정된 뷰 타입 (유효성 검사 실패 시 기존 값)
-		 */
-		static setView(newView) {
-			const validValues = ViewManager.#getValidValues();
-			
-			// 🚨 유효성 검사: 설정하려는 값이 유효한 값 중 하나인지 확인
-			if (validValues.includes(newView)) {
-				localStorage.setItem(ViewManager.#STORAGE_KEY, newView);
-				console.log(`[ViewManager] 뷰 타입을 ${newView}로 저장했습니다.`);
-				return newView;
+			/**
+			 * 유효한 뷰 타입 값들만 배열로 반환하는 내부 헬퍼 메서드
+			 * @returns {string[]} 유효한 뷰 타입 값들의 배열
+			 */
+			static #getValidValues() {
+				// ViewType 객체의 모든 값(value)을 배열로 반환: ['icon', 'detail']
+				return Object.values(ViewType);
 			}
-			
-			console.error(`[ViewManager] 유효하지 않은 뷰 타입(${newView})입니다. 저장이 거부됩니다.`);
-			// 유효하지 않은 값이라면, 변경하지 않고 현재 값을 반환
-			return ViewManager.getCurrentView(); 
+
+			/**
+			 * 현재 뷰 타입을 LocalStorage에서 가져오거나, 유효하지 않으면 기본값을 반환합니다.
+			 * @returns {string} 현재 뷰 타입 ('icon' 또는 'detail')
+			 */
+			static getCurrentView() {
+				const storedView = localStorage.getItem(ViewManager.#STORAGE_KEY);
+				const validValues = ViewManager.#getValidValues();
+
+				// 🚨 유효성 검사: 저장된 값이 존재하고 유효한 값 목록에 포함되는지 확인
+				if (storedView && validValues.includes(storedView)) {
+					return storedView;
+				}
+
+				// 유효하지 않거나 값이 없으면 내부에서 정의된 기본값 반환
+				console.warn(`[ViewManager] LocalStorage 값(${storedView})이 유효하지 않아 기본값(${ViewManager.#DEFAULT_VIEW}) 사용`);
+				localStorage.setItem(ViewManager.#STORAGE_KEY, ViewManager.#DEFAULT_VIEW);
+				return ViewManager.#DEFAULT_VIEW;
+			}
+
+			/**
+			 * 새로운 뷰 타입을 LocalStorage에 저장합니다.
+			 * @param {string} newView - 새로 설정할 뷰 타입 (ViewManager.ICON 또는 ViewManager.DETAIL)
+			 * @returns {string} 새로 설정된 뷰 타입 (유효성 검사 실패 시 기존 값)
+			 */
+			static setView(newView) {
+				const validValues = ViewManager.#getValidValues();
+
+				// 🚨 유효성 검사: 설정하려는 값이 유효한 값 중 하나인지 확인
+				if (validValues.includes(newView)) {
+					localStorage.setItem(ViewManager.#STORAGE_KEY, newView);
+					console.log(`[ViewManager] 뷰 타입을 ${newView}로 저장했습니다.`);
+					return newView;
+				}
+
+				console.error(`[ViewManager] 유효하지 않은 뷰 타입(${newView})입니다. 저장이 거부됩니다.`);
+				// 유효하지 않은 값이라면, 변경하지 않고 현재 값을 반환
+				return ViewManager.getCurrentView();
+			}
+
+			// 뷰 타입이 상세 보기인지 확인하는 헬퍼 메서드
+			static isDetailView() {
+				return ViewManager.getCurrentView() === ViewType.DETAIL;
+			}
+
+			// 뷰 타입이 아이콘 보기인지 확인하는 헬퍼 메서드
+			static isIconView() {
+				return ViewManager.getCurrentView() === ViewType.ICON;
+			}
 		}
-		
-		// 뷰 타입이 상세 보기인지 확인하는 헬퍼 메서드
-        static isDetailView() {
-            return ViewManager.getCurrentView() === ViewType.DETAIL;
-        }
 
-        // 뷰 타입이 아이콘 보기인지 확인하는 헬퍼 메서드
-		static isIconView() {
-            return ViewManager.getCurrentView() === ViewType.ICON;
-        }
-	}
-	
-	// 이미 전역에 있다면 재사용
-	const selectedUids = window.selectedUids ?? new Set();
-	window.selectedUids = selectedUids;
+		// 이미 전역에 있다면 재사용
+		const selectedUids = window.selectedUids ?? new Set();
+		window.selectedUids = selectedUids;
 
-	function formatItemDetail(item) {
-	  if (!item) return '';
-	  if (item.file) {
-	    const size = formatFileSize(item.fileLength);
-	    const ext  = item.extension || '없음';
-	    return `파일 | 이름: ${item.name} · 크기: ${size} · 확장자: ${ext}`;
-	  }
-	  return `폴더 | 이름: ${item.name}`;
-	}
-
-	function updateDetail(item) {
-	  const el = document.getElementById('detailPane');
-	  if (!el) return;
-	  el.textContent = item ? formatItemDetail(item) : 'Detail';
-	}
-
-	function updateSelectedDetail() {
-	  const el = document.getElementById('selectedDetailPane');
-	  if (!el) return;
-
-	  if (!lastFetchedList || selectedUids.size === 0) {
-	    el.textContent = '선택: 없음';
-	    return;
-	  }
-
-	  const selected = lastFetchedList.filter(i => selectedUids.has(i.uid));
-	  const count = selected.length;
-	  const files = selected.filter(i => i.file).length;
-	  const folders = count - files;
-
-	  // 필요하면 이름 2~3개만 미리보기
-	  const previewNames = selected.slice(0, 3).map(i => i.name).join(', ');
-	  const more = count > 3 ? ` 외 ${count - 3}개` : '';
-
-	  el.textContent = `선택: ${count}개 (폴더 ${folders}, 파일 ${files}) · ${previewNames}${more}`;
-	}
-
-		
-		
-	// 파일 리스트 가져오기
-	async function loadFileList(uid) {
-		
-		const url = /*[[@{/Dir/Files.json}]]*/ '/Dir/Files.json';
-		
-		const params = new URLSearchParams({ uid: uid || '' });
-		
-		const fileListUrl = url + '?' + params.toString();
-		
-		try {
-			const res = await fetch(fileListUrl);
-			const list = await res.json(); 
-			console.info('loadFileList', uid, list );
-			
-			renderFileList(list);
-		} catch (err) {
-			console.error("파일 목록 불러오기 실패:", err);
+		function formatItemDetail(item) {
+			if (!item) return '';
+			if (item.file) {
+				const size = formatFileSize(item.fileLength);
+				const ext = item.extension || '없음';
+				return `파일 | 이름: ${item.name} · 크기: ${size} · 확장자: ${ext}`;
+			}
+			return `폴더 | 이름: ${item.name}`;
 		}
-	}
 
-	const THUMBNAIL_URL = /*[[@{/Files/Thumbnail}]]*/ '/Files/Thumbnail';
-	const ICON_BASE = /*[[@{/images/storage/ext}]]*/ '/images/storage/ext';
-	let lastFetchedList = [];
-
-	document.getElementById('detailViewBtn').addEventListener('click', () => {
-	  ViewManager.setView(ViewManager.DETAIL); 
-	  renderFileList(lastFetchedList);
-	});
-	
-	document.getElementById('iconViewBtn').addEventListener('click', () => {
-	  ViewManager.setView(ViewManager.ICON); 
-	  renderFileList(lastFetchedList);
-	});
-	
-	function setSelected(uid, element, checked) {
-	  if (checked) {
-	    selectedUids.add(uid);
-	    element?.classList.add('bg-blue-100');
-	  } else {
-	    selectedUids.delete(uid);
-	    element?.classList.remove('bg-blue-100');
-	  }
-	}
-	
-	
-	function renderFileList(list) {
-		lastFetchedList = list;
-		selectedUids.clear();
-		
-		const fileGrid = document.getElementById('fileGrid');
-		fileGrid.innerHTML = '';
-		
-		const isIconView = ViewManager.isIconView();
-		fileGrid.className = isIconView ? 'grid grid-cols-10 gap-4' : '';
-		
-		let table;
-		if (!isIconView) {
-			const tableTemplate = document.getElementById('fileItemDetailTableTemplate');
-			const tableClone = tableTemplate.content.cloneNode(true);
-			table = tableClone.querySelector('table');
-			fileGrid.appendChild(table);
+		function updateDetail(item) {
+			const el = document.getElementById('detailPane');
+			if (!el) return;
+			el.textContent = item ? formatItemDetail(item) : 'Detail';
 		}
-	
-		list.forEach((item, index) => {
-			const template = document.getElementById(isIconView ? 'fileItemIconTemplate' : 'fileItemDetailTemplate');
-			const clone = template.content.cloneNode(true);
-			const element = clone.querySelector('.file-item');
-			
-			element.dataset.uid = item.uid;
-			element.dataset.index = index;
-			element.dataset.file = item.file;
-			
-	        // [수정] 체크박스 로직 추가
-	        const checkbox = clone.querySelector('.file-select-checkbox');
-	        if (checkbox) {
-	            // 1. 렌더링 시 상태 복원
-	            if (selectedUids.has(item.uid)) {
-					element.classList.add('bg-blue-100');
-	                checkbox.checked = true;
-	            }
-	            
-	            // 2. 체크박스 클릭 이벤트 핸들러
-	            checkbox.addEventListener('change', (e) => {
-	                e.stopPropagation(); // element의 클릭 이벤트 전파 중지
-			        const checked = e.target.checked;
-			        if (checked) {
-			          selectedUids.add(item.uid);
-			          element.classList.add('bg-blue-100');
-			        } else {
-			          selectedUids.delete(item.uid);
-			          element.classList.remove('bg-blue-100');
-			        }
-			        updateSelectedDetail();  // ✅ 선택 상세 갱신
-	            });
-	        }
-	        
-			if (isIconView) {
-				const nameDiv = clone.querySelector('.file-name');
-				nameDiv.textContent = item.name;
-				
-				//const icon = clone.querySelector('.icon');
-				const iconImg = clone.querySelector('.icon-img');
-				const thumbImg = clone.querySelector('.thumb-img');
-				
-				if (item.file){
-					if (item.hasThumb) {
-						const img = thumbImg;
-						img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
-						img.loading = 'lazy';
-						img.classList.remove('hidden');
-						// hide the file-type icon element
-						//if (icon) icon.classList.add('hidden');
-						if (iconImg) iconImg.classList.add('hidden');
-					} else {
-						// Use icon images from /images/storage based on extension with fallbacks
-						const rawExt = (item.extension || (item.name && item.name.split('.').pop()) || 'file');
-						const ext = rawExt.toLowerCase();
-						const candidates = [
-							`${ICON_BASE}/${encodeURIComponent(ext)}.svg`,
-							`${ICON_BASE}/file.svg`
-						];
-						let tryIndex = 0;
-						
-						//if (icon) icon.classList.add('hidden');
-//						if (iconImg) {
+
+		function updateSelectedDetail() {
+			const el = document.getElementById('selectedDetailPane');
+			if (!el) return;
+
+			if (!lastFetchedList || selectedUids.size === 0) {
+				el.textContent = '선택: 없음';
+				return;
+			}
+
+			const selected = lastFetchedList.filter(i => selectedUids.has(i.uid));
+			const count = selected.length;
+			const files = selected.filter(i => i.file).length;
+			const folders = count - files;
+
+			// 필요하면 이름 2~3개만 미리보기
+			const previewNames = selected.slice(0, 3).map(i => i.name).join(', ');
+			const more = count > 3 ? ` 외 ${count - 3}개` : '';
+
+			el.textContent = `선택: ${count}개 (폴더 ${folders}, 파일 ${files}) · ${previewNames}${more}`;
+		}
+
+
+
+		// 파일 리스트 가져오기
+		async function loadFileList(uid) {
+
+			const url = /*[[@{/Dir/Files.json}]]*/ '/Dir/Files.json';
+
+			const params = new URLSearchParams({uid: uid || ''});
+
+			const fileListUrl = url + '?' + params.toString();
+
+			try {
+				const res = await fetch(fileListUrl);
+				const list = await res.json();
+				console.info('loadFileList', uid, list);
+
+				renderFileList(list);
+			} catch (err) {
+				console.error("파일 목록 불러오기 실패:", err);
+			}
+		}
+
+		const THUMBNAIL_URL = /*[[@{/Files/Thumbnail}]]*/ '/Files/Thumbnail';
+		const ICON_BASE = /*[[@{/images/storage/ext}]]*/ '/images/storage/ext';
+		let lastFetchedList = [];
+
+		document.getElementById('detailViewBtn').addEventListener('click', () => {
+			ViewManager.setView(ViewManager.DETAIL);
+			renderFileList(lastFetchedList);
+		});
+
+		document.getElementById('iconViewBtn').addEventListener('click', () => {
+			ViewManager.setView(ViewManager.ICON);
+			renderFileList(lastFetchedList);
+		});
+
+		function setSelected(uid, element, checked) {
+			if (checked) {
+				selectedUids.add(uid);
+				element?.classList.add('bg-blue-100');
+			} else {
+				selectedUids.delete(uid);
+				element?.classList.remove('bg-blue-100');
+			}
+		}
+
+
+		function renderFileList(list) {
+			lastFetchedList = list;
+			selectedUids.clear();
+
+			const fileGrid = document.getElementById('fileGrid');
+			fileGrid.innerHTML = '';
+
+			const isIconView = ViewManager.isIconView();
+			fileGrid.className = isIconView ? 'grid grid-cols-10 gap-4' : '';
+
+			let table;
+			if (!isIconView) {
+				const tableTemplate = document.getElementById('fileItemDetailTableTemplate');
+				const tableClone = tableTemplate.content.cloneNode(true);
+				table = tableClone.querySelector('table');
+				fileGrid.appendChild(table);
+			}
+
+			list.forEach((item, index) => {
+				const template = document.getElementById(isIconView ? 'fileItemIconTemplate' : 'fileItemDetailTemplate');
+				const clone = template.content.cloneNode(true);
+				const element = clone.querySelector('.file-item');
+
+				element.dataset.uid = item.uid;
+				element.dataset.index = index;
+				element.dataset.file = item.file;
+
+				// [수정] 체크박스 로직 추가
+				const checkbox = clone.querySelector('.file-select-checkbox');
+				if (checkbox) {
+					// 1. 렌더링 시 상태 복원
+					if (selectedUids.has(item.uid)) {
+						element.classList.add('bg-blue-100');
+						checkbox.checked = true;
+					}
+
+					// 2. 체크박스 클릭 이벤트 핸들러
+					checkbox.addEventListener('change', (e) => {
+						e.stopPropagation(); // element의 클릭 이벤트 전파 중지
+						const checked = e.target.checked;
+						if (checked) {
+							selectedUids.add(item.uid);
+							element.classList.add('bg-blue-100');
+						} else {
+							selectedUids.delete(item.uid);
+							element.classList.remove('bg-blue-100');
+						}
+						updateSelectedDetail();  // ✅ 선택 상세 갱신
+					});
+				}
+
+				if (isIconView) {
+					const nameDiv = clone.querySelector('.file-name');
+					nameDiv.textContent = item.name;
+
+					const iconImg = clone.querySelector('.icon-img');
+					const thumbImg = clone.querySelector('.thumb-img');
+
+					if (item.file) {
+						if (item.hasThumb) {
+							const img = thumbImg;
+							img.src = `${THUMBNAIL_URL}/${encodeURIComponent(item.uid)}`;
+							img.loading = 'lazy';
+							img.classList.remove('hidden');
+							if (iconImg) iconImg.classList.add('hidden');
+						} else {
+							// Use icon images from /images/storage based on extension with fallbacks
+							const rawExt = (item.extension || (item.name && item.name.split('.').pop()) || 'file');
+							const ext = rawExt.toLowerCase();
+							const candidates = [
+								`${ICON_BASE}/${encodeURIComponent(ext)}.svg`,
+								`${ICON_BASE}/file.svg`
+							];
+							let tryIndex = 0;
+
 							iconImg.classList.remove('hidden');
 							iconImg.alt = item.name;
-							iconImg.onerror = function() {
+							iconImg.onerror = function () {
 								tryIndex++;
 								if (tryIndex < candidates.length) {
 									iconImg.src = candidates[tryIndex];
@@ -335,143 +330,138 @@
 							};
 							// start with first candidate
 							iconImg.src = candidates[0];
-//						} else {
-//							// fallback to emoji if no icon-img element
-//							icon.textContent = item.file ? '📄' : '📁';
-//							icon.className = isIconView ? 'icon text-4xl flex items-center justify-center h-16' : 'icon';
-//						}
+						}
+					} else {
+						// 폴더 아이콘
+						iconImg.classList.remove('hidden');
+						iconImg.alt = item.name;
+						// start with first candidate
+						iconImg.src = `${ICON_BASE}/folder.svg`
 					}
-				}else{
-		            // 폴더 아이콘
-					iconImg.classList.remove('hidden');
-					iconImg.alt = item.name;
-					// start with first candidate
-					iconImg.src = `${ICON_BASE}/folder.svg`
+
+
+				} else {
+					const nameTd = clone.querySelector('.file-name');
+					const dateTd = clone.querySelector('.file-date');
+					const typeTd = clone.querySelector('.file-type');
+					const sizeTd = clone.querySelector('.file-size');
+
+					nameTd.textContent = item.name;
+					dateTd.textContent = item.lastModified ?? '';
+					typeTd.textContent = item.file ? item.extension ?? '' : '폴더';
+					sizeTd.textContent = item.file ? formatFileSize(item.fileLength) : '';
 				}
-				
-				
-			} else {
-				const nameTd = clone.querySelector('.file-name');
-				const dateTd = clone.querySelector('.file-date');
-				const typeTd = clone.querySelector('.file-type');
-				const sizeTd = clone.querySelector('.file-size');
-				
-				nameTd.textContent = item.name;
-				dateTd.textContent = item.lastModified ?? '';
-				typeTd.textContent = item.file ? item.extension ?? '' : '폴더';
-				sizeTd.textContent = item.file ? formatFileSize(item.fileLength) : '';
-			}
-			
-			(table?.querySelector('tbody') ?? fileGrid).appendChild(clone);
-		});
-		
-		if (fileGrid._evtCtrl) fileGrid._evtCtrl.abort();
-		 const ctrl = new AbortController();
-		 fileGrid._evtCtrl = ctrl;
-		 const { signal } = ctrl;
-		
-		let clickTimer = null;
-		let suppressClick = false;
-		
-		fileGrid.addEventListener('click', (e) => {
-			const itemEl = e.target.closest('.file-item');
-			if (!itemEl) return;
-			
-			if (clickTimer) clearTimeout(clickTimer);
-			clickTimer = setTimeout(() => {
-				if( clickTimer == null ) return; // 더블클릭 시 타이머 클리어됨
-				clickTimer = null;
-				
-		        console.log('Clicked item:', itemEl.dataset.uid);
+
+				(table?.querySelector('tbody') ?? fileGrid).appendChild(clone);
+			});
+
+			if (fileGrid._evtCtrl) fileGrid._evtCtrl.abort();
+			const ctrl = new AbortController();
+			fileGrid._evtCtrl = ctrl;
+			const {signal} = ctrl;
+
+			let clickTimer = null;
+			let suppressClick = false;
+
+			fileGrid.addEventListener('click', (e) => {
+				const itemEl = e.target.closest('.file-item');
+				if (!itemEl) return;
+
+				if (clickTimer) clearTimeout(clickTimer);
+				clickTimer = setTimeout(() => {
+					if (clickTimer == null) return; // 더블클릭 시 타이머 클리어됨
+					clickTimer = null;
+
+					console.log('Clicked item:', itemEl.dataset.uid);
+					const uid = itemEl.dataset.uid;
+
+					const item = lastFetchedList.find(f => f.uid === uid);
+					if (!item) return;
+
+					updateDetail(item);
+
+				}, 200); // 200ms는 일반적인 더블클릭 인식 시간
+			}, {signal});
+
+			fileGrid.addEventListener('dblclick', (e) => {
+				// 버블링으로 중복 호출 방지
+				e.stopPropagation();
+
+				if (clickTimer) {
+					// 예정된 클릭 핸들러 취소
+					clearTimeout(clickTimer);
+					clickTimer = null;
+				}
+				// 이 프레임에서 클릭 무시
+				suppressClick = true;
+				queueMicrotask(() => {
+					// 다음 마이크로태스크에서 해제
+					suppressClick = false;
+				});
+
+				const itemEl = e.target.closest('.file-item');
+				if (!itemEl) return;
+
+				console.log('Double-clicked item:', itemEl.dataset.uid);
+
 				const uid = itemEl.dataset.uid;
-				
-				  const item = lastFetchedList.find(f => f.uid === uid);
-				  if (!item) return;
+				const item = lastFetchedList.find(f => f.uid === uid);
+				if (!item) return;
 
-				  updateDetail(item);
-				
-		    }, 200); // 200ms는 일반적인 더블클릭 인식 시간
-		}, { signal });
-		
-		fileGrid.addEventListener('dblclick', (e) => {
-			// 버블링으로 중복 호출 방지
-			e.stopPropagation();
-			   
-			if (clickTimer) {
-				// 예정된 클릭 핸들러 취소
-				clearTimeout(clickTimer);    
-				clickTimer = null;
-			}
-			// 이 프레임에서 클릭 무시
-			suppressClick = true;
-			queueMicrotask(() => { 
-				// 다음 마이크로태스크에서 해제
-				suppressClick = false; 
-			}); 
-			
-			const itemEl = e.target.closest('.file-item');
-			if (!itemEl) return;
-			
-			console.log('Double-clicked item:', itemEl.dataset.uid);
-	
-			const uid = itemEl.dataset.uid;
-			const item = lastFetchedList.find(f => f.uid === uid);
-			if (!item) return;
-	
-			if (item.file) {
-			  // 파일일 경우 새창으로 열기
-			  const url = /*[[@{/Files/Open/}]]*/ null;
-			  window.open(`${url}${encodeURIComponent(uid)}`, '_blank');
-			} else {
-				if (typeof selectDirectory === 'function') {
-					selectDirectory(uid);
+				if (item.file) {
+					// 파일일 경우 새창으로 열기
+					const url = /*[[@{/Files/Open/}]]*/ null;
+					window.open(`${url}${encodeURIComponent(uid)}`, '_blank');
+				} else {
+					if (typeof selectDirectory === 'function') {
+						selectDirectory(uid);
+					}
 				}
-			}
-			updateDetail(item);
-		}, { signal });
-		
-		// 리스트 렌더 후 현재 선택 정보 반영
-	  	updateSelectedDetail();
-	  	// 상세 패널은 초기화
-	  	updateDetail(null);
-	}
+				updateDetail(item);
+			}, {signal});
 
-	function clearSelected(rootNode) {
-		if (!rootNode) return;
-		rootNode.selected = false;
-		
-		if (rootNode.child) {
-			rootNode.child.forEach(clearSelected);
+			// 리스트 렌더 후 현재 선택 정보 반영
+			updateSelectedDetail();
+			// 상세 패널은 초기화
+			updateDetail(null);
 		}
-	}
 
-	function clearSelectedExcept(uid) {
-		const root = document.getElementById("tree");
-		if (!root) return;
-		
-		function traverse(node) {
-			if (!node._nodeData) return;
-			if (node._nodeData.owner.uid !== uid) {
-				node._nodeData.selected = false;
+		function clearSelected(rootNode) {
+			if (!rootNode) return;
+			rootNode.selected = false;
+
+			if (rootNode.child) {
+				rootNode.child.forEach(clearSelected);
 			}
-			const children = node.querySelectorAll(':scope > ul > li > div');
-			children.forEach(child => traverse(child));
 		}
-		
-		root.querySelectorAll('[data-node="true"]').forEach(el => {
-			if (el._nodeData?.owner.uid !== uid) {
-				el._nodeData.selected = false;
+
+		function clearSelectedExcept(uid) {
+			const root = document.getElementById("tree");
+			if (!root) return;
+
+			function traverse(node) {
+				if (!node._nodeData) return;
+				if (node._nodeData.owner.uid !== uid) {
+					node._nodeData.selected = false;
+				}
+				const children = node.querySelectorAll(':scope > ul > li > div');
+				children.forEach(child => traverse(child));
 			}
-		});
-	}
 
-	function formatFileSize(bytes) {
-		if (bytes < 1024) return bytes + ' B';
-		if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-		if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB';
-		return (bytes / 1024 / 1024 / 1024).toFixed(1) + ' GB';
-	}
+			root.querySelectorAll('[data-node="true"]').forEach(el => {
+				if (el._nodeData?.owner.uid !== uid) {
+					el._nodeData.selected = false;
+				}
+			});
+		}
 
-</script>
+		function formatFileSize(bytes) {
+			if (bytes < 1024) return bytes + ' B';
+			if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+			if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+			return (bytes / 1024 / 1024 / 1024).toFixed(1) + ' GB';
+		}
+
+	</script>
 
 </div>

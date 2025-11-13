@@ -130,6 +130,11 @@ class StorageServiceImpl implements StorageService {
 		return result;
 	}
 	
+	@Override
+	public List<BnDirectory> getParentDirectoryList(String uid) {
+		
+		return storageDao.getParentDirectoryList(uid);
+	}
 }
 
 

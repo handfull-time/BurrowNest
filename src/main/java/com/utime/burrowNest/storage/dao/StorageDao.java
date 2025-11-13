@@ -162,5 +162,12 @@ public interface StorageDao {
 	 * @return
 	 */
 	List<BnDirectory> getDirectories(long groupNo, String uid);
+
+	/**
+	 * 최상위 Root부터 uid 폴더까지 조회
+	 * @param uid
+	 * @return
+	 */
+	List<BnDirectory> getParentDirectoryList(String uid);
 	
 }

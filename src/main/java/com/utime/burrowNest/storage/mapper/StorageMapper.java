@@ -347,7 +347,13 @@ public interface StorageMapper {
 //	 */
 //	int removeGroupStorage(@Param("groupNo") long groupNo, @Param("dirNo") long dirNo)throws Exception;
 
-
+	/**
+	 * 최상위 Root부터 uid 폴더까지 조회
+	 * @param uid
+	 * @return
+	 */
+	List<BnDirectory> selectParentDirectoryListByUid(@Param("uid") String uid);
+	
 }
 
 /*

@@ -24,9 +24,12 @@ class ViewHandlerInterceptor implements AsyncHandlerInterceptor {
 		if( ! (handler instanceof HandlerMethod) )
 			return;
 		
-		final String path = req.getServletPath();
-		if( path.lastIndexOf(".html") < 1 && path.lastIndexOf(".json") < 1 && ! path.contains("/File"))
+		if( view == null )
 			return;
+		
+//		final String path = req.getServletPath();
+//		if( path.lastIndexOf(".html") < 1 && path.lastIndexOf(".json") < 1 && ! path.contains("/File"))
+//			return;
 
 		final ModelMap model = view.getModelMap();
 		

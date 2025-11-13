@@ -44,6 +44,8 @@ public class DirectoryController {
     public String path(ModelMap model, @RequestParam("uid") String uid) throws Exception {
 		
 		model.addAttribute("selectedUid", uid);
+		
+		model.addAttribute("parents", storageService.getParentDirectoryList(uid));
 	    
 	    return "Storage/StorageMain";
 	}
