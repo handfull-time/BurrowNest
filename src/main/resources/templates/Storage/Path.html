@@ -6,27 +6,25 @@
     <div id="breadcrumb" class="flex items-center space-x-1"></div>
   </div>
 
-  <!-- 검색 영역 (동작은 이후 구현) -->
+  <!-- 검색 입력창 (동작은 이후 구현) -->
   <div>
     <input type="text" placeholder="검색"
            class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400" />
     <button class="ml-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">검색</button>
   </div>
 
-  <!-- 드롭다운 템플릿 -->
   <template id="DropDownTemplate">
     <div class="dropdown absolute bg-white border border-gray-300 rounded shadow z-50 hidden">
       <ul class="py-2 text-sm text-gray-700"></ul>
     </div>
   </template>
 
-  <script>
+  <script th:inline="javascript">
     (function () {
-      const breadcrumbEl = document.getElementById("breadcrumb");
+      const breadcrumbEl   = document.getElementById("breadcrumb");
+      const initialParents = /*[[${parents}]]*/ [];
 
       if (!breadcrumbEl) return;
-
-      // ------- 헬퍼들 -------
 
       function getTreeRoot() {
         return document.getElementById("directoryTree");
@@ -35,11 +33,11 @@
       function findLabelByUid(uid) {
         const tree = getTreeRoot();
         if (!tree || !uid) return null;
-        return tree.querySelector(`.dir-label[data-uid="${CSS.escape(uid)}"]`);
+        return tree.querySelector(`.dir-label[data-uid="${uid}"]`);
       }
 
-      // uid 기준으로 ROOT → ... → 현재 폴더까지 경로 구성
-      function buildPath(uid) {
+      // uid 기준으로 Root → ... → uid 경로 구성 (DOM 기반, 동적 갱신용)
+      function buildPathFromDom(uid) {
         const path = [];
         const tree = getTreeRoot();
         if (!tree || !uid) return path;
@@ -53,88 +51,118 @@
 
           path.unshift({
             uid: label.dataset.uid,
-            name: label.textContent.trim(),
-            labelEl: label,
-            liEl: li
+            name: label.textContent.trim()
           });
 
           const parentUl = li.parentElement;
           if (!parentUl || !parentUl.dataset.childrenFor) break;
 
-          const parentUid = parentUl.dataset.childrenFor;
+          const parentUid   = parentUl.dataset.childrenFor;
           const parentLabel = findLabelByUid(parentUid);
-          label = parentLabel;
+          label             = parentLabel;
         }
-
         return path;
-      }
-
-      // 해당 단계의 children UL 확보 (필요 시 loadDirectory 호출)
-      async function ensureChildrenLoaded(segment) {
-        const li = segment.liEl || segment.labelEl.closest("li");
-        if (!li) return null;
-
-        const childUl = li.querySelector("ul[data-children-for]");
-        if (!childUl) return null;
-
-        const toggleBtn = li.querySelector(".toggle-btn");
-        if (toggleBtn && toggleBtn.dataset.loaded !== "true" && typeof loadDirectory === "function") {
-          await loadDirectory(segment.uid, childUl);
-          toggleBtn.dataset.loaded = "true";
-        }
-
-        return childUl;
       }
 
       function closeExistingDropdown() {
         document.querySelectorAll(".path-dropdown").forEach(d => d.remove());
       }
 
-      // 화살표 클릭 시 하위 폴더 드롭다운
-      async function openDropdownForSegment(segment, anchorEl) {
+      // 공통 렌더 함수: path = [{uid, name}, ...]
+      function renderBreadcrumb(path) {
+        breadcrumbEl.innerHTML = "";
+
+        if (!Array.isArray(path) || !path.length) {
+          const span = document.createElement("span");
+          span.textContent = "Root";
+          span.className   = "text-gray-600";
+          breadcrumbEl.appendChild(span);
+          return;
+        }
+
+        path.forEach((segment, idx) => {
+          const container = document.createElement("div");
+          container.className = "relative inline-flex items-center";
+
+          const btn = document.createElement("button");
+          btn.type  = "button";
+          btn.className = "px-1 text-blue-700 hover:underline text-xs md:text-sm";
+          btn.textContent = segment.name;
+          btn.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            const uid = segment.uid;
+            if (typeof window.selectDirectory === "function") {
+              await window.selectDirectory(uid);
+            } else if (typeof window.loadFileList === "function") {
+              window.loadFileList(uid);
+            }
+            updateBreadcrumbByUid(uid);
+          });
+          container.appendChild(btn);
+
+          // 마지막이 아니면 ▾ 화살표 + 드롭다운
+          if (idx < path.length - 1) {
+            const arrow = document.createElement("button");
+            arrow.type = "button";
+            arrow.className = "mx-0.5 text-gray-500 hover:bg-gray-100 rounded px-0.5";
+            arrow.textContent = "▾";
+            arrow.addEventListener("click", (e) => {
+              e.stopPropagation();
+              openDropdownForSegment(segment, arrow, path[idx + 1]);
+            });
+            container.appendChild(arrow);
+          }
+
+          breadcrumbEl.appendChild(container);
+        });
+      }
+
+      // 드롭다운: 해당 segment.uid 의 하위 디렉터리 목록
+      async function openDropdownForSegment(segment, anchorEl, nextSegment) {
         closeExistingDropdown();
 
         const template = document.getElementById("DropDownTemplate");
         if (!template) return;
-
-        const clone = template.content.cloneNode(true);
+        const clone    = template.content.cloneNode(true);
         const dropdown = clone.querySelector(".dropdown");
         if (!dropdown) return;
         dropdown.classList.add("path-dropdown");
 
         const ul = dropdown.querySelector("ul");
-        const childUl = await ensureChildrenLoaded(segment);
+
+        // children 은 Directory 트리에서 이미 로딩된 UL을 이용
+        const tree   = getTreeRoot();
+        const label  = findLabelByUid(segment.uid);
+        const li     = label && label.closest("li");
+        const childUl = li && li.querySelector("ul[data-children-for]");
         if (!childUl) return;
 
         const childLis = Array.from(childUl.children);
-
-        childLis.forEach(li => {
-          const lbl = li.querySelector(".dir-label");
+        childLis.forEach(liNode => {
+          const lbl = liNode.querySelector(".dir-label");
           if (!lbl) return;
 
-          const uid = lbl.dataset.uid;
+          const uid  = lbl.dataset.uid;
           const name = lbl.textContent.trim();
 
           const liEl = document.createElement("li");
-          const btn = document.createElement("button");
-          btn.type = "button";
+          const btn  = document.createElement("button");
+          btn.type   = "button";
           btn.className = "block px-4 py-1 hover:bg-gray-100 w-full text-left text-xs";
           btn.textContent = name;
 
-          if (uid === segment.nextUid) {
+          if (nextSegment && nextSegment.uid === uid) {
             btn.classList.add("font-semibold", "text-blue-600");
           }
 
           btn.addEventListener("click", async (e) => {
             e.stopPropagation();
             closeExistingDropdown();
-
             if (typeof window.selectDirectory === "function") {
               await window.selectDirectory(uid);
             } else if (typeof window.loadFileList === "function") {
               window.loadFileList(uid);
             }
-
             updateBreadcrumbByUid(uid);
           });
 
@@ -145,8 +173,8 @@
         document.body.appendChild(dropdown);
         const rect = anchorEl.getBoundingClientRect();
         dropdown.style.position = "absolute";
-        dropdown.style.left = `${rect.left + window.scrollX}px`;
-        dropdown.style.top = `${rect.bottom + window.scrollY}px`;
+        dropdown.style.left     = `${rect.left + window.scrollX}px`;
+        dropdown.style.top      = `${rect.bottom + window.scrollY}px`;
         dropdown.classList.remove("hidden");
 
         const closeOnClick = (evt) => {
@@ -155,114 +183,27 @@
             document.removeEventListener("click", closeOnClick);
           }
         };
-        // setTimeout으로 현재 클릭 이벤트 이후에 등록
         setTimeout(() => document.addEventListener("click", closeOnClick), 0);
       }
 
-      // 실제 breadcrumb DOM 렌더
-      function renderBreadcrumbForPath(path) {
-        breadcrumbEl.innerHTML = "";
+      // Directory 쪽에서 호출: 서버에서 내려준 parents 그대로 Breadcrumb 구성
+      window.updateBreadcrumbFromServer = function (parents) {
+        if (!Array.isArray(parents) || !parents.length) return;
+        const path = parents.map(p => ({ uid: p.uid, name: p.name }));
+        renderBreadcrumb(path);
+      };
 
-        if (!path.length) {
-          const span = document.createElement("span");
-          span.textContent = "/";
-          span.className = "text-gray-800";
-          breadcrumbEl.appendChild(span);
-          return;
-        }
+      // Directory 쪽에서 호출: uid만 있을 때 DOM 기반으로 경로 재구성
+      window.updateBreadcrumbByUid = function (uid) {
+        const path = buildPathFromDom(uid);
+        renderBreadcrumb(path);
+      };
 
-        path.forEach((segment, idx) => {
-          const container = document.createElement("div");
-          container.className = "relative inline-flex items-center";
-
-          // 경로 조각 버튼 (이름)
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "px-1 text-blue-700 hover:underline text-xs md:text-sm";
-          btn.textContent = segment.name;
-          btn.addEventListener("click", async (e) => {
-            e.stopPropagation();
-            if (typeof window.selectDirectory === "function") {
-              await window.selectDirectory(segment.uid);
-            } else if (typeof window.loadFileList === "function") {
-              window.loadFileList(segment.uid);
-            }
-            updateBreadcrumbByUid(segment.uid);
-          });
-          container.appendChild(btn);
-
-          // 마지막이 아니면 화살표(▾) → 드롭다운
-          if (idx < path.length - 1) {
-            const arrow = document.createElement("button");
-            arrow.type = "button";
-            arrow.className = "mx-0.5 text-gray-500 hover:bg-gray-100 rounded px-0.5";
-            arrow.textContent = "▾";
-            arrow.addEventListener("click", (e) => {
-              e.stopPropagation();
-              openDropdownForSegment(
-                {
-                  uid: segment.uid,
-                  labelEl: segment.labelEl,
-                  liEl: segment.liEl,
-                  nextUid: path[idx + 1].uid
-                },
-                arrow
-              );
-            });
-            container.appendChild(arrow);
-          }
-
-          breadcrumbEl.appendChild(container);
-        });
-      }
-
-      // 외부에서 호출할 수 있게 공개
-      function updateBreadcrumbByUid(uid) {
-        const path = buildPath(uid);
-        renderBreadcrumbForPath(path);
-      }
-      window.updateBreadcrumbByUid = updateBreadcrumbByUid;
-
-      // ------- Directory.html 과 연동 -------
-
-      // 1) 디렉터리 트리에서 클릭 시 자동 갱신
-      const tree = getTreeRoot();
-      if (tree) {
-        tree.addEventListener("click", (e) => {
-          const label = e.target.closest(".dir-label");
-          if (label && label.dataset.uid) {
-            updateBreadcrumbByUid(label.dataset.uid);
-            return;
-          }
-          const toggleBtn = e.target.closest(".toggle-btn");
-          if (toggleBtn && toggleBtn.dataset.uid) {
-            updateBreadcrumbByUid(toggleBtn.dataset.uid);
-          }
-        });
-      }
-
-      // 2) selectDirectory가 이미 정의되어 있으면 감싸서 호출 후 breadcrumb 갱신
-      if (typeof window.selectDirectory === "function") {
-        const originalSelectDirectory = window.selectDirectory;
-        window.selectDirectory = async function (uid) {
-          const result = await originalSelectDirectory(uid);
-          if (uid != null) {
-            updateBreadcrumbByUid(uid);
-          }
-          return result;
-        };
-      }
-
-      // 3) 최초 진입 시 URL ?uid= 파라미터 기준으로 초기 breadcrumb 렌더
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const currentUid = params.get("uid");
-        if (currentUid) {
-          // 트리가 그려지는 시간 고려해 약간 딜레이
-          setTimeout(() => updateBreadcrumbByUid(currentUid), 300);
-        }
-      } catch (e) {
-        console.warn("breadcrumb init error:", e);
+      // 초기 진입 시 서버 parents 가 있으면 그것으로 한 번 그리고,
+      // 이후 Directory 초기화에서 다시 updateBreadcrumbFromServer를 호출해도 OK
+      if (Array.isArray(initialParents) && initialParents.length > 0) {
+        const path = initialParents.map(p => ({ uid: p.uid, name: p.name }));
+        renderBreadcrumb(path);
       }
     })();
   </script>

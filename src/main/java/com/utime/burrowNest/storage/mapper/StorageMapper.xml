@@ -919,22 +919,8 @@
  
  <!--최상위 Root부터 uid 폴더까지 조회-->
  <select id="selectParentDirectoryListByUid" resultMap="BnDirectoryMap">
-     <!--WITH RECURSIVE PATH_TO_ROOT(NO, PARENT_NO, UID, NAME, LEVEL) AS (
-          SELECT 
-          	NO, PARENT_NO, CAST(UID AS VARCHAR) AS UID, NAME, 0 AS LEVEL
-          FROM BN_DIRECTORY
-          WHERE UID = #{uid}
      
-          UNION ALL
-     
-          SELECT 
-          	D.NO, D.PARENT_NO, CAST(D.UID AS VARCHAR) AS UID, D.NAME, LEVEL + 1
-          FROM BN_DIRECTORY D
-          	JOIN PATH_TO_ROOT P 
-          		ON D.NO = P.PARENT_NO
-          WHERE D.NO != P.NO 
-     )-->
-     WITH RECURSIVE DIR_PATH AS (
+     WITH RECURSIVE DIR_PATH ( NO, PARENT_NO, UID, NAME, LVL ) AS (
 		<!--1) target 폴더를 시작점으로-->
 		SELECT
 			d.NO,
@@ -960,7 +946,7 @@
     )
     SELECT *
     	FROM DIR_PATH
-    ORDER BY LVL DESC;
+    ORDER BY LVL DESC
  </select>
  
 </mapper>

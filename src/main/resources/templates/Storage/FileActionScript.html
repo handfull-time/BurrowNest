@@ -1,0 +1,367 @@
+<script xmlns:th="http://www.thymeleaf.org" th:fragment="clipboardScript" th:inline="javascript">
+	// ===============================
+	//  파일 클립보드 관리 클래스
+	// ===============================
+	class FileClipboard {
+		static STORAGE_KEY = 'bn.clipboard';
+
+		constructor() {
+			this.mode = null;   // 'copy' | 'cut'
+			this.items = [];     // [uid, uid, ...]
+			this.loadFromSession();
+			this.updatePasteButton();
+		}
+
+		loadFromSession() {
+			try {
+				const raw = sessionStorage.getItem(FileClipboard.STORAGE_KEY);
+				if (!raw) return;
+				const parsed = JSON.parse(raw);
+				this.mode = parsed.mode || null;
+				this.items = Array.isArray(parsed.items) ? parsed.items : [];
+			} catch (e) {
+				console.warn('clipboard load error', e);
+			}
+		}
+
+		saveToSession() {
+			const data = {
+				mode: this.mode,
+				items: this.items
+			};
+			sessionStorage.setItem(FileClipboard.STORAGE_KEY, JSON.stringify(data));
+		}
+
+		set(mode, uids) {
+			this.mode = mode;                         // 'copy' or 'cut'
+			this.items = Array.from(new Set(uids));    // 중복 제거
+			this.saveToSession();
+			this.updatePasteButton();
+			console.info(`[Clipboard] ${mode}`, this.items);
+		}
+
+		clear() {
+			this.mode = null;
+			this.items = [];
+			this.saveToSession();
+			this.updatePasteButton();
+		}
+
+		hasData() {
+			return this.items && this.items.length > 0;
+		}
+
+		updatePasteButton() {
+			const btn = document.getElementById('pasteBtn');
+			if (!btn) return;
+			btn.disabled = !this.hasData();
+		}
+
+		/**
+		 * 붙여넣기 실행
+		 * @param {string} targetDirUid - 붙여넣기 대상 디렉터리 UID
+		 */
+		async paste(targetDirUid) {
+			if (!this.hasData()) {
+				showCustomAlert?.('붙여넣기할 항목이 없습니다.');
+				return;
+			}
+			if (!targetDirUid) {
+				showCustomAlert?.('대상 디렉터리가 선택되지 않았습니다.');
+				return;
+			}
+
+			const url = /*[[@{/Files/Paste.json}]]*/ null;
+
+			const body = {
+				mode: this.mode,
+				target: targetDirUid,
+				list: this.items
+			};
+
+			const options = {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(body)
+			};
+
+			try {
+				const response = await apiRequest(url, options);
+				if (!response.ok) {
+					console.error('붙여넣기 실패:', response.status);
+					showCustomAlert?.('붙여넣기에 실패했습니다.');
+					return;
+				}
+
+				const data = await response.json();
+				if (data.code === '0') {
+					// cut 모드면 붙여넣기 후 클립보드 비우기
+					if (this.mode === 'cut') {
+						this.clear();
+					}
+					// paste 성공 후 현재 디렉토리 새로고침
+					if (typeof window.loadFileList === 'function') {
+						window.loadFileList(targetDirUid);
+					}
+				} else {
+					showCustomAlert?.(`${data.code} - ${data.message}`);
+				}
+			} catch (e) {
+				console.error('붙여넣기 오류:', e);
+				showCustomAlert?.('붙여넣기 중 오류가 발생했습니다.');
+			}
+		}
+	}
+
+	// 전역 인스턴스
+	const fileClipboard = new FileClipboard();
+
+	// ===============================
+	//  선택된 파일/폴더 UID 읽기 헬퍼
+	// ===============================
+	function getSelectedFileUids() {
+		const set = window.selectedUids;
+		if (!set || typeof set.forEach !== 'function') {
+			return [];
+		}
+		return Array.from(set);
+	}
+
+	// ===============================
+	//  헤더 버튼 이벤트 바인딩
+	// ===============================
+	document.getElementById('copyBtn').addEventListener('click', () => {
+		const selected = getSelectedFileUids();
+		if (!selected.length) {
+			showCustomAlert?.('복사할 항목을 선택해 주세요.');
+			return;
+		}
+		fileClipboard.set('copy', selected);
+	});
+
+	document.getElementById('cutBtn').addEventListener('click', () => {
+		const selected = getSelectedFileUids();
+		if (!selected.length) {
+			showCustomAlert?.('잘라낼 항목을 선택해 주세요.');
+			return;
+		}
+		fileClipboard.set('cut', selected);
+	});
+
+	document.getElementById('pasteBtn').addEventListener('click', async () => {
+		const targetDirUid = window.currentDirectoryUid;
+		if (!targetDirUid) {
+			showCustomAlert?.('붙여넣기할 디렉터리가 선택되지 않았습니다.');
+			return;
+		}
+		await fileClipboard.paste(targetDirUid);
+	});
+
+	// ==================================================
+	//  공용 헬퍼: 선택된 항목 목록 / uid → item 매핑
+	// ==================================================
+	function getSelectedFileUids() {
+		const set = window.selectedUids;
+		if (!set || typeof set.forEach !== 'function') return [];
+		return Array.from(set);
+	}
+
+	function getItemByUid(uid) {
+		const list = window.lastFetchedList || [];
+		return list.find(it => it.uid === uid);
+	}
+
+	function getSelectedItems() {
+		const uids = getSelectedFileUids();
+		const list = [];
+		uids.forEach(uid => {
+			const item = getItemByUid(uid);
+			if (item) list.push(item);
+		});
+		return list;
+	}
+
+	// ==================================================
+	//  1) 삭제 /Files/Delete.json
+	//  Body : [{file:false, uid:"삭제할 Diretory의 uid"}, {file:true, uid:"삭제할 file의 uid"}, ...]
+	// ==================================================
+	document.getElementById('deleteBtn').addEventListener('click', async () => {
+		const items = getSelectedItems();
+
+		if (!items.length) {
+			showCustomAlert?.('삭제할 항목을 선택해 주세요.');
+			return;
+		}
+
+		const hasFile = items.some(it => it.file);
+		const hasDir = items.some(it => !it.file);
+
+		let msg = '선택한 항목을 삭제하시겠습니까?';
+		if (hasDir && hasFile) msg = '선택한 파일과 폴더를 삭제하시겠습니까?';
+		else if (hasDir) msg = '선택한 폴더를 삭제하시겠습니까?';
+		else if (hasFile) msg = '선택한 파일을 삭제하시겠습니까?';
+
+		showCustomConfirm?.(msg, async (isConfirm) => {
+			if (!isConfirm) return;
+
+			const payload = items.map(it => ({
+				file: !!it.file,
+				uid: it.uid
+			}));
+
+			const url = /*[[@{/Files/Delete.json}]]*/ null;
+
+			const options = {
+				method: 'POST',
+				headers: {'Content-Type': 'application/json'},
+				body: JSON.stringify(payload)
+			};
+
+			try {
+				const response = await apiRequest(url, options);
+				if (!response.ok) {
+					console.error('삭제 실패:', response.status);
+					showCustomAlert?.('삭제에 실패했습니다.');
+					return;
+				}
+				const data = await response.json();
+				if (data.code === '0') {
+					// 선택 상태 초기화
+					if (window.selectedUids) window.selectedUids.clear?.();
+					// 현재 디렉터리 목록 새로고침
+					if (typeof window.loadFileList === 'function') {
+						window.loadFileList(window.currentDirectoryUid || '');
+					}
+				} else {
+					showCustomAlert?.(`${data.code} - ${data.message}`);
+				}
+			} catch (e) {
+				console.error('삭제 오류:', e);
+				showCustomAlert?.('삭제 중 오류가 발생했습니다.');
+			}
+		});
+	});
+
+	// ==================================================
+	//  2) 이름 변경 /Files/Rename.json
+	//  Body : {file:false, uid:"이름 변경할 아이템의 uid", name:"새로운 이름"}
+	// ==================================================
+	document.getElementById('renameBtn').addEventListener('click', async () => {
+		const items = getSelectedItems();
+
+		if (items.length === 0) {
+			showCustomAlert?.('이름을 변경할 항목을 선택해 주세요.');
+			return;
+		}
+		if (items.length > 1) {
+			showCustomAlert?.('이름 변경은 한 번에 하나의 항목만 가능합니다.');
+			return;
+		}
+
+		const item = items[0];
+		const currentName = item.name || '';
+		const newName = await promptP('새 이름을 입력하세요', currentName);
+		if (newName === false || !newName.trim()) {
+		    return;
+		}
+
+		if (!newName.trim()) {
+			showCustomAlert?.('이름은 비워둘 수 없습니다.');
+			return;
+		}
+		if (newName === currentName) return;    // 변경 없음
+
+		const body = {
+			file: !!item.file,
+			uid: item.uid,
+			name: newName.trim()
+		};
+
+		const url = /*[[@{/Files/Rename.json}]]*/ null;
+
+		const options = {
+			method: 'POST',
+			headers: {'Content-Type': 'application/json'},
+			body: JSON.stringify(body)
+		};
+
+		try {
+			const response = await apiRequest(url, options);
+			if (!response.ok) {
+				console.error('이름 변경 실패:', response.status);
+				showCustomAlert?.('이름 변경에 실패했습니다.');
+				return;
+			}
+			const data = await response.json();
+			if (data.code === '0') {
+				if (typeof window.loadFileList === 'function') {
+					window.loadFileList(window.currentDirectoryUid || '');
+				}
+			} else {
+				showCustomAlert?.(`${data.code} - ${data.message}`);
+			}
+		} catch (e) {
+			console.error('이름 변경 오류:', e);
+			showCustomAlert?.('이름 변경 중 오류가 발생했습니다.');
+		}
+	});
+
+	// ==================================================
+	//  3) 새 폴더 /Files/NewFolder.json
+	//  Body : {uid:"새로운 폴더를 만들 Directory의 uid", name:"새로운 이름"}
+	// ==================================================
+	document.getElementById('newFolderBtn').addEventListener('click', async () => {
+		const targetDirUid = window.currentDirectoryUid;
+
+		if (!targetDirUid) {
+			showCustomAlert?.('새 폴더를 만들 디렉터리가 선택되지 않았습니다.');
+			return;
+		}
+
+		const name = await promptP("새폴더 이름을 입력하세요", "새폴더");
+		if (name === false || !name.trim()) {
+		    return;
+		}
+		
+		const body = {
+			uid: targetDirUid,         // 새 폴더를 만들 디렉터리의 UID
+			name: name.trim()
+		};
+
+		const url = /*[[@{/Files/NewFolder.json}]]*/ null;
+
+		const options = {
+			method: 'POST',
+			headers: {'Content-Type': 'application/json'},
+			body: JSON.stringify(body)
+		};
+
+		try {
+			const response = await apiRequest(url, options);
+			if (!response.ok) {
+				console.error('새 폴더 생성 실패:', response.status);
+				showCustomAlert?.('새 폴더 생성에 실패했습니다.');
+				return;
+			}
+			const data = await response.json();
+			if (data.code === '0') {
+				// 파일 목록 새로고침
+				if (typeof window.loadFileList === 'function') {
+					window.loadFileList(targetDirUid);
+				}
+				// 디렉토리 트리도 갱신하고 싶다면, 필요 시 selectDirectory 재호출
+				if (typeof window.selectDirectory === 'function') {
+					window.selectDirectory(targetDirUid);
+				}
+			} else {
+				showCustomAlert?.(`${data.code} - ${data.message}`);
+			}
+		} catch (e) {
+			console.error('새 폴더 생성 오류:', e);
+			showCustomAlert?.('새 폴더 생성 중 오류가 발생했습니다.');
+		}
+	});
+
+</script>

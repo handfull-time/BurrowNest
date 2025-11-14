@@ -152,6 +152,10 @@
 		// 이미 전역에 있다면 재사용
 		const selectedUids = window.selectedUids ?? new Set();
 		window.selectedUids = selectedUids;
+		
+		let lastFetchedList = window.lastFetchedList ?? [];
+		window.lastFetchedList = lastFetchedList;
+
 
 		function formatItemDetail(item) {
 			if (!item) return '';
@@ -194,6 +198,9 @@
 
 		// 파일 리스트 가져오기
 		async function loadFileList(uid) {
+			
+			// 🔹 현재 디렉터리 UID를 전역에 기록 (붙여넣기 target용)
+			window.currentDirectoryUid = uid || null;
 
 			const url = /*[[@{/Dir/Files.json}]]*/ '/Dir/Files.json';
 
@@ -214,7 +221,6 @@
 
 		const THUMBNAIL_URL = /*[[@{/Files/Thumbnail}]]*/ '/Files/Thumbnail';
 		const ICON_BASE = /*[[@{/images/storage/ext}]]*/ '/images/storage/ext';
-		let lastFetchedList = [];
 
 		document.getElementById('detailViewBtn').addEventListener('click', () => {
 			ViewManager.setView(ViewManager.DETAIL);

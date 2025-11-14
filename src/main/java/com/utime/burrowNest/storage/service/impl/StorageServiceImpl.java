@@ -133,7 +133,14 @@ class StorageServiceImpl implements StorageService {
 	@Override
 	public List<BnDirectory> getParentDirectoryList(String uid) {
 		
-		return storageDao.getParentDirectoryList(uid);
+		List<BnDirectory> result;
+		if( BurrowUtils.isEmpty(uid) ) {
+			result = new ArrayList<>();
+		}else {
+			result = storageDao.getParentDirectoryList(uid);
+		}
+		
+		return result;
 	}
 }
 

@@ -11,9 +11,9 @@
     <div class="w-px h-6 bg-gray-400 mx-2"></div>
 
     <!-- 편집 기능 -->
-    <button id="copyBtn" class="px-2 py-1 bg-white border rounded hover:bg-gray-100">📄 복사</button>
-    <button id="cutBtn" class="px-2 py-1 bg-white border rounded hover:bg-gray-100">✂️ 자르기</button>
-    <button id="pasteBtn" class="px-2 py-1 bg-white border rounded hover:bg-gray-100" disabled>📋 붙여넣기</button>
+    <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100" id="copyBtn">📄 복사</button>
+    <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100" id="cutBtn">✂️ 자르기</button>
+    <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100" id="pasteBtn" disabled>📋 붙여넣기</button>
 
     <!-- 구분선 -->
     <div class="w-px h-6 bg-gray-400 mx-2"></div>
@@ -22,15 +22,15 @@
     <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100">⬆️ 업로드</button>
     <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100" id="downloadBtn">⬇️ 다운로드</button>
     <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100" id="deleteBtn" >🗑️ 삭제</button>
-    <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100">✏️ 이름 변경</button>
-    <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100">📁➕ 새 폴더</button>
+    <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100" id="renameBtn">✏️ 이름 변경</button>
+    <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100" id="newFolderBtn">📁➕ 새 폴더</button>
 
     <!-- 구분선 -->
     <div class="w-px h-6 bg-gray-400 mx-2"></div>
 
 	<!-- 보기 기능 -->
-    <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100" id="detailViewBtn">상세 보기</button>
-    <button class="px-2 py-1 bg-white border rounded hover:bg-gray-100" id="iconViewBtn">아이콘 보기</button>
+	<button class="px-2 py-1 bg-white border rounded hover:bg-gray-100" id="detailViewBtn">📑 상세 보기</button>
+	<button class="px-2 py-1 bg-white border rounded hover:bg-gray-100" id="iconViewBtn">🗂️ 아이콘 보기</button>
 
   </div>
 
@@ -114,6 +114,4 @@
     	}
     });
   </script>
-  
-  
 </div>
