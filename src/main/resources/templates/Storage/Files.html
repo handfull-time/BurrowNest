@@ -153,6 +153,9 @@
 		const selectedUids = window.selectedUids ?? new Set();
 		window.selectedUids = selectedUids;
 		
+		const selectedItems = window.selectedItems ?? new Map();
+		window.selectedItems = selectedItems;
+		
 		let lastFetchedList = window.lastFetchedList ?? [];
 		window.lastFetchedList = lastFetchedList;
 
@@ -174,30 +177,33 @@
 		}
 
 		function updateSelectedDetail() {
-			const el = document.getElementById('selectedDetailPane');
-			if (!el) return;
+		    const el = document.getElementById('selectedDetailPane');
+		    if (!el) return;
 
-			if (!lastFetchedList || selectedUids.size === 0) {
-				el.textContent = '선택: 없음';
-				return;
-			}
+		    // ✅ selectedItems 기준으로 계산
+		    if (!selectedItems || selectedItems.size === 0) {
+		        el.textContent = '선택: 없음';
+		        return;
+		    }
 
-			const selected = lastFetchedList.filter(i => selectedUids.has(i.uid));
-			const count = selected.length;
-			const files = selected.filter(i => i.file).length;
-			const folders = count - files;
+		    const selected = Array.from(selectedItems.values());
+		    const count = selected.length;
+		    const files = selected.filter(i => i.file).length;
+		    const folders = count - files;
 
-			// 필요하면 이름 2~3개만 미리보기
-			const previewNames = selected.slice(0, 3).map(i => i.name).join(', ');
-			const more = count > 3 ? ` 외 ${count - 3}개` : '';
+		    const previewNames = selected.slice(0, 3).map(i => i.name).join(', ');
+		    const more = count > 3 ? ` 외 ${count - 3}개` : '';
 
-			el.textContent = `선택: ${count}개 (폴더 ${folders}, 파일 ${files}) · ${previewNames}${more}`;
+		    el.textContent = `선택: ${count}개 (폴더 ${folders}, 파일 ${files}) · ${previewNames}${more}`;
 		}
+
 
 
 
 		// 파일 리스트 가져오기
 		async function loadFileList(uid) {
+			
+			showLoading();
 			
 			// 🔹 현재 디렉터리 UID를 전역에 기록 (붙여넣기 target용)
 			window.currentDirectoryUid = uid || null;
@@ -217,6 +223,8 @@
 			} catch (err) {
 				console.error("파일 목록 불러오기 실패:", err);
 			}
+			
+			hideLoading();
 		}
 
 		const THUMBNAIL_URL = /*[[@{/Files/Thumbnail}]]*/ '/Files/Thumbnail';
@@ -232,20 +240,23 @@
 			renderFileList(lastFetchedList);
 		});
 
-		function setSelected(uid, element, checked) {
-			if (checked) {
-				selectedUids.add(uid);
-				element?.classList.add('bg-blue-100');
-			} else {
-				selectedUids.delete(uid);
-				element?.classList.remove('bg-blue-100');
-			}
+		function setSelected(uid, item, element, checked) {
+		    if (checked) {
+		        selectedUids.add(uid);
+		        selectedItems.set(uid, item);
+		        element?.classList.add('bg-blue-100');
+		    } else {
+		        selectedUids.delete(uid);
+		        selectedItems.delete(uid);
+		        element?.classList.remove('bg-blue-100');
+		    }
+		    updateSelectedDetail();
 		}
-
 
 		function renderFileList(list) {
 			lastFetchedList = list;
 			selectedUids.clear();
+			selectedItems.clear();
 
 			const fileGrid = document.getElementById('fileGrid');
 			fileGrid.innerHTML = '';
@@ -285,9 +296,11 @@
 						const checked = e.target.checked;
 						if (checked) {
 							selectedUids.add(item.uid);
+							selectedItems.set(item.uid, item);
 							element.classList.add('bg-blue-100');
 						} else {
 							selectedUids.delete(item.uid);
+							selectedItems.delete(item.uid);
 							element.classList.remove('bg-blue-100');
 						}
 						updateSelectedDetail();  // ✅ 선택 상세 갱신

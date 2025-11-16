@@ -6,6 +6,9 @@ import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
+import com.utime.burrowNest.storage.vo.PasteItem;
+import com.utime.burrowNest.storage.vo.RenameItem;
+import com.utime.burrowNest.storage.vo.StorageIOItem;
 import com.utime.burrowNest.user.vo.UserVo;
 
 public interface StorageService {
@@ -62,5 +65,37 @@ public interface StorageService {
 	 * @return
 	 */
 	List<BnDirectory> getParentDirectoryList(String uid);
+
+	/**
+	 * 저장소 붙여넣기
+	 * @param user
+	 * @param pasteItem
+	 * @return
+	 */
+	ReturnBasic pasteStorage(UserVo user, PasteItem pasteItem);
+
+	/**
+	 * 저장소 삭제
+	 * @param user
+	 * @param delItems
+	 * @return
+	 */
+	ReturnBasic deleteStorage(UserVo user, List<StorageIOItem> delItems);
+	
+	/**
+	 * 저장소 이름 변경
+	 * @param user
+	 * @param renameItem
+	 * @return
+	 */
+	ReturnBasic renameStorage(UserVo user, RenameItem renameItem);
+	
+	/**
+	 * 새 폴더 생성
+	 * @param user
+	 * @param newFolderItem
+	 * @return
+	 */
+	ReturnBasic newFolderStorage(UserVo user, RenameItem newFolderItem);
 
 }

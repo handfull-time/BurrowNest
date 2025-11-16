@@ -72,6 +72,8 @@
 	extends="com.utime.burrowNest.storage.mapper.StorageMapper.AbsPathMap">
 	<result column="FILE_LENGTH" property="fileLength"/>
 	<result column="FILE_TYPE" property="fileType"/>
+	<result column="FULL_NAME" property="fullName"/>
+	<result column="DIRECTORY_PATH" property="directoryPath"/>
 	<result column="EXTENSION" property="extension"/>
 </resultMap>
 
@@ -749,6 +751,7 @@
 	    , d.PARENT_NO
 	    , CAST(d.UID AS VARCHAR) AS UID
 	    , d.NAME
+	    , d.ABSOLUTE_PATH
 	    , EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d.NO) AS HAS_CHILD
 	FROM BN_DIRECTORY d
 	WHERE 1=1
@@ -873,6 +876,7 @@
 	    , d.PARENT_NO
 	    , CAST(d.UID AS VARCHAR) AS UID
 	    , d.NAME
+	    , d.ABSOLUTE_PATH 
 	    , EXISTS (SELECT 1 FROM BN_DIRECTORY c WHERE c.PARENT_NO = d.NO) AS HAS_CHILD
 	FROM BN_DIRECTORY d
 		INNER JOIN BN_DIRECTORY p ON d.PARENT_NO = p.NO
@@ -894,6 +898,8 @@
 <select id="selectFilesByParentUid" resultMap="BnFileMap">
     SELECT
         <include refid="BnFileColumn"/>
+        , DR.ABSOLUTE_PATH AS DIRECTORY_PATH
+        , FL.NAME || CASE WHEN FL.EXTENSION IS NOT NULL THEN '.' || FL.EXTENSION ELSE '' END AS FULL_NAME
         , CASE WHEN THM.FILE_NO IS NOT NULL THEN TRUE ELSE FALSE END AS HAS_THUMBNAIL
     FROM BN_FILE FL 
     	INNER JOIN BN_DIRECTORY DR ON FL.PARENT_NO = DR.NO

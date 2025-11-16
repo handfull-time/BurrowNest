@@ -1,7 +1,10 @@
 package com.utime.burrowNest.root.service;
 
+import java.io.File;
+
 import com.utime.burrowNest.admin.vo.SaveSotrageReqVo;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.user.vo.UserVo;
 
 public interface LoadStorageService {
 	
@@ -18,4 +21,13 @@ public interface LoadStorageService {
 	 * @return
 	 */
 	ReturnBasic deleteRootStorage(long no);
+	
+	/**
+	 * 파일 정보 저장
+	 * @param parentNo
+	 * @param owner
+	 * @param file
+	 * @return
+	 */
+	ReturnBasic saveFileStorage(long parentNo, UserVo owner, File file);
 }

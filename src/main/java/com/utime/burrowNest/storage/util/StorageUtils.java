@@ -1,4 +1,4 @@
-package com.utime.burrowNest.root.service.impl;
+package com.utime.burrowNest.storage.util;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -53,7 +53,7 @@ import net.coobird.thumbnailator.Thumbnails;
  *
  */
 @Slf4j
-class StorageUtils {
+public class StorageUtils {
 	
 	private final static int width = 320, height = 320;
 	private final static String ThumFormat = "jpg";

@@ -3,117 +3,135 @@
 	//  파일 클립보드 관리 클래스
 	// ===============================
 	class FileClipboard {
-		static STORAGE_KEY = 'bn.clipboard';
+	    static STORAGE_KEY = 'bn.clipboard';
 
-		constructor() {
-			this.mode = null;   // 'copy' | 'cut'
-			this.items = [];     // [uid, uid, ...]
-			this.loadFromSession();
-			this.updatePasteButton();
-		}
+	    constructor() {
+	        this.mode = null;   // 'Copy' | 'Cut'
+	        this.items = [];    // [{file:true, uid:"..."}, ...]
+	        this.loadFromSession();
+	        this.updatePasteButton();
+	    }
 
-		loadFromSession() {
-			try {
-				const raw = sessionStorage.getItem(FileClipboard.STORAGE_KEY);
-				if (!raw) return;
-				const parsed = JSON.parse(raw);
-				this.mode = parsed.mode || null;
-				this.items = Array.isArray(parsed.items) ? parsed.items : [];
-			} catch (e) {
-				console.warn('clipboard load error', e);
-			}
-		}
+	    loadFromSession() {
+	        try {
+	            const raw = sessionStorage.getItem(FileClipboard.STORAGE_KEY);
+	            if (!raw) return;
+	            const parsed = JSON.parse(raw);
 
-		saveToSession() {
-			const data = {
-				mode: this.mode,
-				items: this.items
-			};
-			sessionStorage.setItem(FileClipboard.STORAGE_KEY, JSON.stringify(data));
-		}
+	            this.mode  = parsed.mode || null;
+	            this.items = Array.isArray(parsed.items) ? parsed.items : [];
+	        } catch (e) {
+	            console.warn('clipboard load error', e);
+	        }
+	    }
 
-		set(mode, uids) {
-			this.mode = mode;                         // 'copy' or 'cut'
-			this.items = Array.from(new Set(uids));    // 중복 제거
-			this.saveToSession();
-			this.updatePasteButton();
-			console.info(`[Clipboard] ${mode}`, this.items);
-		}
+	    saveToSession() {
+	        const data = {
+	            mode: this.mode,
+	            items: this.items
+	        };
+	        sessionStorage.setItem(FileClipboard.STORAGE_KEY, JSON.stringify(data));
+	    }
 
-		clear() {
-			this.mode = null;
-			this.items = [];
-			this.saveToSession();
-			this.updatePasteButton();
-		}
+	    /**
+	     * @param {string} mode 'Copy' | 'Cut'
+	     * @param {Array} items item 객체 배열 [{file:true, uid:""}, ...]
+	     */
+	    set(mode, items) {
+	        this.mode = mode;
 
-		hasData() {
-			return this.items && this.items.length > 0;
-		}
+	        // uid 중복 제거
+	        const map = new Map();
+	        items.forEach(item => map.set(item.uid, item));
+	        this.items = Array.from(map.values());
 
-		updatePasteButton() {
-			const btn = document.getElementById('pasteBtn');
-			if (!btn) return;
-			btn.disabled = !this.hasData();
-		}
+	        this.saveToSession();
+	        this.updatePasteButton();
 
-		/**
-		 * 붙여넣기 실행
-		 * @param {string} targetDirUid - 붙여넣기 대상 디렉터리 UID
-		 */
-		async paste(targetDirUid) {
-			if (!this.hasData()) {
-				showCustomAlert?.('붙여넣기할 항목이 없습니다.');
-				return;
-			}
-			if (!targetDirUid) {
-				showCustomAlert?.('대상 디렉터리가 선택되지 않았습니다.');
-				return;
-			}
+	        console.info(`[Clipboard] ${mode}`, this.items);
+	    }
 
-			const url = /*[[@{/Files/Paste.json}]]*/ null;
+	    clear() {
+	        this.mode = null;
+	        this.items = [];
+	        this.saveToSession();
+	        this.updatePasteButton();
+	    }
 
-			const body = {
-				mode: this.mode,
-				target: targetDirUid,
-				list: this.items
-			};
+	    hasData() {
+	        return this.items && this.items.length > 0;
+	    }
 
-			const options = {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(body)
-			};
+	    updatePasteButton() {
+	        const btn = document.getElementById('pasteBtn');
+	        if (!btn) return;
+	        btn.disabled = !this.hasData();
+	    }
 
-			try {
-				const response = await apiRequest(url, options);
-				if (!response.ok) {
-					console.error('붙여넣기 실패:', response.status);
-					showCustomAlert?.('붙여넣기에 실패했습니다.');
-					return;
-				}
+	    /**
+	     * 붙여넣기 실행
+	     * @param {string} targetDirUid
+	     */
+	    async paste(targetDirUid) {
+	        if (!this.hasData()) {
+	            showCustomAlert?.('붙여넣기할 항목이 없습니다.');
+	            return;
+	        }
+	        if (!targetDirUid) {
+	            showCustomAlert?.('대상 디렉터리가 선택되지 않았습니다.');
+	            return;
+	        }
 
-				const data = await response.json();
-				if (data.code === '0') {
-					// cut 모드면 붙여넣기 후 클립보드 비우기
-					if (this.mode === 'cut') {
-						this.clear();
-					}
-					// paste 성공 후 현재 디렉토리 새로고침
-					if (typeof window.loadFileList === 'function') {
-						window.loadFileList(targetDirUid);
-					}
-				} else {
-					showCustomAlert?.(`${data.code} - ${data.message}`);
-				}
-			} catch (e) {
-				console.error('붙여넣기 오류:', e);
-				showCustomAlert?.('붙여넣기 중 오류가 발생했습니다.');
-			}
-		}
+			showLoading();
+
+	        const url = /*[[@{/Storage/Paste.json}]]*/ null;
+
+	        const body = {
+	            mode: this.mode,
+	            target: targetDirUid,
+	            list: this.items
+	        };
+
+	        const options = {
+	            method: 'POST',
+	            headers: {
+	                'Content-Type': 'application/json'
+	            },
+	            body: JSON.stringify(body)
+	        };
+			
+	        try {
+	            const response = await apiRequest(url, options);
+	            if (!response.ok) {
+					hideLoading();
+					
+	                console.error('붙여넣기 실패:', response.status);
+	                showCustomAlert?.('붙여넣기에 실패했습니다.');
+	                return;
+	            }
+
+	            const data = await response.json();
+	            if (data.code === '0') {
+	                if (this.mode === 'Cut') {
+	                    this.clear();
+	                }
+
+	                if (typeof window.loadFileList === 'function') {
+	                    window.loadFileList(targetDirUid);
+	                }
+	            } else {
+					hideLoading();
+					
+	                showCustomAlert?.(`${data.code} - ${data.message}`);
+	            }
+	        } catch (e) {
+				hideLoading();
+	            console.error('붙여넣기 오류:', e);
+	            showCustomAlert?.('붙여넣기 중 오류가 발생했습니다.');
+	        }
+	    }
 	}
+
 
 	// 전역 인스턴스
 	const fileClipboard = new FileClipboard();
@@ -122,11 +140,7 @@
 	//  선택된 파일/폴더 UID 읽기 헬퍼
 	// ===============================
 	function getSelectedFileUids() {
-		const set = window.selectedUids;
-		if (!set || typeof set.forEach !== 'function') {
-			return [];
-		}
-		return Array.from(set);
+		return Array.from(window.selectedItems.values());
 	}
 
 	// ===============================
@@ -138,7 +152,7 @@
 			showCustomAlert?.('복사할 항목을 선택해 주세요.');
 			return;
 		}
-		fileClipboard.set('copy', selected);
+		fileClipboard.set('Copy', selected);
 	});
 
 	document.getElementById('cutBtn').addEventListener('click', () => {
@@ -147,7 +161,7 @@
 			showCustomAlert?.('잘라낼 항목을 선택해 주세요.');
 			return;
 		}
-		fileClipboard.set('cut', selected);
+		fileClipboard.set('Cut', selected);
 	});
 
 	document.getElementById('pasteBtn').addEventListener('click', async () => {
@@ -158,15 +172,6 @@
 		}
 		await fileClipboard.paste(targetDirUid);
 	});
-
-	// ==================================================
-	//  공용 헬퍼: 선택된 항목 목록 / uid → item 매핑
-	// ==================================================
-	function getSelectedFileUids() {
-		const set = window.selectedUids;
-		if (!set || typeof set.forEach !== 'function') return [];
-		return Array.from(set);
-	}
 
 	function getItemByUid(uid) {
 		const list = window.lastFetchedList || [];
@@ -206,12 +211,13 @@
 		showCustomConfirm?.(msg, async (isConfirm) => {
 			if (!isConfirm) return;
 
+			showLoading();
 			const payload = items.map(it => ({
 				file: !!it.file,
 				uid: it.uid
 			}));
 
-			const url = /*[[@{/Files/Delete.json}]]*/ null;
+			const url = /*[[@{/Storage/Delete.json}]]*/ null;
 
 			const options = {
 				method: 'POST',
@@ -222,6 +228,7 @@
 			try {
 				const response = await apiRequest(url, options);
 				if (!response.ok) {
+					hideLoading();
 					console.error('삭제 실패:', response.status);
 					showCustomAlert?.('삭제에 실패했습니다.');
 					return;
@@ -235,9 +242,11 @@
 						window.loadFileList(window.currentDirectoryUid || '');
 					}
 				} else {
+					hideLoading();
 					showCustomAlert?.(`${data.code} - ${data.message}`);
 				}
 			} catch (e) {
+				hideLoading();
 				console.error('삭제 오류:', e);
 				showCustomAlert?.('삭제 중 오류가 발생했습니다.');
 			}
@@ -273,13 +282,14 @@
 		}
 		if (newName === currentName) return;    // 변경 없음
 
+		showLoading();
 		const body = {
 			file: !!item.file,
 			uid: item.uid,
 			name: newName.trim()
 		};
 
-		const url = /*[[@{/Files/Rename.json}]]*/ null;
+		const url = /*[[@{/Storage/Rename.json}]]*/ null;
 
 		const options = {
 			method: 'POST',
@@ -290,6 +300,7 @@
 		try {
 			const response = await apiRequest(url, options);
 			if (!response.ok) {
+				hideLoading();
 				console.error('이름 변경 실패:', response.status);
 				showCustomAlert?.('이름 변경에 실패했습니다.');
 				return;
@@ -300,9 +311,11 @@
 					window.loadFileList(window.currentDirectoryUid || '');
 				}
 			} else {
+				hideLoading();
 				showCustomAlert?.(`${data.code} - ${data.message}`);
 			}
 		} catch (e) {
+			hideLoading();
 			console.error('이름 변경 오류:', e);
 			showCustomAlert?.('이름 변경 중 오류가 발생했습니다.');
 		}
@@ -325,12 +338,15 @@
 		    return;
 		}
 		
+		showLoading();
+		
 		const body = {
+			file: false,
 			uid: targetDirUid,         // 새 폴더를 만들 디렉터리의 UID
 			name: name.trim()
 		};
 
-		const url = /*[[@{/Files/NewFolder.json}]]*/ null;
+		const url = /*[[@{/Storage/NewFolder.json}]]*/ null;
 
 		const options = {
 			method: 'POST',
@@ -341,6 +357,7 @@
 		try {
 			const response = await apiRequest(url, options);
 			if (!response.ok) {
+				hideLoading();
 				console.error('새 폴더 생성 실패:', response.status);
 				showCustomAlert?.('새 폴더 생성에 실패했습니다.');
 				return;
@@ -356,9 +373,11 @@
 					window.selectDirectory(targetDirUid);
 				}
 			} else {
+				hideLoading();
 				showCustomAlert?.(`${data.code} - ${data.message}`);
 			}
 		} catch (e) {
+			hideLoading();
 			console.error('새 폴더 생성 오류:', e);
 			showCustomAlert?.('새 폴더 생성 중 오류가 발생했습니다.');
 		}

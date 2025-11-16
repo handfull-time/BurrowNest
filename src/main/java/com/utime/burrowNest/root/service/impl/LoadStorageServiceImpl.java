@@ -18,6 +18,7 @@ import com.utime.burrowNest.admin.vo.SaveSotrageReqVo;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.root.service.LoadStorageService;
 import com.utime.burrowNest.storage.dao.StorageDao;
+import com.utime.burrowNest.storage.util.StorageUtils;
 import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
@@ -103,76 +104,13 @@ class LoadStorageServiceImpl implements LoadStorageService {
     		
     		{
     			// 파일 읽을 때도 가끔 메시지 쏘자.
-        		if( fileCount % 10L == 0L ) {
+        		if( fileCount % 5L == 0L ) {
         			ifl.message.setProgress( fileCount );
         			messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, ifl.message);
         		}
     		}
     		
-    		final BnFile bnFile;
-    		try {
-				bnFile = StorageUtils.getFileInfo(file);
-			} catch (Exception e) {
-				log.error("", e);
-				return;
-			}
-    		
-    		bnFile.setParentNo(this.parent.getNo());
-    		bnFile.setEnabled(true);
-    		bnFile.setOwnerNo(ifl.owner.getUserNo());
-    		
-    		final EBnFileType fileType = mapFileType.containsKey( bnFile.getExtension() )? mapFileType.get(bnFile.getExtension()):EBnFileType.Basic;
-    		bnFile.setFileType(fileType);
-    		
-    		try {
-				if( storageDao.saveFile(bnFile, ifl.owner) < 0 ) {
-					log.warn("파일 저장 실패: " + bnFile);
-					return;
-				}
-			} catch (Exception e) {
-				log.error("", e);
-				return;
-			}
-    		
-    		{
-    			// 파일 섬네일 추출
-    			try {
-    				final byte [] thumbnail = StorageUtils.getFileThumbnail(file, bnFile);
-    				if( thumbnail != null ) {
-    					storageDao.saveThumbnail(bnFile, thumbnail);
-    				}
-				} catch (Exception e) {
-					log.error("섬네일 실패", e);
-				}
-    		}
-    		
-    		{
-    			// 확장 정보 저장
-        		AbsBnFileInfo fileInfo = null;
-        		try {
-            		switch( fileType ) {
-            		case Basic: fileInfo = null; break;
-            		case Document: fileInfo = StorageUtils.getFileInfoDocument(file, bnFile); break;
-            		case Image: fileInfo = StorageUtils.getFileInfoImage(file, bnFile); break;
-            		case Video: fileInfo = StorageUtils.getFileInfoVideo(file, bnFile); break;
-            		case Audio: fileInfo = StorageUtils.getFileInfoAudio(file, bnFile); break;
-            		case Archive: fileInfo = StorageUtils.getFileInfoArchive(file, bnFile); break;
-            		}
-    			} catch (Exception e) {
-    				log.error("확장 정보 추출 실패", e);
-    				fileInfo = null;
-    			}
-        		
-        		if( fileInfo != null ) {
-        			bnFile.setInfo(fileInfo);
-        			try {
-    					storageDao.saveFileInfor(bnFile);
-    				} catch (Exception e) {
-    					log.error("확장 정보 저장 실패", e);
-    				}
-        		}
-    		}
-    		
+    		saveFileStorage(this.parent.getNo(), ifl.owner, file);
     	}
     }
     
@@ -439,5 +377,74 @@ class LoadStorageServiceImpl implements LoadStorageService {
 			result.setCodeMessage("E", "루트 저장소 삭제 실패");
 		}
 		return result;
+	}
+	
+	@Override
+	public ReturnBasic saveFileStorage(long parentNo, UserVo owner, File file) {
+
+		final BnFile bnFile;
+		try {
+			bnFile = StorageUtils.getFileInfo(file);
+		} catch (Exception e) {
+			log.error("", e);
+			return new ReturnBasic("ELS00A1", e.getMessage());
+		}
+		
+		bnFile.setParentNo(parentNo);
+		bnFile.setEnabled(true);
+		bnFile.setOwnerNo(owner.getUserNo());
+		
+		final EBnFileType fileType = mapFileType.containsKey( bnFile.getExtension() )? mapFileType.get(bnFile.getExtension()):EBnFileType.Basic;
+		bnFile.setFileType(fileType);
+		
+		try {
+			if( storageDao.saveFile(bnFile, owner) < 0 ) {
+				log.warn("파일 저장 실패: " + bnFile);
+				return new ReturnBasic("ELS00A2", "저장 실패");
+			}
+		} catch (Exception e) {
+			log.error("", e);
+			return new ReturnBasic("ELS00A3", e.getMessage());
+		}
+		
+		{
+			// 파일 섬네일 추출
+			try {
+				final byte [] thumbnail = StorageUtils.getFileThumbnail(file, bnFile);
+				if( thumbnail != null ) {
+					storageDao.saveThumbnail(bnFile, thumbnail);
+				}
+			} catch (Exception e) {
+				log.error("섬네일 실패", e);
+			}
+		}
+		
+		{
+			// 확장 정보 저장
+    		AbsBnFileInfo fileInfo = null;
+    		try {
+        		switch( fileType ) {
+        		case Basic: fileInfo = null; break;
+        		case Document: fileInfo = StorageUtils.getFileInfoDocument(file, bnFile); break;
+        		case Image: fileInfo = StorageUtils.getFileInfoImage(file, bnFile); break;
+        		case Video: fileInfo = StorageUtils.getFileInfoVideo(file, bnFile); break;
+        		case Audio: fileInfo = StorageUtils.getFileInfoAudio(file, bnFile); break;
+        		case Archive: fileInfo = StorageUtils.getFileInfoArchive(file, bnFile); break;
+        		}
+			} catch (Exception e) {
+				log.error("확장 정보 추출 실패", e);
+				fileInfo = null;
+			}
+    		
+    		if( fileInfo != null ) {
+    			bnFile.setInfo(fileInfo);
+    			try {
+					storageDao.saveFileInfor(bnFile);
+				} catch (Exception e) {
+					log.error("확장 정보 저장 실패", e);
+				}
+    		}
+		}
+		return null;
 	}
 }

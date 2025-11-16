@@ -1,21 +1,26 @@
 package com.utime.burrowNest.storage.service.impl;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
+import com.utime.burrowNest.common.util.FileUtils;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.root.service.LoadStorageService;
 import com.utime.burrowNest.storage.dao.StorageDao;
 import com.utime.burrowNest.storage.service.StorageService;
+import com.utime.burrowNest.storage.util.StorageUtils;
 import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
-import com.utime.burrowNest.storage.vo.EBnFileType;
+import com.utime.burrowNest.storage.vo.PasteItem;
+import com.utime.burrowNest.storage.vo.RenameItem;
+import com.utime.burrowNest.storage.vo.StorageIOItem;
 import com.utime.burrowNest.user.vo.UserVo;
 
 import lombok.RequiredArgsConstructor;
@@ -28,15 +33,17 @@ class StorageServiceImpl implements StorageService {
 	
 	private final StorageDao storageDao;
 	
-	private Map<String, EBnFileType> mapFileType;
+	private final LoadStorageService loadStorageService;
 	
-	/**
-	 * ApplicationReadyEvent
-	 */
-	@EventListener(ApplicationReadyEvent.class)
-	protected void handleApplicationReadyEvent() {
-		this.mapFileType = storageDao.getBnFileType();
-	}
+//	private Map<String, EBnFileType> mapFileType;
+//	
+//	/**
+//	 * ApplicationReadyEvent
+//	 */
+//	@EventListener(ApplicationReadyEvent.class)
+//	protected void handleApplicationReadyEvent() {
+//		this.mapFileType = storageDao.getBnFileType();
+//	}
 	
 	/**
 	 * 기본 관리자 계정의 최상위 Root를 생성한다.
@@ -98,10 +105,12 @@ class StorageServiceImpl implements StorageService {
 		
 		// groupNo, directoryUid 로 Directory 목록 조회
 		final List<BnDirectory> dirList = this.storageDao.getDirectories( groupNo, uid );
+		this.existDirecotryList( dirList );
 		result.addAll( dirList );
 		
 		// groupNo, directoryUid 로 파일 목록 조회
 		final List<BnFile> fileList = this.storageDao.getFiles( groupNo, uid );
+		this.existFileList( user, fileList );
 		result.addAll( fileList );
 		
 		return result;
@@ -113,6 +122,78 @@ class StorageServiceImpl implements StorageService {
 		final BnFile file = this.storageDao.getFile( user, uid );
 		
 		return file;
+	}
+	
+	private void existDirecotryList(List<BnDirectory> list) {
+		if( BurrowUtils.isEmpty(list) ) {
+			return;
+		}
+		
+		for( int index=list.size()-1 ; index>=0 ; index-- ) {
+			
+			final BnDirectory item = list.get(index);
+			
+			if( BurrowUtils.isEmpty(item.getAbsolutePath()) ) {
+				continue;
+			}
+			
+			final File d = new File( item.getAbsolutePath() );
+			if( ! d.exists() ) {
+				try {
+					storageDao.deleteDirectory(item);
+					list.remove(index);
+				} catch (Exception e) {
+					log.error("Dir 삭제 실패:" + item.getNo(), e);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * 물리적 객체 존재 여부 확인
+	 */
+	private void existFileList( UserVo user, List<BnFile> list ) {
+		
+		if( BurrowUtils.isEmpty(list) ) {
+			return;
+		}
+		
+		BnFile item = list.get(0);
+		final long parentDirNo = item.getParentNo();
+		
+		final File dir = new File( item.getDirectoryPath() );
+		final File [] files = dir.listFiles( new java.io.FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				return pathname.isFile();
+			}
+		});
+		
+		final Map<String, File> fileMap = new HashMap<>();
+		for( File f : files ) {
+			fileMap.put(f.getName(), f);
+		}
+		
+		for( int index=list.size()-1 ; index>=0 ; index-- ) {
+			
+			item = list.get(index);
+			
+			final File f = new File( item.getDirectoryPath(), item.getFullName() );
+			if( ! f.exists() ) {
+				try {
+					storageDao.deleteFile(item);
+					list.remove(index);
+				} catch (Exception e) {
+					log.error("File 삭제 실패:" + item.getNo(), e);
+				}
+			}else {
+				fileMap.remove( item.getFullName() );
+			}
+		}
+		
+		for( String fileName : fileMap.keySet() ) {
+			this.loadStorageService.saveFileStorage(parentDirNo, user, fileMap.get(fileName) );
+		}
 	}
 
 	@Override
@@ -126,6 +207,8 @@ class StorageServiceImpl implements StorageService {
 		}else {
 			result = storageDao.getGroupStorageList( user.getGroup().getGroupNo(), uid );
 		}
+		
+		this.existDirecotryList( result );
 		
 		return result;
 	}
@@ -142,6 +225,174 @@ class StorageServiceImpl implements StorageService {
 		
 		return result;
 	}
+
+	@Override
+	public ReturnBasic pasteStorage(UserVo user, PasteItem pasteItem) {
+		
+		final ReturnBasic result = new ReturnBasic();
+		
+		final BnDirectory dir = storageDao.getDirectory( user, pasteItem.getTarget() );
+		if( dir == null ) {
+			result.setCodeMessage("E", "존재하지 않는 디렉토리입니다.");
+			return result;
+		}
+		
+		// TODO: 복사/이동 작업 구현 필요
+		
+		return result;
+	}
+
+	@Override
+	public ReturnBasic deleteStorage(UserVo user, List<StorageIOItem> delItems) {
+		
+		final ReturnBasic result = new ReturnBasic();
+		
+		final List<AbsPath> list = storageDao.selectStorageItems(user, delItems);
+		for( AbsPath item : list ) {
+			if( item instanceof BnDirectory ) {
+				BnDirectory dir = (BnDirectory)item;
+				if( FileUtils.deleteDirectory( new File( dir.getAbsolutePath() ).toPath() ) ) {
+					log.info("디렉토리 삭제 성공: " + dir.getAbsolutePath());
+					try {
+						storageDao.deleteDirectory(dir);
+					} catch (Exception e) {
+						log.error("디렉토리 삭제 DB 반영 실패: " + dir.getAbsolutePath(), e);
+						result.setCodeMessage("E", "디렉토리 삭제 DB 반영 실패: " + dir.getAbsolutePath());
+					}
+				}else {
+					log.error("디렉토리 삭제 실패: " + dir.getAbsolutePath());
+					result.setCodeMessage("E", "디렉토리 삭제 실패: " + dir.getAbsolutePath());
+				}
+			}else if( item instanceof BnFile ) {
+				BnFile file = (BnFile)item;
+				if( FileUtils.deleteFile( new File( file.getDirectoryPath(), file.getFullName() ) ) ) {
+					log.info("파일 삭제 성공: " + file.getDirectoryPath() + File.separator + file.getFullName());
+					try {
+						storageDao.deleteFile(file);
+					} catch (Exception e) {
+						log.error("파일 삭제 DB 반영 실패: " + file.getDirectoryPath() + File.separator + file.getFullName(), e);
+						result.setCodeMessage("E", "파일 삭제 DB 반영 실패: " + file.getDirectoryPath() + File.separator + file.getFullName());
+					}
+				}else {
+					log.error("파일 삭제 실패: " + file.getDirectoryPath() + File.separator + file.getFullName());
+					result.setCodeMessage("E", "파일 삭제 실패: " + file.getDirectoryPath() + File.separator + file.getFullName());
+				}
+			}
+		}
+		
+		return result;
+	}
+
+	@Override
+	public ReturnBasic renameStorage(UserVo user, RenameItem renameItem) {
+		
+		final ReturnBasic result = new ReturnBasic();
+
+		if( renameItem.isFile() ) {
+			final BnFile file = storageDao.getFile( user, renameItem.getUid() );
+			if( file == null ) {
+				result.setCodeMessage("E", "존재하지 않는 파일입니다.");
+				return result;
+			}
+			
+			final File oldFile = new File( file.getDirectoryPath(), file.getFullName() );
+			final File newFile = new File( file.getDirectoryPath(), renameItem.getName() );
+			
+			if( oldFile.renameTo( newFile ) ) {
+				log.info("파일명 변경 성공: {} -> {}", oldFile.getName(), newFile.getName());
+				
+				file.setName(newFile.getName());
+				
+				try {
+					storageDao.updateRename(file);
+				} catch (Exception e) {
+					log.error("파일명 변경 DB 반영 실패: {} -> {}", oldFile.getName(), newFile.getName(), e);
+					// 파일명 원복
+					if( newFile.renameTo( oldFile ) ) {
+						log.info("파일명 원복 성공: {} -> {}", newFile.getName(), oldFile.getName());
+					}else {
+						log.error("파일명 원복 실패: {} -> {}", newFile.getName(), oldFile.getName());
+					}
+				}
+				
+			}else {
+				log.error("파일명 변경 실패: {} -> {}", oldFile.getName(), newFile.getName());
+			}
+			
+		} else {
+			final BnDirectory dir = storageDao.getDirectory( user, renameItem.getUid() );
+			if( dir == null ) {
+				result.setCodeMessage("E", "존재하지 않는 디렉토리입니다.");
+				return result;
+			}
+
+			final File oldDir = new File( dir.getAbsolutePath() );
+			final File newDir = new File( oldDir.getParent(), renameItem.getName() );
+			
+			if( oldDir.renameTo( newDir ) ) {
+				log.info("디렉토리명 변경 성공: {} -> {}", oldDir.getName(), newDir.getName());
+				dir.setName( renameItem.getName() );
+				try {
+					storageDao.updateRename(dir);
+				} catch (Exception e) {
+					log.error("디렉토리명 변경 DB 반영 실패: {} -> {}", oldDir.getName(), newDir.getName(), e);
+					// 파일명 원복
+					if( newDir.renameTo( oldDir ) ) {
+						log.info("디렉토리명 원복 성공: {} -> {}", newDir.getName(), oldDir.getName());
+					}else {
+						log.error("디렉토리명 원복 실패: {} -> {}", newDir.getName(), oldDir.getName());
+					}
+				}
+			}else {
+				log.error("디렉토리명 변경 실패: {} -> {}", oldDir.getName(), newDir.getName());
+			}
+		}
+		
+		return result;
+	}
+
+	@Override
+	public ReturnBasic newFolderStorage(UserVo user, RenameItem newFolderItem) {
+		
+		final ReturnBasic result = new ReturnBasic();
+
+		final BnDirectory parentDir = storageDao.getParentDirectory(user, newFolderItem.getUid());
+		if( parentDir == null ) {
+			result.setCodeMessage("E", "존재하지 않는 폴더입니다.");
+			return result;
+		}
+		
+		final File newDir = new File( parentDir.getAbsolutePath(), newFolderItem.getName() );
+		if( newDir.exists() ) {
+			result.setCodeMessage("E", "이미 존재하는 폴더명입니다.");
+			return result;
+		}
+		
+		if( newDir.mkdir() ) {
+			final BnDirectory childDir;
+			
+			try {
+				childDir = StorageUtils.getDirectoryInfo(newDir);
+				childDir.setEnabled(true);
+				childDir.setPublicAccessible(true);
+				childDir.setParentNo( parentDir.getNo() );
+				childDir.setOwnerNo( user.getUserNo() );
+				if( storageDao.saveDirectory( childDir, user ) < 1 ) {
+					log.warn("Dir 저장 실패: " + childDir);
+				};
+				
+			} catch (Exception e) {
+				log.error("", e);
+				result.setCodeMessage("E", "폴더 정보 저장에 실패했습니다.");
+			}
+		}else {
+			result.setCodeMessage("E", "폴더 생성에 실패했습니다.");
+		}
+		
+		return result;
+	}
+	
+	
 }
 
 

@@ -4,9 +4,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.utime.burrowNest.storage.vo.AbsBnFileInfo;
+import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
 import com.utime.burrowNest.storage.vo.EBnFileType;
+import com.utime.burrowNest.storage.vo.RenameItem;
+import com.utime.burrowNest.storage.vo.StorageIOItem;
 import com.utime.burrowNest.user.vo.UserVo;
 
 public interface StorageDao {
@@ -52,7 +55,7 @@ public interface StorageDao {
 	 * @return
 	 */
 	BnFile getFile( UserVo user, String uid );
-
+	
 	/**
 	 * 파일 확장 조회
 	 * @param file
@@ -74,6 +77,13 @@ public interface StorageDao {
 	 * @return
 	 */
 	BnDirectory getDirectory( long dirNo );
+	
+	/**
+	 * directory 정보 조회
+	 * @param fileNo
+	 * @return
+	 */
+	BnDirectory getDirectory( UserVo user, String uid );
 	
 	/**
 	 * 루트 Dir 조회.
@@ -169,5 +179,21 @@ public interface StorageDao {
 	 * @return
 	 */
 	List<BnDirectory> getParentDirectoryList(String uid);
+
+	/**
+	 * 삭제 대상 물리적 경로 조회
+	 * @param user
+	 * @param delItems
+	 * @return
+	 */
+	List<AbsPath> selectStorageItems(UserVo user, List<StorageIOItem> delItems);
 	
+	/**
+	 * 이름 변경 처리
+	 * @param path
+	 * @return
+	 */
+	int updateRename(AbsPath path)throws Exception;
+
+
 }
