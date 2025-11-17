@@ -29,6 +29,26 @@
 
 
 	<!-- 상세 보기용 템플릿 (table row) -->
+	<template id="fileItemDetailTableTemplate">
+		<table class="min-w-full divide-y divide-gray-200 text-sm border border-gray-200 rounded-lg overflow-hidden shadow-lg">
+			<thead>
+				<tr>
+		            <th class="px-4 py-3 text-center w-12">
+		                <input type="checkbox" class="form-checkbox h-4 w-4 text-indigo-200 bg-indigo-500 border-none rounded cursor-pointer" />
+		            </th>
+		            <th class="px-4 py-3 text-center w-12"></th>
+		            <th class="px-6 py-3 text-left font-medium tracking-wider">이름</th>
+		            <th class="px-6 py-3 text-center font-medium tracking-wider">수정날짜</th>
+		            <th class="px-6 py-3 text-center font-medium tracking-wider">유형</th>
+		            <th class="px-6 py-3 text-right font-medium tracking-wider">크기</th>
+		        </tr>
+			</thead>
+			<tbody class="bg-white divide-y divide-gray-100">
+			</tbody>
+		</table>
+	</template>
+
+	<!-- 상세 보기용 템플릿 (table row) -->
 	<template id="fileItemDetailTemplate">
 		<tr class="file-item hover:bg-blue-50">
 			<td class="border p-2 text-center align-middle">
@@ -42,24 +62,6 @@
 			<td class="border p-2 text-center file-type"></td>
 			<td class="border p-2 text-right file-size"></td>
 		</tr>
-	</template>
-
-	<!-- 상세 보기용 템플릿 (table row) -->
-	<template id="fileItemDetailTableTemplate">
-		<table class="table-auto w-full border-collapse border border-gray-200 text-sm">
-			<thead>
-				<tr class="bg-gray-100">
-					<th class="border p-2 text-center">선택</th>
-					<th class="border p-2 text-center"></th>
-					<th class="border p-2 text-center">이름</th>
-					<th class="border p-2 text-center">수정날짜</th>
-					<th class="border p-2 text-center">유형</th>
-					<th class="border p-2 text-center">크기</th>
-				</tr>
-			</thead>
-			<tbody>
-			</tbody>
-		</table>
 	</template>
 
 	<script th:inline="javascript">
@@ -281,11 +283,11 @@
 				element.dataset.index = index;
 				element.dataset.file = item.file;
 
-				// [수정] 체크박스 로직 추가
+				// 체크박스 로직 추가
 				const checkbox = clone.querySelector('.file-select-checkbox');
 				if (checkbox) {
 					// 1. 렌더링 시 상태 복원
-					if (selectedUids.has(item.uid)) {
+					if (selectedItems.has(item.uid)) {
 						element.classList.add('bg-blue-100');
 						checkbox.checked = true;
 					}

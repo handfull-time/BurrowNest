@@ -1,72 +1,77 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
-    <title>🐇 BurrowNest</title>
-    <meta charset="UTF-8">
+	<title>🐇 BurrowNest</title>
+	<meta charset="UTF-8">
 
-   	<th:block th:replace="~{Common/Favicon :: Favicon}"></th:block>
+	<th:block th:replace="~{Common/Favicon :: Favicon}"></th:block>
 
-    <script type="text/javascript" th:src="@{/js/tailwind/tailwind.min.js}"></script>
-	<th:script th:replace="~{Common/Script :: CommonScript}"/>
+	<script type="text/javascript" th:src="@{/js/tailwind/tailwind.min.js}"></script>
+	<th:script th:replace="~{Common/Script :: CommonScript}" />
 	<!-- <a href="https://www.untitledui.com/resources/file-icons" title="file icons">파일 확장자 아이콘 참조</a> -->
-    <style>
+	<style>
 	</style>
-		
+
 </head>
+
 <body class="h-screen flex flex-col">
-    <!-- Header -->
-    <div th:replace="~{Storage/Header :: header}" class="flex-none"></div>
+	<!-- Header -->
+	<div th:replace="~{Storage/Header :: header}" class="flex-none"></div>
 
-    <!-- Path Bar -->
-    <div th:replace="~{Storage/Path :: path}" class="flex-none border-t border-b border-gray-300"></div>
+	<!-- Path Bar -->
+	<div th:replace="~{Storage/Path :: path}" class="flex-none border-t border-b border-gray-300"></div>
 
-    <!-- Main Content: Directory Tree + File List -->
-    <div class="flex-1 flex overflow-hidden">
-        <!-- Directories Tree (Resizable) -->
+	<!-- Main Content: Directory Tree + File List -->
+	<div class="flex-1 flex overflow-hidden">
+		<!-- Directories Tree (Resizable) -->
 		<div id="resizable-left"
-		     class="w-1/4 min-w-[150px] max-w-[500px] resize-x overflow-auto border-r border-gray-300">
-		  <div th:insert="~{Storage/Directories :: directories}"></div>
+			class="w-1/4 min-w-[150px] max-w-[500px] resize-x overflow-auto border-r border-gray-300">
+			<div th:insert="~{Storage/Directories :: directories}"></div>
 		</div>
 
-        <!-- Files List -->
-        <div class="flex-1 overflow-auto" th:replace="~{Storage/Files :: files}"></div>
-    </div>
-	<!--<th:div th:replace="~{Storage/CustomSubMenu :: customMenu}" />-->
+		<!-- Files List -->
+		<div class="flex-1 overflow-auto" th:replace="~{Storage/Files :: files}"></div>
+	</div>
 
-    <!-- Footer -->
-    <div th:replace="~{Storage/Footer :: footer}" class="flex-none border-t border-gray-300 text-sm px-2 py-1"></div>
+	<!-- Footer -->
+	<div th:replace="~{Storage/Footer :: footer}" class="flex-none border-t border-gray-300 text-sm px-2 py-1"></div>
 
-    <!-- Optional: Add a simple resizable script -->
-    <script th:inline="javascript">
-        const resizable = document.getElementById('resizable-left');
-        
-        let isResizing = false;
+	<!-- <th:div th:replace="~{Storage/CustomSubMenu :: customMenu}" /> -->
+	<th:div th:replace="~{Storage/FileActionScript :: actionScript}" />
 
-        resizable.addEventListener('mousedown', function(e) {
-            if (e.offsetX > resizable.offsetWidth - 10) {
-                isResizing = true;
-                document.body.style.cursor = 'col-resize';
-            }
-        });
+	<!-- Optional: Add a simple resizable script -->
+	<script th:inline="javascript">
+		const resizable = document.getElementById('resizable-left');
 
-        document.addEventListener('mousemove', function(e) {
-            if (!isResizing) return;
-            const newWidth = e.clientX;
-            resizable.style.width = newWidth + 'px';
-        });
+		let isResizing = false;
 
-        document.addEventListener('mouseup', function() {
-            isResizing = false;
-            document.body.style.cursor = 'default';
-        });
-    </script>
-    
+		resizable.addEventListener('mousedown', function (e) {
+			if (e.offsetX > resizable.offsetWidth - 10) {
+				isResizing = true;
+				document.body.style.cursor = 'col-resize';
+			}
+		});
+
+		document.addEventListener('mousemove', function (e) {
+			if (!isResizing) return;
+			const newWidth = e.clientX;
+			resizable.style.width = newWidth + 'px';
+		});
+
+		document.addEventListener('mouseup', function () {
+			isResizing = false;
+			document.body.style.cursor = 'default';
+		});
+	</script>
+
 	<!-- 로딩 오버레이 -->
 	<div th:replace="~{Storage/LoadingOverlay :: LoadingOverlay}"></div>
-    <!-- alert confirm prompt -->
+	<!-- alert confirm prompt -->
 	<div th:replace="~{Common/alertView :: alertView}"></div>
-    <!-- 모달창 -->
-    <div th:replace="~{Common/modalView :: modalView}"></div>
-    
+	<!-- 모달창 -->
+	<div th:replace="~{Common/modalView :: modalView}"></div>
+
 </body>
+
 </html>
