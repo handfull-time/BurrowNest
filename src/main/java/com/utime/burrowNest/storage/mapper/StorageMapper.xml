@@ -241,10 +241,12 @@
     	<include refid="BnFileColumn" /> 
     	,DR.UID AS PARENT_UID
     	,DR.ABSOLUTE_PATH AS DIRECTORY_PATH
-    	,FL.NAME || '.' || FL.EXTENSION AS FULL_NAME
+    	,FL.NAME || CASE WHEN FL.EXTENSION IS NOT NULL THEN '.' || FL.EXTENSION ELSE '' END AS FULL_NAME
     FROM BN_FILE FL 
     	INNER JOIN BN_DIRECTORY DR ON FL.PARENT_NO = DR.NO
-    WHERE FL.UID = #{uid}
+    WHERE 1=1
+    	AND FL.UID = #{uid}
+    	AND FL.ENABLED = TRUE
 </select>
 
 <!-- UPDATE -->
@@ -769,18 +771,13 @@
 <!-- dir 조회 -->
 <select id="selectDirectoryByGuid" parameterType="map" resultMap="BnDirectoryMap">
 	SELECT 
-		<include refid="BnDirectoryColumn" />
-		, DA.ACCESS_FLAGS
-	FROM BN_DIRECTORY DR
-	    INNER JOIN BN_DIRECTORY_ACCESS DA ON DR.NO = DA.DIR_NO
+    	<include refid="BnDirectoryColumn" /> 
+    	, P.UID AS PARENT_UID
+    FROM BN_DIRECTORY DR
+    	INNER JOIN BN_DIRECTORY P ON DR.PARENT_NO = P.NO
     WHERE 1=1
-    	AND DR.ENABLED = TRUE 
-    	AND DA.GROUP_NO = #{group.groupNo}
     	AND DR.UID = #{uid}
-    	<if test="group.role.name() != 'Admin' ">
-    	AND BITAND( #{group.accType, typeHandler=com.utime.burrowNest.storage.typeHandler.EAccessTypeTypeHandler}, DA.ACCESS_FLAGS ) = ${@com.utime.burrowNest.storage.vo.EAccessType@Read.getBit()}
-    	</if>
-    ORDER BY DR.NAME
+    	AND DR.ENABLED = TRUE
 </select>
 
 <!-- directory 속한 파일 -->
@@ -790,6 +787,7 @@
 	FROM BN_FILE FL
     WHERE 1=1
     	AND FL.PARENT_NO = #{dirNo}
+    	AND FL.ENABLED = TRUE
 <!--
      	<if test="group.role.name() != 'Admin' ">
     	AND FL.ENABLED = TRUE 
@@ -950,9 +948,50 @@
     		JOIN DIR_PATH dp ON dp.PARENT_NO = p.NO
     	WHERE p.NO != dp.NO
     )
-    SELECT *
-    	FROM DIR_PATH
+    SELECT 
+		NO, PARENT_NO, UID, NAME, LVL
+    FROM DIR_PATH
     ORDER BY LVL DESC
+ </select>
+ 
+ 
+ <!--이름 변경-->
+ <update id="updateName" parameterType="com.utime.burrowNest.storage.vo.AbsPath" >
+ 	UPDATE <choose> <when test="isFile">BN_FILE</when> <otherwise>BN_DIRECTORY</otherwise> </choose> SET
+ 		UPDATE_DATE = CURRENT_TIMESTAMP
+ 		, NAME = #{name}
+ 	WHERE NO = #{no}
+ </update>
+ 
+ 
+ <!-- UID 목록 관련 dir 목록 -->
+ <select id="selectDirectoryByUidList" parameterType="java.util.List" resultMap="BnDirectoryMap">
+	SELECT 
+    	<include refid="BnDirectoryColumn" /> 
+    	, P.UID AS PARENT_UID
+    FROM BN_DIRECTORY DR
+    	INNER JOIN BN_DIRECTORY P ON DR.PARENT_NO = P.NO
+    WHERE 1=1
+    	AND DR.UID IN <foreach collection="list" item="uid" open="(" separator="," close=")">
+                #{uid}
+            </foreach>
+    	AND DR.ENABLED = TRUE
+ </select>
+
+<!-- UID 목록 관련 file 목록 -->
+ <select id="selectFileByUidList" parameterType="java.util.List" resultMap="BnFileMap">
+	SELECT 
+    	<include refid="BnFileColumn" /> 
+    	,DR.UID AS PARENT_UID
+    	,DR.ABSOLUTE_PATH AS DIRECTORY_PATH
+    	,FL.NAME || CASE WHEN FL.EXTENSION IS NOT NULL THEN '.' || FL.EXTENSION ELSE '' END AS FULL_NAME
+    FROM BN_FILE FL 
+    	INNER JOIN BN_DIRECTORY DR ON FL.PARENT_NO = DR.NO
+    WHERE 1=1
+    	AND FL.UID IN <foreach collection="list" item="uid" open="(" separator="," close=")">
+                #{uid}
+            </foreach>
+    	AND FL.ENABLED = TRUE
  </select>
  
 </mapper>

@@ -1,13 +1,16 @@
 package com.utime.burrowNest.storage.dao.impl;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.utime.burrowNest.common.mapper.CommonMapper;
+import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.storage.dao.StorageDao;
 import com.utime.burrowNest.storage.mapper.StorageBasicMapper;
@@ -23,6 +26,7 @@ import com.utime.burrowNest.storage.vo.BnFileExtension;
 import com.utime.burrowNest.storage.vo.BnFileImage;
 import com.utime.burrowNest.storage.vo.BnFileVideo;
 import com.utime.burrowNest.storage.vo.EBnFileType;
+import com.utime.burrowNest.storage.vo.StorageIOItem;
 import com.utime.burrowNest.user.vo.UserVo;
 
 import jakarta.annotation.PostConstruct;
@@ -518,5 +522,42 @@ class StorageDaoImpl implements StorageDao{
 	public List<BnDirectory> getParentDirectoryList(String uid) {
 		
 		return mapper.selectParentDirectoryListByUid(uid);
+	}
+
+	@Override
+	public BnDirectory getDirectory(UserVo user, String uid) {
+
+		return mapper.selectDirectoryByGuid(user.getGroup(), uid);
+	}
+
+	@Override
+	public List<AbsPath> selectStorageItems(UserVo user, List<StorageIOItem> delItems) {
+		final List<AbsPath> result = List.of();
+		
+		final Map<Boolean, List<String>> classifiedUids = delItems.stream()
+			    .collect(Collectors.partitioningBy(
+			        StorageIOItem::isFile,
+			        Collectors.mapping(StorageIOItem::getUid, Collectors.toList())
+			    ));
+
+			// 결과 List<String> 얻기
+		final List<String> dirList = classifiedUids.get(false);
+
+		if( ! BurrowUtils.isEmpty(dirList) ) {
+			result.addAll( mapper.selectDirectoryByUidList(dirList) );
+		}
+		
+		final List<String> fileList = classifiedUids.get(true);
+		if( ! BurrowUtils.isEmpty(fileList) ) {
+			result.addAll( mapper.selectFileByUidList(fileList) );
+		}
+
+		return result;
+	}
+
+	@Override
+	public int updateRename(AbsPath path) throws Exception {
+		
+		return mapper.updateName( path );
 	}
 }

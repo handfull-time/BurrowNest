@@ -1,11 +1,13 @@
 package com.utime.burrowNest.storage.mapper;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.utime.burrowNest.common.vo.BinResultVo;
+import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
 import com.utime.burrowNest.storage.vo.BnFileArchive;
@@ -353,6 +355,27 @@ public interface StorageMapper {
 	 * @return
 	 */
 	List<BnDirectory> selectParentDirectoryListByUid(@Param("uid") String uid);
+
+	/**
+	 * 이름 변경
+	 * @param path
+	 * @return
+	 */
+	int updateName(AbsPath path);
+
+	/**
+	 * UID 목록 관련 dir 목록
+	 * @param dirList
+	 * @return
+	 */
+	List<BnDirectory> selectDirectoryByUidList(List<String> dirList);
+
+	/**
+	 * UID 목록 관련 file 목록
+	 * @param fileList
+	 * @return
+	 */
+	List<BnFile> selectFileByUidList(List<String> fileList);
 	
 }
 

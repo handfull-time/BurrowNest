@@ -1,6 +1,10 @@
 package com.utime.burrowNest.storage.service.impl;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +22,7 @@ import com.utime.burrowNest.storage.util.StorageUtils;
 import com.utime.burrowNest.storage.vo.AbsPath;
 import com.utime.burrowNest.storage.vo.BnDirectory;
 import com.utime.burrowNest.storage.vo.BnFile;
+import com.utime.burrowNest.storage.vo.EStorageIOMode;
 import com.utime.burrowNest.storage.vo.PasteItem;
 import com.utime.burrowNest.storage.vo.RenameItem;
 import com.utime.burrowNest.storage.vo.StorageIOItem;
@@ -237,9 +242,47 @@ class StorageServiceImpl implements StorageService {
 			return result;
 		}
 		
-		// TODO: 복사/이동 작업 구현 필요
+		if( pasteItem.getMode() == EStorageIOMode.Copy ) {
+			// 복사
+			for( StorageIOItem item : pasteItem.getList() ) {
+				this.copyStorage( user, dir, item);
+			}
+		}else {
+			// 이동
+			for( StorageIOItem item : pasteItem.getList() ) {
+				this.moveStorage( user, dir, item);
+			}
+		}
 		
 		return result;
+	}
+
+	private void moveStorage(UserVo user, BnDirectory dir, StorageIOItem item) {
+		
+		AbsPath pathItem = storageDao.selectStorageItem(user, item);
+		
+		final Path sourceBase = Paths.get(pathItem.getAbsolutePath(), pathItem.getName());
+		final Path targetBase = Paths.get(dir.getAbsolutePath(), dir.getName());
+
+	    try {
+//	        for (PasteItem item : req.getItems()) {
+	            //Path source = sourceBase.resolve(item.getName()).normalize();
+	            //Path target = targetBase.resolve(item.getName()).normalize();
+	            
+		if( item.isFile() ) {
+			Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+		} else {
+			FileUtils.copyDirectory(source, target);
+		}
+	}
+
+	private void copyStorage(UserVo user, BnDirectory dir, StorageIOItem item) {
+		if( item.isFile() ) {
+	        Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+		} else {
+			FileUtils.copyDirectory(source, target);
+		}
+		
 	}
 
 	@Override
