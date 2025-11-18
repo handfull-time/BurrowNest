@@ -964,8 +964,8 @@
  </update>
  
  
- <!-- UID 목록 관련 dir 목록 -->
- <select id="selectDirectoryByUidList" parameterType="java.util.List" resultMap="BnDirectoryMap">
+<!-- UID 목록 관련 dir 목록 -->
+<select id="selectDirectoryByUidList" parameterType="java.util.List" resultMap="BnDirectoryMap">
 	SELECT 
     	<include refid="BnDirectoryColumn" /> 
     	, P.UID AS PARENT_UID
@@ -976,10 +976,10 @@
                 #{uid}
             </foreach>
     	AND DR.ENABLED = TRUE
- </select>
+</select>
 
 <!-- UID 목록 관련 file 목록 -->
- <select id="selectFileByUidList" parameterType="java.util.List" resultMap="BnFileMap">
+<select id="selectFileByUidList" parameterType="java.util.List" resultMap="BnFileMap">
 	SELECT 
     	<include refid="BnFileColumn" /> 
     	,DR.UID AS PARENT_UID
@@ -992,6 +992,245 @@
                 #{uid}
             </foreach>
     	AND FL.ENABLED = TRUE
- </select>
+</select>
+ 
+<!--파일 복사. 새로 추가 됨.-->
+<insert id="insertCopyFile" parameterType="com.utime.burrowNest.storage.vo.BnFile">
+	
+	<selectKey resultType="long" keyProperty="no" order="AFTER"> 
+		SELECT IDENTITY()
+	</selectKey>
+		
+    INSERT INTO BN_FILE (
+    	REG_DATE
+    	, UPDATE_DATE
+    	, ENABLED
+    	, PARENT_NO
+    	, OWNER_NO
+    	, FILE_LENGTH
+    	, FILE_TYPE
+    	, CREATION
+    	, LAST_MODIFIED
+    	, EXTENSION
+    	, NAME
+    ) SELECT 
+    	CURRENT_TIMESTAMP
+    	, CURRENT_TIMESTAMP
+    	, ENABLED
+    	, #{parentNo}
+    	, OWNER_NO
+    	, FILE_LENGTH
+    	, FILE_TYPE
+    	, CREATION
+    	, LAST_MODIFIED
+    	, EXTENSION
+    	, NAME
+    FROM BN_FILE
+	WHERE NO = #{no}
+</insert>
+
+<!--문서 정보 복사 추가.-->
+<insert id="insertCopyFileDocumentByFileNo" parameterType="map">
+	INSERT BN_FILE_DOCUMENT INTO(
+    	FILE_NO 
+    	, UPDATE_DATE
+    	, TITLE
+		, SUBJECT
+		, CREATOR
+		, LAST_MODIFIED_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, KEYWORDS
+		, DESCRIPTION
+		, HEADING_PAIRS
+		, COMPANY
+	) 
+	SELECT 
+    	#{dst} 
+    	, UPDATE_DATE
+    	, TITLE
+		, SUBJECT
+		, CREATOR
+		, LAST_MODIFIED_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, KEYWORDS
+		, DESCRIPTION
+		, HEADING_PAIRS
+		, COMPANY
+    FROM BN_FILE_DOCUMENT
+    WHERE FILE_NO = #{src}
+</insert>
+
+<!--이미지 정보 복사 추가.-->
+<insert id="insertCopyFileImageByFileNo" parameterType="map">
+	INSERT BN_FILE_IMAGE INTO(
+    	FILE_NO
+    	, UPDATE_DATE
+        , MAKE
+		, CAMERA_MODEL_NAME 
+		, ORIENTATION 
+		, F_NUMBER 
+		, EXPOSURE_TIME 
+		, SENSING_METHOD 
+		, FLASH 
+		, LIGHT_SOURCE 
+		, WHITE_BALANCE
+		, SHUTTER_SPEED 
+		, ISO 
+		, IMAGE_WIDTH 
+		, IMAGE_HEIGHT
+		, CREATE_DATE
+		, MODIFY_DATE
+		, GPS_LATITUDE
+		, GPS_LONGITUDE
+	) SELECT 
+    	#{dst}
+    	, UPDATE_DATE
+        , MAKE
+		, CAMERA_MODEL_NAME 
+		, ORIENTATION 
+		, F_NUMBER 
+		, EXPOSURE_TIME 
+		, SENSING_METHOD 
+		, FLASH 
+		, LIGHT_SOURCE 
+		, WHITE_BALANCE
+		, SHUTTER_SPEED 
+		, ISO 
+		, IMAGE_WIDTH 
+		, IMAGE_HEIGHT
+		, CREATE_DATE
+		, MODIFY_DATE
+		, GPS_LATITUDE
+		, GPS_LONGITUDE
+    FROM BN_FILE_IMAGE
+    WHERE FILE_NO = #{src}
+</insert>
+
+<!--영상 정보 복사 추가.-->
+<insert id="insertCopyFileVideoByFileNo" parameterType="map">
+	INSERT BN_FILE_VIDEO INTO(
+    	FILE_NO
+        , UPDATE_DATE
+        , MIME_TYPE
+		, AUTHOR 
+		, DURATION
+		, PREFERRED_RATE 
+		, PREFERRED_VOLUME 
+		, AUDIO_FORMAT 
+		, AUDIO_BITS_PER_SAMPLE 
+		, AUDIO_SAMPLE_RATE 
+		, LAYOUT_FLAGS 
+		, AUDIO_CHANNELS
+		, COMPRESSOR_VERSION 
+		, CAMERA_MODEL_NAME 
+		, FIRMWARE_VERSION 
+		, AVG_BITRATE 
+		, ROTATION 
+		, IMAGE_WIDTH 
+		, IMAGE_HEIGHT 
+		, CREATE_DATE 
+		, MODIFY_DATE 
+		, GPS_LATITUDE 
+		, GPS_LONGITUDE 
+	) SELECT 
+    	#{dst}
+        , UPDATE_DATE
+        , MIME_TYPE
+		, AUTHOR 
+		, DURATION
+		, PREFERRED_RATE 
+		, PREFERRED_VOLUME 
+		, AUDIO_FORMAT 
+		, AUDIO_BITS_PER_SAMPLE 
+		, AUDIO_SAMPLE_RATE 
+		, LAYOUT_FLAGS 
+		, AUDIO_CHANNELS
+		, COMPRESSOR_VERSION 
+		, CAMERA_MODEL_NAME 
+		, FIRMWARE_VERSION 
+		, AVG_BITRATE 
+		, ROTATION 
+		, IMAGE_WIDTH 
+		, IMAGE_HEIGHT 
+		, CREATE_DATE 
+		, MODIFY_DATE 
+		, GPS_LATITUDE 
+		, GPS_LONGITUDE 
+    FROM 
+        BN_FILE_VIDEO
+    WHERE FILE_NO = #{src}
+</insert>
+
+<!--소리 정보 복사 추가.-->
+<insert id="insertCopyFileAudioByFileNo" parameterType="map">
+	INSERT BN_FILE_AUDIO INTO(
+    	FILE_NO
+        , UPDATE_DATE
+        , MIME_TYPE
+		, SAMPLE_RATE  
+		, CHANNELS
+		, BITS_PER_SAMPLE
+		, TOTAL_SAMPLES
+		, TITLE
+		, ARTIST
+		, ALBUM
+		, GENRE
+		, ALBUM_ARTIST
+		, DISCNUMBER
+		, ALBUM_DATE
+		, ORGANIZATION
+		, TRACK_NUMBER
+		, DURATION
+	) SELECT 
+    	#{dst}
+        , UPDATE_DATE
+        , MIME_TYPE
+		, SAMPLE_RATE  
+		, CHANNELS
+		, BITS_PER_SAMPLE
+		, TOTAL_SAMPLES
+		, TITLE
+		, ARTIST
+		, ALBUM
+		, GENRE
+		, ALBUM_ARTIST
+		, DISCNUMBER
+		, ALBUM_DATE
+		, ORGANIZATION
+		, TRACK_NUMBER
+		, DURATION
+    FROM BN_FILE_AUDIO
+    WHERE FILE_NO = #{src}
+</insert>
+
+<!--압축 정보 복사 추가.-->
+<insert id="insertCopyFileArchiveByFileNo" parameterType="map">
+	INSERT BN_FILE_ARCHIVE INTO(
+    	FILE_NO
+        , UPDATE_DATE
+        , ARCHIVE_FORMAT
+        , TOTAL_ENTRIES
+        , UNCOMPRESSED_SIZE
+        , COMPRESSION_RATIO
+        , ENCRYPTED
+        , PASSWORD_PROTECTED
+        , COMMENT
+	) SELECT
+        #{dst}
+        , UPDATE_DATE
+        , ARCHIVE_FORMAT
+        , TOTAL_ENTRIES
+        , UNCOMPRESSED_SIZE
+        , COMPRESSION_RATIO
+        , ENCRYPTED
+        , PASSWORD_PROTECTED
+        , COMMENT
+    FROM BN_FILE_ARCHIVE
+    WHERE FILE_NO = #{src}
+</insert>
+
+
  
 </mapper>

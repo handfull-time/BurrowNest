@@ -1,6 +1,5 @@
 package com.utime.burrowNest.storage.mapper;
 
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
@@ -15,7 +14,6 @@ import com.utime.burrowNest.storage.vo.BnFileAudio;
 import com.utime.burrowNest.storage.vo.BnFileDocument;
 import com.utime.burrowNest.storage.vo.BnFileImage;
 import com.utime.burrowNest.storage.vo.BnFileVideo;
-import com.utime.burrowNest.storage.vo.BnPathAccess;
 import com.utime.burrowNest.user.vo.GroupVo;
 
 @Mapper
@@ -376,6 +374,53 @@ public interface StorageMapper {
 	 * @return
 	 */
 	List<BnFile> selectFileByUidList(List<String> fileList);
+
+	/**
+	 * 파일 복사. 새로 추가 됨.
+	 * @param file
+	 * @return
+	 */
+	int insertCopyFile(BnFile file);
+
+	/**
+	 * 문서 정보 복사 추가.
+	 * @param src
+	 * @param dst
+	 * @return
+	 */
+	int insertCopyFileDocumentByFileNo(@Param("src")long src, @Param("dst")long dst);
+
+	/**
+	 * 이미지 정보 복사 추가.
+	 * @param src
+	 * @param dst
+	 * @return
+	 */
+	int insertCopyFileImageByFileNo(@Param("src")long src, @Param("dst")long dst);
+
+	/**
+	 * 영상 정보 복사 추가.
+	 * @param src
+	 * @param dst
+	 * @return
+	 */
+	int insertCopyFileVideoByFileNo(@Param("src")long src, @Param("dst")long dst);
+
+	/**
+	 * 소리 정보 복사 추가.
+	 * @param src
+	 * @param dst
+	 * @return
+	 */
+	int insertCopyFileAudioByFileNo(@Param("src")long src, @Param("dst")long dst);
+
+	/**
+	 * 압축 정보 복사 추가.
+	 * @param src
+	 * @param dst
+	 * @return
+	 */
+	int insertCopyFileArchiveByFileNo(@Param("src")long src, @Param("dst")long dst);
 	
 }
 

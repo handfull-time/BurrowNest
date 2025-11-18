@@ -425,6 +425,32 @@ class StorageDaoImpl implements StorageDao{
 		
 		return result == null? null:result.getBinary();
 	}
+	
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public int copyFile(BnFile file, UserVo user) throws Exception {
+		
+		int result = 0;
+		
+		final long srcFileNo = file.getNo();
+		
+		result += mapper.insertCopyFile( file );
+		
+		final long dstFileNo = file.getNo();
+		
+		log.info( "File copy : {} -> {}", srcFileNo, dstFileNo);
+		
+		switch( file.getFileType() ) {
+		case Basic: result += 0; break;
+		case Document: result += mapper.insertCopyFileDocumentByFileNo(srcFileNo, dstFileNo); break;
+		case Image: result += mapper.insertCopyFileImageByFileNo(srcFileNo, dstFileNo); break;
+		case Video: result += mapper.insertCopyFileVideoByFileNo(srcFileNo, dstFileNo); break;
+		case Audio: result += mapper.insertCopyFileAudioByFileNo(srcFileNo, dstFileNo); break;
+		case Archive: result += mapper.insertCopyFileArchiveByFileNo(srcFileNo, dstFileNo); break;
+		}
+		
+		return result;
+	}
 
 //	@Override
 //	public DirectoryDto getRootDirectory(UserVo user) {
@@ -531,10 +557,10 @@ class StorageDaoImpl implements StorageDao{
 	}
 
 	@Override
-	public List<AbsPath> selectStorageItems(UserVo user, List<StorageIOItem> delItems) {
+	public List<AbsPath> selectStorageItems(UserVo user, List<StorageIOItem> items) {
 		final List<AbsPath> result = List.of();
 		
-		final Map<Boolean, List<String>> classifiedUids = delItems.stream()
+		final Map<Boolean, List<String>> classifiedUids = items.stream()
 			    .collect(Collectors.partitioningBy(
 			        StorageIOItem::isFile,
 			        Collectors.mapping(StorageIOItem::getUid, Collectors.toList())
@@ -552,6 +578,21 @@ class StorageDaoImpl implements StorageDao{
 			result.addAll( mapper.selectFileByUidList(fileList) );
 		}
 
+		return result;
+	}
+	
+	@Override
+	public AbsPath selectStorageItem(UserVo user, StorageIOItem item) {
+		
+		AbsPath result = null;
+		if( item.isFile() ) {
+			final List<BnFile> list = mapper.selectFileByUidList(List.of(item.getUid()));
+			result = BurrowUtils.isEmpty(list)? null:list.get(0);
+		} else {
+			final List<BnDirectory> list = mapper.selectDirectoryByUidList(List.of(item.getUid()));
+			result = BurrowUtils.isEmpty(list)? null:list.get(0);
+		}
+		
 		return result;
 	}
 

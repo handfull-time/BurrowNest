@@ -2,7 +2,6 @@ package com.utime.burrowNest.common.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.AccessDeniedException;
 import java.nio.file.FileSystemException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -25,12 +24,18 @@ public class FileUtils {
      * @throws IOException 예외 발생 시
      */
     public static void copyDirectory(Path sourceDir, Path targetDir) throws IOException {
+    	
         if (!Files.exists(sourceDir) || !Files.isDirectory(sourceDir)) {
             throw new IllegalArgumentException("Source must be an existing directory: " + sourceDir);
+        }
+        
+        if (targetDir.startsWith(sourceDir)) {
+            throw new IllegalArgumentException("targetDir must not be inside sourceDir");
         }
 
         // 디렉토리 복사 수행
         Files.walkFileTree(sourceDir, new SimpleFileVisitor<>() {
+        	
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                 Path relative = sourceDir.relativize(dir);
@@ -45,6 +50,7 @@ public class FileUtils {
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 Path relative = sourceDir.relativize(file);
                 Path targetPath = targetDir.resolve(relative);
+                
                 Files.copy(file, targetPath, StandardCopyOption.REPLACE_EXISTING);
                 return FileVisitResult.CONTINUE;
             }
@@ -53,7 +59,59 @@ public class FileUtils {
 
     // Path 지원 버전
     public static void copyDirectory(String source, String target) throws IOException {
-        copyDirectory(Paths.get(source), Paths.get(target));
+    	FileUtils.copyDirectory(Paths.get(source), Paths.get(target));
+    }
+    
+    /**
+     * 디렉토리 이동
+     *
+     * @param sourceDir 복사할 디렉토리
+     * @param targetDir 대상 디렉토리
+     * @throws IOException 예외 발생 시
+     */
+    public static void moveDirectory(Path sourceDir, Path targetDir) throws IOException {
+    	
+        if (!Files.exists(sourceDir) || !Files.isDirectory(sourceDir)) {
+            throw new IllegalArgumentException("Source must be an existing directory: " + sourceDir);
+        }
+        
+        if (targetDir.startsWith(sourceDir)) {
+            throw new IllegalArgumentException("targetDir must not be inside sourceDir");
+        }
+
+        // 디렉토리 복사 수행
+        Files.walkFileTree(sourceDir, new SimpleFileVisitor<>() {
+        	
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                Path relative = sourceDir.relativize(dir);
+                Path targetPath = targetDir.resolve(relative);
+                
+                if (!Files.exists(targetPath)) {
+                    Files.createDirectories(targetPath);
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Path relative = sourceDir.relativize(file);
+                Path targetPath = targetDir.resolve(relative);
+                
+                Files.move(file, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                return FileVisitResult.CONTINUE;
+            }
+            
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                // 하위 파일/폴더 이동이 끝난 후 원본 디렉토리 삭제
+                if (exc != null) {
+                    throw exc;
+                }
+                Files.delete(dir); // 최종적으로 sourceDir 자체도 여기서 삭제됨
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
     
     /**

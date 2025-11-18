@@ -1,10 +1,14 @@
 package com.utime.burrowNest.storage.service.impl;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -236,8 +240,8 @@ class StorageServiceImpl implements StorageService {
 		
 		final ReturnBasic result = new ReturnBasic();
 		
-		final BnDirectory dir = storageDao.getDirectory( user, pasteItem.getTarget() );
-		if( dir == null ) {
+		final BnDirectory dirTarget = storageDao.getDirectory( user, pasteItem.getTarget() );
+		if( dirTarget == null ) {
 			result.setCodeMessage("E", "존재하지 않는 디렉토리입니다.");
 			return result;
 		}
@@ -245,44 +249,113 @@ class StorageServiceImpl implements StorageService {
 		if( pasteItem.getMode() == EStorageIOMode.Copy ) {
 			// 복사
 			for( StorageIOItem item : pasteItem.getList() ) {
-				this.copyStorage( user, dir, item);
+				this.copyStorage( user, dirTarget, item);
 			}
 		}else {
 			// 이동
 			for( StorageIOItem item : pasteItem.getList() ) {
-				this.moveStorage( user, dir, item);
+				this.moveStorage( user, dirTarget, item);
 			}
 		}
 		
 		return result;
 	}
 
-	private void moveStorage(UserVo user, BnDirectory dir, StorageIOItem item) {
+	private void moveStorage(UserVo user, BnDirectory dirTarget, StorageIOItem item) {
 		
 		AbsPath pathItem = storageDao.selectStorageItem(user, item);
+		if( pathItem == null ) {
+			log.warn("pathItem is null. {}", item.toString());
+			return;
+		}
 		
-		final Path sourceBase = Paths.get(pathItem.getAbsolutePath(), pathItem.getName());
-		final Path targetBase = Paths.get(dir.getAbsolutePath(), dir.getName());
+		final Path target = Paths.get(dirTarget.getAbsolutePath()).resolve(dirTarget.getName()).normalize();
+		
+		final Path source;
+		if( pathItem.isFile() ) {
+			final BnFile f = (BnFile)pathItem;
+			source = Paths.get(f.getDirectoryPath()).resolve(f.getName()).normalize();
+		}else {
+			final BnDirectory d = (BnDirectory)pathItem; 
+			source = Paths.get(d.getAbsolutePath()).resolve(d.getName()).normalize();
+		}
 
-	    try {
-//	        for (PasteItem item : req.getItems()) {
-	            //Path source = sourceBase.resolve(item.getName()).normalize();
-	            //Path target = targetBase.resolve(item.getName()).normalize();
-	            
-		if( item.isFile() ) {
-			Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
-		} else {
-			FileUtils.copyDirectory(source, target);
+		try {
+			if( item.isFile() ) {
+				Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+			} else {
+				FileUtils.moveDirectory(source, target);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
-	private void copyStorage(UserVo user, BnDirectory dir, StorageIOItem item) {
-		if( item.isFile() ) {
-	        Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
-		} else {
-			FileUtils.copyDirectory(source, target);
+	private void copyStorage(UserVo user, BnDirectory dirTarget, StorageIOItem item) {
+		AbsPath pathItem = storageDao.selectStorageItem(user, item);
+		if( pathItem == null ) {
+			log.warn("pathItem is null. {}", item.toString());
+			return;
 		}
 		
+		final Path target = Paths.get(dirTarget.getAbsolutePath()).resolve(dirTarget.getName()).normalize();
+		
+		final Path source;
+		if( pathItem.isFile() ) {
+			final BnFile f = (BnFile)pathItem;
+			source = Paths.get(f.getDirectoryPath()).resolve(f.getName()).normalize();
+		}else {
+			final BnDirectory d = (BnDirectory)pathItem; 
+			source = Paths.get(d.getAbsolutePath()).resolve(d.getName()).normalize();
+		}
+
+		try {
+			if( item.isFile() ) {
+				Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+				try {
+					final BnFile f = (BnFile)pathItem;
+					f.setParentNo(dirTarget.getNo());
+
+					this.storageDao.copyFile(f, user);
+				} catch (Exception e) {
+					log.error("파일 복사 오류", e);
+				}
+			} else {
+			    	
+		        if (!Files.exists(source) || !Files.isDirectory(source)) {
+		            throw new IllegalArgumentException("Source must be an existing directory: " + source);
+		        }
+		        
+		        if (target.startsWith(source)) {
+		            throw new IllegalArgumentException("targetDir must not be inside sourceDir");
+		        }
+
+		        // 디렉토리 복사 수행
+		        Files.walkFileTree(source, new SimpleFileVisitor<>() {
+		        	
+		            @Override
+		            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+		                Path relative = sourceDir.relativize(dir);
+		                Path targetPath = targetDir.resolve(relative);
+		                if (!Files.exists(targetPath)) {
+		                    Files.createDirectories(targetPath);
+		                }
+		                return FileVisitResult.CONTINUE;
+		            }
+
+		            @Override
+		            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+		                Path relative = sourceDir.relativize(file);
+		                Path targetPath = targetDir.resolve(relative);
+		                
+		                Files.copy(file, targetPath, StandardCopyOption.REPLACE_EXISTING);
+		                return FileVisitResult.CONTINUE;
+		            }
+		        });
+			}
+		} catch (IOException e) {
+			log.error("파일 복사 Exception", e);
+		}
 	}
 
 	@Override

@@ -181,12 +181,12 @@ public interface StorageDao {
 	List<BnDirectory> getParentDirectoryList(String uid);
 
 	/**
-	 * 삭제 대상 물리적 경로 조회
+	 * items 데이터 조회
 	 * @param user
-	 * @param delItems
+	 * @param items
 	 * @return
 	 */
-	List<AbsPath> selectStorageItems(UserVo user, List<StorageIOItem> delItems);
+	List<AbsPath> selectStorageItems(UserVo user, List<StorageIOItem> items);
 	
 	/**
 	 * 이름 변경 처리
@@ -194,6 +194,22 @@ public interface StorageDao {
 	 * @return
 	 */
 	int updateRename(AbsPath path)throws Exception;
+
+	/**
+	 * item 데이터 조회
+	 * @param user
+	 * @param item
+	 * @return
+	 */
+	AbsPath selectStorageItem(UserVo user, StorageIOItem item);
+
+	/**
+	 * 파일 복사
+	 * @param f
+	 * @param user
+	 * @return
+	 */
+	int copyFile(BnFile file, UserVo user)throws Exception;
 
 
 }
