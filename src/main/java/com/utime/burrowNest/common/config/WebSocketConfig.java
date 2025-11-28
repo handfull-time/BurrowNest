@@ -80,7 +80,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         	.addInterceptors(hi)
         	.setHandshakeHandler( this.handshakeHandler )
         	.setAllowedOriginPatterns(allowedOriginPatterns)
-        	.withSockJS();
+        	.withSockJS()
+        	.setSessionCookieNeeded(true); // SockJS 세션 쿠키 사용 여부 설정
     }
     
     @Override

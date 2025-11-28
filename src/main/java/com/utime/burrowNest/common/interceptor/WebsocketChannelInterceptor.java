@@ -1,5 +1,7 @@
 package com.utime.burrowNest.common.interceptor;
 
+import java.security.Principal;
+
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -19,12 +21,24 @@ class WebsocketChannelInterceptor implements ChannelInterceptor {
         
     	final StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
-        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+    	if (accessor == null) {
+            return message;
+        }
+
+    	final StompCommand command = accessor.getCommand();
+        if (command == null) {
+            return message;
+        }
+        
+        final Principal user = accessor.getUser(); // HandshakeHandler 에서 만든 Principal
+        log.info("👤 STOMP User: sessionId={}, user={}", accessor.getSessionId(), user != null ? user.getName() : "ANONYMOUS");
+        
+        if (StompCommand.CONNECT.equals(command)) {
             log.info("🔌 STOMP CONNECT: sessionId={}, headers={}",
                      accessor.getSessionId(), accessor.toNativeHeaderMap());
         }
 
-        if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
+        if (StompCommand.DISCONNECT.equals(command)) {
             log.info("❌ STOMP DISCONNECT: sessionId={}", accessor.getSessionId());
         }
 
