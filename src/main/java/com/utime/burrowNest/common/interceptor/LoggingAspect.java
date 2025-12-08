@@ -109,10 +109,10 @@ class LoggingAspect {
 		
 		paramStrBuffer.append(line1).append(lineSepretor);
 		paramStrBuffer.append(RequestValue + startValue).append(lineSepretor);
-		paramStrBuffer.append(RemoteUri + req.getRequestURI()).append(lineSepretor);
-		paramStrBuffer.append(Method + method).append(lineSepretor);
 		paramStrBuffer.append(PackagePath + packageName).append(lineSepretor);
 		paramStrBuffer.append(MethodName + methodName).append(lineSepretor);
+		paramStrBuffer.append(RemoteUri + req.getRequestURI()).append(lineSepretor);
+		paramStrBuffer.append(Method + method).append(lineSepretor);
 		paramStrBuffer.append(ContentType + contentType ).append(lineSepretor);
 		paramStrBuffer.append(UserAgent + req.getHeader(KEY_USER_AGENT) ).append(lineSepretor);
 		paramStrBuffer.append(RemoteAddress + BurrowUtils.getRemoteAddress(req) ).append(lineSepretor);

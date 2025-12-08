@@ -11,8 +11,10 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
@@ -114,7 +116,7 @@ class StorageServiceImpl implements StorageService {
 		
 		// groupNo, directoryUid 로 Directory 목록 조회
 		final List<BnDirectory> dirList = this.storageDao.getDirectories( groupNo, uid );
-		this.existDirecotryList( dirList );
+		this.existDirecotryList(user, uid, dirList);
 		result.addAll( dirList );
 		
 		// groupNo, directoryUid 로 파일 목록 조회
@@ -133,21 +135,87 @@ class StorageServiceImpl implements StorageService {
 		return file;
 	}
 	
-	private void existDirecotryList(List<BnDirectory> list) {
-		if( BurrowUtils.isEmpty(list) ) {
+	private void existDirecotryList(UserVo user, String parentUid, List<BnDirectory> list) {
+		// If list is null, nothing to compare against; attempt to resolve parent directory
+		BnDirectory parentDir = null;
+		if (list != null && !list.isEmpty()) {
+			parentDir = list.get(0);
+		} else if (!BurrowUtils.isEmpty(parentUid)) {
+			parentDir = storageDao.getDirectory(user, parentUid);
+		}
+		
+		if (parentDir == null) {
+			// No parent information available; nothing we can do safely.
 			return;
 		}
 		
-		for( int index=list.size()-1 ; index>=0 ; index-- ) {
-			
-			final BnDirectory item = list.get(index);
-			
-			if( BurrowUtils.isEmpty(item.getAbsolutePath()) ) {
-				continue;
+		final String parentPath = parentDir.getAbsolutePath();
+		if (BurrowUtils.isEmpty(parentPath)) {
+			return;
+		}
+		
+		final File parentFile = new File(parentPath);
+		if (!parentFile.exists() || !parentFile.isDirectory()) {
+			// Parent no longer exists on disk; remove all DB entries in the list
+			if (list == null) return;
+			for (int i = list.size() - 1; i >= 0; i--) {
+				final BnDirectory item = list.get(i);
+				try {
+					storageDao.deleteDirectory(item);
+					list.remove(i);
+				} catch (Exception e) {
+					log.error("Dir 삭제 실패:" + item.getNo(), e);
+				}
 			}
-			
-			final File d = new File( item.getAbsolutePath() );
-			if( ! d.exists() ) {
+			return;
+		}
+		
+		// Build a set of names present in DB
+		final Set<String> dbNames = new HashSet<>();
+		if (list != null) {
+			for (BnDirectory d : list) {
+				if (!BurrowUtils.isEmpty(d.getName())) dbNames.add(d.getName());
+			}
+		}
+		
+		// Scan filesystem for directories
+		final File[] children = parentFile.listFiles(file -> file.isDirectory());
+		if (children == null) {
+			return;
+		}
+		
+		// For directories missing in DB, persist them and add to list
+		for (File f : children) {
+			final String name = f.getName();
+			if (!dbNames.contains(name)) {
+				try {
+					final BnDirectory childDir = StorageUtils.getDirectoryInfo(f);
+					childDir.setEnabled(true);
+					childDir.setPublicAccessible(true);
+					childDir.setParentNo(parentDir.getNo());
+					childDir.setOwnerNo(user.getUserNo());
+					try {
+						if (storageDao.saveDirectory(childDir, user) < 1) {
+							log.warn("Dir 저장 실패: " + childDir);
+						} else {
+							if (list != null) list.add(childDir);
+						}
+					} catch (Exception e) {
+						log.error("디렉토리 저장 실패: " + f.getAbsolutePath(), e);
+					}
+				} catch (Exception e) {
+					log.error("디렉토리 정보 생성 실패: " + f.getAbsolutePath(), e);
+				}
+			}
+		}
+		
+		// Now remove DB entries that no longer have physical directories (original behavior)
+		if (list == null) return;
+		for (int index = list.size() - 1; index >= 0; index--) {
+			final BnDirectory item = list.get(index);
+			if (BurrowUtils.isEmpty(item.getAbsolutePath())) continue;
+			final File d = new File(item.getAbsolutePath(), item.getName());
+			if (!d.exists()) {
 				try {
 					storageDao.deleteDirectory(item);
 					list.remove(index);
@@ -217,7 +285,7 @@ class StorageServiceImpl implements StorageService {
 			result = storageDao.getGroupStorageList( user.getGroup().getGroupNo(), uid );
 		}
 		
-		this.existDirecotryList( result );
+		this.existDirecotryList(user, uid, result);
 		
 		return result;
 	}
@@ -283,7 +351,7 @@ class StorageServiceImpl implements StorageService {
 		try {
 			if( item.isFile() ) {
 				Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
-			} else {
+			}else {
 				FileUtils.moveDirectory(source, target);
 			}
 		} catch (IOException e) {
@@ -291,6 +359,9 @@ class StorageServiceImpl implements StorageService {
 		}
 	}
 
+	/**
+	 * Storage 복사
+	 */
 	private void copyStorage(UserVo user, BnDirectory dirTarget, StorageIOItem item) {
 		AbsPath pathItem = storageDao.selectStorageItem(user, item);
 		if( pathItem == null ) {
@@ -332,11 +403,11 @@ class StorageServiceImpl implements StorageService {
 
 		        // 디렉토리 복사 수행
 		        Files.walkFileTree(source, new SimpleFileVisitor<>() {
-		        	
+			        
 		            @Override
 		            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-		                Path relative = sourceDir.relativize(dir);
-		                Path targetPath = targetDir.resolve(relative);
+		                Path relative = source.relativize(dir);
+		                Path targetPath = target.resolve(relative);
 		                if (!Files.exists(targetPath)) {
 		                    Files.createDirectories(targetPath);
 		                }
@@ -345,8 +416,8 @@ class StorageServiceImpl implements StorageService {
 
 		            @Override
 		            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-		                Path relative = sourceDir.relativize(file);
-		                Path targetPath = targetDir.resolve(relative);
+		                Path relative = source.relativize(file);
+		                Path targetPath = target.resolve(relative);
 		                
 		                Files.copy(file, targetPath, StandardCopyOption.REPLACE_EXISTING);
 		                return FileVisitResult.CONTINUE;
@@ -510,5 +581,3 @@ class StorageServiceImpl implements StorageService {
 	
 	
 }
-
-
