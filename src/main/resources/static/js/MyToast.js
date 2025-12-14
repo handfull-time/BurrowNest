@@ -1,125 +1,159 @@
 // Enum처럼 사용할 객체
 const ToastType = Object.freeze({
-    INFO: "info",
-    SUCCESS: "success",
-    WARNING: "warning",
-    ERROR: "error"
+	INFO: "info",
+	SUCCESS: "success",
+	WARNING: "warning",
+	ERROR: "error",
 });
 
-// 타입별 배경색 매핑
-const ToastColors = {
-    [ToastType.INFO]: "bg-blue-500",
-    [ToastType.SUCCESS]: "bg-green-500",
-    [ToastType.WARNING]: "bg-yellow-500",
-    [ToastType.ERROR]: "bg-red-500"
+// 타입별 스타일(그라데이션/프로그레스 컬러)
+const ToastTheme = {
+	[ToastType.INFO]: {
+		// 반투명 + 그라데이션(유리 느낌)
+		bg: "bg-gradient-to-br from-sky-500/40 via-blue-500/30 to-indigo-600/40",
+		bar: "bg-sky-200/80",
+		ring: "ring-sky-300/30",
+	},
+	[ToastType.SUCCESS]: {
+		bg: "bg-gradient-to-br from-emerald-500/40 via-green-500/30 to-teal-600/40",
+		bar: "bg-emerald-200/80",
+		ring: "ring-emerald-300/30",
+	},
+	[ToastType.WARNING]: {
+		bg: "bg-gradient-to-br from-amber-400/45 via-yellow-500/30 to-orange-500/40",
+		bar: "bg-amber-100/90",
+		ring: "ring-amber-300/30",
+	},
+	[ToastType.ERROR]: {
+		bg: "bg-gradient-to-br from-rose-500/45 via-red-500/30 to-fuchsia-600/40",
+		bar: "bg-rose-100/90",
+		ring: "ring-rose-300/30",
+	},
 };
 
-// ProgressBar 색상 (배경보다 조금 더 진한 색)
-const ProgressBarColors = {
-    [ToastType.INFO]: "bg-blue-600",
-    [ToastType.SUCCESS]: "bg-green-600",
-    [ToastType.WARNING]: "bg-yellow-600",
-    [ToastType.ERROR]: "bg-red-600"
-};
-
+// 토스트 표시
 function showToast(title, message, type = ToastType.INFO, duration = 2000, buttons = [], onClose = null) {
-    // `toastContainer`가 없으면 생성
-    let toastContainer = document.getElementById("toastContainer");
-    if (!toastContainer) {
-        toastContainer = document.createElement("div");
-        toastContainer.id = "toastContainer";
-        toastContainer.className = "fixed inset-0 flex justify-center pointer-events-none items-center z-50";
-        document.body.appendChild(toastContainer);
-    }
 
-    // 잘못된 type 값이 전달되었을 경우 기본값 INFO 사용
-    if (!Object.values(ToastType).includes(type)) {
-        console.warn(`Invalid toast type: "${type}". Defaulting to INFO.`);
-        type = ToastType.INFO;
-    }
-    
-    // 토스트 고유 ID 생성
-    const toastId = `toast-${Date.now()}`;
+	if (message === undefined && typeof title === "string") {
+		message = title;
+		title = "";
+	}
 
-    // 토스트 팝업 생성
-    const toast = document.createElement("div");
-    toast.id = toastId;
-    toast.className = `relative text-white px-6 py-4 rounded-lg shadow-lg text-center ${ToastColors[type]} transition-opacity opacity-0 pointer-events-auto`;
-    toast.style.position = "absolute";
-    toast.style.maxWidth = "400px";
-    toast.style.width = "90%";
-    toast.style.top = "50%";
-    toast.style.left = "50%";
-    toast.style.transform = "translate(-50%, -50%)";
+	// container 생성/획득
+	let toastContainer = document.getElementById("toastContainer");
+	if (!toastContainer) {
+		toastContainer = document.createElement("div");
+		toastContainer.id = "toastContainer";
+		toastContainer.className =
+			"fixed inset-0 z-50 flex items-center justify-center pointer-events-none px-4";
+		document.body.appendChild(toastContainer);
+	}
 
-    // ProgressBar 추가
-    const progressBar = document.createElement("div");
-    progressBar.className = `absolute top-0 left-0 h-[3px] ${ProgressBarColors[type]}`;
-    progressBar.style.width = "100%";
-    progressBar.style.transition = `width linear ${duration}ms`;
+	// type 검증
+	if (!Object.values(ToastType).includes(type)) {
+		console.warn(`Invalid toast type: "${type}". Defaulting to INFO.`);
+		type = ToastType.INFO;
+	}
 
-    // 제목 추가
-    const titleElement = document.createElement("div");
-    titleElement.className = "font-bold text-lg";
-    titleElement.innerText = title;
+	const theme = ToastTheme[type];
 
-    // 내용 추가
-    const messageElement = document.createElement("div");
-    messageElement.className = "text-sm";
-    messageElement.innerText = message;
+	// id 충돌 방지
+	const toastId = `toast-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-    // 버튼 컨테이너 추가
-    const buttonContainer = document.createElement("div");
-    buttonContainer.className = "mt-3 flex justify-center space-x-2";
+	// toast element
+	const toast = document.createElement("div");
+	toast.id = toastId;
 
-    // 버튼 생성 및 이벤트 바인딩
-    buttons.forEach((btn, index) => {
-        const button = document.createElement("button");
-        button.className = "bg-gray-200 text-black px-3 py-1 rounded-md hover:bg-gray-300";
-        button.innerText = btn.label;
-        button.addEventListener("click", () => {
-            btn.onClick(); // 원래 이벤트 실행
-            closeToast(toastId); // Toast 닫기
-        });
-        buttonContainer.appendChild(button);
-    });
+	// container가 중앙정렬하므로 absolute/top/left 불필요
+	toast.className = [
+		"pointer-events-auto",
+		"relative",
+		"w-full max-w-md",
+		"rounded-2xl",
+		"px-6 py-4",
+		"text-gray-900",
+		"shadow-2xl shadow-black/20",
+		"backdrop-blur-md",
+		"ring-1",
+		theme.ring,
+		theme.bg,
 
-    // 요소 추가
-    toast.appendChild(progressBar);
-    toast.appendChild(titleElement);
-    toast.appendChild(messageElement);
-    if (buttons.length > 0) {
-        toast.appendChild(buttonContainer);
-    }
+		// 애니메이션: 살짝 아래에서 올라오며 페이드 인/아웃
+		"opacity-0 translate-y-2 scale-[0.98]",
+		"transition-all duration-200 ease-out",
+	].join(" ");
 
-    // 추가
-    toastContainer.appendChild(toast);
+	// ProgressBar
+	const progressBar = document.createElement("div");
+	progressBar.className = `absolute top-0 left-0 h-[3px] rounded-t-2xl ${theme.bar}`;
+	progressBar.style.width = "100%";
+	progressBar.style.transition = `width linear ${duration}ms`;
 
-    // 애니메이션 효과
-    setTimeout(() => {
-        toast.classList.add("opacity-100");
-        progressBar.style.width = "0%"; // ProgressBar가 점점 줄어듦
-    }, 50);
+	// title
+	const titleElement = document.createElement("div");
+	titleElement.className = "font-semibold text-base tracking-tight text-gray-900 drop-shadow-sm";
+	titleElement.innerText = title ?? "";
 
-    // 자동 제거
-    setTimeout(() => {
-    	closeToast(toastId, onClose);
-    }, duration);
+	// message
+	const messageElement = document.createElement("div");
+	messageElement.className = "mt-1 text-sm text-gray-800 leading-relaxed drop-shadow-sm";
+	messageElement.innerText = message ?? "";
+
+	// buttons
+	const buttonContainer = document.createElement("div");
+	buttonContainer.className = "mt-4 flex justify-center gap-2";
+
+	buttons.forEach((btn) => {
+		const button = document.createElement("button");
+		button.type = "button";
+		button.className =
+			"rounded-lg bg-white/85 px-3 py-1.5 text-sm font-medium text-gray-900 hover:bg-white transition";
+		button.innerText = btn.label ?? "OK";
+		button.addEventListener("click", () => {
+			try {
+				btn.onClick?.();
+			} finally {
+				closeToast(toastId, onClose);
+			}
+		});
+		buttonContainer.appendChild(button);
+	});
+
+	// 조립
+	toast.appendChild(progressBar);
+	toast.appendChild(titleElement);
+	toast.appendChild(messageElement);
+	if (buttons.length > 0) toast.appendChild(buttonContainer);
+
+	toastContainer.appendChild(toast);
+
+	// show animation
+	requestAnimationFrame(() => {
+		toast.classList.remove("opacity-0", "translate-y-2", "scale-[0.98]");
+		toast.classList.add("opacity-100", "translate-y-0", "scale-100");
+		progressBar.style.width = "0%";
+	});
+
+	// auto close
+	const timer = window.setTimeout(() => closeToast(toastId, onClose), duration);
+
+	// 필요 시 외부에서 강제로 닫을 수 있게 반환(선택)
+	return () => {
+		window.clearTimeout(timer);
+		closeToast(toastId, onClose);
+	};
 }
 
-/**
- * 특정 Toast를 닫는 함수 (이벤트 제거 포함)
- */
+// 닫기
 function closeToast(toastId, onClose = null) {
-    const toast = document.getElementById(toastId);
-    if (!toast) return;
+	const toast = document.getElementById(toastId);
+	if (!toast) return;
 
-    // 애니메이션 효과 적용 후 제거
-    toast.classList.remove("opacity-100");
-    setTimeout(() => {
-        toast.remove();
-        if (typeof onClose === "function") {
-            onClose(); // Toast 종료 시 실행할 콜백 함수 실행
-        }
-    }, 300);
+	toast.classList.remove("opacity-100", "translate-y-0", "scale-100");
+	toast.classList.add("opacity-0", "translate-y-2", "scale-[0.98]");
+
+	window.setTimeout(() => {
+		toast.remove();
+		if (typeof onClose === "function") onClose();
+	}, 220);
 }

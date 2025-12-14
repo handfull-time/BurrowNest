@@ -1,11 +1,12 @@
 package com.utime.burrowNest.common.jwt;
 
-import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -13,6 +14,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
@@ -23,6 +25,7 @@ import com.utime.burrowNest.user.vo.ResUserVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -37,374 +40,295 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class JwtProvider {
 
-	private static final long ONE_SECOND = 1000L;
-    private static final long ACCESS_EXPIRATION_TIME = 15L * 60L * ONE_SECOND; // 15분
-    private static final long PAGING_EXPIRATION_TIME = 1L * 24L * 60L * 60L * ONE_SECOND; // 1일
-    private static final long REFRESH_EXPIRATION_TIME = 7L * 24L * 60L * 60L * ONE_SECOND; // 7일
-    
-	/** 엑세스 토큰의 쿠키 이름 */
-    private static final String KeyAccessToken = "accessToken";
-	
-	/** 페이지 갱신 토큰의 쿠키 이름 */
-    private static final String KeyPagingToken = "pagingToken";
+    private static final long ONE_SECOND = 1000L;
+
+    /** 15분 */
+    private static final long ACCESS_EXP_MS  = 15L * 60L * ONE_SECOND;
+    /** 1일 */
+    private static final long PAGING_EXP_MS  = 1L * 24L * 60L * 60L * ONE_SECOND;
+    /** 7일 */
+    private static final long REFRESH_EXP_MS = 7L * 24L * 60L * 60L * ONE_SECOND;
+
+    private static final String COOKIE_ACCESS  = "accessToken";
+    private static final String COOKIE_PAGING  = "pagingToken";
+    private static final String COOKIE_REFRESH = BurrowDefine.KeyRefreshToken;
+
+    private static final String HDR_AUTH = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
+
+    private static final String CLM_IP     = "ReqIp";
+    private static final String CLM_AGENT  = "ReqAgent";
+    private static final String CLM_USERNO = "userNo";
+    private static final String CLM_SID    = "sid"; // 세션/디바이스 바인딩용(선택)
 
     @Value("${jwt.secret}")
     private String secret;
 
     private SecretKey key;
-    
+    private final MacAlgorithm macAlgo = Jwts.SIG.HS256;
+
     @Autowired
     private UserDao userDao;
-    
+
     /**
-     * 암호 알고리즘
+     * IP/UA 바인딩을 강제할지 여부.
+     * 운영 환경에서 IP 변경이 잦으면 false 권장.
      */
-    private final MacAlgorithm macAlgo = Jwts.SIG.HS256;
-    
+    @Value("${jwt.bindRequest:false}")
+    private boolean bindRequest;
+
     /**
-     * JWT 키 상수 관리
+     * HTTPS 환경이면 true 권장(운영 필수급).
+     * request.isSecure() 기준으로 동적으로도 처리 가능하지만,
+     * 프록시/로드밸런서 환경에서 오동작할 수 있어 설정으로 받는 편이 안전합니다.
      */
-    private static class JWT_KEY {
-        static final String AUTHORIZATION = "Authorization";
-        static final String TOKEN_PREFIX = "Bearer ";
-        static final String GUN_KEY = "PS3K91L287C";
-        static final String IP = "ReqIp";
-        static final String AGENT = "ReqAgent";
-        static final String UserNo = "userNo";
-    }
-    
+    @Value("${jwt.cookie.secure:true}")
+    private boolean cookieSecure;
+
     @PostConstruct
     public void init() {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
-    }
-    
-    /**
-     * 해더 값에서 인증 토큰 추출
-     * @param request
-     * @return
-     */
-    private String getAuthToken( HttpServletRequest request ) {
+        final byte[] secretBytes = secret == null ? new byte[0] : secret.getBytes(StandardCharsets.UTF_8);
 
-    	return Optional.ofNullable(request.getHeader(JWT_KEY.AUTHORIZATION))
-                .filter(header -> header.startsWith(JWT_KEY.TOKEN_PREFIX))
-                .map(header -> header.substring(JWT_KEY.TOKEN_PREFIX.length()))
-                .orElseGet(() -> getCookieValue(request, JwtProvider.KeyAccessToken));
+        // HS256은 충분한 키 길이가 필요합니다(너무 짧으면 런타임 예외/약한 키).
+        if (secretBytes.length < 32) {
+            // 운영에서 이 로그는 꼭 눈에 띄게 하는 게 좋습니다.
+            log.warn("jwt.secret 길이가 짧습니다. HS256은 최소 32바이트 이상 권장입니다. (현재: {} bytes)", secretBytes.length);
+        }
+
+        this.key = Keys.hmacShaKeyFor(secretBytes);
     }
-    
+
     /**
-     * 특정 이름의 쿠키 값을 가져오기
+     * Authorization 헤더 또는 accessToken 쿠키에서 JWT 문자열을 가져옵니다.
      */
-    private String getCookieValue(HttpServletRequest request, String key) {
-        if (request.getCookies() == null) return null;
-        
-        return Arrays.stream(request.getCookies())
-                .filter(cookie -> key.equals(cookie.getName()))
-                .map(Cookie::getValue)
-                .findFirst()
-                .orElse(null);
+    private String resolveAccessToken(HttpServletRequest request) {
+        final String header = request.getHeader(HDR_AUTH);
+        if (header != null && header.startsWith(BEARER_PREFIX)) {
+            return header.substring(BEARER_PREFIX.length());
+        }
+        return getCookieValue(request, COOKIE_ACCESS);
     }
-    
-//    /**
-//     * token 유효성 검증
-//     *
-//     * @param token JWT
-//     * @return token 검증 결과
-//     */
-//    private boolean validateToken(String token) {
-//        return Optional.ofNullable(this.getAllClaimsFromToken(token)).isPresent();
-//    }
-	
+
+    private String getCookieValue(HttpServletRequest request, String name) {
+        final Cookie[] cookies = request.getCookies();
+        if (cookies == null) return null;
+
+        for (Cookie c : cookies) {
+            if (name.equals(c.getName())) return c.getValue();
+        }
+        return null;
+    }
+
     /**
-     * JWT에서 모든 Claims 정보 가져오기
+     * JWT 파싱(서명/만료 검증 포함).
+     * - 만료는 ExpiredJwtException으로 분리해서 핸들링 가능하게 함
      */
-    private Claims getAllClaimsFromToken(String token) {
-    	
-    	if( token == null || token.length() < 1 ) {
-    		log.warn("토큰 값 없음");
-    		return null;
-    	}
-    	
+    private Claims parseClaims(String token) {
+        if (token == null || token.isBlank()) return null;
+
         try {
             return Jwts.parser()
                     .verifyWith(key)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
+        } catch (ExpiredJwtException e) {
+            // 만료는 흔한 케이스라 error로 남기지 않는 편이 운영에 유리합니다.
+            log.debug("JWT expired");
+            return null;
         } catch (JwtException e) {
-            log.error("Invalid JWT", e);
+            log.warn("Invalid JWT: {}", e.getMessage());
             return null;
         }
     }
-    
+
     /**
-     * Token 생성 및 쿠키 추가
+     * 토큰 생성.
      */
-    private Cookie createTokenAndCookie(String cookieName, UserVo user, Map<String, Object> claims, long expirationTime, String domain, String path) {
-        
-    	final String token = (user != null)? this.generateToken(user, claims, expirationTime):null;
-        
-    	final Cookie cookie = new Cookie(cookieName, token);
-        cookie.setHttpOnly(true);
-        cookie.setPath(path);
-        cookie.setDomain(domain);
-        cookie.setMaxAge((int) (expirationTime / ONE_SECOND));
-        
-        return cookie;
-    }
-    
-    /**
-     * JWT 생성
-     */
-    private String generateToken(UserVo user, Map<String, Object> claims, long expirationTime) {
-    	
-    	claims.put(JWT_KEY.UserNo, "" + user.getUserNo());
-    	
+    private String generateToken(UserVo user, Map<String, Object> claims, long expMs) {
+        final Map<String, Object> safeClaims = (claims == null) ? new HashMap<>() : new HashMap<>(claims);
+        safeClaims.put(CLM_USERNO, String.valueOf(user.getUserNo()));
+
+        final Instant now = Instant.now();
         return Jwts.builder()
                 .id(user.getId())
-                .claims(claims)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expirationTime))
+                .claims(safeClaims)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plusMillis(expMs)))
                 .signWith(this.key, this.macAlgo)
                 .compact();
     }
-    
+
     /**
-     * IP 및 User-Agent 정보 검증
+     * 쿠키 생성(응답 헤더로 SameSite까지 포함).
      */
-    private boolean validateRequestIpAndAgent(HttpServletRequest request, Claims claims) {
-    	
-    	final String ip = claims.get(JWT_KEY.IP, String.class);
-		final String reqIp = BurrowUtils.getRemoteAddress( request );
-		if( ! reqIp.equals( ip ) ) {
-			log.warn("ip가 서로 다르다. TokenIp:{}, ReqIp:{}", ip, reqIp);
-            return false;
-		}
-		
-		final String agent = claims.get(JWT_KEY.AGENT, String.class);
-		final String reqAgent = request.getHeader(HttpHeaders.USER_AGENT);
-		if( ! reqAgent.equals( agent ) ) {
-			log.warn("USER-AGENT가 서로 다르다. Token User-agent:{}, Req User-agent:{}", agent, reqAgent);
-            return false;
-		}
-		
-//		final String s = claims.get(JWT_KEY.GUN_KEY, String.class);
-		
-		
-    	return true;
+    private void addTokenCookie(HttpServletRequest req, HttpServletResponse res,
+                                String cookieName, String token, long expMs) {
+        final String path = Optional.ofNullable(BurrowDefine.ContextPath).orElse("/");
+        final String domain = req.getServerName(); // 필요 시 설정으로 분리 권장(서브도메인/localhost 이슈)
+
+        final ResponseCookie cookie = ResponseCookie.from(cookieName, token)
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .path(path)
+                .domain(domain)
+                .maxAge(Duration.ofMillis(expMs))
+                .sameSite("Lax") // 대부분의 로그인 쿠키 기본값으로 무난 (요구사항에 따라 Strict/None 조정)
+                .build();
+
+        res.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     /**
-     * <P>JWT에서 사용자 정보 추출</P>
-     * EJwtRole 의 경우 바로 추출이 불가능 하더라. string으로 꺼낸 후 변환 해야 함. -_-;
+     * 쿠키 삭제(표준: maxAge=0 + 빈 값).
      */
-    private UserVo extractUserFromClaims(Claims claims) {
-    	
-    	final String id = claims.getId();
-    	if( id == null || id.length() < 1 ) {
-    		log.warn("ID 정보 없음");
-    		return null;
-    	}
-    	
-    	final UserVo result = userDao.getUserFormIdByProvider( id );
-    	if( result == null ) {
-    		log.warn("ID 일치 정보 없음: " + id);
-    		return result;
-    	}
-    	
-    	if( result.getUserNo() !=  NumberUtils.toInt( claims.get(JWT_KEY.UserNo, String.class) ) ) {
-    		log.warn("회원 정보 불일치\n Cookie UserNo:{}\nDb UserNo:{}", claims.get(JWT_KEY.UserNo, String.class), result.getUserNo());
-    		return null;
-    	}
-    	
-    	return result;
+    private void deleteCookie(HttpServletRequest req, HttpServletResponse res, String cookieName) {
+        final String path = Optional.ofNullable(BurrowDefine.ContextPath).orElse("/");
+        final String domain = req.getServerName();
+
+        final ResponseCookie cookie = ResponseCookie.from(cookieName, "")
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .path(path)
+                .domain(domain)
+                .maxAge(Duration.ZERO)
+                .sameSite("Lax")
+                .build();
+
+        res.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
-//    /**
-//     * 토큰 만료 일자 조회
-//     *
-//     * @param token JWT
-//     * @return 만료 일자
-//     */
-//    public Date getExpirationDateFromToken(final String token) {
-//        return this.getAllClaimsFromToken(token, Claims::getExpiration);
-//    }
-
     /**
-     * 요청으로부터 IP 및 User-Agent 정보 가져오기
+     * 요청 IP/UA 바인딩용 claims 생성(로그 최소화).
      */
-    private Map<String, Object> createPagingClaims(HttpServletRequest request) {
-        
-    	final Map<String, Object> claims = new HashMap<>();
-        
-    	claims.put(JWT_KEY.IP, BurrowUtils.getRemoteAddress(request));
-        claims.put(JWT_KEY.AGENT, request.getHeader(HttpHeaders.USER_AGENT));
-        
-        log.info("요청 정보 : " + claims);
-        
+    private Map<String, Object> createRequestBindClaims(HttpServletRequest request, String sid) {
+        final Map<String, Object> claims = new HashMap<>();
+        claims.put(CLM_IP, BurrowUtils.getRemoteAddress(request));
+        claims.put(CLM_AGENT, request.getHeader(HttpHeaders.USER_AGENT));
+        if (sid != null) claims.put(CLM_SID, sid);
         return claims;
     }
 
     /**
-     * <P>로그인</P>
-     * 로그인에 필요한 토큰 생성
-     * @param request
-     * @param response
-     * @param user
-     * @return
+     * bindRequest=true일 때만 IP/UA 검증 수행.
      */
-	public ReturnBasic procLogin(HttpServletRequest request, HttpServletResponse response, UserVo user) {
-		
-        this.genCookie(request, response, user);
+    private boolean validateRequestBinding(HttpServletRequest request, Claims claims) {
+        if (!bindRequest) return true;
 
-        final Map<String, Object> claims = this.createPagingClaims(request);
-        response.addCookie( this.createTokenAndCookie( BurrowDefine.KeyRefreshToken, 
-        		user, new HashMap<>(claims), 
-        		REFRESH_EXPIRATION_TIME, 
-        		request.getServerName(), BurrowDefine.ContextPath));
+        final String tokenIp = claims.get(CLM_IP, String.class);
+        final String reqIp = BurrowUtils.getRemoteAddress(request);
+        if (tokenIp != null && !tokenIp.equals(reqIp)) {
+            log.warn("Req IP mismatch. token={}, req={}", tokenIp, reqIp);
+            return false;
+        }
+
+        final String tokenAgent = claims.get(CLM_AGENT, String.class);
+        final String reqAgent = request.getHeader(HttpHeaders.USER_AGENT);
+        if (tokenAgent != null && reqAgent != null && !tokenAgent.equals(reqAgent)) {
+            log.warn("Req UA mismatch.");
+            return false;
+        }
+
+        // 한쪽이 null인 경우는 운영 환경에서 종종 있어 “바로 실패”보다 통과가 안전할 때가 많습니다.
+        return true;
+    }
+
+    /**
+     * Claims 기반으로 사용자 로드 + 기본 정합성 체크
+     */
+    private UserVo extractUser(Claims claims) {
+        final String id = claims.getId();
+        if (id == null || id.isBlank()) return null;
+
+        final UserVo user = userDao.getUserFormIdByProvider(id);
+        if (user == null) return null;
+
+        final int tokenUserNo = NumberUtils.toInt(claims.get(CLM_USERNO, String.class), -1);
+        if (tokenUserNo < 0 || user.getUserNo() != tokenUserNo) {
+            log.warn("User mismatch. tokenUserNo={}, dbUserNo={}", tokenUserNo, user.getUserNo());
+            return null;
+        }
+        return user;
+    }
+
+    /**
+     * 로그인: access/paging/refresh 발급
+     */
+    public ReturnBasic procLogin(HttpServletRequest request, HttpServletResponse response, UserVo user) {
+        if (user == null) return new ReturnBasic("E", "사용자 정보 없음");
+
+        // sid: access/paging/refresh 간 연결고리(원하면 더 적극적으로 검증에 사용 가능)
+        final String sid = java.util.UUID.randomUUID().toString();
+
+        final String access = generateToken(user, Map.of(CLM_SID, sid), ACCESS_EXP_MS);
+        addTokenCookie(request, response, COOKIE_ACCESS, access, ACCESS_EXP_MS);
+
+        final String paging = generateToken(user, createRequestBindClaims(request, sid), PAGING_EXP_MS);
+        addTokenCookie(request, response, COOKIE_PAGING, paging, PAGING_EXP_MS);
+
+        final String refresh = generateToken(user, createRequestBindClaims(request, sid), REFRESH_EXP_MS);
+        addTokenCookie(request, response, COOKIE_REFRESH, refresh, REFRESH_EXP_MS);
 
         return new ReturnBasic();
-	}
-	
-	/**
-	 * 토근 쿠키 생성
-	 * @param request
-	 * @param response
-	 * @param user
-	 */
-	private void genCookie(HttpServletRequest request, HttpServletResponse response, UserVo user ) {
-		final String uuid = UUID.randomUUID().toString();
-		final String domain = request.getServerName();
-        
-        {
-        	final Map<String, Object> claims = new HashMap<>();
-        	claims.put(JWT_KEY.GUN_KEY, uuid);
-            response.addCookie( this.createTokenAndCookie( JwtProvider.KeyAccessToken, 
-            		user, new HashMap<>(), 
-            		ACCESS_EXPIRATION_TIME, 
-            		domain, BurrowDefine.ContextPath));
+    }
+
+    /**
+     * Access 만료/부재 시 pagingToken으로 access 재발급(세션 유지용)
+     */
+    public ResUserVo procPagingToken(HttpServletRequest request, HttpServletResponse response) {
+        String token = resolveAccessToken(request);
+        Claims claims = parseClaims(token);
+
+        // access가 없거나 만료/파싱 실패면 paging으로 시도
+        if (claims == null) {
+            token = getCookieValue(request, COOKIE_PAGING);
+            if (token == null) return new ResUserVo("E", "토큰 만료");
+
+            claims = parseClaims(token);
+            if (claims == null) return new ResUserVo("E", "토큰 만료");
         }
 
-        {
-            final Map<String, Object> claims = this.createPagingClaims(request);
-            claims.put(uuid, "" + System.currentTimeMillis());
-            response.addCookie( this.createTokenAndCookie( JwtProvider.KeyPagingToken, 
-            		user, new HashMap<>(claims), 
-            		PAGING_EXPIRATION_TIME, 
-            		domain, BurrowDefine.ContextPath));
+        if (!validateRequestBinding(request, claims)) {
+            return new ResUserVo("E", "유효성 검사 실패");
         }
-	}
-	
-	/**
-	 * 페이징 토큰을 이용해 Access token 작업을 생성한다.
-	 * @param request
-	 * @param response
-	 * @param pagingToken
-	 * @return
-	 */
-	public ResUserVo procPagingToken(HttpServletRequest request, HttpServletResponse response) {
-		
-		boolean isPagingToken = false;
-		String userToken = this.getAuthToken(request);
-		
-		if( userToken == null ) {
-			isPagingToken = true;
-		    userToken = this.getCookieValue(request, JwtProvider.KeyPagingToken);
-		    
-		    if( userToken == null ) {
-		    	log.warn("PagingToken invalid or expired. Redirecting to login.");
-		        return new ResUserVo("E", "토큰 만료");
-		    }
-		}
-    	
-        final Claims claims = this.getAllClaimsFromToken(userToken);
-        if( claims == null ) {
-        	return new ResUserVo("E", "토큰으로부터 데이터 추출 실패");
-        }
-        
-        if( isPagingToken ) {
-	        if ( ! this.validateRequestIpAndAgent(request, claims)) { 
-	        	return new ResUserVo("E", "유효성 검사 실패");
-	        }
-        }
+
+        final UserVo user = extractUser(claims);
+        if (user == null) return new ResUserVo("E", "사용자 정보 불일치");
+
+        // 재발급(rotate sid까지 하고 싶으면 procLogin으로 돌려도 됨)
+        final String sid = claims.get(CLM_SID, String.class);
+        final String newAccess = generateToken(user, sid == null ? null : Map.of(CLM_SID, sid), ACCESS_EXP_MS);
+        addTokenCookie(request, response, COOKIE_ACCESS, newAccess, ACCESS_EXP_MS);
 
         final ResUserVo result = new ResUserVo();
-        final UserVo user = this.extractUserFromClaims(claims);
         result.setUser(user);
-        
-        this.genCookie(request, response, user);
-
         return result;
-	}
+    }
 
-	/**
-	 * 로그 아웃 처리
-	 * @param request
-	 * @param response
-	 */
-	public void procLogout(HttpServletRequest request, HttpServletResponse response) {
-		
-		boolean isPagingToken = false;
-		String userToken = this.getAuthToken(request);
-		
-		if( userToken == null ) {
-			isPagingToken = true;
-		    userToken = this.getCookieValue(request, JwtProvider.KeyPagingToken);
-		    
-		    if( userToken == null ) {
-		    	log.warn("PagingToken invalid or expired. Redirecting to login.");
-		    	return;
-		    }
-		}
-    	
-        final Claims claims = this.getAllClaimsFromToken(userToken);
-        if( claims == null ) {
-        	log.warn("토큰 정보 추출 실패");
-        	return;
-        }
-        
-        if( isPagingToken ) {
-	        if ( ! this.validateRequestIpAndAgent(request, claims)) {
-	        	log.warn("토큰 유효하지 않음");
-	        	return;
-	        }
+    /**
+     * Refresh로 재로그인(Access 재발급)
+     */
+    public ReturnBasic procRefresh(HttpServletRequest request, HttpServletResponse response, String refreshToken) {
+        final Claims claims = parseClaims(refreshToken);
+        if (claims == null) return new ReturnBasic("E", "토큰 만료");
+
+        if (!validateRequestBinding(request, claims)) {
+            return new ReturnBasic("E", "유효성 검사 실패");
         }
 
-        final UserVo user = this.extractUserFromClaims(claims);
+        final UserVo user = extractUser(claims);
+        if (user == null) return new ReturnBasic("E", "사용자 정보 불일치");
 
-        final String contextPath = request.getContextPath();
-        final String domain = request.getServerName();
-		log.info("로그아웃 처리 - " + user.getId());
-        
-		response.addCookie( this.createTokenAndCookie( JwtProvider.KeyAccessToken, 
-        		null, null, 
-        		ONE_SECOND, 
-        		domain, contextPath));
-        
-        response.addCookie( this.createTokenAndCookie( JwtProvider.KeyPagingToken, 
-        		null, null, 
-        		ONE_SECOND, 
-        		domain, contextPath));
-        
-        response.addCookie( this.createTokenAndCookie( BurrowDefine.KeyRefreshToken, 
-        		user, new HashMap<>(claims), 
-        		REFRESH_EXPIRATION_TIME, 
-        		domain, contextPath));
-		
-	}
+        // refresh까지 같이 rotate하려면 procLogin 호출이 가장 단순
+        return procLogin(request, response, user);
+    }
 
-	public ReturnBasic procRefresh(HttpServletRequest request, HttpServletResponse response, String refreshToken) {
-		final Claims claims = this.getAllClaimsFromToken(refreshToken);
-        if( claims == null ) {
-        	return new ReturnBasic("E", "토큰으로부터 데이터 추출 실패");
-        }
-        
-        if ( ! this.validateRequestIpAndAgent(request, claims)) { 
-        	return new ReturnBasic("E", "유효성 검사 실패");
-        }
-
-        final UserVo user = this.extractUserFromClaims(claims);
-
-        return this.procLogin(request, response, user);
-	}
-
+    /**
+     * 로그아웃: access/paging/refresh 모두 삭제
+     */
+    public void procLogout(HttpServletRequest request, HttpServletResponse response) {
+        deleteCookie(request, response, COOKIE_ACCESS);
+        deleteCookie(request, response, COOKIE_PAGING);
+        deleteCookie(request, response, COOKIE_REFRESH);
+    }
 }

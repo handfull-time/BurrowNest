@@ -137,24 +137,24 @@ class StorageServiceImpl implements StorageService {
 	
 	private void existDirecotryList(UserVo user, String parentUid, List<BnDirectory> list) {
 		// If list is null, nothing to compare against; attempt to resolve parent directory
-		BnDirectory parentDir = null;
+		BnDirectory currentDir = null;
 		if (list != null && !list.isEmpty()) {
-			parentDir = list.get(0);
+			currentDir = list.get(0);
 		} else if (!BurrowUtils.isEmpty(parentUid)) {
-			parentDir = storageDao.getDirectory(user, parentUid);
+			currentDir = storageDao.getDirectory(user, parentUid);
 		}
 		
-		if (parentDir == null) {
+		if (currentDir == null) {
 			// No parent information available; nothing we can do safely.
 			return;
 		}
 		
-		final String parentPath = parentDir.getAbsolutePath();
-		if (BurrowUtils.isEmpty(parentPath)) {
+		final String currentPath = currentDir.getAbsolutePath();
+		if (BurrowUtils.isEmpty(currentPath)) {
 			return;
 		}
 		
-		final File parentFile = new File(parentPath);
+		final File parentFile = new File(currentPath).getParentFile();
 		if (!parentFile.exists() || !parentFile.isDirectory()) {
 			// Parent no longer exists on disk; remove all DB entries in the list
 			if (list == null) return;
@@ -184,37 +184,37 @@ class StorageServiceImpl implements StorageService {
 			return;
 		}
 		
-		// For directories missing in DB, persist them and add to list
-		for (File f : children) {
-			final String name = f.getName();
-			if (!dbNames.contains(name)) {
-				try {
-					final BnDirectory childDir = StorageUtils.getDirectoryInfo(f);
-					childDir.setEnabled(true);
-					childDir.setPublicAccessible(true);
-					childDir.setParentNo(parentDir.getNo());
-					childDir.setOwnerNo(user.getUserNo());
-					try {
-						if (storageDao.saveDirectory(childDir, user) < 1) {
-							log.warn("Dir 저장 실패: " + childDir);
-						} else {
-							if (list != null) list.add(childDir);
-						}
-					} catch (Exception e) {
-						log.error("디렉토리 저장 실패: " + f.getAbsolutePath(), e);
-					}
-				} catch (Exception e) {
-					log.error("디렉토리 정보 생성 실패: " + f.getAbsolutePath(), e);
-				}
-			}
-		}
+//		// For directories missing in DB, persist them and add to list
+//		for (File f : children) {
+//			final String name = f.getName();
+//			if (!dbNames.contains(name)) {
+//				try {
+//					final BnDirectory childDir = StorageUtils.getDirectoryInfo(f);
+//					childDir.setEnabled(true);
+//					childDir.setPublicAccessible(true);
+//					childDir.setParentNo(currentDir.getNo());
+//					childDir.setOwnerNo(user.getUserNo());
+//					try {
+//						if (storageDao.saveDirectory(childDir, user) < 1) {
+//							log.warn("Dir 저장 실패: " + childDir);
+//						} else {
+//							if (list != null) list.add(childDir);
+//						}
+//					} catch (Exception e) {
+//						log.error("디렉토리 저장 실패: " + f.getAbsolutePath(), e);
+//					}
+//				} catch (Exception e) {
+//					log.error("디렉토리 정보 생성 실패: " + f.getAbsolutePath(), e);
+//				}
+//			}
+//		}
 		
 		// Now remove DB entries that no longer have physical directories (original behavior)
 		if (list == null) return;
 		for (int index = list.size() - 1; index >= 0; index--) {
 			final BnDirectory item = list.get(index);
-			if (BurrowUtils.isEmpty(item.getAbsolutePath())) continue;
-			final File d = new File(item.getAbsolutePath(), item.getName());
+			if (BurrowUtils.isEmpty(parentFile.getAbsolutePath())) continue;
+			final File d = new File(parentFile.getAbsolutePath(), item.getName());
 			if (!d.exists()) {
 				try {
 					storageDao.deleteDirectory(item);
