@@ -1,20 +1,18 @@
 package com.utime.burrowNest.user.dao.impl;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.utime.burrowNest.admin.service.AdminStorageService;
 import com.utime.burrowNest.common.mapper.CommonMapper;
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.util.CacheIntervalMap;
 import com.utime.burrowNest.common.util.Sha256;
 import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.common.vo.EJwtRole;
-import com.utime.burrowNest.root.service.LoadStorageService;
 import com.utime.burrowNest.storage.vo.EAccessType;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.mapper.UserMapper;
@@ -271,5 +269,16 @@ class UserDaoImpl implements UserDao {
 		final BinResultVo result = userMapper.selectProfileImg( userNo );
 		
 		return result;
+	}
+	
+	@Transactional(rollbackFor = Exception.class)
+	public int saveDropboxToken(UserVo member) throws Exception {
+		return userMapper.updateDropboxToken(member);
+	};
+	
+	@Override
+	public List<UserVo> findAllByExpiresAtIsNotNull() {
+		
+		return userMapper.findAllByExpiresAtIsNotNull();
 	}
 }

@@ -16,6 +16,9 @@
 			, DAILY_UPLOAD_LIMIT BIGINT DEFAULT 0  <!-- 하루 업로드 제한 (byte) -->
 			, DAILY_DOWNLOAD_LIMIT BIGINT DEFAULT 0   <!-- 일일 최대 다운로드 용량 -->
 			, MAX_STORAGE_USAGE BIGINT DEFAULT 0  <!-- 저장공간 최대 사용 용량 -->
+			, DROPBOX_ACCESS_TOKEN VARCHAR(128) DEFAULT NULL <!-- 드롭 박스 엑세스 토큰 -->
+			, DROPBOX_REFRESH_TOKEN VARCHAR(128) DEFAULT NULL <!-- 드롭 박스 리플래쉬 토큰 -->
+			, DROPBOX_EXPIRES_AT TIMESTAMP DEFAULT 0 <!-- 드롭 박스 리플래쉬 만료 시간 -->
 			, CONSTRAINT UK_UG_NAME UNIQUE (NAME)
 			, CONSTRAINT CK_UG_ROLE CHECK (ROLE IN ('Admin','User'))
 			, CONSTRAINT CK_UG_FLAGS CHECK (ACCESS_FLAGS BETWEEN 0 AND 15)
@@ -359,6 +362,24 @@
 			, UPDATE_DATE AS LAST_DATE
 		FROM BN_USER_PROFILE_IMG 
 		WHERE USER_NO = #{userNo}
+	</select>
+	
+	<!--드롭박스 토큰 갱신-->
+	<update id="updateDropboxToken" parameterType="com.utime.burrowNest.user.vo.UserVo">
+		UPDATE BN_USER SET
+            UPDATE_DATE = CURRENT_TIMESTAMP
+            , DROPBOX_ACCESS_TOKEN = #{accessToken}
+            , DROPBOX_REFRESH_TOKEN = #{refreshToken}
+            , DROPBOX_EXPIRES_AT = #{expiresAt}
+        WHERE NO = #{userNo}
+	</update>
+	
+	<!--드롭박스 토큰이 있는 사용자 조회-->
+	<select id="findAllByExpiresAtIsNotNull" resultMap="UserVoMap">
+		SELECT 
+            <include refid="UserAllColumn" /> 
+        FROM BN_USER UR
+        WHERE UR.DROPBOX_EXPIRES_AT IS NOT NULL
 	</select>
 	
 </mapper>

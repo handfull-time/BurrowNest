@@ -1,5 +1,6 @@
 package com.utime.burrowNest.user.vo;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 import com.utime.burrowNest.common.util.BurrowUtils;
@@ -38,8 +39,25 @@ public class UserVo {
 	/** 저장공간 최대 사용 용량전체 저장소 제한 (사용자별 quota 등) */
 	long maxStorageUsage;
 	
+	/**
+	 * Dropbox access token
+	 */
+    private String accessToken;
+    /**
+	 * Dropbox refresh token
+	 */
+    private String refreshToken;
+    /**
+     * access token 만료시각 (있으면)
+     */
+    private Instant expiresAt; 
+	
 	@Override
 	public String toString() {
 		return BurrowUtils.toJson(this);
 	}
+	
+	public boolean isConnected() {
+        return accessToken != null && !accessToken.trim().isEmpty();
+    }
 }

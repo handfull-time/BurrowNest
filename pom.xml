@@ -167,6 +167,13 @@
 		  <groupId>com.github.ben-manes.caffeine</groupId>
 		  <artifactId>caffeine</artifactId>
 		</dependency>
+		
+		<!-- Dropbox Java SDK (파일 다운로드/삭제 단계에서 사용) -->
+		<dependency>
+			<groupId>com.dropbox.core</groupId>
+			<artifactId>dropbox-core-sdk</artifactId>
+			<version>7.0.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>

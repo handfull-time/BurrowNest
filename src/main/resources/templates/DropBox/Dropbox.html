@@ -1,0 +1,31 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8"/>
+  <title>Members</title>
+</head>
+<body>
+<h2>멤버</h2>
+
+<form method="post" th:action="@{/Dropbox/members}">
+  <input name="name" placeholder="멤버 이름" required/>
+  <button type="submit">추가</button>
+</form>
+
+<hr/>
+
+<ul>
+  <li th:each="m : ${members}">
+    <b th:text="${m.id}">name</b>
+    <span th:if="${m.connected()}">✅ Dropbox 연결됨</span>
+    <span th:if="${!m.connected()}">❌ 미연결</span>
+
+    <a th:href="@{'/Dropbox/Connect/' + ${m.id} }">Dropbox 연결</a>
+  </li>
+</ul>
+
+<p th:if="${param.error}">
+  오류: <span th:text="${param.error}"></span>
+</p>
+</body>
+</html>

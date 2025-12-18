@@ -1,5 +1,7 @@
 package com.utime.burrowNest.user.mapper;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -171,4 +173,17 @@ public interface UserMapper {
 	 * @return
 	 */
 	BinResultVo selectProfileImg(@Param("userNo") long userNo);
+
+	/**
+	 * 드롭박스 토큰 갱신
+	 * @param member
+	 * @return
+	 */
+	int updateDropboxToken(UserVo member);
+	
+	/**
+	 * 드롭박스 토큰이 있는 사용자 조회
+	 * @return
+	 */
+	List<UserVo> findAllByExpiresAtIsNotNull();
 }

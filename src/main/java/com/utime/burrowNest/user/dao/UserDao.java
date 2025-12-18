@@ -1,5 +1,7 @@
 package com.utime.burrowNest.user.dao;
 
+import java.util.List;
+
 import com.utime.burrowNest.common.vo.BinResultVo;
 import com.utime.burrowNest.user.vo.GroupVo;
 import com.utime.burrowNest.user.vo.LoginReqVo;
@@ -110,5 +112,19 @@ public interface UserDao {
 	 * @return
 	 */
 	BinResultVo getProfileImg(long userNo);
+
+	/**
+	 * Dropbox 토큰 저장
+	 * @param member
+	 * @return
+	 * @throws Exception
+	 */
+	int saveDropboxToken(UserVo member) throws Exception;
+
+	/**
+	 * 드롭박스 토큰이 있는 사용자 조회
+	 * @return
+	 */
+	List<UserVo> findAllByExpiresAtIsNotNull();
 
 }
