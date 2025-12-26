@@ -53,8 +53,8 @@ public class JwtProvider {
     private static final String COOKIE_PAGING  = "pagingToken";
     private static final String COOKIE_REFRESH = BurrowDefine.KeyRefreshToken;
 
-    private static final String HDR_AUTH = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
+//    private static final String HDR_AUTH = "Authorization";
+//    private static final String BEARER_PREFIX = "Bearer ";
 
     private static final String CLM_IP     = "ReqIp";
     private static final String CLM_AGENT  = "ReqAgent";
@@ -74,16 +74,16 @@ public class JwtProvider {
      * IP/UA 바인딩을 강제할지 여부.
      * 운영 환경에서 IP 변경이 잦으면 false 권장.
      */
-    @Value("${jwt.bindRequest:false}")
-    private boolean bindRequest;
+//    @Value("${jwt.bindRequest:false}")
+    private final boolean bindRequest = false;
 
     /**
      * HTTPS 환경이면 true 권장(운영 필수급).
      * request.isSecure() 기준으로 동적으로도 처리 가능하지만,
      * 프록시/로드밸런서 환경에서 오동작할 수 있어 설정으로 받는 편이 안전합니다.
      */
-    @Value("${jwt.cookie.secure:true}")
-    private boolean cookieSecure;
+//    @Value("${jwt.cookie.secure:true}")
+    private final boolean cookieSecure = false;
 
     @PostConstruct
     public void init() {
@@ -102,10 +102,10 @@ public class JwtProvider {
      * Authorization 헤더 또는 accessToken 쿠키에서 JWT 문자열을 가져옵니다.
      */
     private String resolveAccessToken(HttpServletRequest request) {
-        final String header = request.getHeader(HDR_AUTH);
-        if (header != null && header.startsWith(BEARER_PREFIX)) {
-            return header.substring(BEARER_PREFIX.length());
-        }
+//        final String header = request.getHeader(HDR_AUTH);
+//        if (header != null && header.startsWith(BEARER_PREFIX)) {
+//            return header.substring(BEARER_PREFIX.length());
+//        }
         return getCookieValue(request, COOKIE_ACCESS);
     }
 

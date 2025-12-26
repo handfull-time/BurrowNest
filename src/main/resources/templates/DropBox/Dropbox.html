@@ -17,8 +17,8 @@
 <ul>
   <li th:each="m : ${members}">
     <b th:text="${m.id}">name</b>
-    <span th:if="${m.connected()}">✅ Dropbox 연결됨</span>
-    <span th:if="${!m.connected()}">❌ 미연결</span>
+    <span th:if="${m.connected}">✅ Dropbox 연결됨</span>
+    <span th:if="${!m.connected}">❌ 미연결</span>
 
     <a th:href="@{'/Dropbox/Connect/' + ${m.id} }">Dropbox 연결</a>
   </li>

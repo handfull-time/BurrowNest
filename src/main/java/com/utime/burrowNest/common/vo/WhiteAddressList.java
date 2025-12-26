@@ -25,6 +25,7 @@ public class WhiteAddressList {
 			, "/DbConsoleH2/"
 			, "/Test/"
 			, "/BackEvent/"
+			, "/Dropbox/"
 		};
 	
 	public static final Set<String> whiteListPaths = Arrays.stream(AddressList)

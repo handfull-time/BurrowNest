@@ -279,6 +279,10 @@ class UserDaoImpl implements UserDao {
 	@Override
 	public List<UserVo> findAllByExpiresAtIsNotNull() {
 		
+		if( ! common.existTable("BN_USER") ) {
+			return List.of();
+		}
+		
 		return userMapper.findAllByExpiresAtIsNotNull();
 	}
 }

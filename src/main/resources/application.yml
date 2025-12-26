@@ -53,6 +53,11 @@ security:
   pwSaltKey: Pa57242N708B7WO5U
 
 dropbox:
-  client-id: "8t2l5z89fbw2a30"
-  client-secret: "u8vc2a502tsei8o"
-  redirect-uri: "http://localhost:9709/Burrow/Dropbox/OAuth/callback"
+  client-id: 8t2l5z89fbw2a30
+  client-secret: u8vc2a502tsei8o
+  redirect-uri: http://localhost:9709/Burrow/Dropbox/OAuth/callback
+#	redirect-uri: ${DROPBOX_REDIRECT_URI}
+
+
+
+

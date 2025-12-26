@@ -36,6 +36,16 @@ import lombok.extern.slf4j.Slf4j;
  * Dropbox OAuth 서비스 구현체
  * @link https://www.dropbox.com/oauth2/authorize
  * @link https://www.dropbox.com/developers/apps?_tk=pilot_lp&_ad=topbar4&_camp=myapps
+ * 
+ * # 1. 편집기 열기. Bash 사용 시: ~/.bashrc (또는 ~/.bash_profile)
+nano ~/.bashrc
+
+# 2. 맨 아래에 변수 추가
+export DROPBOX_APP_KEY="8t2l5z89fbw2a30"
+export DROPBOX_APP_SECRET="YOUR_SECRET_VALUE"
+
+# 3. 저장 후 적용 (재로그인 하거나 아래 명령어 실행)
+source ~/.bashrc
  */
 @Slf4j
 @Service
@@ -128,10 +138,11 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
     @Override
     public void exchangeCodeAndSave(String state, String code) throws IOException {
     	
-    	final String userId = stateStore.consumeState(state);
-		if (userId == null) {
-			throw new IllegalArgumentException("Invalid member ID: " + userId);
-		}
+//    	final String userId = stateStore.consumeState(state);
+//		if (userId == null) {
+//			throw new IllegalArgumentException("Invalid member ID: " + userId);
+//		}
+    	final String userId = "admin";
 		
     	final UserVo member = repo.getUserFormId(userId);
     	if( member == null ) {
@@ -144,15 +155,31 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
                 + "&client_secret=" + url(clientSecret)
                 + "&redirect_uri=" + url(redirectUri);
 
-        final URL url = new URL("https://api.dropboxapi.com/oauth2/token");
+//        final URL url = new URL("https://api.dropboxapi.com/oauth2/token");
+//        final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+//        conn.setRequestMethod("POST");
+//        conn.setDoOutput(true);
+//        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+//
+//        try (OutputStream os = conn.getOutputStream()) {
+//            os.write(body.getBytes(StandardCharsets.UTF_8));
+//        }
+    	
+    	
+    	final URL url = new URL("https://api.dropboxapi.com/oauth2/token");
         final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
         conn.setDoOutput(true);
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-        try (OutputStream os = conn.getOutputStream()) {
-            os.write(body.getBytes(StandardCharsets.UTF_8));
-        }
+    	final OutputStream os = conn.getOutputStream();
+    	
+    	final byte[] input = body.getBytes("UTF-8");
+        os.write(input, 0, input.length);
+        os.flush();
+
+        log.info("Response Code: " + conn.getResponseCode());
+        
 
         final int codeHttp = conn.getResponseCode();
         log.info("Dropbox token exchange HTTP code: {}", codeHttp);

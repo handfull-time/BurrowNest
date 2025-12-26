@@ -25,7 +25,7 @@ public class DropboxController {
 	private final AdminUserDao repo;
 	private final DropboxOAuthService dropboxService;
 	
-	@GetMapping("/")
+	@GetMapping(path = { "/", "Index.html" })
     public String index(Model model) {
 		List<ManageUserVo> userList = repo.userList(null);
         model.addAttribute("members", userList);
