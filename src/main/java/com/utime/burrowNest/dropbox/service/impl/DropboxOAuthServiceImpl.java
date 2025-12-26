@@ -24,7 +24,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.dropbox.service.DropboxOAuthService;
+import com.utime.burrowNest.dropbox.vo.DropboxTokenVO;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -61,6 +64,8 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
 
     @Value("${dropbox.redirect-uri}")
     private String redirectUri;
+    
+    private final ObjectMapper objectMapper;
 
     private final UserDao repo;
     private final OAuthStateStore stateStore = new OAuthStateStore();
@@ -155,17 +160,6 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
                 + "&client_secret=" + url(clientSecret)
                 + "&redirect_uri=" + url(redirectUri);
 
-//        final URL url = new URL("https://api.dropboxapi.com/oauth2/token");
-//        final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-//        conn.setRequestMethod("POST");
-//        conn.setDoOutput(true);
-//        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-//
-//        try (OutputStream os = conn.getOutputStream()) {
-//            os.write(body.getBytes(StandardCharsets.UTF_8));
-//        }
-    	
-    	
     	final URL url = new URL("https://api.dropboxapi.com/oauth2/token");
         final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
@@ -178,30 +172,26 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
         os.write(input, 0, input.length);
         os.flush();
 
-        log.info("Response Code: " + conn.getResponseCode());
-        
-
         final int codeHttp = conn.getResponseCode();
         log.info("Dropbox token exchange HTTP code: {}", codeHttp);
         final String json = readAll((codeHttp >= 200 && codeHttp < 300) ? conn.getInputStream() : conn.getErrorStream());
         log.info("Dropbox token exchange response: {}", json);
         
-        // 아주 심플 파싱(실무에선 Jackson 권장)
-        final String accessToken = pickJson(json, "access_token");
-        final String refreshToken = pickJson(json, "refresh_token");
-        final String expiresIn = pickJson(json, "expires_in");
+//        // 아주 심플 파싱(실무에선 Jackson 권장)
+//        final String accessToken = pickJson(json, "access_token");
+//        final String refreshToken = pickJson(json, "refresh_token");
+//        final String expiresIn = pickJson(json, "expires_in");
+        final DropboxTokenVO tokenVo = objectMapper.readValue(json, DropboxTokenVO.class);
+        if( tokenVo.getError() != null ) {
+			throw new IllegalStateException("Dropbox token exchange failed: " + json);
+		}
 
-        member.setAccessToken(accessToken);
-        if (refreshToken != null && !refreshToken.isEmpty()) {
-            member.setRefreshToken(refreshToken);
+        member.setAccessToken(tokenVo.getAccessToken());
+        if ( ! BurrowUtils.isEmpty(tokenVo.getRefreshToken() )) {
+            member.setRefreshToken(tokenVo.getRefreshToken());
         }
-        if (expiresIn != null && !expiresIn.isEmpty()) {
-            try {
-                long sec = Long.parseLong(expiresIn);
-                member.setExpiresAt(Instant.now().plusSeconds(sec));
-            } catch (Exception ignored) {}
-        }
-
+        member.setExpiresAt(Instant.now().plusSeconds(tokenVo.getExpiresIn()));
+        
         try {
 			repo.saveDropboxToken(member);
 		} catch (Exception e) {
@@ -240,43 +230,53 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
                 + "&client_id=" + url(clientId)
                 + "&client_secret=" + url(clientSecret);
 
-        URL url = new URL("https://api.dropboxapi.com/oauth2/token");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+//        URL url = new URL("https://api.dropboxapi.com/oauth2/token");
+//        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+//        conn.setRequestMethod("POST");
+//        conn.setDoOutput(true);
+//        conn.setConnectTimeout(15000);
+//        conn.setReadTimeout(15000);
+//        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+//
+//        try (OutputStream os = conn.getOutputStream()) {
+//            os.write(body.getBytes(StandardCharsets.UTF_8));
+//        }
+        
+    	final URL url = new URL("https://api.dropboxapi.com/oauth2/token");
+        final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
         conn.setDoOutput(true);
         conn.setConnectTimeout(15000);
         conn.setReadTimeout(15000);
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-        try (OutputStream os = conn.getOutputStream()) {
-            os.write(body.getBytes(StandardCharsets.UTF_8));
-        }
+    	final OutputStream os = conn.getOutputStream();
+    	
+    	final byte[] input = body.getBytes("UTF-8");
+        os.write(input, 0, input.length);
+        os.flush();
 
-        int codeHttp = conn.getResponseCode();
-        String json = readAll((codeHttp >= 200 && codeHttp < 300) ? conn.getInputStream() : conn.getErrorStream());
+
+        final int codeHttp = conn.getResponseCode();
+        final String json = readAll((codeHttp >= 200 && codeHttp < 300) ? conn.getInputStream() : conn.getErrorStream());
 
         if (codeHttp < 200 || codeHttp >= 300) {
             // 예: refresh_token 폐기/회수/앱 연결 해제 등
             throw new IllegalStateException("refresh failed: " + json);
         }
 
-        String newAccessToken = pickJson(json, "access_token");
-        String expiresIn = pickJson(json, "expires_in"); // 초 단위일 때가 많음
+        final DropboxTokenVO tokenVo = objectMapper.readValue(json, DropboxTokenVO.class);
+        if( tokenVo.getError() != null ) {
+			throw new IllegalStateException("Dropbox token exchange failed: " + json);
+		}
 
-        if (newAccessToken == null || newAccessToken.trim().isEmpty()) {
-            throw new IllegalStateException("refresh response missing access_token: " + json);
+        final String newAccessToken = tokenVo.getAccessToken();
+        if ( BurrowUtils.isEmpty(newAccessToken )) {
+        	throw new IllegalStateException("refresh response missing access_token: " + json);
         }
-
+        
         member.setAccessToken(newAccessToken);
-
-        if (expiresIn != null && !expiresIn.isEmpty()) {
-            try {
-                long sec = Long.parseLong(expiresIn);
-                member.setExpiresAt(Instant.now().plusSeconds(sec));
-            } catch (Exception ignored) {
-                // expires_in 파싱 실패하면 expiresAt은 유지/비움(정책 선택)
-            }
-        }
+        member.setExpiresAt(Instant.now().plusSeconds(tokenVo.getExpiresIn()));
 
         try {
         	repo.saveDropboxToken(member);
@@ -300,23 +300,23 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
         }
     }
 
-    // 매우 단순 JSON 값 추출 (데모용)
-    private static String pickJson(String json, String key) {
-        String pat = "\"" + key + "\":";
-        int i = json.indexOf(pat);
-        if (i < 0) return null;
-        int start = i + pat.length();
-        while (start < json.length() && (json.charAt(start) == ' ')) start++;
-        if (start < json.length() && json.charAt(start) == '"') {
-            int s = start + 1;
-            int e = json.indexOf('"', s);
-            return e > s ? json.substring(s, e) : null;
-        } else {
-            int e = start;
-            while (e < json.length() && "0123456789".indexOf(json.charAt(e)) >= 0) e++;
-            return json.substring(start, e);
-        }
-    }
+//    // 매우 단순 JSON 값 추출 (데모용)
+//    private static String pickJson(String json, String key) {
+//        String pat = "\"" + key + "\":";
+//        int i = json.indexOf(pat);
+//        if (i < 0) return null;
+//        int start = i + pat.length();
+//        while (start < json.length() && (json.charAt(start) == ' ')) start++;
+//        if (start < json.length() && json.charAt(start) == '"') {
+//            int s = start + 1;
+//            int e = json.indexOf('"', s);
+//            return e > s ? json.substring(s, e) : null;
+//        } else {
+//            int e = start;
+//            while (e < json.length() && "0123456789".indexOf(json.charAt(e)) >= 0) e++;
+//            return json.substring(start, e);
+//        }
+//    }
 
     // 간단 state 저장(메모리). 데모용이라 서버 재시작하면 날아갑니다.
     static class OAuthStateStore {
