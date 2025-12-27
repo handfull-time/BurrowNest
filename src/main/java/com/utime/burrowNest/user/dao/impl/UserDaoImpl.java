@@ -237,6 +237,12 @@ class UserDaoImpl implements UserDao {
 	}
 	
 	@Override
+	public UserVo getUserFormUserNo(long userNo) {
+		
+		return userMapper.getUserFormUserNo(userNo);
+	}
+	
+	@Override
 	public UserVo getUserFormIdByProvider(String id) {
 		
 		final UserVo result;
@@ -272,8 +278,8 @@ class UserDaoImpl implements UserDao {
 	}
 	
 	@Transactional(rollbackFor = Exception.class)
-	public int saveDropboxToken(UserVo member) throws Exception {
-		return userMapper.updateDropboxToken(member);
+	public int saveDropboxToken(UserVo user) throws Exception {
+		return userMapper.updateDropboxToken(user);
 	};
 	
 	@Override

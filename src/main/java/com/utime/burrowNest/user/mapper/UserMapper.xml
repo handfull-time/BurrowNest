@@ -66,7 +66,7 @@
 			, DAILY_UPLOAD_LIMIT BIGINT DEFAULT 0 <!-- 하루 업로드 제한 (byte) -->
 			, DAILY_DOWNLOAD_LIMIT BIGINT DEFAULT 0  <!-- 일일 최대 다운로드 용량 -->
 			, MAX_STORAGE_USAGE BIGINT DEFAULT 0 <!-- 저장공간 최대 사용 용량 -->
-			, DROPBOX_ACCESS_TOKEN VARCHAR(128) DEFAULT NULL <!-- 드롭 박스 엑세스 토큰 -->
+			, DROPBOX_ACCESS_TOKEN VARCHAR(1600) DEFAULT NULL <!-- 드롭 박스 엑세스 토큰 -->
 			, DROPBOX_REFRESH_TOKEN VARCHAR(128) DEFAULT NULL <!-- 드롭 박스 리플래쉬 토큰 -->
 			, DROPBOX_EXPIRES_AT TIMESTAMP DEFAULT NULL <!-- 드롭 박스 리플래쉬 만료 시간 -->
 			, CONSTRAINT FK_USER_GROUP FOREIGN KEY (GROUP_NO) REFERENCES BN_USER_GROUP(NO) ON DELETE RESTRICT
@@ -222,6 +222,9 @@
 		, UR.DAILY_UPLOAD_LIMIT 
 		, UR.DAILY_DOWNLOAD_LIMIT 
 		, UR.MAX_STORAGE_USAGE
+        , UR.DROPBOX_ACCESS_TOKEN
+        , UR.DROPBOX_REFRESH_TOKEN
+        , UR.DROPBOX_EXPIRES_AT
 	</sql>
 	
 	<resultMap id="UserVoMap" type="com.utime.burrowNest.user.vo.UserVo">
@@ -236,6 +239,9 @@
 		<result column="DAILY_UPLOAD_LIMIT" property="dailyUploadLimit"/>
 		<result column="DAILY_DOWNLOAD_LIMIT" property="dailyDownloadLimit"/>
 		<result column="MAX_STORAGE_USAGE" property="maxStorageUsage"/>
+		<result column="DROPBOX_ACCESS_TOKEN" property="accessToken"/>
+        <result column="DROPBOX_REFRESH_TOKEN" property="refreshToken"/>
+        <result column="DROPBOX_EXPIRES_AT" property="expiresAt"/>
 		<association 
 			column="{groupNo=GROUP_NO}" 
 			property="group" 
@@ -266,6 +272,14 @@
 			INNER JOIN BN_USER_PW PW
 				ON UR.NO = PW.USER_NO
 		WHERE UR.ID = #{id} AND PW.FAIL_COUNT <![CDATA[ <= ]]> 5
+	</select>
+	
+	<!-- 사용자 조회 -->
+	<select id="getUserFormUserNo" parameterType="map" resultMap="UserVoMap">
+		SELECT 
+			<include refid="UserAllColumn" /> 
+		FROM BN_USER UR 
+		WHERE UR.NO = #{userNo}
 	</select>
 	
 	<!-- 기본 회원 정보 조회 -->
@@ -368,9 +382,9 @@
 	<update id="updateDropboxToken" parameterType="com.utime.burrowNest.user.vo.UserVo">
 		UPDATE BN_USER SET
             UPDATE_DATE = CURRENT_TIMESTAMP
-            , DROPBOX_ACCESS_TOKEN = #{accessToken}
-            , DROPBOX_REFRESH_TOKEN = #{refreshToken}
-            , DROPBOX_EXPIRES_AT = #{expiresAt}
+            , DROPBOX_ACCESS_TOKEN = <choose> <when test="accessToken != null and accessToken.trim() != '' ">#{accessToken}</when> <otherwise>NULL</otherwise> </choose>
+            , DROPBOX_REFRESH_TOKEN = <choose> <when test="refreshToken != null and refreshToken.trim() != '' ">#{refreshToken}</when> <otherwise>NULL</otherwise> </choose>
+            , DROPBOX_EXPIRES_AT = <choose> <when test="expiresAt != null ">#{expiresAt, jdbcType=TIMESTAMP}</when> <otherwise>NULL</otherwise> </choose>
         WHERE NO = #{userNo}
 	</update>
 	

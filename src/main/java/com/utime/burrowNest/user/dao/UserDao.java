@@ -83,6 +83,13 @@ public interface UserDao {
 	 * @return
 	 */
 	UserVo getUserFormId(String id);
+	
+	/**
+	 * 사용자 정보 조회
+	 * @param userNo
+	 * @return
+	 */
+	UserVo getUserFormUserNo(long userNo);
 
 	/**
 	 * 사용자 정보 조회 (캐시 사용 )
@@ -115,11 +122,11 @@ public interface UserDao {
 
 	/**
 	 * Dropbox 토큰 저장
-	 * @param member
+	 * @param user
 	 * @return
 	 * @throws Exception
 	 */
-	int saveDropboxToken(UserVo member) throws Exception;
+	int saveDropboxToken(UserVo user) throws Exception;
 
 	/**
 	 * 드롭박스 토큰이 있는 사용자 조회

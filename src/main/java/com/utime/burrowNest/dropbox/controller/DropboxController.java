@@ -9,9 +9,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.dropbox.core.DbxException;
+import com.dropbox.core.v2.files.Metadata;
 import com.utime.burrowNest.admin.dao.AdminUserDao;
 import com.utime.burrowNest.admin.vo.ManageUserVo;
+import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.dropbox.service.DropboxOAuthService;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -41,9 +45,27 @@ public class DropboxController {
     }
 
     @GetMapping("Connect/{id}")
-    public String connect(@PathVariable String id) {
+    public String connect(@PathVariable String id) throws Exception {
         String url = dropboxService.buildAuthorizeUrl(id);
         return "redirect:" + url;
+    }
+    
+    @ResponseBody
+    @GetMapping("Refresh/{id}")
+    public ReturnBasic Refresh(@PathVariable String id) {
+        return dropboxService.refreshMember(id);
+    }
+    
+    @ResponseBody
+    @GetMapping("All/{id}")
+    public List<Metadata> listAll(@PathVariable String id) throws DbxException {
+    	return dropboxService.listAll(id, null);
+    }
+    
+    @ResponseBody
+    @GetMapping("Unlink/{id}")
+    public ReturnBasic Unlink(@PathVariable String id) throws DbxException {
+    	return dropboxService.unlinkDropbox(id);
     }
     
 	@GetMapping("OAuth/callback")

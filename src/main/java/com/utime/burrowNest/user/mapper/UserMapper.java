@@ -99,6 +99,13 @@ public interface UserMapper {
 	UserVo selectUserId(@Param("id") String id);
 	
 	/**
+	 * 사용자 정보 조회
+	 * @param userNo
+	 * @return
+	 */
+	UserVo getUserFormUserNo(@Param("userNo") long userNo);
+	
+	/**
 	 * 기본 회원 정보 조회
 	 * @param id
 	 * @return
@@ -176,10 +183,10 @@ public interface UserMapper {
 
 	/**
 	 * 드롭박스 토큰 갱신
-	 * @param member
+	 * @param user
 	 * @return
 	 */
-	int updateDropboxToken(UserVo member);
+	int updateDropboxToken(UserVo user);
 	
 	/**
 	 * 드롭박스 토큰이 있는 사용자 조회

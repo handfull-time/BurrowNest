@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.utime.burrowNest.admin.dao.AdminStorageDao;
 import com.utime.burrowNest.admin.vo.SaveSotrageReqVo;
+import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.root.service.LoadStorageService;
 import com.utime.burrowNest.storage.dao.StorageDao;
@@ -319,20 +320,13 @@ class LoadStorageServiceImpl implements LoadStorageService {
 			
 			log.info("FileLoad Complete.");
 			
-			executor.shutdown(); // 작업 제출 중단 (기존 작업은 계속 실행됨)
-
-			boolean finished = false;
-			try {
-				finished = executor.awaitTermination(10000, TimeUnit.SECONDS);
-			} catch (InterruptedException e) {
-				log.error("", e);
-			}
+			BurrowUtils.shutdownAndAwait( executor, 10000, TimeUnit.SECONDS );
 			
-			log.info("파일 로딩 종료 작업 : " + finished);
+			log.info("파일 로딩 종료 작업");
 			executor = null;
 			
 			message.setMessage("작업 완료");
-			message.setDone(finished);
+			message.setDone(true);
 			
 			messagingTemplate.convertAndSendToUser(ifl.wsUserName, KeyToWsFileRecieveStatus, message);
 		}
