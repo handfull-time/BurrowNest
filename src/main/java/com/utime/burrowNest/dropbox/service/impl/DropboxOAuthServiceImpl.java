@@ -11,19 +11,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -32,27 +25,32 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.dropbox.core.DbxAppInfo;
+import com.dropbox.core.DbxAuthFinish;
 import com.dropbox.core.DbxException;
+import com.dropbox.core.DbxRequestConfig;
+import com.dropbox.core.DbxStandardSessionStore;
+import com.dropbox.core.DbxWebAuth;
 import com.dropbox.core.TokenAccessType;
+import com.dropbox.core.oauth.DbxCredential;
+import com.dropbox.core.oauth.DbxOAuthException;
+import com.dropbox.core.oauth.DbxRefreshResult;
 import com.dropbox.core.v2.DbxClientV2;
-import com.dropbox.core.v2.files.DeleteErrorException;
-import com.dropbox.core.v2.files.DeleteResult;
 import com.dropbox.core.v2.files.FileMetadata;
 import com.dropbox.core.v2.files.FolderMetadata;
 import com.dropbox.core.v2.files.ListFolderResult;
 import com.dropbox.core.v2.files.Metadata;
-import com.dropbox.core.v2.teamlog.SfTeamGrantAccessType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utime.burrowNest.common.util.BurrowUtils;
-import com.utime.burrowNest.common.vo.BurrowDefine;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.dropbox.dao.DropboxDao;
 import com.utime.burrowNest.dropbox.service.DropboxOAuthService;
 import com.utime.burrowNest.dropbox.vo.DropboxTokenVO;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.vo.UserVo;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,7 +74,7 @@ source ~/.bashrc
 @RequiredArgsConstructor
 class DropboxOAuthServiceImpl implements DropboxOAuthService {
 
-	private final DropboxSdkClientFactory dropboxClientFactory;
+//	private final DropboxSdkClientFactory dropboxClientFactory;
 
     @Value("${dropbox.client-id}")
     private String appKey;
@@ -91,26 +89,33 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
 
     private final UserDao userDao;
     
-    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+    private final DropboxDao dbxDao;
+    
+//    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
-    private final Map<String, ScheduledFuture<?>> scheduled = new ConcurrentHashMap<>();
+//    private final Map<String, ScheduledFuture<?>> scheduled = new ConcurrentHashMap<>();
 
+    private final DbxRequestConfig config =
+            DbxRequestConfig.newBuilder("BurrowNest/1.0")
+                    .withUserLocale(Locale.getDefault().toLanguageTag())
+                    .build();
+    
 
     // 서버 시작 시 1회만: 기존 멤버들 예약 복구(심플)
-    @PostConstruct
-    private void init() {
-        for (UserVo m : userDao.findAllByExpiresAtIsNotNull()) {
-            this.scheduleRefresh(m);
-        }
-    }
+//    @PostConstruct
+//    private void init() {
+//        for (UserVo m : userDao.findAllByExpiresAtIsNotNull()) {
+//            this.scheduleRefresh(m);
+//        }
+//    }
     
-    @PreDestroy
-    private void destroy() {
-    	BurrowUtils.shutdownAndAwait( this.executor, 5, TimeUnit.SECONDS );
-    }
+//    @PreDestroy
+//    private void destroy() {
+//    	BurrowUtils.shutdownAndAwait( this.executor, 5, TimeUnit.SECONDS );
+//    }
     
     private DbxClientV2 getDbxClient(String userId) {
-        UserVo user = userDao.getUserFormId(userId);
+        final UserVo user = userDao.getUserFormId(userId);
         if (user == null) {
             throw new IllegalArgumentException("Invalid userId: " + userId);
         }
@@ -119,51 +124,106 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
         return this.getDbxClient(user);
     }
     
+    /**
+     * 사용자 토큰 상태로 DbxClientV2 생성 (필요 시 refresh + DB 반영)
+     * @param user
+     * @return
+     */
     private DbxClientV2 getDbxClient(UserVo user) {
-        return dropboxClientFactory.getClient(user);
+    	final DbxCredential cred = new DbxCredential(
+                user.getAccessToken(),
+                user.getExpiresAt() == null ? null : user.getExpiresAt().toEpochMilli(),
+                user.getRefreshToken(),
+                appKey,
+                appSecret
+        );
+
+        // access token이 없거나(초기/정리됨), 만료 임박이면 refresh 시도
+    	// aboutToExpire: 만료 임박/만료 :contentReference[oaicite:5]{index=5}
+        if (cred.getAccessToken() == null || cred.aboutToExpire()) { 
+            this.refreshAndPersist(user, cred);
+        }
+
+        return new DbxClientV2(config, cred); // DbxCredential 기반 클라이언트 :contentReference[oaicite:6]{index=6}
     }
 
-    // 외부에서 호출: 특정 멤버의 refresh 예약(기존 예약은 교체)
-	private void scheduleRefresh(UserVo user) {
-		final String userId = user.getId();
-        this.cancel(userId);
-
-        final long delayMs = computeDelayMs(user.getExpiresAt(), 120); // 만료 2분 전
-        ScheduledFuture<?> f = executor.schedule(() -> this.runRefresh(user), delayMs, TimeUnit.MILLISECONDS);
-        scheduled.put(userId, f);
-    }
-
-    public void cancel(String userId) {
-        final ScheduledFuture<?> prev = scheduled.remove(userId);
-        if (prev != null) 
-        	prev.cancel(false);
-    }
-
-    private void runRefresh(UserVo user) {
+    /**
+	 * DbxCredential을 refresh하고 UserVo에 반영 + DB 저장
+	 * @param user
+	 * @param cred
+	 */
+    private void refreshAndPersist(UserVo user, DbxCredential cred) {
         try {
-            // 만료 임박이면 refresh
-            this.refreshAccessTokenIfNeeded(user);
+            DbxRefreshResult result = cred.refresh(config); // SDK refresh :contentReference[oaicite:7]{index=7}
 
-            if (user.getRefreshToken() != null && user.getExpiresAt() != null) {
-                scheduleRefresh(user);
-            }
+            // cred 내부도 갱신되지만, 우리 DB(UserVo)도 동기화
+            user.setAccessToken(result.getAccessToken());
+            user.setExpiresAt(Instant.ofEpochMilli(result.getExpiresAt()));
+            
+            userDao.saveDropboxToken(user);
+
+        } catch (DbxOAuthException e) {
+            // ✅ 여기서 “재인증 필요”를 분기
+            // refresh_token 무효/철회/권한 변경 등으로 invalid_grant가 나는 케이스가 대표적입니다. :contentReference[oaicite:8]{index=8}
+
+            // 운영/화면이 명확히 알 수 있게 토큰 정리 + 상태 저장(추천)
+            user.setAccessToken(null);
+            user.setRefreshToken(null);
+            user.setExpiresAt(null);
+            try {
+            	userDao.saveDropboxToken(user);
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+
+            throw new ReauthRequiredException("Dropbox 재연결 필요(토큰 갱신 실패): " + e.getMessage(), e);
         } catch (Exception e) {
-            // refresh 실패 → 예약 중단하고 UI에서 "재연결 필요" 안내하는 게 안전
-            // (원하면 needsReconnect 플래그를 DB에 저장)
-            System.out.println("[DropboxRefreshFail] userId=" + user.getId() + " err=" + e.getMessage());
-            cancel(user.getId());
+            // 일시적 장애는 토큰 정리하지 말고 에러만 올리는 게 안전
+            throw new IllegalStateException("Dropbox token refresh failed: " + e.getMessage(), e);
         }
     }
+    
+//    // 외부에서 호출: 특정 멤버의 refresh 예약(기존 예약은 교체)
+//	private void scheduleRefresh(UserVo user) {
+//		final String userId = user.getId();
+//        this.cancel(userId);
+//
+//        final long delayMs = computeDelayMs(user.getExpiresAt(), 120); // 만료 2분 전
+//        ScheduledFuture<?> f = executor.schedule(() -> this.runRefresh(user), delayMs, TimeUnit.MILLISECONDS);
+//        scheduled.put(userId, f);
+//    }
 
-    private static long computeDelayMs(Instant expiresAt, int beforeSeconds) {
-        Instant target = expiresAt.minusSeconds(beforeSeconds);
-        long ms = Duration.between(Instant.now(), target).toMillis();
-        // 이미 지났으면 즉시 실행(최소 0ms)
-        return Math.max(ms, 0);
-    }
+//    public void cancel(String userId) {
+//        final ScheduledFuture<?> prev = scheduled.remove(userId);
+//        if (prev != null) 
+//        	prev.cancel(false);
+//    }
+
+//    private void runRefresh(UserVo user) {
+//        try {
+//            // 만료 임박이면 refresh
+//            this.refreshAccessTokenIfNeeded(user);
+//
+//            if (user.getRefreshToken() != null && user.getExpiresAt() != null) {
+//                scheduleRefresh(user);
+//            }
+//        } catch (Exception e) {
+//            // refresh 실패 → 예약 중단하고 UI에서 "재연결 필요" 안내하는 게 안전
+//            // (원하면 needsReconnect 플래그를 DB에 저장)
+//            System.out.println("[DropboxRefreshFail] userId=" + user.getId() + " err=" + e.getMessage());
+//            cancel(user.getId());
+//        }
+//    }
+
+//    private static long computeDelayMs(Instant expiresAt, int beforeSeconds) {
+//        Instant target = expiresAt.minusSeconds(beforeSeconds);
+//        long ms = Duration.between(Instant.now(), target).toMillis();
+//        // 이미 지났으면 즉시 실행(최소 0ms)
+//        return Math.max(ms, 0);
+//    }
 
     // 1) 멤버별 authorize URL 생성
-    public String buildAuthorizeUrl(String userId) throws IOException {
+    public String buildAuthorizeUrl2(String userId) throws IOException {
     	// state 발급 및 저장
     	UserVo user = userDao.getUserFormId(userId);
     	if( user == null ) {
@@ -184,9 +244,33 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
                 .toUriString();
     }
     
+    public String buildAuthorizeUrl(HttpServletRequest request, String userId) {
+        
+    	final UserVo user = userDao.getUserFormId(userId);
+        if (user == null) {
+            throw new IllegalArgumentException("Invalid member ID: " + userId);
+        }
+
+        final String state = String.valueOf(user.getUserNo());
+        
+        final HttpSession session = request.getSession(true);
+        final DbxStandardSessionStore sessionStore = new DbxStandardSessionStore(session, "dropbox-auth"); 
+
+        final DbxWebAuth.Request authRequest = DbxWebAuth.newRequestBuilder()
+                .withRedirectUri(redirectUri, sessionStore)
+                .withTokenAccessType(TokenAccessType.OFFLINE)
+                .withState(state)
+                .build();
+        
+        final DbxAppInfo appInfo = new DbxAppInfo(appKey, appSecret);
+        final DbxWebAuth webAuth = new DbxWebAuth(config, appInfo);
+
+        return webAuth.authorize(authRequest);
+    }
+
+    
     // 2) callback에서 code 받아 token 교환
-    @Override
-    public void exchangeCodeAndSave(String state, String code) throws IOException {
+    public void exchangeCodeAndSave2(String state, String code) throws IOException {
     	
     	final UserVo user = userDao.getUserFormUserNo(Long.valueOf(state));
     	if( user == null ) {
@@ -244,13 +328,50 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
     }
     
     @Override
+    public void exchangeCodeAndSave(String state, String code) throws IOException {
+        final UserVo user = userDao.getUserFormUserNo(Long.valueOf(state));
+        if (user == null) {
+            throw new IllegalArgumentException("Invalid user ID: " + state);
+        }
+
+        try {
+            // 1) Dropbox SDK WebAuth 준비
+            final DbxAppInfo appInfo = new DbxAppInfo(appKey, appSecret);
+            final DbxWebAuth webAuth = new DbxWebAuth(config, appInfo);
+
+            // 2) code -> token 교환 (SDK가 /oauth2/token 호출을 내부에서 처리)
+            final DbxAuthFinish finish = webAuth.finishFromCode(code, redirectUri);
+
+            // 3) 토큰 저장
+            user.setAccessToken(finish.getAccessToken());
+            user.setRefreshToken(finish.getRefreshToken());
+
+            // expiresIn이 null일 수 있는 버전/상황 대비
+            Long expiresIn = finish.getExpiresAt();
+            if (expiresIn != null && expiresIn > 0) {
+                user.setExpiresAt(Instant.now().plusSeconds(expiresIn));
+            } else {
+                // 만료가 없거나 제공 안 되는 경우: 정책에 맞게 처리(예: null 유지)
+                user.setExpiresAt(null);
+            }
+
+            userDao.saveDropboxToken(user);
+
+        } catch (Exception e) {
+            // DbxException까지 포함해 한 번에 잡는 형태
+            log.error("Dropbox token exchange failed for userNo={} (state={})", user.getUserNo(), state, e);
+            throw new IOException("Dropbox token exchange failed", e);
+        }
+    }
+    
+    @Override
     public ReturnBasic refreshMember(String userId) {
     	final UserVo user = userDao.getUserFormId(userId);
     	if( user == null ) {
 			throw new IllegalArgumentException("Invalid member ID: " + userId);
 		}
 
-    	DbxClientV2 client = getDbxClient(user);
+    	DbxClientV2 client = this.getDbxClient(user);
     	if( client == null ) {
     		return new ReturnBasic("E", "");
     	}
@@ -258,115 +379,115 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
     	return new ReturnBasic();
     }
 
-    /**
-	 * 필요 시 Dropbox access token 갱신
-	 * @param user
-	 */
-    private ReturnBasic refreshAccessTokenIfNeeded(UserVo user) {
+//    /**
+//	 * 필요 시 Dropbox access token 갱신
+//	 * @param user
+//	 */
+//    private ReturnBasic refreshAccessTokenIfNeeded(UserVo user) {
+//
+//        if (user.getRefreshToken() == null || user.getRefreshToken().isEmpty()) {
+//            // refresh_token 자체가 없으면 이미 재연결 상태
+//            return new ReturnBasic("REAUTH", "Dropbox 재연결 필요 (refresh_token 없음)");
+//        }
+//
+//        if (user.getExpiresAt() != null) {
+//            Instant now = Instant.now();
+//            if (user.getExpiresAt().isAfter(now.plusSeconds(120))) {
+//                long secondsLeft = Duration.between(now, user.getExpiresAt()).getSeconds();
+//                log.info("Dropbox access token still valid for member ID: {}, seconds left: {}", user.getId(), secondsLeft);
+//                return new ReturnBasic(BurrowDefine.ERROR_OK, String.format("아직 충분히 유효(%,d초 남음)", secondsLeft));
+//            }
+//        }
+//
+//        try {
+//            return this.refreshAccessToken(user);
+//        } catch (ReauthRequiredException e) {
+//            // ✅ 재연결 필요를 명확히
+//            return new ReturnBasic("REAUTH", e.getMessage());
+//        } catch (IOException e) {
+//            log.error("Failed to refresh Dropbox access token for member ID: {}", user.getId(), e);
+//            return new ReturnBasic("E", "Failed to refresh access token: " + e.getMessage());
+//        } catch (RuntimeException e) {
+//            log.error("Refresh runtime error for member ID: {}", user.getId(), e);
+//            return new ReturnBasic("E", "Refresh failed: " + e.getMessage());
+//        }
+//    }
 
-        if (user.getRefreshToken() == null || user.getRefreshToken().isEmpty()) {
-            // refresh_token 자체가 없으면 이미 재연결 상태
-            return new ReturnBasic("REAUTH", "Dropbox 재연결 필요 (refresh_token 없음)");
-        }
 
-        if (user.getExpiresAt() != null) {
-            Instant now = Instant.now();
-            if (user.getExpiresAt().isAfter(now.plusSeconds(120))) {
-                long secondsLeft = Duration.between(now, user.getExpiresAt()).getSeconds();
-                log.info("Dropbox access token still valid for member ID: {}, seconds left: {}", user.getId(), secondsLeft);
-                return new ReturnBasic(BurrowDefine.ERROR_OK, String.format("아직 충분히 유효(%,d초 남음)", secondsLeft));
-            }
-        }
-
-        try {
-            return this.refreshAccessToken(user);
-        } catch (ReauthRequiredException e) {
-            // ✅ 재연결 필요를 명확히
-            return new ReturnBasic("REAUTH", e.getMessage());
-        } catch (IOException e) {
-            log.error("Failed to refresh Dropbox access token for member ID: {}", user.getId(), e);
-            return new ReturnBasic("E", "Failed to refresh access token: " + e.getMessage());
-        } catch (RuntimeException e) {
-            log.error("Refresh runtime error for member ID: {}", user.getId(), e);
-            return new ReturnBasic("E", "Refresh failed: " + e.getMessage());
-        }
-    }
-
-
-    /**
-     * Dropbox access token 갱신
-     * @param user
-     * @throws IOException
-     */
-    private ReturnBasic refreshAccessToken(UserVo user) throws IOException {
-    	
-        final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("client_id", appKey);
-        params.add("grant_type", "refresh_token");
-        params.add("client_secret", appSecret);
-        params.add("refresh_token", user.getRefreshToken());
-
-        final String body = UriComponentsBuilder
-                .newInstance()
-                .queryParams(params)
-                .build()
-                .encode(StandardCharsets.UTF_8)
-                .toUriString()
-                .substring(1); // '?' 제거
-
-        
-    	final URL url = new URL("https://api.dropboxapi.com/oauth2/token");
-        final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
-        conn.setDoOutput(true);
-        conn.setConnectTimeout(15000);
-        conn.setReadTimeout(15000);
-
-    	final OutputStream os = conn.getOutputStream();
-    	
-    	final byte[] input = body.getBytes(StandardCharsets.UTF_8);
-        os.write(input, 0, input.length);
-        os.flush();
-
-        final int codeHttp = conn.getResponseCode();
-        final String json = readAll((codeHttp >= 200 && codeHttp < 300) ? conn.getInputStream() : conn.getErrorStream());
-        log.info("Dropbox refresh HTTP code: {}", codeHttp);
-        log.info("Dropbox refresh response: {}", json);
-
-        if (codeHttp < 200 || codeHttp >= 300) {
-            // ✅ 재인증 필요 케이스를 구분
-            if (isReauthRequired(codeHttp, json)) {
-                markReconnectRequired(user, "refresh_token invalid/revoked: " + json);
-                throw new ReauthRequiredException("Dropbox 재연결 필요 (refresh_token 무효)");
-            }
-            // ✅ 일시 오류는 그대로 예외
-            throw new IllegalStateException("refresh failed: " + json);
-        }
-
-        final DropboxTokenVO tokenVo = objectMapper.readValue(json, DropboxTokenVO.class);
-        if (tokenVo.getError() != null) {
-            // 성공(200)인데도 error가 있다면 방어
-            throw new IllegalStateException("refresh response error: " + json);
-        }
-
-        final String newAccessToken = tokenVo.getAccessToken();
-        if (BurrowUtils.isEmpty(newAccessToken)) {
-            throw new IllegalStateException("refresh response missing access_token: " + json);
-        }
-
-        user.setAccessToken(newAccessToken);
-        user.setExpiresAt(Instant.now().plusSeconds(tokenVo.getExpiresIn()));
-
-        try {
-            userDao.saveDropboxToken(user);
-            this.scheduleRefresh(user);
-        } catch (Exception e) {
-            log.error("Failed to save refreshed Dropbox token for member ID: {}", user.getId(), e);
-        }
-
-        return new ReturnBasic();
-    }
+//    /**
+//     * Dropbox access token 갱신
+//     * @param user
+//     * @throws IOException
+//     */
+//    private ReturnBasic refreshAccessToken(UserVo user) throws IOException {
+//    	
+//        final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+//        params.add("client_id", appKey);
+//        params.add("grant_type", "refresh_token");
+//        params.add("client_secret", appSecret);
+//        params.add("refresh_token", user.getRefreshToken());
+//
+//        final String body = UriComponentsBuilder
+//                .newInstance()
+//                .queryParams(params)
+//                .build()
+//                .encode(StandardCharsets.UTF_8)
+//                .toUriString()
+//                .substring(1); // '?' 제거
+//
+//        
+//    	final URL url = new URL("https://api.dropboxapi.com/oauth2/token");
+//        final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+//        conn.setRequestMethod("POST");
+//        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
+//        conn.setDoOutput(true);
+//        conn.setConnectTimeout(15000);
+//        conn.setReadTimeout(15000);
+//
+//    	final OutputStream os = conn.getOutputStream();
+//    	
+//    	final byte[] input = body.getBytes(StandardCharsets.UTF_8);
+//        os.write(input, 0, input.length);
+//        os.flush();
+//
+//        final int codeHttp = conn.getResponseCode();
+//        final String json = readAll((codeHttp >= 200 && codeHttp < 300) ? conn.getInputStream() : conn.getErrorStream());
+//        log.info("Dropbox refresh HTTP code: {}", codeHttp);
+//        log.info("Dropbox refresh response: {}", json);
+//
+//        if (codeHttp < 200 || codeHttp >= 300) {
+//            // ✅ 재인증 필요 케이스를 구분
+//            if (isReauthRequired(codeHttp, json)) {
+//                markReconnectRequired(user, "refresh_token invalid/revoked: " + json);
+//                throw new ReauthRequiredException("Dropbox 재연결 필요 (refresh_token 무효)");
+//            }
+//            // ✅ 일시 오류는 그대로 예외
+//            throw new IllegalStateException("refresh failed: " + json);
+//        }
+//
+//        final DropboxTokenVO tokenVo = objectMapper.readValue(json, DropboxTokenVO.class);
+//        if (tokenVo.getError() != null) {
+//            // 성공(200)인데도 error가 있다면 방어
+//            throw new IllegalStateException("refresh response error: " + json);
+//        }
+//
+//        final String newAccessToken = tokenVo.getAccessToken();
+//        if (BurrowUtils.isEmpty(newAccessToken)) {
+//            throw new IllegalStateException("refresh response missing access_token: " + json);
+//        }
+//
+//        user.setAccessToken(newAccessToken);
+//        user.setExpiresAt(Instant.now().plusSeconds(tokenVo.getExpiresIn()));
+//
+//        try {
+//            userDao.saveDropboxToken(user);
+//            this.scheduleRefresh(user);
+//        } catch (Exception e) {
+//            log.error("Failed to save refreshed Dropbox token for member ID: {}", user.getId(), e);
+//        }
+//
+//        return new ReturnBasic();
+//    }
     
     /**
      * Dropbox 연결 해제(로그아웃)
@@ -377,14 +498,14 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
      */
     @Override
     public ReturnBasic unlinkDropbox(String userId) {
-    	UserVo user = userDao.getUserFormId(userId);
+    	final UserVo user = userDao.getUserFormId(userId);
         if (user == null) throw new IllegalArgumentException("Invalid userId: " + userId);
 
         // 1) 서버 토큰 revoke (가능하면)
         try {
             if (user.getAccessToken() != null && !user.getAccessToken().isBlank()) {
                 // Factory를 통해 클라이언트 생성 (필요 시 refresh 포함)
-                DbxClientV2 client = dropboxClientFactory.getClient(user);
+                final DbxClientV2 client = this.getDbxClient(user);
 
                 // ✅ 서버에서 토큰 폐기
                 client.auth().tokenRevoke();  // SDK revoke :contentReference[oaicite:3]{index=3}
@@ -393,7 +514,7 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
             // 이미 무효화된 토큰이라면 여기서 에러가 날 수 있음
             // "연결 끊기" UX 관점에서는 토큰 삭제가 더 중요하므로 경고만 남기고 진행 권장
             log.warn("Dropbox tokenRevoke failed (will still clear local tokens). userId={}, msg={}", userId, e.getMessage());
-        } catch (DropboxSdkClientFactory.ReauthRequiredException e) {
+        } catch (ReauthRequiredException e) {
             // refresh token이 이미 무효인 케이스여도 로컬 토큰 삭제로 "연결 끊기"는 완료 처리
             log.warn("Dropbox reauth required while unlink (will still clear local tokens). userId={}", userId);
         }
@@ -408,8 +529,8 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
 			e.printStackTrace();
 		}
 
-        // 3) 스케줄러/캐시/클라이언트 캐시가 있다면 여기서 정리
-        this.cancel(userId);
+//        // 3) 스케줄러/캐시/클라이언트 캐시가 있다면 여기서 정리
+//        this.cancel(userId);
         
         return new ReturnBasic();
     }
@@ -425,51 +546,51 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
         }
     }
     
-    private boolean isReauthRequired(int httpCode, String json) {
-        // Dropbox token endpoint에서 refresh_token이 무효/철회되면 보통 400 + invalid_grant(또는 invalid_request류)로 옵니다.
-        // (실제 에러 바디는 Map으로 파싱해서 보는 게 안전)
-        try {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> m = objectMapper.readValue(json, Map.class);
+//    private boolean isReauthRequired(int httpCode, String json) {
+//        // Dropbox token endpoint에서 refresh_token이 무효/철회되면 보통 400 + invalid_grant(또는 invalid_request류)로 옵니다.
+//        // (실제 에러 바디는 Map으로 파싱해서 보는 게 안전)
+//        try {
+//            @SuppressWarnings("unchecked")
+//            Map<String, Object> m = objectMapper.readValue(json, Map.class);
+//
+//            String err = String.valueOf(m.getOrDefault("error", ""));
+//            String desc = String.valueOf(m.getOrDefault("error_description", ""));
+//            String summary = String.valueOf(m.getOrDefault("error_summary", ""));
+//
+//            String all = (err + " " + desc + " " + summary).toLowerCase();
+//
+//            // 실무에서 “재인증 필요”로 보는 패턴들
+//            if (all.contains("invalid_grant")) return true;
+//            if (all.contains("revoked")) return true;
+//            if (all.contains("expired") && all.contains("refresh")) return true;
+//            if (all.contains("invalid_refresh_token")) return true;
+//
+//            // HTTP 코드만으로도 강하게 의심되는 경우(보수적으로)
+//            return httpCode == 400 && (all.contains("invalid") || all.contains("grant"));
+//        } catch (Exception ignore) {
+//            // 파싱 실패 시 문자열 기반으로 최소 판정
+//            String lower = (json == null ? "" : json.toLowerCase());
+//            return httpCode == 400 && (lower.contains("invalid_grant") || lower.contains("revoked"));
+//        }
+//    }
 
-            String err = String.valueOf(m.getOrDefault("error", ""));
-            String desc = String.valueOf(m.getOrDefault("error_description", ""));
-            String summary = String.valueOf(m.getOrDefault("error_summary", ""));
-
-            String all = (err + " " + desc + " " + summary).toLowerCase();
-
-            // 실무에서 “재인증 필요”로 보는 패턴들
-            if (all.contains("invalid_grant")) return true;
-            if (all.contains("revoked")) return true;
-            if (all.contains("expired") && all.contains("refresh")) return true;
-            if (all.contains("invalid_refresh_token")) return true;
-
-            // HTTP 코드만으로도 강하게 의심되는 경우(보수적으로)
-            return httpCode == 400 && (all.contains("invalid") || all.contains("grant"));
-        } catch (Exception ignore) {
-            // 파싱 실패 시 문자열 기반으로 최소 판정
-            String lower = (json == null ? "" : json.toLowerCase());
-            return httpCode == 400 && (lower.contains("invalid_grant") || lower.contains("revoked"));
-        }
-    }
-
-    private void markReconnectRequired(UserVo user, String reason) {
-        // ✅ 스케줄 중단
-        cancel(user.getId());
-
-        // ✅ 토큰/만료정보 정리 (UI가 "연결 필요"로 판단하기 쉬움)
-        user.setAccessToken(null);
-        user.setRefreshToken(null);
-        user.setExpiresAt(null);
-
-        try {
-            userDao.saveDropboxToken(user);
-        } catch (Exception e) {
-            log.error("Failed to mark reconnect required for user ID: {}", user.getId(), e);
-        }
-
-        log.warn("[DropboxReconnectRequired] userId={} reason={}", user.getId(), reason);
-    }
+//    private void markReconnectRequired(UserVo user, String reason) {
+//        // ✅ 스케줄 중단
+//        cancel(user.getId());
+//
+//        // ✅ 토큰/만료정보 정리 (UI가 "연결 필요"로 판단하기 쉬움)
+//        user.setAccessToken(null);
+//        user.setRefreshToken(null);
+//        user.setExpiresAt(null);
+//
+//        try {
+//            userDao.saveDropboxToken(user);
+//        } catch (Exception e) {
+//            log.error("Failed to mark reconnect required for user ID: {}", user.getId(), e);
+//        }
+//
+//        log.warn("[DropboxReconnectRequired] userId={} reason={}", user.getId(), reason);
+//    }
 
 
     // ---------------------------
@@ -483,28 +604,86 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
      * @param path ""(루트) 또는 "/some/folder"
      * @param recursive 재귀 여부
      */
-    @Override
     public List<Metadata> listAll(String userId, String path) throws DbxException {
-        DbxClientV2 client = this.getDbxClient(userId);
+    	final UserVo user = userDao.getUserFormId(userId);
+        if (user == null) {
+            throw new IllegalArgumentException("Invalid userId: " + userId);
+        }
+        
+    	final DbxClientV2 client = this.getDbxClient(userId);
 
-        String p = (path == null) ? "" : path;
-
-        ListFolderResult res = client.files()
-                .listFolderBuilder(p)
+    	ListFolderResult res = client.files()
+                .listFolderBuilder((path == null) ? "" : path)
                 .withRecursive(true)
                 .withIncludeDeleted(false)
                 .start();
 
-        List<Metadata> all = new ArrayList<>(res.getEntries());
+    	final List<Metadata> result = new ArrayList<>(res.getEntries());
 
         while (res.getHasMore()) {
             res = client.files().listFolderContinue(res.getCursor());
-            all.addAll(res.getEntries());
+            result.addAll(res.getEntries());
         }
 
-        return all;
+        return result;
     }
+    
+    @Override
+    public List<Metadata> getAllList(String userId) throws DbxException{
+    	
+    	final UserVo user = userDao.getUserFormId(userId);
+        if (user == null) {
+            throw new IllegalArgumentException("Invalid userId: " + userId);
+        }
+        
+    	final DbxClientV2 client = this.getDbxClient(user);
 
+    	ListFolderResult res = client.files()
+                .listFolderBuilder("")
+                .withRecursive(true)
+                .withIncludeDeleted(false)
+                .start();
+
+    	final List<Metadata> result = new ArrayList<>(res.getEntries());
+
+        while (res.getHasMore()) {
+            res = client.files().listFolderContinue(res.getCursor());
+            result.addAll(res.getEntries());
+        }
+        
+        final Path localTargetDir = Path.of("D:\\var\\Dropbox").resolve(userId);
+        try {
+			Files.createDirectories(localTargetDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+        
+        for( Metadata item : result) {
+        	if( item instanceof FileMetadata ) {
+        		final FileMetadata fileMeta = (FileMetadata)item;
+        		int dbRes = 0;
+        		try {
+            		final String rev = dbxDao.getMetadataRev(user, fileMeta);
+        			if( rev == null ) {
+        				dbRes = dbxDao.addMetadata(user, fileMeta);
+        			}else {
+        				if( !rev.equals( fileMeta.getRev() ) ) {
+        					dbRes = dbxDao.modifyMetadataRev(user, fileMeta);
+        				}
+        			}
+        			
+        			if( dbRes > 0 || "id:ftbXa7gMxBAAAAAAAAADLA".equals(fileMeta.getId()) ) { // 강제 다운로드
+        				this.downloadFile(client, fileMeta, localTargetDir);
+					}
+				} catch (Exception e) {
+					log.error("getAllList error fileMeta={}", fileMeta.getPathLower(), e);
+				}
+			}
+        }
+
+        return result;
+    }
+    
     /**
      * 파일/폴더 다운로드 (폴더는 zip으로 저장)
      *
@@ -558,7 +737,7 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
         for (String p : dropboxPaths) {
             try {
                 saved.add(download(userId, p, localTargetDir));
-            } catch (DropboxSdkClientFactory.ReauthRequiredException e) {
+            } catch (ReauthRequiredException e) {
                 // 재인증 필요는 즉시 중단(원하는 정책에 따라 다르게)
                 throw e;
             } catch (Exception e) {
@@ -631,20 +810,20 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
 //    }
 
     
-    private List<Metadata> listFolderAllRecursive(DbxClientV2 client, String folderPathLower) throws DbxException {
-        ListFolderResult res = client.files()
-                .listFolderBuilder(folderPathLower)
-                .withRecursive(true)
-                .withIncludeDeleted(false)
-                .start();
-
-        List<Metadata> all = new ArrayList<>(res.getEntries());
-        while (res.getHasMore()) {
-            res = client.files().listFolderContinue(res.getCursor());
-            all.addAll(res.getEntries());
-        }
-        return all;
-    }
+//    private List<Metadata> listFolderAllRecursive(DbxClientV2 client, String folderPathLower) throws DbxException {
+//        ListFolderResult res = client.files()
+//                .listFolderBuilder(folderPathLower)
+//                .withRecursive(true)
+//                .withIncludeDeleted(false)
+//                .start();
+//
+//        List<Metadata> all = new ArrayList<>(res.getEntries());
+//        while (res.getHasMore()) {
+//            res = client.files().listFolderContinue(res.getCursor());
+//            all.addAll(res.getEntries());
+//        }
+//        return all;
+//    }
 
     /**
      * Dropbox의 full path를, 기준 폴더 아래의 상대경로로 변환해서 로컬에 매핑.
@@ -716,14 +895,12 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
         }
 
         // ✅ 다운로드 성공 후 즉시 삭제
-        safeDelete(client, pathLower);
+        safeDelete(client, meta);
 
         return saved;
     }
     
     private void deleteChildrenOnly(DbxClientV2 client, String folderLower) throws DbxException {
-        // folderLower 하위 목록을 가져와서 (재귀) "하위 엔트리"만 삭제한다.
-        // 폴더 자체는 삭제하지 않는다.
         ListFolderResult res = client.files()
                 .listFolderBuilder(folderLower)
                 .withRecursive(true)
@@ -736,42 +913,108 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
             all.addAll(res.getEntries());
         }
 
-        // ✅ 하위부터(깊이 큰 것부터) 삭제해야 충돌이 적음
-        List<String> pathsToDelete = all.stream()
-                .map(m -> normPathLower(m, null))
+        // 깊은 것부터 삭제(하위 -> 상위)
+        // + 같은 깊이면 "파일 먼저, 폴더 나중" (폴더 삭제 오류 줄이기)
+        List<Metadata> toDelete = all.stream()
                 .filter(Objects::nonNull)
-                .sorted(Comparator.comparingInt(String::length).reversed())
+                .filter(m -> m.getPathLower() != null && !m.getPathLower().isBlank())
+                .sorted((a, b) -> {
+                    String pa = a.getPathLower();
+                    String pb = b.getPathLower();
+
+                    // 1) 경로 길이 내림차순 (깊은 경로 먼저)
+                    int c = Integer.compare(pb.length(), pa.length());
+                    if (c != 0) return c;
+
+                    // 2) 같은 길이면 파일 먼저, 폴더 나중
+                    boolean aIsFolder = a instanceof com.dropbox.core.v2.files.FolderMetadata;
+                    boolean bIsFolder = b instanceof com.dropbox.core.v2.files.FolderMetadata;
+                    if (aIsFolder != bIsFolder) return aIsFolder ? 1 : -1;
+
+                    // 3) 마지막 tie-breaker (안정 정렬)
+                    return pb.compareTo(pa);
+                })
                 .collect(Collectors.toList());
 
-        for (String p : pathsToDelete) {
-            // 혹시라도 카메라 업로드 폴더 엔트리가 하위에 또 있을 가능성은 낮지만 방어
-            if (isCameraUploadsPath(p)) {
-                // 하위에 같은 폴더가 또 있으면 그 폴더는 남기고 내부는 다음 재귀에서 처리됨
-                continue;
-            }
-            safeDelete(client, p);
+        for (Metadata m : toDelete) {
+            safeDelete(client, m);  // id 기반 deleteV2는 파일/폴더 모두 삭제 가능
         }
     }
 
-    private void safeDelete(DbxClientV2 client, String pathLower) throws DbxException {
-        // 카메라 업로드 "폴더 엔트리"만 스킵 (파일들은 삭제 허용)
-        if (isCameraUploadsPath(pathLower)) {
-            log.info("Skip deleting Camera Uploads folder itself: {}", pathLower);
-            return;
+    /**
+	 * 안전하게 삭제
+	 * - 파일은 바로 삭제
+	 * - 폴더는 "카메라 업로드" 폴더 자체는 삭제하지 않음
+	 */
+    private void safeDelete(DbxClientV2 client, Metadata data) throws DbxException {
+    	
+    	if (data instanceof FileMetadata file) {
+            
+    		client.files().deleteV2( file.getId() );
+            
+        } else if (data instanceof FolderMetadata folder) {
+        	final String p = folder.getPathLower().toLowerCase(Locale.ROOT);
+
+            // 대표적인 폴더명 패턴들
+            // (실제 운영에서는 "목록에서 실제 path_lower를 확인해서 그 값을 사용" 추천)
+            if( "/camera uploads".equals(p) || "/카메라 업로드".equals(p) ) {
+            	return;
+            }
+            
+            client.files().deleteV2( folder.getId() );
         }
-        client.files().deleteV2(pathLower);
     }
     
-    private Path downloadFile(DbxClientV2 client, FileMetadata fm, Path localDir) throws DbxException, IOException {
-        String fileName = safeFileName(fm.getName());
-        Path saved = localDir.resolve(fileName);
+    /**
+	 * Dropbox 경로를 로컬 경로로 변환하고, 필요한 디렉터리를 생성한다.
+	 */
+    private Path resolveAndCreateLocalPath(Path baseDir, String dropboxPathLower)
+            throws IOException {
 
-        try (OutputStream os = Files.newOutputStream(saved, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            client.files().download(fm.getPathLower()).download(os);
+        if (dropboxPathLower == null || dropboxPathLower.isBlank()) {
+            throw new IllegalArgumentException("dropboxPathLower is empty");
         }
+
+        // 선행 '/' 제거 (Path.resolve가 절대경로로 오해하지 않도록)
+        String relative = dropboxPathLower.startsWith("/")
+                ? dropboxPathLower.substring(1)
+                : dropboxPathLower;
+
+        Path fullPath = baseDir.resolve(relative);
+
+        // 파일 경로라면 부모 디렉터리 생성
+        Path parentDir = fullPath.getParent();
+        if (parentDir != null) {
+            Files.createDirectories(parentDir);
+        }
+
+        return fullPath;
+    }
+
+    /**
+	 * 파일 다운로드
+	 * - 로컬 경로 해석 + 디렉터리 생성 포함
+	 * - id 기반 다운로드 권장
+	 */
+    private Path downloadFile(DbxClientV2 client, FileMetadata fm, Path localDir)
+            throws DbxException, IOException {
+
+        // 1. 경로 해석 + 디렉터리 생성
+        Path saved = this.resolveAndCreateLocalPath(localDir, fm.getPathLower());
+
+        // 2. 다운로드 (id 기반 권장)
+        try (OutputStream os = Files.newOutputStream(
+                saved,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING)) {
+
+            client.files().download(fm.getId()).download(os);
+        }
+
         return saved;
     }
 
+    
     private Path downloadFolderZip(DbxClientV2 client, FolderMetadata folder, Path localDir) throws DbxException, IOException {
         String folderName = safeFileName(folder.getName());
         Path saved = localDir.resolve(folderName + ".zip");
@@ -840,11 +1083,8 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
     }
 
     
-    static class ReauthRequiredException extends RuntimeException {
-    	
-		private static final long serialVersionUID = 2023176227500332697L;
-
-		ReauthRequiredException(String message) { super(message); }
+    public static class ReauthRequiredException extends RuntimeException {
+        public ReauthRequiredException(String msg, Throwable t) { super(msg, t); }
     }
 
     

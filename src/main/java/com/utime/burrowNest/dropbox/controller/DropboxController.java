@@ -19,6 +19,7 @@ import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.dropbox.service.DropboxOAuthService;
 import com.utime.burrowNest.user.vo.UserVo;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -45,8 +46,8 @@ public class DropboxController {
     }
 
     @GetMapping("Connect/{id}")
-    public String connect(@PathVariable String id) throws Exception {
-        String url = dropboxService.buildAuthorizeUrl(id);
+    public String connect(HttpServletRequest request, @PathVariable String id) throws Exception {
+        String url = dropboxService.buildAuthorizeUrl(request, id);
         return "redirect:" + url;
     }
     
@@ -59,7 +60,7 @@ public class DropboxController {
     @ResponseBody
     @GetMapping("All/{id}")
     public List<Metadata> listAll(@PathVariable String id) throws DbxException {
-    	return dropboxService.listAll(id, null);
+    	return dropboxService.getAllList(id);
     }
     
     @ResponseBody

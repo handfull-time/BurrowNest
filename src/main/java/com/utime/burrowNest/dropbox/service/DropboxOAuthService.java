@@ -7,6 +7,8 @@ import com.dropbox.core.DbxException;
 import com.dropbox.core.v2.files.Metadata;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 /**
  * Dropbox OAuth 서비스 인터페이스
  */
@@ -15,7 +17,7 @@ public interface DropboxOAuthService {
 	/**
 	 * 멤버별 authorize URL 생성
 	 */
-	String buildAuthorizeUrl(String id)throws IOException;
+	String buildAuthorizeUrl(HttpServletRequest request, String id)throws IOException;
 
 	/**
 	 * code를 토큰으로 교환하고 멤버에 저장
@@ -35,6 +37,12 @@ public interface DropboxOAuthService {
 	 */
 	public ReturnBasic unlinkDropbox(String userId);
 	
-	public List<Metadata> listAll(String userId, String path) throws DbxException;
+	/**
+	 * 전체 목록 조회
+	 * @param userId
+	 * @return
+	 * @throws DbxException
+	 */
+	public List<Metadata> getAllList(String userId) throws DbxException;
 
 }

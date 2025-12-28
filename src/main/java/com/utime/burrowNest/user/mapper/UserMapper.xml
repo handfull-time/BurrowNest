@@ -74,6 +74,16 @@
 		)
 	</insert>
 	
+	<!-- 초기화 여부 -->
+	<select id="isInit" resultType="boolean">
+        SELECT 
+            CASE COUNT(1) 
+       			WHEN 0 THEN 0
+                ELSE 1
+       		END AS RES
+       	FROM BN_USER
+	</select>
+	
 	<insert id="createProfileImg">
 		CREATE TABLE BN_USER_PROFILE_IMG (
 			USER_NO BIGINT PRIMARY KEY

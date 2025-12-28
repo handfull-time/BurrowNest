@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.utime.burrowNest.dropbox.mapper.DropboxMapper">
+ 
+<insert id="createMetadataTable">
+	CREATE TABLE BN_DROPBOX_DATA (
+		FILE_ID  VARCHAR(64) PRIMARY KEY, <!-- Dropbox file id (ex: "id:xxxx") -->
+		REV      VARCHAR(64) NOT NULL,  <!-- Dropbox revision -->
+		USER_NO  BIGINT NOT NULL,   <!-- Owner user no -->
+		
+		CONSTRAINT FK_DROPBOX_DATA_OWNER FOREIGN KEY (USER_NO) REFERENCES BN_USER(NO) ON DELETE CASCADE
+	)
+</insert>    
+    
+<!--드롭박스 메타데이터 삽입-->
+<insert id="insertMetadata" parameterType="map">
+	INSERT INTO BN_DROPBOX_DATA (
+		FILE_ID, REV, USER_NO
+	) VALUES (
+		#{data.id}, #{data.rev}, #{userNo}
+	)
+</insert>
+
+<!--드롭박스 메타데이터 존재 여부 조회-->
+<select id="selectMetadataRev" parameterType="map" resultType="String">
+    SELECT
+    	REV
+   	FROM BN_DROPBOX_DATA
+   	WHERE USER_NO = #{userNo} AND FILE_ID = #{data.id}
+</select>
+
+<!--드롭박스 메타데이터 REV 수정-->
+<update id="updateMetadataRev" parameterType="map">
+    UPDATE BN_DROPBOX_DATA
+    SET REV = #{data.rev}
+    WHERE USER_NO = #{userNo} AND FILE_ID = #{data.id}
+</update>
+
+</mapper>

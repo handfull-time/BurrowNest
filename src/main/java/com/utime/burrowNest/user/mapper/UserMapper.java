@@ -49,6 +49,12 @@ public interface UserMapper {
 	int createUser();
 	
 	/**
+	 * 초기화 여부
+	 * @return
+	 */
+	boolean isInit();
+	
+	/**
 	 * 회원 프로필 이미지 생성
 	 * @return
 	 */
@@ -193,4 +199,5 @@ public interface UserMapper {
 	 * @return
 	 */
 	List<UserVo> findAllByExpiresAtIsNotNull();
+
 }

@@ -22,6 +22,7 @@ import com.utime.burrowNest.user.vo.LoginReqVo;
 import com.utime.burrowNest.user.vo.ResUserVo;
 import com.utime.burrowNest.user.vo.UserVo;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,9 +43,15 @@ class UserDaoImpl implements UserDao {
 	
 	final CacheIntervalMap<String, UserVo> intervalMap = new CacheIntervalMap<>(10L, TimeUnit.MINUTES);
 	
+	@PostConstruct
+	private void init() throws Exception{
+		this.initUserTable();
+	}
+	
 	@Override
 	public boolean isInit() {
-		return common.existTable("BN_USER_GROUP") && common.existTable("BN_USER");
+		//return common.existTable("BN_USER_GROUP") && common.existTable("BN_USER");
+		return userMapper.isInit();
 	}
 
 	@Override
