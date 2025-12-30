@@ -18,6 +18,7 @@ import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
+import com.utime.burrowNest.common.dao.KeyValueDao;
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.util.FileUtils;
 import com.utime.burrowNest.common.vo.ReturnBasic;
@@ -43,6 +44,8 @@ import lombok.extern.slf4j.Slf4j;
 class StorageServiceImpl implements StorageService {
 	
 	private final StorageDao storageDao;
+	
+	private final KeyValueDao keyValueDao;
 	
 	private final LoadStorageService loadStorageService;
 	
@@ -579,5 +582,12 @@ class StorageServiceImpl implements StorageService {
 		return result;
 	}
 	
-	
+	@Override
+	public ReturnBasic saveUserPath(String userPath) {
+		ReturnBasic result = new ReturnBasic();
+		
+		keyValueDao.setValue( "userPath", userPath );
+		
+		return result;
+	}
 }

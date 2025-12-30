@@ -17,6 +17,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -42,6 +44,7 @@ import com.dropbox.core.v2.files.ListFolderResult;
 import com.dropbox.core.v2.files.Metadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utime.burrowNest.common.util.BurrowUtils;
+import com.utime.burrowNest.common.util.CacheIntervalMap;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.dropbox.dao.DropboxDao;
 import com.utime.burrowNest.dropbox.service.DropboxOAuthService;
@@ -91,6 +94,8 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
     
     private final DropboxDao dbxDao;
     
+    private final CacheIntervalMap<String, String> cashIntervalState = new CacheIntervalMap<>(20L, TimeUnit.MINUTES);
+    
 //    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
 //    private final Map<String, ScheduledFuture<?>> scheduled = new ConcurrentHashMap<>();
@@ -130,6 +135,7 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
      * @return
      */
     private DbxClientV2 getDbxClient(UserVo user) {
+    	
     	final DbxCredential cred = new DbxCredential(
                 user.getAccessToken(),
                 user.getExpiresAt() == null ? null : user.getExpiresAt().toEpochMilli(),
@@ -153,6 +159,7 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
 	 * @param cred
 	 */
     private void refreshAndPersist(UserVo user, DbxCredential cred) {
+    	
         try {
             DbxRefreshResult result = cred.refresh(config); // SDK refresh :contentReference[oaicite:7]{index=7}
 
@@ -251,7 +258,9 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
             throw new IllegalArgumentException("Invalid member ID: " + userId);
         }
 
-        final String state = String.valueOf(user.getUserNo());
+        final String state = UUID.randomUUID().toString();
+        this.cashIntervalState.put(state, user.getId());
+        log.info( "cashInterval userId add {} -> {}", user.getId(), state );
         
         final HttpSession session = request.getSession(true);
         final DbxStandardSessionStore sessionStore = new DbxStandardSessionStore(session, "dropbox-auth"); 
@@ -329,7 +338,13 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
     
     @Override
     public void exchangeCodeAndSave(String state, String code) throws IOException {
-        final UserVo user = userDao.getUserFormUserNo(Long.valueOf(state));
+    	
+    	final String userId = this.cashIntervalState.remove(state);
+    	if( userId == null || userId.isEmpty() ) {
+    		throw new IllegalArgumentException("Not found user ID: " + state);
+    	}
+    	
+        final UserVo user = userDao.getUserFormId(userId);
         if (user == null) {
             throw new IllegalArgumentException("Invalid user ID: " + state);
         }

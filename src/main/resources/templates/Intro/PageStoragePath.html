@@ -1,0 +1,89 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="content">
+    <div class="space-y-6">
+        <h2 class="text-2xl font-semibold text-center text-gray-800">저장소 폴더 위치 설정</h2>
+
+        <div class="space-y-2 text-center">
+            <p class="text-sm text-gray-500">BurrowNest에서 파일을 저장할 기본 폴더 경로를 입력하세요.</p>
+            <p class="text-xs text-gray-400">예: <code class="font-mono">/mnt/burrownest</code> 또는 <code class="font-mono">D:\Data\</code></p>
+        </div>
+
+        <div class="space-y-4">
+            <table class="w-full border-collapse">
+                <tbody>
+                    <tr>
+                        <td class="w-1/4 font-medium p-2">
+                            <label for="storagePath">폴더 경로</label>
+                        </td>
+                        <td class="w-3/4 p-2">
+                            <input type="text"
+                                   id="storagePath"
+                                   placeholder="/mnt/burrownest"
+                                   minlength="1"
+                                   maxlength="300"
+                                   required
+                                   class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400">
+                            <p id="storagePathHelp" class="mt-1 text-xs text-gray-400">
+                                절대경로를 권장합니다. (Linux 기준 “/”로 시작)
+                            </p>
+                            <p id="storagePathErr" class="mt-1 text-xs text-red-500 hidden">
+                                경로를 올바르게 입력해 주세요.
+                            </p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex justify-between">
+            <button type="button"
+                    class="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 transition"
+                    onclick="prevPage('PageStoragePath', 'PagePasswd')">
+                이전
+            </button>
+
+            <button type="button"
+                    disabled
+                    id="pathNextBtn"
+                    class="bg-gray-500 text-black px-6 py-2 rounded hover:bg-gray-600 transition"
+                    onclick="nextPage('PageStoragePath', 'PageStorageLib')">
+                다음
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ✅ 간단 검증: 비어있지 않고, (리눅스 기준) "/"로 시작하는 절대경로면 통과
+        //    윈도우 경로까지 허용하려면 정규식만 살짝 확장하면 됩니다.
+        function validateStoragePath() {
+            const el = document.getElementById("storagePath");
+            const err = document.getElementById("storagePathErr");
+            const btnId = "pathNextBtn";
+
+            const v = (el.value || "").trim();
+
+            // 최소 조건
+            const ok = v.length > 0;
+
+            if (!ok) {
+                err.classList.remove("hidden");
+            } else {
+                err.classList.add("hidden");
+            }
+
+            buttonStatus(btnId, ok);
+            return ok;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const storagePath = document.getElementById("storagePath");
+            storagePath.addEventListener("input", validateStoragePath);
+            storagePath.addEventListener("blur", validateStoragePath);
+
+			
+			
+			
+            // 초기 상태
+            validateStoragePath();
+        });
+    </script>
+</div>

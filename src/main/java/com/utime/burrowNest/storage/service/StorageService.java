@@ -98,4 +98,11 @@ public interface StorageService {
 	 */
 	ReturnBasic newFolderStorage(UserVo user, RenameItem newFolderItem);
 
+	/**
+	 * 사용자 경로 저장
+	 * @param userPath
+	 * @return
+	 */
+	ReturnBasic saveUserPath(String userPath);
+
 }
