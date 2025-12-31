@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?> 
 <!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
 <!--//네임스페이스에는 mapper 가 있는 풀 패키지명과 매퍼명을 등록 한다. -->
-<mapper namespace="com.utime.burrowNest.common.mapper.CommonMapper">
+<mapper namespace="com.utime.burrowNest.common.mapper.KeyValueMapper">
 
 	<!-- Key-Value 테이블 생성 -->
 	<insert id="createKayValueTable">
@@ -75,9 +75,8 @@
     </select>
 
 	<!-- 만료된 키 삭제 -->
-    <delete id="removoeExpire">
-        DELETE FROM APP_KV
-        WHERE EXPIRE_AT IS NOT NULL AND EXPIRE_AT <= CURRENT_TIMESTAMP
+    <delete id="removeExpire">
+        DELETE FROM APP_KV WHERE EXPIRE_AT IS NOT NULL AND EXPIRE_AT <![CDATA[ <= ]]> CURRENT_TIMESTAMP
     </delete>
     
 </mapper>

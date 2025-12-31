@@ -55,6 +55,6 @@ public interface KeyValueMapper {
 	 * 만료된 키 삭제
 	 * @return
 	 */
-	int removoeExpire();
+	int removeExpire();
 
 }

@@ -13,7 +13,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -38,6 +37,7 @@ import com.dropbox.core.oauth.DbxCredential;
 import com.dropbox.core.oauth.DbxOAuthException;
 import com.dropbox.core.oauth.DbxRefreshResult;
 import com.dropbox.core.v2.DbxClientV2;
+import com.dropbox.core.v2.files.DeleteResult;
 import com.dropbox.core.v2.files.FileMetadata;
 import com.dropbox.core.v2.files.FolderMetadata;
 import com.dropbox.core.v2.files.ListFolderResult;
@@ -688,7 +688,9 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
         			}
         			
         			if( dbRes > 0 || "id:ftbXa7gMxBAAAAAAAAADLA".equals(fileMeta.getId()) ) { // 강제 다운로드
-        				this.downloadFile(client, fileMeta, localTargetDir);
+        				if( this.downloadFile(client, fileMeta, localTargetDir) ) {
+        					
+        				}
 					}
 				} catch (Exception e) {
 					log.error("getAllList error fileMeta={}", fileMeta.getPathLower(), e);
@@ -699,69 +701,69 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
         return result;
     }
     
-    /**
-     * 파일/폴더 다운로드 (폴더는 zip으로 저장)
-     *
-     * @param userId 사용자
-     * @param dropboxPath 다운로드할 경로 (file 또는 folder)
-     * @param localTargetDir 로컬 저장 디렉토리
-     * @return 저장된 로컬 파일 경로
-     */
-    public Path download(String userId, String dropboxPath, Path localTargetDir) throws DbxException, IOException {
-        DbxClientV2 client = this.getDbxClient(userId);
-
-        if (dropboxPath == null || dropboxPath.isBlank()) {
-            throw new IllegalArgumentException("dropboxPath is empty");
-        }
-
-        Files.createDirectories(localTargetDir);
-
-        Metadata meta = client.files().getMetadata(dropboxPath);
-
-        Path saved;
-        if (meta instanceof FileMetadata fm) {
-            String fileName = safeFileName(fm.getName());
-            saved = localTargetDir.resolve(fileName);
-
-            try (OutputStream os = Files.newOutputStream(saved, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-                client.files().download(fm.getPathLower()).download(os);
-            }
-
-        } else if (meta instanceof FolderMetadata folder) {
-            String folderName = safeFileName(folder.getName());
-            // 폴더는 zip으로 받음
-            saved = localTargetDir.resolve(folderName + ".zip");
-
-            try (OutputStream os = Files.newOutputStream(saved, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-                client.files().downloadZip(folder.getPathLower()).download(os);
-            }
-        } else {
-            throw new IllegalStateException("Unsupported metadata type: " + meta.getClass());
-        }
-
-        return saved;
-    }
+//    /**
+//     * 파일/폴더 다운로드 (폴더는 zip으로 저장)
+//     *
+//     * @param userId 사용자
+//     * @param dropboxPath 다운로드할 경로 (file 또는 folder)
+//     * @param localTargetDir 로컬 저장 디렉토리
+//     * @return 저장된 로컬 파일 경로
+//     */
+//    public Path download(String userId, String dropboxPath, Path localTargetDir) throws DbxException, IOException {
+//        DbxClientV2 client = this.getDbxClient(userId);
+//
+//        if (dropboxPath == null || dropboxPath.isBlank()) {
+//            throw new IllegalArgumentException("dropboxPath is empty");
+//        }
+//
+//        Files.createDirectories(localTargetDir);
+//
+//        Metadata meta = client.files().getMetadata(dropboxPath);
+//
+//        Path saved;
+//        if (meta instanceof FileMetadata fm) {
+//            String fileName = safeFileName(fm.getName());
+//            saved = localTargetDir.resolve(fileName);
+//
+//            try (OutputStream os = Files.newOutputStream(saved, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+//                client.files().download(fm.getPathLower()).download(os);
+//            }
+//
+//        } else if (meta instanceof FolderMetadata folder) {
+//            String folderName = safeFileName(folder.getName());
+//            // 폴더는 zip으로 받음
+//            saved = localTargetDir.resolve(folderName + ".zip");
+//
+//            try (OutputStream os = Files.newOutputStream(saved, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+//                client.files().downloadZip(folder.getPathLower()).download(os);
+//            }
+//        } else {
+//            throw new IllegalStateException("Unsupported metadata type: " + meta.getClass());
+//        }
+//
+//        return saved;
+//    }
     
-    /**
-     * 여러 개 다운로드
-     */
-    public List<Path> downloadMany(String userId, List<String> dropboxPaths, Path localTargetDir) {
-        if (dropboxPaths == null || dropboxPaths.isEmpty()) return List.of();
-
-        List<Path> saved = new ArrayList<>();
-        for (String p : dropboxPaths) {
-            try {
-                saved.add(download(userId, p, localTargetDir));
-            } catch (ReauthRequiredException e) {
-                // 재인증 필요는 즉시 중단(원하는 정책에 따라 다르게)
-                throw e;
-            } catch (Exception e) {
-                log.error("download failed path={}", p, e);
-                // 부분 실패 허용 정책: 계속 진행
-            }
-        }
-        return saved;
-    }
+//    /**
+//     * 여러 개 다운로드
+//     */
+//    public List<Path> downloadMany(String userId, List<String> dropboxPaths, Path localTargetDir) {
+//        if (dropboxPaths == null || dropboxPaths.isEmpty()) return List.of();
+//
+//        List<Path> saved = new ArrayList<>();
+//        for (String p : dropboxPaths) {
+//            try {
+//                saved.add(download(userId, p, localTargetDir));
+//            } catch (ReauthRequiredException e) {
+//                // 재인증 필요는 즉시 중단(원하는 정책에 따라 다르게)
+//                throw e;
+//            } catch (Exception e) {
+//                log.error("download failed path={}", p, e);
+//                // 부분 실패 허용 정책: 계속 진행
+//            }
+//        }
+//        return saved;
+//    }
 
 //    // ---------------------------
 //    // 3) 다운로드 했던 것 모두 삭제 (단 "카메라 업로드" 폴더 제외)
@@ -874,46 +876,46 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
     // 2) 파일/폴더 다운로드 후 바로 삭제
     // ---------------------------
 
-    /**
-     * 경로 하나를 다운로드 후 즉시 삭제한다.
-     * - 파일: 그대로 다운로드 후 delete_v2
-     * - 폴더: zip 다운로드 후 delete_v2
-     * - 단, 카메라 업로드 "폴더 자체"는 삭제하지 않는다(그 안의 파일/폴더는 가능)
-     *
-     * @return 로컬에 저장된 파일 경로
-     */
-    public Path downloadAndDelete(String userId, String dropboxPath, Path localDir)
-            throws DbxException, IOException {
-
-        DbxClientV2 client = getDbxClient(userId);
-
-        if (dropboxPath == null || dropboxPath.isBlank()) {
-            throw new IllegalArgumentException("dropboxPath is empty");
-        }
-        Files.createDirectories(localDir);
-
-        Metadata meta = client.files().getMetadata(dropboxPath);
-        String pathLower = normPathLower(meta, dropboxPath);
-
-        // ✅ 카메라 업로드 "폴더 엔트리" 자체는 스킵(다운로드/삭제 모두 하지 않음)
-        if (isCameraUploadsFolderItself(meta, pathLower)) {
-            throw new IllegalStateException("Camera Uploads 폴더 자체는 다운로드/삭제 대상이 아닙니다: " + pathLower);
-        }
-
-        Path saved;
-        if (meta instanceof FileMetadata fm) {
-            saved = downloadFile(client, fm, localDir);
-        } else if (meta instanceof FolderMetadata folder) {
-            saved = downloadFolderZip(client, folder, localDir);
-        } else {
-            throw new IllegalStateException("Unsupported metadata type: " + meta.getClass());
-        }
-
-        // ✅ 다운로드 성공 후 즉시 삭제
-        safeDelete(client, meta);
-
-        return saved;
-    }
+//    /**
+//     * 경로 하나를 다운로드 후 즉시 삭제한다.
+//     * - 파일: 그대로 다운로드 후 delete_v2
+//     * - 폴더: zip 다운로드 후 delete_v2
+//     * - 단, 카메라 업로드 "폴더 자체"는 삭제하지 않는다(그 안의 파일/폴더는 가능)
+//     *
+//     * @return 로컬에 저장된 파일 경로
+//     */
+//    public Path downloadAndDelete(String userId, String dropboxPath, Path localDir)
+//            throws DbxException, IOException {
+//
+//        DbxClientV2 client = getDbxClient(userId);
+//
+//        if (dropboxPath == null || dropboxPath.isBlank()) {
+//            throw new IllegalArgumentException("dropboxPath is empty");
+//        }
+//        Files.createDirectories(localDir);
+//
+//        Metadata meta = client.files().getMetadata(dropboxPath);
+//        String pathLower = normPathLower(meta, dropboxPath);
+//
+//        // ✅ 카메라 업로드 "폴더 엔트리" 자체는 스킵(다운로드/삭제 모두 하지 않음)
+//        if (isCameraUploadsFolderItself(meta, pathLower)) {
+//            throw new IllegalStateException("Camera Uploads 폴더 자체는 다운로드/삭제 대상이 아닙니다: " + pathLower);
+//        }
+//
+//        Path saved;
+//        if (meta instanceof FileMetadata fm) {
+//            saved = downloadFile(client, fm, localDir);
+//        } else if (meta instanceof FolderMetadata folder) {
+//            saved = downloadFolderZip(client, folder, localDir);
+//        } else {
+//            throw new IllegalStateException("Unsupported metadata type: " + meta.getClass());
+//        }
+//
+//        // ✅ 다운로드 성공 후 즉시 삭제
+//        safeDelete(client, meta);
+//
+//        return saved;
+//    }
     
     private void deleteChildrenOnly(DbxClientV2 client, String folderLower) throws DbxException {
         ListFolderResult res = client.files()
@@ -961,24 +963,34 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
 	 * - 파일은 바로 삭제
 	 * - 폴더는 "카메라 업로드" 폴더 자체는 삭제하지 않음
 	 */
-    private void safeDelete(DbxClientV2 client, Metadata data) throws DbxException {
-    	
-    	if (data instanceof FileMetadata file) {
-            
-    		client.files().deleteV2( file.getId() );
-            
-        } else if (data instanceof FolderMetadata folder) {
-        	final String p = folder.getPathLower().toLowerCase(Locale.ROOT);
+    private boolean safeDelete(DbxClientV2 client, Metadata data) {
+        try {
+            if (data instanceof FileMetadata file) {
+                client.files().deleteV2(file.getId());
+                return true;
 
-            // 대표적인 폴더명 패턴들
-            // (실제 운영에서는 "목록에서 실제 path_lower를 확인해서 그 값을 사용" 추천)
-            if( "/camera uploads".equals(p) || "/카메라 업로드".equals(p) ) {
-            	return;
+            } else if (data instanceof FolderMetadata folder) {
+                String p = folder.getPathLower();
+
+                // 보호 폴더
+                if ("/camera uploads".equalsIgnoreCase(p)
+                    || "/카메라 업로드".equals(p)) {
+                    return true; // Skip
+                }
+
+                client.files().deleteV2(folder.getId());
+                return true;
             }
-            
-            client.files().deleteV2( folder.getId() );
+
+        } catch (DbxException e) {
+            // 삭제 실패
+            log.error("Dropbox delete failed: {}", data.getPathLower(), e);
+            return false;
         }
+
+        return false;
     }
+
     
     /**
 	 * Dropbox 경로를 로컬 경로로 변환하고, 필요한 디렉터리를 생성한다.
@@ -1007,15 +1019,22 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
     }
 
     /**
-	 * 파일 다운로드
-	 * - 로컬 경로 해석 + 디렉터리 생성 포함
-	 * - id 기반 다운로드 권장
-	 */
-    private Path downloadFile(DbxClientV2 client, FileMetadata fm, Path localDir)
+     * 파일 다운로드<br/>
+	 * <li> 로컬 경로 해석 + 디렉터리 생성 포함
+	 * <li> id 기반 다운로드 권장
+     * @param client
+     * @param fm
+     * @param localDir
+     * @return
+     * @throws DbxException
+     * @throws IOException
+     */
+    private boolean downloadFile(DbxClientV2 client, FileMetadata fm, Path localDir)
             throws DbxException, IOException {
 
         // 1. 경로 해석 + 디렉터리 생성
-        Path saved = this.resolveAndCreateLocalPath(localDir, fm.getPathLower());
+        final Path saved = this.resolveAndCreateLocalPath(localDir, fm.getPathLower());
+        log.info("Downloading Dropbox file to local path: {}", saved.toString());
 
         // 2. 다운로드 (id 기반 권장)
         try (OutputStream os = Files.newOutputStream(
@@ -1026,7 +1045,11 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
             client.files().download(fm.getId()).download(os);
         }
 
-        return saved;
+        // 3. 결과
+        // 파일이 제대로 저장되었는지 확인
+        final boolean result = Files.exists(saved)
+				&& Files.size(saved) == fm.getSize();
+        return Files.exists(saved);
     }
 
     

@@ -24,11 +24,6 @@ class KeyValueDaoImpl implements KeyValueDao {
 	
 	final ObjectMapper objectMapper;
 	
-	@Scheduled(fixedDelay = 60000) // 1분
-	public void cleanupExpired() {
-	    mapper.removoeExpire();
-	}
-	
 	@PostConstruct
 	private void postCunstruct() {
 		if( ! common.existTable("APP_KV") ) {
@@ -36,6 +31,14 @@ class KeyValueDaoImpl implements KeyValueDao {
 		}
 	}
 
+	@Scheduled(fixedDelay = 60 * 60 * 1000) // 1시간
+	public void cleanupExpired() {
+	    final int cnt = mapper.removeExpire();
+	    if (cnt > 0) {
+	        log.info("Expired keys removed: {}", cnt);
+	    }
+	}
+	
 	@Override
 	public String getValue(String k) {
 
