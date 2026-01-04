@@ -439,6 +439,6 @@ class LoadStorageServiceImpl implements LoadStorageService {
 				}
     		}
 		}
-		return null;
+		return new ReturnBasic();
 	}
 }

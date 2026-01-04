@@ -3,7 +3,6 @@ package com.utime.burrowNest.common.dao.impl;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utime.burrowNest.common.dao.KeyValueDao;
 import com.utime.burrowNest.common.mapper.CommonMapper;
@@ -23,6 +22,8 @@ class KeyValueDaoImpl implements KeyValueDao {
 	final CommonMapper common;
 	
 	final ObjectMapper objectMapper;
+	
+	final int NoneLimit = 0;
 	
 	@PostConstruct
 	private void postCunstruct() {
@@ -48,9 +49,16 @@ class KeyValueDaoImpl implements KeyValueDao {
 	@Override
 	public <T> T getObject(String k, Class<T> cls) throws RuntimeException {
 		
+		final String obj = this.getValue(k);
+		if( obj == null || obj.isEmpty() ) {
+			log.info("Key[{}] not found.", k);
+			return null;
+		}
+		
 		try {
-			return objectMapper.readValue(this.getValue(k), cls);
+			return objectMapper.readValue(obj, cls);
 		} catch (Exception e) {
+			log.error("Invalid value for key. {}({}) - {}", k, cls.getName(), obj);
 			throw new RuntimeException(e);
 		}
 	}
@@ -62,9 +70,9 @@ class KeyValueDaoImpl implements KeyValueDao {
 	}
 
 	@Override
-	public int setValue(String k, String v, int expireMinute) {
+	public int setValue(String k, String v, int expireSeconds) {
 
-		return mapper.setValue(k, v, expireMinute);
+		return mapper.setValue(k, v, expireSeconds);
 	}
 
 	@Override
@@ -74,12 +82,13 @@ class KeyValueDaoImpl implements KeyValueDao {
 	}
 
 	@Override
-	public int setObject(String k, Object v, int expireMinutes) {
+	public int setObject(String k, Object v, int expireSeconds) {
 		
 		int result = 0;
 		try {
-			result = this.setValue(k, objectMapper.writeValueAsString(v), expireMinutes);
-		} catch (JsonProcessingException e) {
+			final String json = objectMapper.writeValueAsString(v);
+			result = this.setValue(k, json, expireSeconds);
+		} catch (Exception e) {
 			log.error("setObject error:", e);
 			result = -1;
 		}
@@ -94,9 +103,9 @@ class KeyValueDaoImpl implements KeyValueDao {
 	}
 
 	@Override
-	public int setExpire(String k, int expireMinutes) {
+	public int setExpire(String k, int expireSeconds) {
 		
-		return mapper.setExpire(k, expireMinutes);
+		return mapper.setExpire(k, expireSeconds);
 	}
 
 	@Override

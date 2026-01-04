@@ -18,4 +18,6 @@ public class BurrowDefine {
 	public static final String NO = "N";
 	
 	public static final boolean IsLinux = System.getProperty("os.name").toLowerCase().indexOf("windows") < 0;
+	
+	public static final String KeyUserPath = "env.UserPath";
 }

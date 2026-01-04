@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import com.utime.burrowNest.common.dao.KeyValueDao;
 import com.utime.burrowNest.common.util.BurrowUtils;
 import com.utime.burrowNest.common.util.FileUtils;
+import com.utime.burrowNest.common.vo.BurrowDefine;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.root.service.LoadStorageService;
 import com.utime.burrowNest.storage.dao.StorageDao;
@@ -584,9 +585,21 @@ class StorageServiceImpl implements StorageService {
 	
 	@Override
 	public ReturnBasic saveUserPath(String userPath) {
-		ReturnBasic result = new ReturnBasic();
 		
-		keyValueDao.setValue( "userPath", userPath );
+		final ReturnBasic result = new ReturnBasic();
+		
+		final Path localTargetDir = Path.of(userPath);
+		if( ! localTargetDir.toFile().exists() ) {
+			try {
+				Files.createDirectories(localTargetDir);
+			} catch (IOException e) {
+				log.error("사용자 경로 생성 실패", e);
+				result.setCodeMessage("E", "사용자 경로 생성 실패");
+				return result;
+			}
+		}
+
+		keyValueDao.setValue( BurrowDefine.KeyUserPath, userPath );
 		
 		return result;
 	}

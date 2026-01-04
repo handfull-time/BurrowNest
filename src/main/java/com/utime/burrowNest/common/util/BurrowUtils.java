@@ -296,12 +296,14 @@ public class BurrowUtils {
 		executor.shutdown();
 
 		try {
+			log.info("1) 종료 대기 시작 -> timeout={} {}", timeout, unit);
+			
 			if (!executor.awaitTermination(timeout, unit)) {
-				// 2) 타임아웃 -> 강제 중단 시도
+				log.info("2) 타임아웃 -> 강제 중단 시도");
 				var notStarted = executor.shutdownNow(); // 대기 큐에 남은 작업 반환
 				log.warn("Executor force shutdown. notStarted={}", notStarted.size());
 
-				// 3) 강제 중단 후에도 일정 시간 더 기다림
+				log.info("3) 강제 중단 후에도 일정 시간 더 기다림");
 				if (!executor.awaitTermination(timeout, unit)) {
 					log.error("Executor did not terminate after shutdownNow.");
 				}

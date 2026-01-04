@@ -6,6 +6,7 @@ import java.util.List;
 import com.dropbox.core.DbxException;
 import com.dropbox.core.v2.files.Metadata;
 import com.utime.burrowNest.common.vo.ReturnBasic;
+import com.utime.burrowNest.dropbox.vo.DropboxContextConfig;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -17,12 +18,17 @@ public interface DropboxOAuthService {
 	/**
 	 * 멤버별 authorize URL 생성
 	 */
-	String buildAuthorizeUrl(HttpServletRequest request, String id)throws IOException;
+	String buildAuthorizeUrl(HttpServletRequest request, String id, String returnUrl, boolean popup)throws IOException;
 
+	/**
+	 * state 문자열을 파싱하여 DropboxContextConfig 객체 생성
+	 */
+	DropboxContextConfig parseContextConfig(String state);
+	
 	/**
 	 * code를 토큰으로 교환하고 멤버에 저장
 	 */
-	void exchangeCodeAndSave(String state, String code)throws IOException;
+	void exchangeCodeAndSave(String userId, String code)throws IOException;
 
 	/**
 	 * 갱신
@@ -44,5 +50,14 @@ public interface DropboxOAuthService {
 	 * @throws DbxException
 	 */
 	public List<Metadata> getAllList(String userId) throws DbxException;
+	
+	/**
+	 * 드롭박스 설정 저장
+	 * @param clientId
+	 * @param secret
+	 * @param redirectUrl
+	 * @return
+	 */
+	public ReturnBasic SaveConfig(String clientId, String secret, String redirectUrl );
 
 }

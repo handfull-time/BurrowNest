@@ -22,28 +22,20 @@
     </select>
 
     <!-- 값 설정 -->
-	<update id="setValue" parameterType="map">
-		MERGE INTO APP_KV TARGET
-		USING (
-		  SELECT
-		    #{key} AS K,
-		    #{value} AS V,
-		    CASE
-		      WHEN #{expireMinute} > 0
-		        THEN DATEADD('MINUTE', #{expireMinute}, CURRENT_TIMESTAMP)
-		      ELSE NULL
-		    END AS EXPIRE_AT
-		) SOURCE
-		ON TARGET.K = SOURCE.K
-		WHEN MATCHED THEN
-		  UPDATE SET
-		    V = SOURCE.V,
-		    EXPIRE_AT = SOURCE.EXPIRE_AT,
-		    UPDATED_AT = CURRENT_TIMESTAMP
-		WHEN NOT MATCHED THEN
-		  INSERT (K, V, EXPIRE_AT, UPDATED_AT)
-		  VALUES (SOURCE.K, SOURCE.V, SOURCE.EXPIRE_AT, CURRENT_TIMESTAMP);
-    </update>
+	<update id="setValue" parameterType="map" >
+	  MERGE INTO APP_KV (K, V, EXPIRE_AT, UPDATED_AT)
+	  KEY (K)
+	  VALUES (
+	    #{key},
+	    #{value},
+	    CASE
+	    	WHEN #{expireSeconds} > 0
+	    		THEN DATEADD('SECOND', #{expireSeconds}, CURRENT_TIMESTAMP)
+	    	ELSE NULL
+	    END,
+	    CURRENT_TIMESTAMP
+	  )
+	</update>
 
     <!-- 키 삭제 -->
 	<delete id="deleteKey" parameterType="map">
@@ -56,7 +48,7 @@
         UPDATE APP_KV
         SET EXPIRE_AT = CASE
                           WHEN #{expireMinute} > 0
-                            THEN DATEADD('MINUTE', #{expireMinute}, CURRENT_TIMESTAMP)
+                            THEN DATEADD('SECOND', #{expireSeconds}, CURRENT_TIMESTAMP)
                           ELSE NULL
                         END,
             UPDATED_AT = CURRENT_TIMESTAMP
@@ -68,7 +60,7 @@
         SELECT 
             CASE 
                 WHEN EXPIRE_AT IS NULL THEN -1
-                ELSE DATEDIFF('MINUTE', CURRENT_TIMESTAMP, EXPIRE_AT)
+                ELSE DATEDIFF('SECOND', CURRENT_TIMESTAMP, EXPIRE_AT)
             END AS MINUTES_REMAINING
         FROM APP_KV
         WHERE K = #{key}

@@ -1,0 +1,159 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="content">
+    <div class="space-y-6">
+        <h2 class="text-2xl font-semibold text-center text-gray-800">
+            Dropbox 연동 설정
+        </h2>
+
+        <div class="space-y-2 text-center">
+            <p class="text-sm text-gray-500">
+                Dropbox API 연동을 위한 설정 정보를 입력하세요.
+            </p>
+            <p class="text-xs text-gray-400">
+                Dropbox App Console에서 발급받은 값입니다.
+            </p>
+			<p class="text-xs text-gray-500">
+			    Dropbox 앱 생성/확인:
+			    <a href="https://www.dropbox.com/developers/apps?_tk=pilot_lp&_ad=topbar4&_camp=myapps"
+			       target="_blank" rel="noopener noreferrer"
+			       class="text-blue-600 hover:text-blue-800 underline">
+			      Dropbox Developers - My Apps
+			    </a>
+			  </p>
+        </div>
+
+        <div class="space-y-4">
+            <table class="w-full border-collapse">
+                <tbody>
+                    <tr>
+                        <td class="w-1/4 font-medium p-2">
+                            <label for="clientId">App key</label>
+                        </td>
+                        <td class="w-3/4 p-2">
+                            <input type="text"
+                                   id="clientId"
+                                   placeholder="Dropbox Client ID"
+                                   minlength="1"
+                                   maxlength="32"
+                                   required
+                                   class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400">
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="font-medium p-2">
+                            <label for="clientSecret">App secret</label>
+                        </td>
+                        <td class="p-2">
+                            <input type="password"
+                                   id="clientSecret"
+                                   placeholder="Dropbox Client Secret"
+                                   minlength="1"
+                                   maxlength="64"
+                                   required
+                                   class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400">
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="font-medium p-2">
+                            <label for="redirectUri">Redirect URI</label>
+                        </td>
+                        <td class="p-2">
+                            <input type="text"
+                                   id="redirectUri"
+                                   placeholder="http://localhost:8080/dropbox/callback"
+                                   minlength="1"
+                                   maxlength="300"
+                                   required
+                                   class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400">
+                            <p class="mt-1 text-xs text-gray-400">
+                                Dropbox App 설정의 OAuth2 - Redirect URI와 반드시 동일해야 합니다.
+                            </p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex justify-between">
+            <button type="button"
+                    class="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 transition"
+                    onclick="prevPage('PageDropBox', 'PagePasswd')">
+                이전
+            </button>
+
+            <button type="button"
+                    disabled
+                    id="dropboxNextBtn"
+                    class="bg-gray-500 text-black px-6 py-2 rounded hover:bg-gray-600 transition">
+                다음
+            </button>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+		function autoFillRedirectUri() {
+	        const el = document.getElementById("redirectUri");
+
+	        // 이미 값이 있다면(이전 입력 등) 덮어쓰지 않음
+	        if (el.value && el.value.trim().length > 0) {
+	            return;
+	        }
+
+	        // 현재 접속 중인 서버 기준
+	        const base = window.location.origin; // https://domain:port
+	        el.value = base + "/Dropbox/OAuth/callback";
+	    }
+		
+        function validateDropbox() {
+            const id = document.getElementById("clientId").value.trim();
+            const secret = document.getElementById("clientSecret").value.trim();
+            const uri = document.getElementById("redirectUri").value.trim();
+
+            const ok = id.length > 0 && secret.length > 0 && uri.length > 0;
+            buttonStatus("dropboxNextBtn", ok);
+            return ok;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+			
+			autoFillRedirectUri();
+			
+            ["clientId", "clientSecret", "redirectUri"].forEach(id => {
+                document.getElementById(id).addEventListener("input", validateDropbox);
+                document.getElementById(id).addEventListener("blur", validateDropbox);
+            });
+
+            validateDropbox();
+        });
+
+        document.getElementById("dropboxNextBtn").addEventListener("click", async function () {
+            
+			const data = {
+                clientId: document.getElementById("clientId").value.trim(),
+                secret: document.getElementById("clientSecret").value.trim(),
+                redirectUrl: document.getElementById("redirectUri").value.trim()
+            };
+
+			try {
+                const res = await fetch(/*[[@{/Dropbox/SaveConfig.json}]]*/ null, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+                    },
+                    body: new URLSearchParams(data),
+                    credentials: "include"
+                });
+
+                if (res.ok) {
+					console.info('작업 성공');
+                    nextPage('PageDropBox', 'PageStoragePath');
+                }
+				return true;
+           } catch (e) {
+                console.error("Dropbox 설정 저장 실패", e);
+                buttonStatus("dropboxNextBtn", true);
+            }
+        });
+    </script>
+</div>

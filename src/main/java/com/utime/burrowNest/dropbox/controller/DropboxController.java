@@ -1,5 +1,7 @@
 package com.utime.burrowNest.dropbox.controller;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.springframework.stereotype.Controller;
@@ -17,6 +19,7 @@ import com.utime.burrowNest.admin.dao.AdminUserDao;
 import com.utime.burrowNest.admin.vo.ManageUserVo;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.dropbox.service.DropboxOAuthService;
+import com.utime.burrowNest.dropbox.vo.DropboxContextConfig;
 import com.utime.burrowNest.user.vo.UserVo;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,8 +39,14 @@ public class DropboxController {
         model.addAttribute("members", userList);
         return "DropBox/Dropbox";
     }
-
-    @PostMapping("Members")
+	
+	@ResponseBody
+	@PostMapping("SaveConfig.json")
+	public ReturnBasic SaveConfig(@RequestParam("clientId") String clientId, @RequestParam("secret") String secret, @RequestParam("redirectUrl") String redirectUrl) {
+		return dropboxService.SaveConfig( clientId, secret, redirectUrl );
+	}
+	
+	@PostMapping("Members")
     public String addMember(@RequestParam String name) throws Exception {
     	UserVo m = new UserVo();
         m.setNickname(name);
@@ -46,8 +55,12 @@ public class DropboxController {
     }
 
     @GetMapping("Connect/{id}")
-    public String connect(HttpServletRequest request, @PathVariable String id) throws Exception {
-        String url = dropboxService.buildAuthorizeUrl(request, id);
+    public String connect(HttpServletRequest request, @PathVariable String id,
+    		@RequestParam(required = false) String returnUrl,
+    		@RequestParam(defaultValue = "1") int popup) throws Exception {
+    	
+        final String url = dropboxService.buildAuthorizeUrl(request, id, returnUrl, popup==1);
+        
         return "redirect:" + url;
     }
     
@@ -64,21 +77,72 @@ public class DropboxController {
     }
     
     @ResponseBody
-    @GetMapping("Unlink/{id}")
+    @PostMapping("Unlink/{id}")
     public ReturnBasic Unlink(@PathVariable String id) throws DbxException {
     	return dropboxService.unlinkDropbox(id);
     }
     
-	@GetMapping("OAuth/callback")
-	public String callback(@RequestParam(required = false) String code, @RequestParam(required = false) String state,
-			@RequestParam(required = false) String error) throws Exception {
+//	@GetMapping("OAuth/callback")
+//	public String callback(@RequestParam(required = false) String code, @RequestParam(required = false) String state,
+//			@RequestParam(required = false) String error) throws Exception {
+//
+//		if (error != null) {
+//			return "redirect:/?error=" + error;
+//		}
+//		
+//		dropboxService.exchangeCodeAndSave(state, code);
+//		return "DropBox/Dropbox";
+//	}
+	
+    private String appendQuery(String url, String key, String value) {
+        if (url == null || url.isBlank()) return "/";
 
-		if (error != null) {
-			return "redirect:/?error=" + error;
-		}
-		
-		dropboxService.exchangeCodeAndSave(state, code);
-		return "DropBox/Dropbox";
+        String base = url;
+        String hash = "";
+
+        // 1) #fragment 분리
+        int hashIdx = base.indexOf('#');
+        if (hashIdx >= 0) {
+            hash = base.substring(hashIdx);
+            base = base.substring(0, hashIdx);
+        }
+
+        // 2) ? 존재 여부에 따라 ? / & 결정
+        String sep = base.contains("?") ? "&" : "?";
+
+        return base + sep + key + "=" + URLEncoder.encode(value, StandardCharsets.UTF_8) + hash;
+    }
+
+    
+	@GetMapping("OAuth/callback")
+	public String callback(@RequestParam(required = false) String code,
+	                       @RequestParam(required = false) String state,
+	                       @RequestParam(required = false) String error,
+	                       Model model) throws Exception {
+
+		final DropboxContextConfig ctx = dropboxService.parseContextConfig(state);
+
+	    if (error != null) {
+	        // 팝업이면 팝업전용 결과 페이지로
+	        if (ctx != null && ctx.isPopup()) {
+	            model.addAttribute("success", false);
+	            model.addAttribute("error", error);
+	            model.addAttribute("id", ctx.getUserId());
+	            return "Dropbox/OAuthPopupResult";
+	        }
+	        return "redirect:" + appendQuery(ctx.getReturnUrl(), "dropboxError", error);
+	    }
+
+	    dropboxService.exchangeCodeAndSave(ctx.getUserId(), code);
+
+	    if (ctx != null && ctx.isPopup()) {
+	        model.addAttribute("success", true);
+	        model.addAttribute("id", ctx.getUserId());
+	        return "Dropbox/OAuthPopupResult";
+	    }
+
+	    return "redirect:" + appendQuery(ctx.getReturnUrl(), "dropboxLinked", "1");
 	}
+
 	
 }

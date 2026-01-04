@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,11 +18,10 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import com.dropbox.core.DbxAppInfo;
 import com.dropbox.core.DbxAuthFinish;
@@ -37,18 +34,18 @@ import com.dropbox.core.oauth.DbxCredential;
 import com.dropbox.core.oauth.DbxOAuthException;
 import com.dropbox.core.oauth.DbxRefreshResult;
 import com.dropbox.core.v2.DbxClientV2;
-import com.dropbox.core.v2.files.DeleteResult;
 import com.dropbox.core.v2.files.FileMetadata;
 import com.dropbox.core.v2.files.FolderMetadata;
 import com.dropbox.core.v2.files.ListFolderResult;
 import com.dropbox.core.v2.files.Metadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.utime.burrowNest.common.util.BurrowUtils;
+import com.utime.burrowNest.common.dao.KeyValueDao;
 import com.utime.burrowNest.common.util.CacheIntervalMap;
+import com.utime.burrowNest.common.vo.BurrowDefine;
 import com.utime.burrowNest.common.vo.ReturnBasic;
 import com.utime.burrowNest.dropbox.dao.DropboxDao;
 import com.utime.burrowNest.dropbox.service.DropboxOAuthService;
-import com.utime.burrowNest.dropbox.vo.DropboxTokenVO;
+import com.utime.burrowNest.dropbox.vo.DropboxContextConfig;
 import com.utime.burrowNest.user.dao.UserDao;
 import com.utime.burrowNest.user.vo.UserVo;
 
@@ -79,14 +76,22 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
 
 //	private final DropboxSdkClientFactory dropboxClientFactory;
 
-    @Value("${dropbox.client-id}")
-    private String appKey;
-
-    @Value("${dropbox.client-secret}")
-    private String appSecret;
-    
-    @Value("${dropbox.redirect-uri}")
-    private String redirectUri;
+//    @Value("${dropbox.client-id}")
+//    private String appKey;
+//
+//    @Value("${dropbox.client-secret}")
+//    private String appSecret;
+//    
+//    @Value("${dropbox.redirect-uri}")
+//    private String redirectUri;
+	
+	private final String KeyClientId = "env.Dropbox.ClientId";
+	
+	private final String KeySecret = "env.Dropbox.Secret";
+	
+	private final String KeyRedirectUrl = "env.Dropbox.RedirectUrl";
+	
+	private final KeyValueDao keyValueDao;
     
     private final ObjectMapper objectMapper;
 
@@ -94,7 +99,7 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
     
     private final DropboxDao dbxDao;
     
-    private final CacheIntervalMap<String, String> cashIntervalState = new CacheIntervalMap<>(20L, TimeUnit.MINUTES);
+    private final CacheIntervalMap<String, DropboxContextConfig> cashIntervalState = new CacheIntervalMap<>(20L, TimeUnit.MINUTES);
     
 //    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
@@ -105,7 +110,26 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
                     .withUserLocale(Locale.getDefault().toLanguageTag())
                     .build();
     
+    @EventListener
+    public void onReady(ApplicationReadyEvent event) {
+        System.out.println("애플리케이션 완전 기동");
+    }
 
+    @EventListener
+    public void onShutdown(ContextClosedEvent event) {
+        System.out.println("애플리케이션 종료");
+    }
+    
+    @Override
+	public ReturnBasic SaveConfig(String clientId, String secret, String redirectUrl) {
+    	final ReturnBasic result = new ReturnBasic();
+    	
+    	keyValueDao.setValue(KeyClientId, clientId);
+    	keyValueDao.setValue(KeySecret, secret);
+    	keyValueDao.setValue(KeyRedirectUrl, redirectUrl);
+    	
+		return result;
+	}
     // 서버 시작 시 1회만: 기존 멤버들 예약 복구(심플)
 //    @PostConstruct
 //    private void init() {
@@ -140,8 +164,8 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
                 user.getAccessToken(),
                 user.getExpiresAt() == null ? null : user.getExpiresAt().toEpochMilli(),
                 user.getRefreshToken(),
-                appKey,
-                appSecret
+                keyValueDao.getValue(KeyClientId),
+                keyValueDao.getValue(KeySecret)
         );
 
         // access token이 없거나(초기/정리됨), 만료 임박이면 refresh 시도
@@ -152,6 +176,16 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
 
         return new DbxClientV2(config, cred); // DbxCredential 기반 클라이언트 :contentReference[oaicite:6]{index=6}
     }
+    
+    private DbxWebAuth getWebbAuth() {
+    	final String key = keyValueDao.getValue(KeyClientId), secret = keyValueDao.getValue(KeySecret);
+    	if( key == null || key.isEmpty() || secret == null || secret.isEmpty() ) {
+			throw new IllegalStateException("Dropbox app key/secret not configured");
+		}
+    	
+		final DbxAppInfo appInfo = new DbxAppInfo(key, secret);
+		return new DbxWebAuth(config, appInfo);
+	}
 
     /**
 	 * DbxCredential을 refresh하고 UserVo에 반영 + DB 저장
@@ -229,29 +263,29 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
 //        return Math.max(ms, 0);
 //    }
 
-    // 1) 멤버별 authorize URL 생성
-    public String buildAuthorizeUrl2(String userId) throws IOException {
-    	// state 발급 및 저장
-    	UserVo user = userDao.getUserFormId(userId);
-    	if( user == null ) {
-    		throw new IllegalArgumentException("Invalid member ID: " + userId);
-    	}
-    	
-        final String state = String.valueOf(user.getUserNo());
-
-        return UriComponentsBuilder
-                .fromUriString("https://www.dropbox.com/oauth2/authorize")
-                .queryParam("client_id", appKey)
-                .queryParam("response_type", "code")
-                .queryParam("redirect_uri", redirectUri)
-                // refresh token까지 받기(offline access)
-                .queryParam("token_access_type", TokenAccessType.OFFLINE.toString())
-                .queryParam("state", state)
-                .build(true)
-                .toUriString();
-    }
+//    // 1) 멤버별 authorize URL 생성
+//    public String buildAuthorizeUrl2(String userId) throws IOException {
+//    	// state 발급 및 저장
+//    	UserVo user = userDao.getUserFormId(userId);
+//    	if( user == null ) {
+//    		throw new IllegalArgumentException("Invalid member ID: " + userId);
+//    	}
+//    	
+//        final String state = String.valueOf(user.getUserNo());
+//
+//        return UriComponentsBuilder
+//                .fromUriString("https://www.dropbox.com/oauth2/authorize")
+//                .queryParam("client_id", appKey)
+//                .queryParam("response_type", "code")
+//                .queryParam("redirect_uri", redirectUri)
+//                // refresh token까지 받기(offline access)
+//                .queryParam("token_access_type", TokenAccessType.OFFLINE.toString())
+//                .queryParam("state", state)
+//                .build(true)
+//                .toUriString();
+//    }
     
-    public String buildAuthorizeUrl(HttpServletRequest request, String userId) {
+    public String buildAuthorizeUrl(HttpServletRequest request, String userId, String returnUrl, boolean popup) {
         
     	final UserVo user = userDao.getUserFormId(userId);
         if (user == null) {
@@ -259,103 +293,110 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
         }
 
         final String state = UUID.randomUUID().toString();
-        this.cashIntervalState.put(state, user.getId());
+        this.cashIntervalState.put(state, new DropboxContextConfig( user.getId(), returnUrl, popup ));
         log.info( "cashInterval userId add {} -> {}", user.getId(), state );
         
         final HttpSession session = request.getSession(true);
         final DbxStandardSessionStore sessionStore = new DbxStandardSessionStore(session, "dropbox-auth"); 
 
         final DbxWebAuth.Request authRequest = DbxWebAuth.newRequestBuilder()
-                .withRedirectUri(redirectUri, sessionStore)
+                .withRedirectUri(keyValueDao.getValue(KeyRedirectUrl), sessionStore)
                 .withTokenAccessType(TokenAccessType.OFFLINE)
                 .withState(state)
                 .build();
         
-        final DbxAppInfo appInfo = new DbxAppInfo(appKey, appSecret);
-        final DbxWebAuth webAuth = new DbxWebAuth(config, appInfo);
+        final DbxWebAuth webAuth = this.getWebbAuth();
 
         return webAuth.authorize(authRequest);
     }
 
     
-    // 2) callback에서 code 받아 token 교환
-    public void exchangeCodeAndSave2(String state, String code) throws IOException {
-    	
-    	final UserVo user = userDao.getUserFormUserNo(Long.valueOf(state));
-    	if( user == null ) {
-			throw new IllegalArgumentException("Invalid user ID: " + state);
-		}
-
-    	final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("code", code);
-        params.add("client_id", appKey);
-        params.add("redirect_uri", redirectUri);
-        params.add("client_secret", appSecret);
-        params.add("grant_type", "authorization_code");
-
-        final String body = UriComponentsBuilder
-                .newInstance()
-                .queryParams(params)
-                .build()
-                .encode(StandardCharsets.UTF_8)
-                .toUriString()
-                .substring(1); // '?' 제거
-
-    	final URL url = new URL("https://api.dropboxapi.com/oauth2/token");
-        final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
-        conn.setDoOutput(true);
-
-    	final OutputStream os = conn.getOutputStream();
-    	
-    	final byte[] input = body.getBytes(StandardCharsets.UTF_8);
-        os.write(input, 0, input.length);
-        os.flush();
-
-        final int codeHttp = conn.getResponseCode();
-        log.info("Dropbox token exchange HTTP code: {}", codeHttp);
-        final String json = readAll((codeHttp >= 200 && codeHttp < 300) ? conn.getInputStream() : conn.getErrorStream());
-        log.info("Dropbox token exchange response: {}", json);
-        
-        final DropboxTokenVO tokenVo = objectMapper.readValue(json, DropboxTokenVO.class);
-        if( tokenVo.getError() != null ) {
-			throw new IllegalStateException("Dropbox token exchange failed: " + json);
-		}
-
-        user.setAccessToken(tokenVo.getAccessToken());
-        if ( ! BurrowUtils.isEmpty(tokenVo.getRefreshToken() )) {
-            user.setRefreshToken(tokenVo.getRefreshToken());
-        }
-        user.setExpiresAt(Instant.now().plusSeconds(tokenVo.getExpiresIn()));
-        
-        try {
-			userDao.saveDropboxToken(user);
-		} catch (Exception e) {
-			log.error("Failed to save Dropbox token for member ID: {}", user.getId(), e);
-		}
-    }
+//    // 2) callback에서 code 받아 token 교환
+//    public void exchangeCodeAndSave2(String state, String code) throws IOException {
+//    	
+//    	final UserVo user = userDao.getUserFormUserNo(Long.valueOf(state));
+//    	if( user == null ) {
+//			throw new IllegalArgumentException("Invalid user ID: " + state);
+//		}
+//
+//    	final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+//        params.add("code", code);
+//        params.add("client_id", appKey);
+//        params.add("redirect_uri", redirectUri);
+//        params.add("client_secret", appSecret);
+//        params.add("grant_type", "authorization_code");
+//
+//        final String body = UriComponentsBuilder
+//                .newInstance()
+//                .queryParams(params)
+//                .build()
+//                .encode(StandardCharsets.UTF_8)
+//                .toUriString()
+//                .substring(1); // '?' 제거
+//
+//    	final URL url = new URL("https://api.dropboxapi.com/oauth2/token");
+//        final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+//        conn.setRequestMethod("POST");
+//        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
+//        conn.setDoOutput(true);
+//
+//    	final OutputStream os = conn.getOutputStream();
+//    	
+//    	final byte[] input = body.getBytes(StandardCharsets.UTF_8);
+//        os.write(input, 0, input.length);
+//        os.flush();
+//
+//        final int codeHttp = conn.getResponseCode();
+//        log.info("Dropbox token exchange HTTP code: {}", codeHttp);
+//        final String json = readAll((codeHttp >= 200 && codeHttp < 300) ? conn.getInputStream() : conn.getErrorStream());
+//        log.info("Dropbox token exchange response: {}", json);
+//        
+//        final DropboxTokenVO tokenVo = objectMapper.readValue(json, DropboxTokenVO.class);
+//        if( tokenVo.getError() != null ) {
+//			throw new IllegalStateException("Dropbox token exchange failed: " + json);
+//		}
+//
+//        user.setAccessToken(tokenVo.getAccessToken());
+//        if ( ! BurrowUtils.isEmpty(tokenVo.getRefreshToken() )) {
+//            user.setRefreshToken(tokenVo.getRefreshToken());
+//        }
+//        user.setExpiresAt(Instant.now().plusSeconds(tokenVo.getExpiresIn()));
+//        
+//        try {
+//			userDao.saveDropboxToken(user);
+//		} catch (Exception e) {
+//			log.error("Failed to save Dropbox token for member ID: {}", user.getId(), e);
+//		}
+//    }
     
     @Override
-    public void exchangeCodeAndSave(String state, String code) throws IOException {
-    	
-    	final String userId = this.cashIntervalState.remove(state);
-    	if( userId == null || userId.isEmpty() ) {
+    public DropboxContextConfig parseContextConfig(String state) {
+    	final DropboxContextConfig context = this.cashIntervalState.remove(state);
+    	if( context == null ) {
     		throw new IllegalArgumentException("Not found user ID: " + state);
     	}
     	
+    	if( context.getUserId() == null || context.getUserId().isEmpty() ) {
+    		throw new IllegalArgumentException("Not found user ID: " + state);
+    	}
+		
+		return context;
+    }
+    
+    @Override
+    public void exchangeCodeAndSave(String userId, String code) throws IOException {
+    	
         final UserVo user = userDao.getUserFormId(userId);
         if (user == null) {
-            throw new IllegalArgumentException("Invalid user ID: " + state);
+            throw new IllegalArgumentException("Invalid user ID: " + userId);
         }
 
         try {
             // 1) Dropbox SDK WebAuth 준비
-            final DbxAppInfo appInfo = new DbxAppInfo(appKey, appSecret);
-            final DbxWebAuth webAuth = new DbxWebAuth(config, appInfo);
+            final DbxWebAuth webAuth = this.getWebbAuth();
 
             // 2) code -> token 교환 (SDK가 /oauth2/token 호출을 내부에서 처리)
-            final DbxAuthFinish finish = webAuth.finishFromCode(code, redirectUri);
+            final DbxAuthFinish finish = webAuth.finishFromCode(code, keyValueDao.getValue(KeyRedirectUrl));
 
             // 3) 토큰 저장
             user.setAccessToken(finish.getAccessToken());
@@ -374,7 +415,7 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
 
         } catch (Exception e) {
             // DbxException까지 포함해 한 번에 잡는 형태
-            log.error("Dropbox token exchange failed for userNo={} (state={})", user.getUserNo(), state, e);
+            log.error("Dropbox token exchange failed for userNo={}", user.getUserNo(), e);
             throw new IOException("Dropbox token exchange failed", e);
         }
     }
@@ -513,6 +554,7 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
      */
     @Override
     public ReturnBasic unlinkDropbox(String userId) {
+    	
     	final UserVo user = userDao.getUserFormId(userId);
         if (user == null) throw new IllegalArgumentException("Invalid userId: " + userId);
 
@@ -531,7 +573,7 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
             log.warn("Dropbox tokenRevoke failed (will still clear local tokens). userId={}, msg={}", userId, e.getMessage());
         } catch (ReauthRequiredException e) {
             // refresh token이 이미 무효인 케이스여도 로컬 토큰 삭제로 "연결 끊기"는 완료 처리
-            log.warn("Dropbox reauth required while unlink (will still clear local tokens). userId={}", userId);
+            log.warn("Dropbox reauth required while unlink (will still clear local tokens). userId={}, msg={}", userId, e.getMessage());
         }
 
         // 2) 로컬(DB) 토큰 제거
@@ -541,7 +583,7 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
         try {
 			userDao.saveDropboxToken(user);
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("Failed to clear Dropbox tokens for userId={}", userId, e);
 		}
 
 //        // 3) 스케줄러/캐시/클라이언트 캐시가 있다면 여기서 정리
@@ -552,14 +594,14 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
 
 
 
-    private static String readAll(InputStream is) throws IOException {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) sb.append(line);
-            return sb.toString();
-        }
-    }
+//    private static String readAll(InputStream is) throws IOException {
+//        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+//            StringBuilder sb = new StringBuilder();
+//            String line;
+//            while ((line = br.readLine()) != null) sb.append(line);
+//            return sb.toString();
+//        }
+//  }
     
 //    private boolean isReauthRequired(int httpCode, String json) {
 //        // Dropbox token endpoint에서 refresh_token이 무효/철회되면 보통 400 + invalid_grant(또는 invalid_request류)로 옵니다.
@@ -666,12 +708,14 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
             result.addAll(res.getEntries());
         }
         
-        final Path localTargetDir = Path.of("D:\\var\\Dropbox").resolve(userId);
+        final Path localTargetDir = Path.of( keyValueDao.getValue(BurrowDefine.KeyUserPath) ).resolve(userId);
         try {
 			Files.createDirectories(localTargetDir);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+        
+        final List<Metadata> downloadList = new ArrayList<>();
         
         for( Metadata item : result) {
         	if( item instanceof FileMetadata ) {
@@ -687,15 +731,22 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
         				}
         			}
         			
-        			if( dbRes > 0 || "id:ftbXa7gMxBAAAAAAAAADLA".equals(fileMeta.getId()) ) { // 강제 다운로드
+        			if( dbRes > 0 ) {
         				if( this.downloadFile(client, fileMeta, localTargetDir) ) {
-        					
+        					downloadList.add( item );        					
         				}
 					}
 				} catch (Exception e) {
 					log.error("getAllList error fileMeta={}", fileMeta.getPathLower(), e);
 				}
+			}else if( item instanceof FolderMetadata ) {
+				//final FolderMetadata folderMeta = (FolderMetadata)item;
+				downloadList.add( item );
 			}
+        }
+        
+        for( int i=downloadList.size()-1; i>=0; i-- ) {
+        	this.safeDelete( client, downloadList.get(i) );
         }
 
         return result;
@@ -1049,7 +1100,8 @@ class DropboxOAuthServiceImpl implements DropboxOAuthService {
         // 파일이 제대로 저장되었는지 확인
         final boolean result = Files.exists(saved)
 				&& Files.size(saved) == fm.getSize();
-        return Files.exists(saved);
+        
+        return result;
     }
 
     

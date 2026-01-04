@@ -1,0 +1,31 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dropbox 연결</title>
+</head>
+<body>
+<script th:inline="javascript">
+  const payload = {
+    type: "DROPBOX_OAUTH_DONE",
+    success: /*[[${success}]]*/ false,
+    id: /*[[${id}]]*/ "",
+    error: /*[[${error}]]*/ null
+  };
+
+  try {
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage(payload, window.location.origin);
+      window.close();
+    } else {
+      // opener가 없으면(모바일/차단) 그냥 안내 후 이동
+      const fallback = "/";
+      window.location.replace(fallback);
+    }
+  } catch (e) {
+    window.location.replace("/");
+  }
+</script>
+</body>
+</html>

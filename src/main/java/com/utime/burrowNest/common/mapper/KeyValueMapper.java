@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Param;
  */
 @Mapper
 public interface KeyValueMapper {
+	
 	/**
 	 * Key-Value 테이블 생성
 	 * @return
@@ -25,9 +26,10 @@ public interface KeyValueMapper {
 	 * 값 설정
 	 * @param k
 	 * @param v
+	 * @param expireSeconds
 	 * @return
 	 */
-	int setValue(@Param("key") String k, @Param("value") String v, @Param("expireMinute") int expireMinute);
+	int setValue(@Param("key") String k, @Param("value") String v, @Param("expireSeconds") int expireSeconds);
 	
 	/**
 	 * 키 삭제
@@ -39,10 +41,10 @@ public interface KeyValueMapper {
 	/**
 	 * 키 만료 시간 설정
 	 * @param k
-	 * @param expireMinute
+	 * @param expireSeconds
 	 * @return
 	 */
-	int setExpire(@Param("key") String k, @Param("expireMinute") int expireMinutes);
+	int setExpire(@Param("key") String k, @Param("expireSeconds") int expireSeconds);
 	
 	/**
 	 * 키 만료 시간 조회

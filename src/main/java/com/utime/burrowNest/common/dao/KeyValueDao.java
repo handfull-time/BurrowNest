@@ -34,7 +34,7 @@ public interface KeyValueDao {
 	 * @param v
 	 * @return
 	 */
-	int setValue(String k, String v, int expireMinute);
+	int setValue(String k, String v, int expireSeconds);
 	
 	/**
 	 * 객체 값 설정
@@ -50,7 +50,7 @@ public interface KeyValueDao {
 	 * @param v
 	 * @return
 	 */
-	int setObject(String k, Object v, int expireMinutes);
+	int setObject(String k, Object v, int expireSeconds);
 	
 	/**
 	 * 키 삭제
@@ -65,7 +65,7 @@ public interface KeyValueDao {
 	 * @param expireMinute
 	 * @return
 	 */
-	int setExpire(String k, int expireMinutes);
+	int setExpire(String k, int expireSeconds);
 	
 	/**
 	 * 키 만료 시간 조회
